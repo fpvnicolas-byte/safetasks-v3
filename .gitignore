@@ -17,4 +17,5 @@ venv/
 node_modules/
 .next/
 dist/
-build/
+build/backend/env.md
+backend/env.md
