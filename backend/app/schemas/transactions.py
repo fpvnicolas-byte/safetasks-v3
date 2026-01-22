@@ -1,0 +1,66 @@
+from pydantic import BaseModel, ConfigDict, Field
+from uuid import UUID
+from datetime import datetime, date
+from typing import Optional, Literal
+
+
+class TransactionBase(BaseModel):
+    """Base schema for Transaction."""
+    bank_account_id: UUID
+    category: str
+    type: Literal["income", "expense"]
+    amount_cents: int = Field(..., gt=0, description="Amount in cents, must be positive")
+    description: Optional[str] = None
+    transaction_date: date
+    project_id: Optional[UUID] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TransactionCreate(TransactionBase):
+    """Schema for creating a Transaction."""
+    pass
+
+
+class TransactionUpdate(BaseModel):
+    """Schema for updating a Transaction."""
+    bank_account_id: Optional[UUID] = None
+    category: Optional[str] = None
+    type: Optional[Literal["income", "expense"]] = None
+    amount_cents: Optional[int] = Field(None, gt=0)
+    description: Optional[str] = None
+    transaction_date: Optional[date] = None
+    project_id: Optional[UUID] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class Transaction(TransactionBase):
+    """Schema for Transaction response."""
+    id: UUID
+    organization_id: UUID
+    created_at: datetime
+
+
+class TransactionWithRelations(Transaction):
+    """Schema for Transaction response with bank account and project data."""
+    bank_account: "BankAccount" = Field(...)
+    project: Optional["Project"] = Field(None)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TransactionStats(BaseModel):
+    """Schema for monthly transaction statistics."""
+    total_income_cents: int
+    total_expense_cents: int
+    net_balance_cents: int
+    year: int
+    month: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# Forward references for circular imports
+from app.schemas.bank_accounts import BankAccount
+from app.schemas.projects import Project

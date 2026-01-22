@@ -1,35 +1,44 @@
-from typing import Optional
-from pydantic_settings import BaseSettings
+from pydantic import BaseSettings
+from pydantic import Field
 
 
 class Settings(BaseSettings):
-    # Project
-    PROJECT_NAME: str
+    PROJECT_NAME: str = "Safe Tasks V3"
     API_V1_STR: str = "/api/v1"
 
-    # Supabase
-    SUPABASE_URL: str
-    SUPABASE_KEY: str
-    SUPABASE_JWT_SECRET: str
+    # Supabase Configuration
+    SUPABASE_URL: str = Field(..., env="SUPABASE_URL")
+    SUPABASE_KEY: str = Field(..., env="SUPABASE_KEY")
+    SUPABASE_JWT_SECRET: str = Field(..., env="SUPABASE_JWT_SECRET")
 
-    # PostgreSQL (from Supabase)
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
-    POSTGRES_SERVER: str
-    POSTGRES_PORT: str
-    POSTGRES_DB: str
+    # PostgreSQL Database
+    POSTGRES_USER: str = Field(..., env="POSTGRES_USER")
+    POSTGRES_PASSWORD: str = Field(..., env="POSTGRES_PASSWORD")
+    POSTGRES_SERVER: str = Field(..., env="POSTGRES_SERVER")
+    POSTGRES_PORT: str = Field(..., env="POSTGRES_PORT")
+    POSTGRES_DB: str = Field(..., env="POSTGRES_DB")
 
-    # External APIs
-    OPENAI_API_KEY: Optional[str] = None
-    GOOGLE_API_KEY: str
-    FISCAL_PROVIDER_API_KEY: Optional[str] = None
-
-    @property
-    def SQLALCHEMY_DATABASE_URI(self) -> str:
-        return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+    # External API Keys
+    GOOGLE_API_KEY: str = Field(default="", env="GOOGLE_API_KEY")
+    GEMINI_API_KEY: str = Field(default="", env="GEMINI_API_KEY")
+    GOOGLE_APPLICATION_CREDENTIALS: str = Field(default="./service-account.json", env="GOOGLE_APPLICATION_CREDENTIALS")
+    FISCAL_PROVIDER_API_KEY: str = Field(default="", env="FISCAL_PROVIDER_API_KEY")
 
     class Config:
         env_file = ".env"
+        case_sensitive = True
+
+    @property
+    def SQLALCHEMY_DATABASE_URI(self) -> str:
+        """Construct async PostgreSQL connection string for Supabase."""
+        return (
+            f"postgresql+asyncpg://"
+            f"{self.POSTGRES_USER}:"
+            f"{self.POSTGRES_PASSWORD}@"
+            f"{self.POSTGRES_SERVER}:"
+            f"{self.POSTGRES_PORT}/"
+            f"{self.POSTGRES_DB}"
+        )
 
 
 settings = Settings()

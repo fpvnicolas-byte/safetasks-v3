@@ -1,174 +1,100 @@
-from contextlib import asynccontextmanager
+import logging
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from sqlalchemy.exc import SQLAlchemyError
-import logging
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
-from .core.config import settings
-from .core.database import create_tables
-
-# Import all module routers
-from .modules.commercial.router import router as commercial_router
-from .modules.production.router import router as production_router
-from .modules.scheduling.router import router as scheduling_router
-from .modules.financial.router import router as financial_router
-from .modules.inventory.router import router as inventory_router
+from app.core.config import settings
+from app.api.v1.api import api_router
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
 logger = logging.getLogger(__name__)
 
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address)
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """
-    Lifespan context manager for FastAPI application.
-    Handles startup and shutdown events.
-    """
-    logger.info("Starting Safe Tasks V3 backend...")
-
-    # Create database tables on startup
-    try:
-        await create_tables()
-        logger.info("Database tables created/verified successfully")
-    except Exception as e:
-        logger.error(f"Failed to create database tables: {e}")
-        raise
-
-    yield
-
-    logger.info("Shutting down Safe Tasks V3 backend...")
-
-
-# Create FastAPI application
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version="3.0.0",
-    description="Safe Tasks V3 - Audiovisual Production Management Platform",
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_url="/openapi.json",
-    lifespan=lifespan
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    description="""
+    Safe Tasks V3 - Professional Video Production Management Platform
+
+    A comprehensive backend system for audiovisual production management,
+    featuring multi-tenant architecture, advanced financial tracking,
+    equipment lifecycle management, and automated cloud synchronization.
+
+    ## Key Features
+    - **Multi-tenant Organizations**: Complete data isolation per client
+    - **Financial Management**: Revenue tracking, expense management, profit analysis
+    - **Production Workflow**: Project management, script breakdown, scheduling
+    - **Equipment Lifecycle**: Asset tracking, maintenance scheduling, health monitoring
+    - **Cloud Integration**: Automated Google Drive sync for production files
+    - **Executive Dashboard**: Real-time business metrics and analytics
+
+    ## Authentication
+    All endpoints require Bearer token authentication via Supabase Auth.
+
+    ## Organization Isolation
+    All data is strictly isolated by `organization_id` for multi-tenant security.
+    """,
+    contact={
+        "name": "Safe Tasks Development Team",
+        "email": "dev@safetasks.com",
+    },
+    license_info={
+        "name": "Proprietary",
+    },
 )
 
-# Configure CORS
+# Add rate limiting middleware
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
+# Set up CORS for production security
+# In production, only allow your frontend domain
+allowed_origins = [
+    "http://localhost:3000",  # Next.js development
+    "http://127.0.0.1:3000", # Next.js development
+    "https://your-frontend-domain.com",  # Replace with your actual frontend domain
+]
+
+# For development, allow common development origins
+if settings.ENVIRONMENT == "development":
+    allowed_origins.extend([
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+        "http://localhost:5173",  # Vite
+        "http://127.0.0.1:5173",  # Vite
+    ])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for development
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "Accept",
+        "Origin",
+        "X-Requested-With",
+        "X-CSRF-Token",
+    ],
 )
 
-
-# Global exception handlers
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
-    """Handle HTTP exceptions with consistent response format."""
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={
-            "success": False,
-            "error": exc.detail,
-            "path": str(request.url),
-            "method": request.method
-        }
-    )
+# Include API routers
+app.include_router(api_router, prefix=settings.API_V1_STR)
 
 
-@app.exception_handler(SQLAlchemyError)
-async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
-    """Handle SQLAlchemy exceptions."""
-    logger.error(f"Database error: {exc}")
-    return JSONResponse(
-        status_code=500,
-        content={
-            "success": False,
-            "error": "Database operation failed",
-            "details": str(exc) if settings.PROJECT_NAME == "development" else "Internal server error",
-            "path": str(request.url),
-            "method": request.method
-        }
-    )
-
-
-@app.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
-    """Handle unexpected exceptions."""
-    logger.error(f"Unexpected error: {exc}", exc_info=True)
-    return JSONResponse(
-        status_code=500,
-        content={
-            "success": False,
-            "error": "Internal server error",
-            "path": str(request.url),
-            "method": request.method
-        }
-    )
-
-
-# Health check endpoint
 @app.get("/health")
 async def health_check():
-    """
-    Health check endpoint to verify service status.
-    Returns basic service information and status.
-    """
-    return {
-        "status": "healthy",
-        "version": "3.0.0",
-        "service": "Safe Tasks V3 Backend",
-        "modules": [
-            "commercial",
-            "production",
-            "scheduling",
-            "financial",
-            "inventory"
-        ]
-    }
-
-
-@app.get("/")
-async def root():
-    """
-    Root endpoint providing basic API information.
-    """
-    return {
-        "message": "Welcome to Safe Tasks V3 API",
-        "version": "3.0.0",
-        "documentation": "/docs",
-        "health": "/health"
-    }
-
-
-# Mount module routers
-app.include_router(
-    commercial_router,
-    prefix=settings.API_V1_STR,
-    tags=["commercial"]
-)
-
-app.include_router(
-    production_router,
-    prefix=settings.API_V1_STR,
-    tags=["production"]
-)
-
-app.include_router(
-    scheduling_router,
-    prefix=settings.API_V1_STR,
-    tags=["scheduling"]
-)
-
-app.include_router(
-    financial_router,
-    prefix=settings.API_V1_STR,
-    tags=["financial"]
-)
-
-app.include_router(
-    inventory_router,
-    prefix=settings.API_V1_STR,
-    tags=["inventory"]
-)
+    """Health check endpoint"""
+    return {"status": "ok", "version": "3.0"}

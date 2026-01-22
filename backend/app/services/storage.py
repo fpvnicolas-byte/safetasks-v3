@@ -1,0 +1,217 @@
+import os
+import uuid
+from typing import Optional, Dict, Any
+from pathlib import Path
+
+from supabase import create_client, Client
+from app.core.config import settings
+
+
+class StorageService:
+    """Service for handling file uploads and storage operations with Supabase Storage."""
+
+    def __init__(self):
+        self.supabase: Client = create_client(
+            supabase_url=settings.SUPABASE_URL,
+            supabase_key=settings.SUPABASE_KEY
+        )
+
+        # Bucket configurations
+        self.buckets = {
+            "public-assets": {
+                "public": True,
+                "allowed_types": ["image/jpeg", "image/png", "image/webp"],
+                "max_size_mb": 10
+            },
+            "production-files": {
+                "public": False,
+                "allowed_types": ["application/pdf", "text/plain", "text/markdown", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+                "max_size_mb": 25
+            }
+        }
+
+    def _get_file_path(self, organization_id: str, module: str, filename: str) -> str:
+        """Generate a multi-tenant file path: /{organization_id}/{module}/{filename}"""
+        # Sanitize filename and ensure unique name
+        file_stem = Path(filename).stem
+        file_suffix = Path(filename).suffix
+        unique_filename = f"{file_stem}_{uuid.uuid4().hex[:8]}{file_suffix}"
+
+        return f"{organization_id}/{module}/{unique_filename}"
+
+    def _validate_file(self, file_content: bytes, filename: str, bucket: str) -> None:
+        """Validate file type and size."""
+        if bucket not in self.buckets:
+            raise ValueError(f"Invalid bucket: {bucket}")
+
+        bucket_config = self.buckets[bucket]
+
+        # Check file size
+        max_size_bytes = bucket_config["max_size_mb"] * 1024 * 1024
+        if len(file_content) > max_size_bytes:
+            raise ValueError(f"File too large. Maximum size: {bucket_config['max_size_mb']}MB")
+
+        # Check file type (basic check)
+        content_type = self._guess_content_type(filename)
+        if content_type not in bucket_config["allowed_types"]:
+            raise ValueError(f"File type not allowed: {content_type}")
+
+    def _guess_content_type(self, filename: str) -> str:
+        """Guess content type from filename extension."""
+        ext = Path(filename).suffix.lower()
+        content_types = {
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".png": "image/png",
+            ".webp": "image/webp",
+            ".pdf": "application/pdf",
+            ".txt": "text/plain",
+            ".md": "text/markdown",
+            ".doc": "application/msword",
+            ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        }
+        return content_types.get(ext, "application/octet-stream")
+
+    async def upload_file(
+        self,
+        organization_id: str,
+        module: str,
+        filename: str,
+        file_content: bytes,
+        bucket: str = "production-files"
+    ) -> Dict[str, Any]:
+        """
+        Upload a file to Supabase Storage with multi-tenant path.
+
+        Args:
+            organization_id: The organization ID for multi-tenancy
+            module: The module name (e.g., 'kits', 'scripts', 'call-sheets')
+            filename: Original filename
+            file_content: File content as bytes
+            bucket: Storage bucket ('public-assets' or 'production-files')
+
+        Returns:
+            Dict with file path and access URL
+        """
+        try:
+            # Validate file
+            self._validate_file(file_content, filename, bucket)
+
+            # Generate multi-tenant file path
+            file_path = self._get_file_path(organization_id, module, filename)
+
+            # Upload to Supabase Storage
+            response = self.supabase.storage.from_(bucket).upload(
+                path=file_path,
+                file=file_content,
+                file_options={
+                    "content-type": self._guess_content_type(filename),
+                    "cache-control": "3600"
+                }
+            )
+
+            if response.status_code != 200:
+                raise Exception(f"Upload failed: {response.json()}")
+
+            # Generate access URL
+            bucket_config = self.buckets[bucket]
+            if bucket_config["public"]:
+                # Public bucket - direct URL
+                access_url = self.supabase.storage.from_(bucket).get_public_url(file_path)
+            else:
+                # Private bucket - will need signed URL
+                access_url = None  # Will be generated on demand
+
+            return {
+                "file_path": file_path,
+                "bucket": bucket,
+                "access_url": access_url,
+                "is_public": bucket_config["public"],
+                "size_bytes": len(file_content),
+                "content_type": self._guess_content_type(filename)
+            }
+
+        except Exception as e:
+            raise Exception(f"File upload failed: {str(e)}")
+
+    async def delete_file(self, bucket: str, file_path: str) -> bool:
+        """
+        Delete a file from Supabase Storage.
+
+        Args:
+            bucket: Storage bucket
+            file_path: Full file path
+
+        Returns:
+            True if deleted successfully
+        """
+        try:
+            response = self.supabase.storage.from_(bucket).remove([file_path])
+
+            if response.status_code != 200:
+                raise Exception(f"Delete failed: {response.json()}")
+
+            return True
+
+        except Exception as e:
+            raise Exception(f"File deletion failed: {str(e)}")
+
+    async def generate_signed_url(
+        self,
+        bucket: str,
+        file_path: str,
+        expires_in: int = 3600
+    ) -> str:
+        """
+        Generate a signed URL for private files.
+
+        Args:
+            bucket: Storage bucket
+            file_path: Full file path
+            expires_in: URL expiration time in seconds (default 1 hour)
+
+        Returns:
+            Signed URL string
+        """
+        try:
+            response = self.supabase.storage.from_(bucket).create_signed_url(
+                path=file_path,
+                expires_in=expires_in
+            )
+
+            if response.get("signedURL"):
+                return response["signedURL"]
+            else:
+                raise Exception(f"Failed to generate signed URL: {response}")
+
+        except Exception as e:
+            raise Exception(f"Signed URL generation failed: {str(e)}")
+
+    async def get_file_info(self, bucket: str, file_path: str) -> Dict[str, Any]:
+        """
+        Get file information from storage.
+
+        Args:
+            bucket: Storage bucket
+            file_path: Full file path
+
+        Returns:
+            File metadata
+        """
+        try:
+            response = self.supabase.storage.from_(bucket).list(
+                path=str(Path(file_path).parent),
+                search=Path(file_path).name
+            )
+
+            if response and len(response) > 0:
+                return response[0]
+            else:
+                raise Exception("File not found")
+
+        except Exception as e:
+            raise Exception(f"File info retrieval failed: {str(e)}")
+
+
+# Global storage service instance
+storage_service = StorageService()

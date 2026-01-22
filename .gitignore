@@ -1,23 +1,19 @@
-# Python / Backend
+# Secrets and Credentials
+.env
+.env.bkp
+backend/.env
+backend/service-account.json
+
+# Markdown Context (ignored as requested)
+*.md
+!README.md
+docs/*.md
+
+# Python
 __pycache__/
 *.py[cod]
-*$py.class
+.venv/
 venv/
-.env
+
+# OS
 .DS_Store
-
-# Logs
-*.log
-
-# IDE
-.vscode/
-.idea/
-
-# Frontend (Já deixando pronto)
-node_modules/
-.next/
-dist/
-build/backend/env.md
-backend/env.md
-
-# Correcao
