@@ -10,6 +10,7 @@ class ProjectBase(BaseModel):
     title: str
     description: Optional[str] = None
     status: Literal["draft", "pre-production", "production", "post-production", "delivered", "archived"] = "draft"
+    budget_total_cents: int = Field(default=0, ge=0, description="Total budget in cents")
     start_date: Optional[date] = None
     end_date: Optional[date] = None
 
@@ -27,6 +28,7 @@ class ProjectUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     status: Optional[Literal["draft", "pre-production", "production", "post-production", "delivered", "archived"]] = None
+    budget_total_cents: Optional[int] = Field(None, ge=0)
     start_date: Optional[date] = None
     end_date: Optional[date] = None
 
@@ -37,7 +39,9 @@ class Project(ProjectBase):
     """Schema for Project response."""
     id: UUID
     organization_id: UUID
+    is_active: bool
     created_at: datetime
+    updated_at: datetime
 
 
 class ProjectWithClient(Project):

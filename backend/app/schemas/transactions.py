@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from uuid import UUID
 from datetime import datetime, date
 from typing import Optional, Literal
@@ -13,6 +13,26 @@ class TransactionBase(BaseModel):
     description: Optional[str] = None
     transaction_date: date
     project_id: Optional[UUID] = None
+    supplier_id: Optional[UUID] = None  # ADDED: Link to supplier/vendor
+
+    @field_validator('category')
+    @classmethod
+    def validate_category(cls, v: str) -> str:
+        """Validate category against allowed values."""
+        allowed_categories = [
+            'crew_hire',
+            'equipment_rental',
+            'logistics',
+            'post_production',
+            'maintenance',
+            'other',
+            'production_revenue'
+        ]
+        if v not in allowed_categories:
+            raise ValueError(
+                f"Category must be one of: {', '.join(allowed_categories)}. Got: {v}"
+            )
+        return v
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -31,6 +51,28 @@ class TransactionUpdate(BaseModel):
     description: Optional[str] = None
     transaction_date: Optional[date] = None
     project_id: Optional[UUID] = None
+    supplier_id: Optional[UUID] = None  # ADDED: Link to supplier/vendor
+
+    @field_validator('category')
+    @classmethod
+    def validate_category(cls, v: Optional[str]) -> Optional[str]:
+        """Validate category against allowed values."""
+        if v is None:
+            return v
+        allowed_categories = [
+            'crew_hire',
+            'equipment_rental',
+            'logistics',
+            'post_production',
+            'maintenance',
+            'other',
+            'production_revenue'
+        ]
+        if v not in allowed_categories:
+            raise ValueError(
+                f"Category must be one of: {', '.join(allowed_categories)}. Got: {v}"
+            )
+        return v
 
     model_config = ConfigDict(from_attributes=True)
 

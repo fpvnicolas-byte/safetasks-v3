@@ -1,21 +1,35 @@
 from pydantic import BaseModel, ConfigDict, Field
 from uuid import UUID
 from datetime import datetime, date, time
-from typing import Optional
+from typing import Optional, Literal
 
 
 class CallSheetBase(BaseModel):
-    """Base schema for Call Sheet."""
+    """
+    Base schema for Professional Call Sheet.
+    Includes all fields required for video production coordination.
+    """
     project_id: UUID
-    shooting_date: date
-    location_name: str = Field(..., min_length=1)
-    location_address: str = Field(..., min_length=1)
-    weather_forecast: Optional[str] = None
-    crew_call: time
-    on_set: time
-    lunch_time: Optional[time] = None
-    wrap_time: Optional[time] = None
-    notes: Optional[str] = None
+    shooting_day: date
+    status: Literal["draft", "confirmed", "completed"] = "draft"
+
+    # Location Information
+    location: Optional[str] = None  # Location name
+    location_address: Optional[str] = None  # Full address with Google Maps link
+    parking_info: Optional[str] = None  # Parking instructions
+
+    # Time Schedule
+    crew_call: Optional[time] = None  # General crew call time
+    on_set: Optional[time] = None  # On-set ready time (shooting call)
+    lunch_time: Optional[time] = None  # Lunch break time
+    wrap_time: Optional[time] = None  # Expected wrap time
+
+    # Production Information
+    weather: Optional[str] = None  # Weather forecast
+    notes: Optional[str] = None  # General production notes
+
+    # Safety & Logistics
+    hospital_info: Optional[str] = None  # Nearest hospital/emergency contact
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -28,15 +42,26 @@ class CallSheetCreate(CallSheetBase):
 class CallSheetUpdate(BaseModel):
     """Schema for updating a Call Sheet."""
     project_id: Optional[UUID] = None
-    shooting_date: Optional[date] = None
-    location_name: Optional[str] = Field(None, min_length=1)
-    location_address: Optional[str] = Field(None, min_length=1)
-    weather_forecast: Optional[str] = None
+    shooting_day: Optional[date] = None
+    status: Optional[Literal["draft", "confirmed", "completed"]] = None
+
+    # Location Information
+    location: Optional[str] = None
+    location_address: Optional[str] = None
+    parking_info: Optional[str] = None
+
+    # Time Schedule
     crew_call: Optional[time] = None
     on_set: Optional[time] = None
     lunch_time: Optional[time] = None
     wrap_time: Optional[time] = None
+
+    # Production Information
+    weather: Optional[str] = None
     notes: Optional[str] = None
+
+    # Safety & Logistics
+    hospital_info: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -48,9 +73,15 @@ class CallSheet(CallSheetBase):
     created_at: datetime
     updated_at: datetime
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class CallSheetWithProject(CallSheet):
-    """Schema for Call Sheet response with basic project info."""
-    # Note: In full implementation, this would include project relationship
-    # For now, keeping it simple as requested
-    pass
+    """Schema for Call Sheet response with project information."""
+    project: "Project" = Field(...)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# Forward reference for circular imports
+from app.schemas.projects import Project

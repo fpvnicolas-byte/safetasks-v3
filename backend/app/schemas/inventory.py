@@ -3,9 +3,10 @@ from uuid import UUID
 from datetime import datetime, date
 from typing import Optional, List
 from decimal import Decimal
+from enum import Enum
 
 
-class MaintenanceType(str):
+class MaintenanceType(str, Enum):
     preventive = "preventive"
     corrective = "corrective"
     calibration = "calibration"
@@ -13,7 +14,7 @@ class MaintenanceType(str):
     upgrade = "upgrade"
 
 
-class HealthStatus(str):
+class HealthStatus(str, Enum):
     excellent = "excellent"
     good = "good"
     needs_service = "needs_service"
@@ -23,15 +24,17 @@ class HealthStatus(str):
 
 class KitItemBase(BaseModel):
     """Base schema for Kit Item."""
-    name: str = Field(..., min_length=1)
+    # CORREÇÃO: Field(..., min_length=1) -> Field(min_length=1)
+    name: str = Field(min_length=1)
     description: Optional[str] = None
-    category: str = Field(..., min_length=1)  # drone, camera, gimbal, battery, etc.
+    category: str = Field(min_length=1)  # drone, camera, gimbal, battery, etc.
     serial_number: Optional[str] = None
     purchase_date: Optional[date] = None
     purchase_cost_cents: Optional[int] = None
     warranty_expiry: Optional[date] = None
-    maintenance_interval_hours: float = Field(..., gt=0, default=50.0)
-    max_usage_hours: float = Field(..., gt=0, default=1000.0)
+    # CORREÇÃO: Field(..., gt=0, default=50.0) -> Field(default=50.0, gt=0)
+    maintenance_interval_hours: float = Field(default=50.0, gt=0)
+    max_usage_hours: float = Field(default=1000.0, gt=0)
     notes: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
@@ -44,16 +47,17 @@ class KitItemCreate(KitItemBase):
 
 class KitItemUpdate(BaseModel):
     """Schema for updating a Kit Item."""
-    name: Optional[str] = Field(None, min_length=1)
+    # CORREÇÃO: Field(None, ...) -> Field(default=None, ...)
+    name: Optional[str] = Field(default=None, min_length=1)
     description: Optional[str] = None
-    category: Optional[str] = Field(None, min_length=1)
+    category: Optional[str] = Field(default=None, min_length=1)
     serial_number: Optional[str] = None
     purchase_date: Optional[date] = None
     purchase_cost_cents: Optional[int] = None
     warranty_expiry: Optional[date] = None
-    maintenance_interval_hours: Optional[float] = Field(None, gt=0)
-    max_usage_hours: Optional[float] = Field(None, gt=0)
-    current_usage_hours: Optional[float] = Field(None, ge=0)
+    maintenance_interval_hours: Optional[float] = Field(default=None, gt=0)
+    max_usage_hours: Optional[float] = Field(default=None, gt=0)
+    current_usage_hours: Optional[float] = Field(default=None, ge=0)
     last_maintenance_date: Optional[date] = None
     health_status: Optional[HealthStatus] = None
     notes: Optional[str] = None
@@ -86,14 +90,14 @@ class KitItemWithMaintenance(KitItem):
 class MaintenanceLogBase(BaseModel):
     """Base schema for Maintenance Log."""
     maintenance_type: MaintenanceType
-    description: str = Field(..., min_length=1)
+    description: str = Field(min_length=1)
     technician_name: Optional[str] = None
-    cost_cents: int = Field(..., ge=0, default=0)
+    cost_cents: int = Field(default=0, ge=0)
     date: date
-    duration_hours: Optional[float] = Field(None, gt=0)
+    duration_hours: Optional[float] = Field(default=None, gt=0)
     health_before: Optional[HealthStatus] = None
     health_after: Optional[HealthStatus] = None
-    usage_hours_reset: float = Field(..., ge=0, default=0.0)
+    usage_hours_reset: float = Field(default=0.0, ge=0)
     notes: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)

@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_organization
+from app.api.deps import get_current_organization, get_current_profile
 from app.db.session import get_db
 from app.services.ai_engine import ai_engine_service
 from app.services.notifications import notification_service

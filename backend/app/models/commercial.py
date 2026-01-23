@@ -1,10 +1,15 @@
-from sqlalchemy import Column, String, TIMESTAMP, func, ForeignKey, TEXT
+from sqlalchemy import Column, String, TIMESTAMP, Boolean, func, ForeignKey, TEXT
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from app.core.base import Base
 import uuid
 
 
 class Supplier(Base):
+    """
+    Supplier/Vendor model for production equipment and services.
+
+    Represents rental houses, freelancers, catering companies, and other vendors.
+    """
     __tablename__ = "suppliers"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -24,9 +29,12 @@ class Supplier(Base):
     specialties = Column(JSONB)  # ["drone_rental", "camera_gear", "lighting"] for rental houses
     notes = Column(TEXT)
 
-    is_active = Column(TEXT, nullable=False, default=True)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+    # Status management (FIXED: was TEXT, now Boolean)
+    is_active = Column(Boolean, default=True, nullable=False)
+
+    # Audit
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     __table_args__ = (
         {'schema': None}

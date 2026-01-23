@@ -1,44 +1,70 @@
-from pydantic import BaseSettings
-from pydantic import Field
-
+from typing import List, Union, Optional, Dict, Any
+from pydantic import AnyHttpUrl, validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "Safe Tasks V3"
     API_V1_STR: str = "/api/v1"
+    PROJECT_NAME: str = "Safe Tasks V3"
+    
+    # Environment
+    ENVIRONMENT: str = "development"
+    
+    # CORS
+    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
 
-    # Supabase Configuration
-    SUPABASE_URL: str = Field(..., env="SUPABASE_URL")
-    SUPABASE_KEY: str = Field(..., env="SUPABASE_KEY")
-    SUPABASE_JWT_SECRET: str = Field(..., env="SUPABASE_JWT_SECRET")
+    @validator("BACKEND_CORS_ORIGINS", pre=True)
+    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",")]
+        elif isinstance(v, (list, str)):
+            return v
+        raise ValueError(v)
 
-    # PostgreSQL Database
-    POSTGRES_USER: str = Field(..., env="POSTGRES_USER")
-    POSTGRES_PASSWORD: str = Field(..., env="POSTGRES_PASSWORD")
-    POSTGRES_SERVER: str = Field(..., env="POSTGRES_SERVER")
-    POSTGRES_PORT: str = Field(..., env="POSTGRES_PORT")
-    POSTGRES_DB: str = Field(..., env="POSTGRES_DB")
+    # Database Settings
+    POSTGRES_SERVER: str = "localhost"
+    POSTGRES_USER: str = "postgres"
+    POSTGRES_PASSWORD: str = "postgres"
+    POSTGRES_DB: str = "safetasks"
+    POSTGRES_PORT: str = "5432"
+    
+    SQLALCHEMY_DATABASE_URI: Optional[str] = None
 
-    # External API Keys
-    GOOGLE_API_KEY: str = Field(default="", env="GOOGLE_API_KEY")
-    GEMINI_API_KEY: str = Field(default="", env="GEMINI_API_KEY")
-    GOOGLE_APPLICATION_CREDENTIALS: str = Field(default="./service-account.json", env="GOOGLE_APPLICATION_CREDENTIALS")
-    FISCAL_PROVIDER_API_KEY: str = Field(default="", env="FISCAL_PROVIDER_API_KEY")
+    @validator("SQLALCHEMY_DATABASE_URI", pre=True)
+    def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
+        if isinstance(v, str):
+            return v
+        
+        user = values.get("POSTGRES_USER")
+        password = values.get("POSTGRES_PASSWORD")
+        server = values.get("POSTGRES_SERVER")
+        port = values.get("POSTGRES_PORT")
+        db = values.get("POSTGRES_DB")
+        
+        # Mantendo a correção do AsyncPG
+        return f"postgresql+asyncpg://{user}:{password}@{server}:{port}/{db}"
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    # Auth
+    SECRET_KEY: str = "YOUR_SECRET_KEY_HERE"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
+    
+    # AI (Gemini)
+    GEMINI_API_KEY: Optional[str] = None
 
-    @property
-    def SQLALCHEMY_DATABASE_URI(self) -> str:
-        """Construct async PostgreSQL connection string for Supabase."""
-        return (
-            f"postgresql+asyncpg://"
-            f"{self.POSTGRES_USER}:"
-            f"{self.POSTGRES_PASSWORD}@"
-            f"{self.POSTGRES_SERVER}:"
-            f"{self.POSTGRES_PORT}/"
-            f"{self.POSTGRES_DB}"
-        )
+    # ✅ CORREÇÃO AQUI: Adicionando as variáveis de Storage para parar o erro
+    # Supabase
+    SUPABASE_URL: Optional[str] = None
+    SUPABASE_KEY: Optional[str] = None
+    
+    # Google Drive (Prevenindo o próximo erro)
+    GOOGLE_CLIENT_ID: Optional[str] = None
+    GOOGLE_CLIENT_SECRET: Optional[str] = None
+    GOOGLE_PROJECT_ID: Optional[str] = None
+    GOOGLE_REDIRECT_URI: Optional[str] = None
 
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        extra="ignore"
+    )
 
 settings = Settings()

@@ -3,7 +3,6 @@ from sqlalchemy.dialects.postgresql import UUID
 from app.core.base import Base
 import uuid
 
-
 class Notification(Base):
     __tablename__ = "notifications"
 
@@ -14,6 +13,9 @@ class Notification(Base):
     message = Column(TEXT, nullable=False)
     type = Column(String, nullable=False)  # info, warning, success, error
     is_read = Column(Boolean, default=False)
-    metadata = Column(TEXT)  # JSON string for additional data
+    
+    # CORREÇÃO: Usamos 'notification_metadata' em vez de 'metadata' para evitar conflito com SQLAlchemy
+    notification_metadata = Column(TEXT)  
+    
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     read_at = Column(TIMESTAMP(timezone=True), nullable=True)

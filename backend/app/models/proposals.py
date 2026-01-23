@@ -1,8 +1,7 @@
-from sqlalchemy import Column, String, TEXT, TIMESTAMP, DATE, func, ForeignKey
+from sqlalchemy import Column, String, TEXT, TIMESTAMP, DATE, func, ForeignKey, BIGINT
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 import uuid
 from app.core.base import Base
-
 
 class Proposal(Base):
     __tablename__ = "proposals"
@@ -18,6 +17,9 @@ class Proposal(Base):
     total_amount_cents = Column(BIGINT)
     currency = Column(String, default="BRL")
     terms_conditions = Column(TEXT)
-    metadata = Column(JSONB)  # Additional flexible data
+    
+    # CORREÇÃO: Nome alterado para evitar conflito
+    proposal_metadata = Column(JSONB)  
+    
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())

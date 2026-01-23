@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, TIMESTAMP, DATE, func, ForeignKey, CheckConstraint
+from sqlalchemy import Column, String, TIMESTAMP, DATE, Boolean, BIGINT, func, ForeignKey, CheckConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
@@ -6,6 +6,11 @@ from app.core.base import Base
 
 
 class Project(Base):
+    """
+    Video Production Project model.
+
+    Represents a client project with budget tracking, status workflow, and production planning.
+    """
     __tablename__ = "projects"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -14,9 +19,20 @@ class Project(Base):
     title = Column(String, nullable=False)
     description = Column(String)
     status = Column(String, default="draft")  # draft, pre-production, production, post-production, delivered, archived
+
+    # Financial tracking (money stored as cents for precision)
+    budget_total_cents = Column(BIGINT, default=0, nullable=False)  # Total project budget in cents
+
+    # Timeline
     start_date = Column(DATE)
     end_date = Column(DATE)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+
+    # Status management
+    is_active = Column(Boolean, default=True, nullable=False)
+
+    # Audit
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relationships to production entities
     scenes = relationship("Scene", back_populates="project", cascade="all, delete-orphan")

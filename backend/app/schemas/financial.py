@@ -3,9 +3,10 @@ from uuid import UUID
 from datetime import datetime, date
 from typing import Optional, List, Literal
 from decimal import Decimal
+from enum import Enum
 
 
-class TransactionCategory(str):
+class TransactionCategory(str, Enum):
     crew_hire = "crew_hire"
     equipment_rental = "equipment_rental"
     logistics = "logistics"
@@ -14,7 +15,7 @@ class TransactionCategory(str):
     production_revenue = "production_revenue"
 
 
-class TaxType(str):
+class TaxType(str, Enum):
     iss = "iss"
     irrf = "irrf"
     pis = "pis"
@@ -25,7 +26,7 @@ class TaxType(str):
     other = "other"
 
 
-class InvoiceStatus(str):
+class InvoiceStatus(str, Enum):
     draft = "draft"
     sent = "sent"
     paid = "paid"
@@ -35,9 +36,9 @@ class InvoiceStatus(str):
 
 class TaxTableBase(BaseModel):
     """Base schema for Tax Table."""
-    name: str = Field(..., min_length=1)
+    name: str = Field(min_length=1)
     tax_type: TaxType
-    rate_percentage: Decimal = Field(..., ge=0, le=100)
+    rate_percentage: Decimal = Field(ge=0, le=100)
     description: Optional[str] = None
     applies_to_income: Optional[str] = None  # JSON string
     applies_to_expenses: Optional[str] = None  # JSON string
@@ -53,9 +54,9 @@ class TaxTableCreate(TaxTableBase):
 
 class TaxTableUpdate(BaseModel):
     """Schema for updating a Tax Table."""
-    name: Optional[str] = Field(None, min_length=1)
+    name: Optional[str] = Field(default=None, min_length=1)
     tax_type: Optional[TaxType] = None
-    rate_percentage: Optional[Decimal] = Field(None, ge=0, le=100)
+    rate_percentage: Optional[Decimal] = Field(default=None, ge=0, le=100)
     description: Optional[str] = None
     applies_to_income: Optional[str] = None
     applies_to_expenses: Optional[str] = None
@@ -74,10 +75,10 @@ class TaxTable(TaxTableBase):
 
 class InvoiceItemBase(BaseModel):
     """Base schema for Invoice Item."""
-    description: str = Field(..., min_length=1)
-    quantity: Decimal = Field(..., gt=0)
-    unit_price_cents: int = Field(..., gt=0)
-    total_cents: int = Field(..., gt=0)
+    description: str = Field(min_length=1)
+    quantity: Decimal = Field(gt=0)
+    unit_price_cents: int = Field(gt=0)
+    total_cents: int = Field(gt=0)
     project_id: Optional[UUID] = None
     category: Optional[str] = None
 
@@ -101,11 +102,11 @@ class InvoiceBase(BaseModel):
     """Base schema for Invoice."""
     client_id: UUID
     project_id: Optional[UUID] = None
-    invoice_number: str = Field(..., min_length=1)
+    invoice_number: str = Field(min_length=1)
     status: InvoiceStatus = InvoiceStatus.draft
-    subtotal_cents: int = Field(..., ge=0)
-    tax_amount_cents: int = Field(..., ge=0)
-    total_amount_cents: int = Field(..., ge=0)
+    subtotal_cents: int = Field(ge=0)
+    tax_amount_cents: int = Field(ge=0)
+    total_amount_cents: int = Field(ge=0)
     currency: str = "BRL"
     issue_date: date
     due_date: date
@@ -120,7 +121,7 @@ class InvoiceCreate(BaseModel):
     """Schema for creating an Invoice."""
     client_id: UUID
     project_id: Optional[UUID] = None
-    items: List[InvoiceItemCreate] = Field(..., min_items=1)
+    items: List[InvoiceItemCreate] = Field(min_items=1)
     due_date: date
     description: Optional[str] = None
     notes: Optional[str] = None
@@ -132,9 +133,9 @@ class InvoiceCreate(BaseModel):
 class InvoiceUpdate(BaseModel):
     """Schema for updating an Invoice."""
     status: Optional[InvoiceStatus] = None
-    subtotal_cents: Optional[int] = Field(None, ge=0)
-    tax_amount_cents: Optional[int] = Field(None, ge=0)
-    total_amount_cents: Optional[int] = Field(None, ge=0)
+    subtotal_cents: Optional[int] = Field(default=None, ge=0)
+    tax_amount_cents: Optional[int] = Field(default=None, ge=0)
+    total_amount_cents: Optional[int] = Field(default=None, ge=0)
     currency: Optional[str] = None
     due_date: Optional[date] = None
     paid_date: Optional[date] = None

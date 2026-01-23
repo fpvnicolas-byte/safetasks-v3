@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, TEXT, TIMESTAMP, func, ForeignKey, BIGINT, DECIMAL, Date, Enum
+from sqlalchemy import Column, String, TEXT, TIMESTAMP, Boolean, func, ForeignKey, BIGINT, DECIMAL, Date, Enum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.core.base import Base
@@ -26,6 +26,11 @@ class InvoiceStatusEnum(enum.Enum):
 
 
 class TaxTable(Base):
+    """
+    Tax configuration table for Brazilian tax compliance.
+
+    Defines tax rates and applicability rules for different transaction types.
+    """
     __tablename__ = "tax_tables"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -36,13 +41,16 @@ class TaxTable(Base):
     rate_percentage = Column(DECIMAL(5, 2), nullable=False)  # e.g., 5.00 for 5%
     description = Column(TEXT, nullable=True)
 
-    # Applicability rules
+    # Applicability rules (JSON stored as TEXT)
     applies_to_income = Column(TEXT, nullable=True)  # JSON: {"categories": ["production_revenue"]}
     applies_to_expenses = Column(TEXT, nullable=True)  # JSON: {"categories": ["crew_hire"]}
 
-    is_active = Column(TEXT, nullable=False, default=True)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+    # Status management (FIXED: was TEXT, now Boolean)
+    is_active = Column(Boolean, default=True, nullable=False)
+
+    # Audit
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     __table_args__ = (
         {'schema': None}
@@ -50,6 +58,12 @@ class TaxTable(Base):
 
 
 class Invoice(Base):
+    """
+    Invoice/Nota Fiscal model for billing clients.
+
+    Tracks invoices issued to clients for video production services.
+    All amounts stored in cents for precision (e.g., R$ 1.500,00 = 150000 cents).
+    """
     __tablename__ = "invoices"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -76,12 +90,17 @@ class Invoice(Base):
     description = Column(TEXT, nullable=True)
     notes = Column(TEXT, nullable=True)
 
+    # Status management
+    is_active = Column(Boolean, default=True, nullable=False)
+
+    # Audit
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
     # Relationships
     client = relationship("Client", back_populates="invoices")
     project = relationship("Project", back_populates="invoices")
-
-    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+    items = relationship("InvoiceItem", back_populates="invoice", cascade="all, delete-orphan")
 
     __table_args__ = (
         {'schema': None}
@@ -89,6 +108,11 @@ class Invoice(Base):
 
 
 class InvoiceItem(Base):
+    """
+    Line items for invoices.
+
+    Represents individual services/products billed in an invoice.
+    """
     __tablename__ = "invoice_items"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -104,7 +128,12 @@ class InvoiceItem(Base):
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=True)
     category = Column(String, nullable=True)  # crew_hire, equipment_rental, etc.
 
-    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    # Status management
+    is_active = Column(Boolean, default=True, nullable=False)
+
+    # Audit
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relationships
     invoice = relationship("Invoice", back_populates="items")
