@@ -8,7 +8,8 @@ from app.db.session import get_db
 from app.services.production import production_service
 from app.services.ai_engine import ai_engine_service
 from app.services.notifications import notification_service
-from app.schemas.production import ProjectBreakdown, AIScriptAnalysisCommit
+from app.schemas.production import ProjectBreakdown, AIScriptAnalysisCommit, Scene, Character
+from app.models.scheduling import ShootingDay
 
 
 router = APIRouter()
