@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_organization, require_admin_or_manager
+from app.api.deps import get_current_organization, require_admin_manager_or_crew
 from app.db.session import get_db
 from app.services.production import character_service
 from app.schemas.production import Character, CharacterCreate, CharacterUpdate
@@ -36,7 +36,7 @@ async def get_characters(
     return characters
 
 
-@router.post("/", response_model=Character, dependencies=[Depends(require_admin_or_manager)])
+@router.post("/", response_model=Character, dependencies=[Depends(require_admin_manager_or_crew)])
 async def create_character(
     character_in: CharacterCreate,
     organization_id: UUID = Depends(get_current_organization),
@@ -84,7 +84,7 @@ async def get_character(
     return character
 
 
-@router.put("/{character_id}", response_model=Character, dependencies=[Depends(require_admin_or_manager)])
+@router.put("/{character_id}", response_model=Character, dependencies=[Depends(require_admin_manager_or_crew)])
 async def update_character(
     character_id: UUID,
     character_in: CharacterUpdate,
@@ -117,7 +117,7 @@ async def update_character(
         )
 
 
-@router.delete("/{character_id}", response_model=Character, dependencies=[Depends(require_admin_or_manager)])
+@router.delete("/{character_id}", response_model=Character, dependencies=[Depends(require_admin_manager_or_crew)])
 async def delete_character(
     character_id: UUID,
     organization_id: UUID = Depends(get_current_organization),

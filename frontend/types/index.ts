@@ -879,6 +879,7 @@ export interface CharacterCreate {
   name: string
   description: string
   actor_name?: string
+  project_id: UUID
 }
 
 export interface CharacterUpdate {

@@ -29,6 +29,12 @@ class ApiClient {
     let session = sessionResult.data.session
     const error = sessionResult.error
 
+    console.log('🔍 API Client - Session check:', {
+      hasSession: !!session,
+      sessionError: error,
+      endpoint: endpoint
+    })
+
     // If token is expired or about to expire, refresh it
     if (session && session.expires_at) {
       const expiresAt = session.expires_at * 1000 // Convert to milliseconds
@@ -37,11 +43,13 @@ class ApiClient {
 
       // Refresh if token expires in less than 5 minutes
       if (expiresAt - now < fiveMinutes) {
+        console.log('🔄 API Client - Refreshing token...')
         const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
         if (refreshError) {
           console.error('Token refresh error:', refreshError)
         } else if (refreshData.session) {
           session = refreshData.session
+          console.log('✅ API Client - Token refreshed')
         }
       }
     }
@@ -52,10 +60,16 @@ class ApiClient {
     }
 
     if (!session) {
+      console.error('❌ API Client - No session found')
       throw new Error('Not authenticated - please log in again')
     }
 
     const token = session.access_token
+    console.log('📤 API Client - Sending request with token:', {
+      endpoint: endpoint,
+      hasToken: !!token,
+      tokenLength: token ? token.length : 0
+    })
 
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), timeout)

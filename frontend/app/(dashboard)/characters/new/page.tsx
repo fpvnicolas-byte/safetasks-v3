@@ -3,6 +3,7 @@
 import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCreateCharacter } from '@/lib/api/hooks'
+import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,6 +19,7 @@ function NewCharacterForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const projectId = searchParams.get('project') || ''
+  const { profile } = useAuth()
 
   const [formData, setFormData] = useState({
     name: '',
@@ -59,7 +61,12 @@ function NewCharacterForm() {
         name: formData.name.trim(),
         description: formData.description.trim(), // REQUIRED
         actor_name: formData.actor_name.trim() || undefined,
+        project_id: projectId,
       }
+
+      console.log('🚀 Creating character with data (no org_id):', characterData)
+      console.log('👤 Profile:', profile)
+      console.log('🆔 Organization ID (auto-added by backend):', profile?.organization_id)
 
       await createCharacter.mutateAsync(characterData)
       router.push('/characters')

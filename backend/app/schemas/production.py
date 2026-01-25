@@ -69,6 +69,7 @@ class CharacterBase(BaseModel):
     name: str = Field(..., min_length=1)
     description: str = Field(..., min_length=1)
     actor_name: Optional[str] = None
+    project_id: UUID
 
     model_config = ConfigDict(from_attributes=True)
 
