@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_organization, require_admin_manager_or_crew, require_admin_or_manager
+from app.api.deps import get_organization_from_profile, require_admin_manager_or_crew, require_admin_or_manager
 from app.db.session import get_db
 from app.modules.scheduling.service import call_sheet_service
 from app.schemas.call_sheets import CallSheet, CallSheetCreate, CallSheetUpdate
@@ -13,7 +13,7 @@ router = APIRouter()
 
 @router.get("/", response_model=List[CallSheet])
 async def get_call_sheets(
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -39,7 +39,7 @@ async def get_call_sheets(
 @router.post("/", response_model=CallSheet, dependencies=[Depends(require_admin_or_manager)])
 async def create_call_sheet(
     call_sheet_in: CallSheetCreate,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> CallSheet:
     """
@@ -63,7 +63,7 @@ async def create_call_sheet(
 @router.get("/{call_sheet_id}", response_model=CallSheet)
 async def get_call_sheet(
     call_sheet_id: UUID,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> CallSheet:
     """
@@ -88,7 +88,7 @@ async def get_call_sheet(
 async def update_call_sheet(
     call_sheet_id: UUID,
     call_sheet_in: CallSheetUpdate,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> CallSheet:
     """
@@ -120,7 +120,7 @@ async def update_call_sheet(
 @router.delete("/{call_sheet_id}", response_model=CallSheet, dependencies=[Depends(require_admin_or_manager)])
 async def delete_call_sheet(
     call_sheet_id: UUID,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> CallSheet:
     """

@@ -88,6 +88,23 @@ async def get_current_profile(
     return profile
 
 
+async def get_organization_from_profile(
+    profile: Profile = Depends(get_current_profile)
+) -> UUID:
+    """
+    Get the organization ID from the current user's profile.
+    This is a simpler alternative to get_current_organization when you don't
+    need to validate against a specific organization_id parameter.
+    """
+    if not profile.organization_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User does not belong to any organization"
+        )
+
+    return profile.organization_id
+
+
 def check_permissions(required_roles: list[str]):
     """
     Dependency factory for role-based permissions.
