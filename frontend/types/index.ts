@@ -526,6 +526,43 @@ export function getSupplierCategoryDisplayName(category: SupplierCategory): stri
 }
 
 // ============================================================================
+// STAKEHOLDER TYPES (Project Team Members)
+// ============================================================================
+
+export interface Stakeholder {
+  id: UUID
+  organization_id: UUID
+  project_id: UUID
+  name: string
+  role: string
+  email: string | null
+  phone: string | null
+  notes: string | null
+  is_active: boolean
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+
+export interface StakeholderCreate {
+  project_id: UUID
+  name: string
+  role: string
+  email?: string
+  phone?: string
+  notes?: string
+}
+
+export interface StakeholderUpdate {
+  name?: string
+  role?: string
+  project_id?: UUID
+  email?: string
+  phone?: string
+  notes?: string
+  is_active?: boolean
+}
+
+// ============================================================================
 // PROPOSAL TYPES
 // ============================================================================
 
@@ -1050,4 +1087,90 @@ export interface ProjectDriveFolder {
   media_folder_url: string | null
   created_at: ISODateTime
   updated_at: ISODateTime
+}
+
+// ============================================================================
+// ANALYTICS & DASHBOARD TYPES
+// ============================================================================
+
+export interface FinancialMetrics {
+  month_to_date: {
+    revenue_cents: number
+    revenue_brl: number
+    expenses_cents: number
+    expenses_brl: number
+    net_profit_cents: number
+    net_profit_brl: number
+    profit_margin: number
+  }
+  year_to_date: {
+    revenue_cents: number
+    revenue_brl: number
+    expenses_cents: number
+    expenses_brl: number
+    net_profit_cents: number
+    net_profit_brl: number
+    profit_margin: number
+  }
+  cash_flow_projection_cents: number
+  cash_flow_projection_brl: number
+}
+
+export interface ProductionMetrics {
+  active_projects: number
+  total_projects: number
+  projects_by_status: Record<string, number>
+  pending_call_sheets_this_week: number
+  production_efficiency: {
+    avg_project_duration_days: number
+    on_time_delivery_rate: number
+  }
+}
+
+export interface InventoryMetrics {
+  total_items: number
+  items_by_health: Record<string, number>
+  items_needing_service: number
+  maintenance_overdue: number
+  equipment_utilization_rate: number
+  maintenance_cost_cents: number
+  maintenance_cost_brl: number
+  inventory_health_score: number
+}
+
+export interface CloudMetrics {
+  total_sync_operations: number
+  successful_syncs: number
+  failed_syncs: number
+  sync_success_rate: number
+  estimated_storage_used_gb: number
+  recent_sync_activity_30_days: number
+  cloud_health_status: 'healthy' | 'warning' | 'critical'
+}
+
+export interface MonthlyTrend {
+  month: string
+  revenue_cents: number
+  expenses_cents: number
+  net_profit_cents: number
+}
+
+export interface TrendsData {
+  monthly_financial_trends: MonthlyTrend[]
+  key_insights: string[]
+}
+
+export interface ExecutiveDashboard {
+  organization_id: string
+  generated_at: ISODateTime
+  period: {
+    start_date: string
+    end_date: string
+    months_analyzed: number
+  }
+  financial: FinancialMetrics
+  production: ProductionMetrics
+  inventory: InventoryMetrics
+  cloud: CloudMetrics
+  trends: TrendsData
 }

@@ -1,0 +1,68 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { apiClient } from '../client'
+
+const NOTIFICATIONS_KEY = 'notifications'
+
+export interface Notification {
+  id: string
+  organization_id: string
+  profile_id: string
+  title: string
+  message: string
+  type: 'info' | 'success' | 'warning' | 'error'
+  is_read: boolean
+  metadata: string | null
+  created_at: string
+  read_at: string | null
+}
+
+export interface NotificationStats {
+  total_count: number
+  unread_count: number
+  read_count: number
+}
+
+export function useNotifications(unreadOnly: boolean = false) {
+  return useQuery({
+    queryKey: [NOTIFICATIONS_KEY, unreadOnly],
+    queryFn: () => {
+      const params = new URLSearchParams()
+      if (unreadOnly) params.append('unread_only', 'true')
+      const url = params.toString() ? `/api/v1/notifications/?${params.toString()}` : '/api/v1/notifications/'
+      return apiClient.get<Notification[]>(url)
+    },
+    refetchInterval: 30000, // Refetch every 30 seconds
+  })
+}
+
+export function useNotificationStats() {
+  return useQuery({
+    queryKey: [NOTIFICATIONS_KEY, 'stats'],
+    queryFn: () => apiClient.get<NotificationStats>('/api/v1/notifications/stats'),
+    refetchInterval: 30000,
+  })
+}
+
+export function useMarkAsRead() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (notificationId: string) =>
+      apiClient.patch(`/api/v1/notifications/${notificationId}/read`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [NOTIFICATIONS_KEY] })
+    },
+  })
+}
+
+export function useMarkAllAsRead() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: () =>
+      apiClient.patch('/api/v1/notifications/mark-all-read', {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [NOTIFICATIONS_KEY] })
+    },
+  })
+}

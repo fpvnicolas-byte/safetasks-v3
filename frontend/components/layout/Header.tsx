@@ -3,6 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { signOut } from '@/app/auth/actions'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { NotificationsBell } from '@/components/NotificationsBell'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -53,6 +54,7 @@ export function Header() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
+          {user && <NotificationsBell />}
           <ThemeToggle />
           {user && (
             <DropdownMenu>

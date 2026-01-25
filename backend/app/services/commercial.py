@@ -1,9 +1,10 @@
 from app.services.base import BaseService
-from app.models.commercial import Supplier
+from app.models.commercial import Supplier, Stakeholder
 from app.models.transactions import Transaction
 from app.schemas.commercial import (
     SupplierCreate, SupplierUpdate,
-    SupplierStatement, StakeholderSummary
+    SupplierStatement, StakeholderSummary,
+    StakeholderCreate, StakeholderUpdate
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_
@@ -299,7 +300,35 @@ class SupplierStatementService:
         )
 
 
+class StakeholderCRUDService(BaseService[Stakeholder, StakeholderCreate, StakeholderUpdate]):
+    """Service for project Stakeholder CRUD operations."""
+
+    def __init__(self):
+        super().__init__(Stakeholder)
+
+    async def get_by_project(
+        self,
+        db: AsyncSession,
+        *,
+        organization_id: UUID,
+        project_id: UUID,
+        active_only: bool = True
+    ) -> List[Stakeholder]:
+        """Get all stakeholders for a specific project."""
+        conditions = [
+            Stakeholder.organization_id == organization_id,
+            Stakeholder.project_id == project_id
+        ]
+        if active_only:
+            conditions.append(Stakeholder.is_active == True)
+
+        query = select(Stakeholder).where(and_(*conditions)).order_by(Stakeholder.created_at.desc())
+        result = await db.execute(query)
+        return list(result.scalars().all())
+
+
 # Service instances
 supplier_service = SupplierService()
 stakeholder_service = StakeholderService()
 supplier_statement_service = SupplierStatementService()
+stakeholder_crud_service = StakeholderCRUDService()

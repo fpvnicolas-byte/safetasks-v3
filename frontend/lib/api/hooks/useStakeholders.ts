@@ -1,0 +1,68 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { apiClient } from '../client'
+import {
+  Stakeholder,
+  StakeholderCreate,
+  StakeholderUpdate
+} from '@/types'
+
+const STAKEHOLDERS_KEY = 'stakeholders'
+
+export function useStakeholders(projectId?: string, activeOnly: boolean = true) {
+  return useQuery({
+    queryKey: [STAKEHOLDERS_KEY, projectId, activeOnly],
+    queryFn: () => {
+      const params = new URLSearchParams()
+      if (projectId) params.append('project_id', projectId)
+      params.append('active_only', String(activeOnly))
+
+      const queryString = params.toString()
+      const url = queryString ? `/api/v1/stakeholders/?${queryString}` : '/api/v1/stakeholders/'
+      return apiClient.get<Stakeholder[]>(url)
+    },
+  })
+}
+
+export function useStakeholder(stakeholderId: string) {
+  return useQuery({
+    queryKey: [STAKEHOLDERS_KEY, stakeholderId],
+    queryFn: () => apiClient.get<Stakeholder>(`/api/v1/stakeholders/${stakeholderId}`),
+    enabled: !!stakeholderId,
+  })
+}
+
+export function useCreateStakeholder() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (stakeholder: StakeholderCreate) =>
+      apiClient.post<Stakeholder>('/api/v1/stakeholders/', stakeholder),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [STAKEHOLDERS_KEY] })
+    },
+  })
+}
+
+export function useUpdateStakeholder() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ stakeholderId, data }: { stakeholderId: string; data: StakeholderUpdate }) =>
+      apiClient.put<Stakeholder>(`/api/v1/stakeholders/${stakeholderId}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [STAKEHOLDERS_KEY] })
+    },
+  })
+}
+
+export function useDeleteStakeholder() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (stakeholderId: string) =>
+      apiClient.delete(`/api/v1/stakeholders/${stakeholderId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [STAKEHOLDERS_KEY] })
+    },
+  })
+}

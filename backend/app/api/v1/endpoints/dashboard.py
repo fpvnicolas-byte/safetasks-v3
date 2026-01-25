@@ -2,7 +2,7 @@ from typing import Dict, Any
 from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 
-from app.api.deps import get_current_organization, require_admin_or_manager
+from app.api.deps import get_organization_from_profile
 from app.db.session import get_db
 from app.services.analytics import analytics_service
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +13,7 @@ router = APIRouter()
 @router.get("/executive", response_model=Dict[str, Any])
 async def get_executive_dashboard(
     months_back: int = Query(12, ge=1, le=24, description="Number of months to analyze"),
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
     """
@@ -45,7 +45,7 @@ async def get_executive_dashboard(
 
 @router.get("/executive/financial", response_model=Dict[str, Any])
 async def get_financial_dashboard(
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
     """
@@ -66,7 +66,7 @@ async def get_financial_dashboard(
 
 @router.get("/executive/production", response_model=Dict[str, Any])
 async def get_production_dashboard(
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
     """
@@ -87,7 +87,7 @@ async def get_production_dashboard(
 
 @router.get("/executive/inventory", response_model=Dict[str, Any])
 async def get_inventory_dashboard(
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
     """
@@ -108,7 +108,7 @@ async def get_inventory_dashboard(
 
 @router.get("/executive/cloud", response_model=Dict[str, Any])
 async def get_cloud_dashboard(
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
     """

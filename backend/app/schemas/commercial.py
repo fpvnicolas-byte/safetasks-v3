@@ -84,3 +84,41 @@ class StakeholderSummary(BaseModel):
     total_active_projects: int = 0
     generated_at: datetime
     model_config = ConfigDict(from_attributes=True)
+
+
+# Project Stakeholder Schemas
+class StakeholderBase(BaseModel):
+    """Base schema for project Stakeholder."""
+    name: str = Field(min_length=1)
+    role: str = Field(min_length=1)
+    project_id: UUID
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    notes: Optional[str] = None
+    is_active: bool = True
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class StakeholderCreate(StakeholderBase):
+    pass
+
+
+class StakeholderUpdate(BaseModel):
+    """Schema for updating a Stakeholder."""
+    name: Optional[str] = Field(default=None, min_length=1)
+    role: Optional[str] = Field(default=None, min_length=1)
+    project_id: Optional[UUID] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    notes: Optional[str] = None
+    is_active: Optional[bool] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class Stakeholder(StakeholderBase):
+    id: UUID
+    organization_id: UUID
+    created_at: datetime
+    updated_at: datetime
