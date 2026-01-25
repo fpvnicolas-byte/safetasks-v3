@@ -11,6 +11,7 @@ from app.services.financial_advanced import (
 from app.schemas.financial import (
     TaxTable, TaxTableCreate, TaxTableUpdate,
     Invoice, InvoiceCreate, InvoiceUpdate, InvoiceWithItems,
+    InvoiceItem, InvoiceItemCreate, InvoiceItemUpdate,
     ProjectFinancialReport
 )
 
@@ -162,7 +163,7 @@ async def delete_tax_table(
     return tax_table
 
 
-@router.get("/invoices/", response_model=List[Invoice])
+@router.get("/invoices/", response_model=List[InvoiceWithItems])
 async def get_invoices(
     organization_id: UUID = Depends(get_current_organization),
     db: AsyncSession = Depends(get_db),
@@ -171,10 +172,13 @@ async def get_invoices(
     client_id: UUID = None,
     project_id: UUID = None,
     status: str = Query(None, regex="^(draft|sent|paid|overdue|cancelled)$"),
-) -> List[Invoice]:
+) -> List[InvoiceWithItems]:
     """
-    Get all invoices for the current user's organization.
+    Get all invoices for the current user's organization with client and project details.
     """
+    from sqlalchemy.orm import selectinload
+    from app.models.financial import Invoice as InvoiceModel
+
     filters = {}
     if client_id:
         filters["client_id"] = client_id
@@ -188,7 +192,12 @@ async def get_invoices(
         organization_id=organization_id,
         skip=skip,
         limit=limit,
-        filters=filters
+        filters=filters,
+        options=[
+            selectinload(InvoiceModel.items),
+            selectinload(InvoiceModel.client),
+            selectinload(InvoiceModel.project)
+        ]
     )
     return invoices
 
@@ -203,6 +212,10 @@ async def create_invoice(
     Create a new invoice in the current user's organization.
     Only admins and managers can create invoices.
     """
+    # Debug logging
+    import json
+    print(f"DEBUG: Received invoice data: {json.dumps(invoice_in.model_dump(), indent=2, default=str)}")
+
     try:
         invoice = await invoice_service.create(
             db=db,
@@ -211,10 +224,14 @@ async def create_invoice(
         )
         return invoice
     except ValueError as e:
+        print(f"DEBUG: ValueError in create_invoice: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
+    except Exception as e:
+        print(f"DEBUG: Unexpected error in create_invoice: {type(e).__name__}: {str(e)}")
+        raise
 
 
 @router.get("/invoices/{invoice_id}", response_model=InvoiceWithItems)
@@ -224,21 +241,8 @@ async def get_invoice(
     db: AsyncSession = Depends(get_db),
 ) -> InvoiceWithItems:
     """
-    Get invoice by ID with items (must belong to current user's organization).
+    Get invoice by ID with items, client, and project (must belong to current user's organization).
     """
-    invoice = await invoice_service.get(
-        db=db,
-        organization_id=organization_id,
-        id=invoice_id
-    )
-
-    if not invoice:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Invoice not found"
-        )
-
-    # Get invoice with items
     from sqlalchemy.orm import selectinload
     from app.models.financial import Invoice as InvoiceModel
 
@@ -246,8 +250,18 @@ async def get_invoice(
         db=db,
         organization_id=organization_id,
         id=invoice_id,
-        options=[selectinload(InvoiceModel.items)]
+        options=[
+            selectinload(InvoiceModel.items),
+            selectinload(InvoiceModel.client),
+            selectinload(InvoiceModel.project)
+        ]
     )
+
+    if not invoice_with_items:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invoice not found"
+        )
 
     return invoice_with_items
 
@@ -302,6 +316,101 @@ async def delete_invoice(
         )
 
     return invoice
+
+
+@router.post(
+    "/invoices/{invoice_id}/items",
+    response_model=InvoiceItem,
+    dependencies=[Depends(require_admin_or_manager)]
+)
+async def add_invoice_item(
+    invoice_id: UUID,
+    item_in: InvoiceItemCreate,
+    organization_id: UUID = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db),
+) -> InvoiceItem:
+    """
+    Add a new item to an invoice. Only works on draft invoices.
+    Automatically recalculates invoice totals.
+    Only admins and managers can add items.
+    """
+    try:
+        item = await invoice_service.add_item(
+            db=db,
+            invoice_id=invoice_id,
+            organization_id=organization_id,
+            item_in=item_in
+        )
+        return item
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
+@router.put(
+    "/invoices/{invoice_id}/items/{item_id}",
+    response_model=InvoiceItem,
+    dependencies=[Depends(require_admin_or_manager)]
+)
+async def update_invoice_item(
+    invoice_id: UUID,
+    item_id: UUID,
+    item_in: InvoiceItemUpdate,
+    organization_id: UUID = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db),
+) -> InvoiceItem:
+    """
+    Update an invoice item. Only works on draft invoices.
+    Automatically recalculates invoice totals.
+    Only admins and managers can update items.
+    """
+    try:
+        item = await invoice_service.update_item(
+            db=db,
+            invoice_id=invoice_id,
+            item_id=item_id,
+            organization_id=organization_id,
+            item_in=item_in
+        )
+        return item
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
+@router.delete(
+    "/invoices/{invoice_id}/items/{item_id}",
+    response_model=InvoiceItem,
+    dependencies=[Depends(require_admin_or_manager)]
+)
+async def delete_invoice_item(
+    invoice_id: UUID,
+    item_id: UUID,
+    organization_id: UUID = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db),
+) -> InvoiceItem:
+    """
+    Delete an invoice item. Only works on draft invoices.
+    Automatically recalculates invoice totals.
+    Only admins and managers can delete items.
+    """
+    try:
+        item = await invoice_service.delete_item(
+            db=db,
+            invoice_id=invoice_id,
+            item_id=item_id,
+            organization_id=organization_id
+        )
+        return item
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
 
 
 @router.get("/expense-summary")
