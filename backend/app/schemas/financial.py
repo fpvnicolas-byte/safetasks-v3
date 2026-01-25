@@ -145,6 +145,17 @@ class InvoiceUpdate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class InvoiceItemUpdate(BaseModel):
+    """Schema for updating an Invoice Item."""
+    description: Optional[str] = Field(default=None, min_length=1)
+    quantity: Optional[Decimal] = Field(default=None, gt=0)
+    unit_price_cents: Optional[int] = Field(default=None, gt=0)
+    total_cents: Optional[int] = Field(default=None, gt=0)
+    category: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class Invoice(InvoiceBase):
     """Schema for Invoice response."""
     id: UUID
@@ -156,6 +167,8 @@ class Invoice(InvoiceBase):
 class InvoiceWithItems(Invoice):
     """Schema for Invoice response with items."""
     items: List[InvoiceItem] = []
+    client: Optional['Client'] = None
+    project: Optional['Project'] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -187,3 +200,11 @@ class ProjectFinancialReport(BaseModel):
     generated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# Import at end to avoid circular imports
+from app.schemas.clients import Client
+from app.schemas.projects import Project
+
+# Rebuild models to resolve forward references
+InvoiceWithItems.model_rebuild()
