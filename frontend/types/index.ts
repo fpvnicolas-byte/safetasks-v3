@@ -511,6 +511,7 @@ export interface ProjectUpdate {
  * Note: HTML time inputs provide HH:MM, must be converted to HH:MM:SS before sending to backend
  */
 export interface CallSheetFormData {
+  project_id: string // UUID of the project
   shooting_day: string // Will be converted to ISO date
   status?: CallSheetStatus
 
