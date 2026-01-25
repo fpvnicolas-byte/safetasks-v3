@@ -3,7 +3,7 @@ from app.models.financial import TaxTable, Invoice, InvoiceItem
 from app.models.transactions import Transaction
 from app.schemas.financial import (
     TaxTableCreate, TaxTableUpdate,
-    InvoiceCreate, InvoiceUpdate,
+    InvoiceCreate, InvoiceUpdate, InvoiceItemCreate, InvoiceItemUpdate,
     ProjectFinancialReport
 )
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -69,7 +69,7 @@ class InvoiceService(BaseService[Invoice, InvoiceCreate, InvoiceUpdate]):
             "tax_amount_cents": 0,  # Will be calculated later if needed
             "total_amount_cents": subtotal,  # No taxes for now
             "currency": obj_in.currency,
-            "issue_date": obj_in.issue_date or datetime.now().date(),
+            "issue_date": datetime.now().date(),  # Always use today's date for new invoices
             "due_date": obj_in.due_date,
             "description": obj_in.description,
             "notes": obj_in.notes
@@ -96,6 +96,156 @@ class InvoiceService(BaseService[Invoice, InvoiceCreate, InvoiceUpdate]):
         await db.refresh(invoice)
 
         return invoice
+
+    async def add_item(
+        self,
+        db: AsyncSession,
+        invoice_id: UUID,
+        organization_id: UUID,
+        item_in: InvoiceItemCreate
+    ) -> InvoiceItem:
+        """Add a new item to an existing invoice and recalculate totals."""
+        from app.models.financial import Invoice as InvoiceModel, InvoiceItem, InvoiceStatusEnum
+        from sqlalchemy import select
+
+        # Get invoice and verify ownership
+        result = await db.execute(
+            select(InvoiceModel).where(
+                InvoiceModel.id == invoice_id,
+                InvoiceModel.organization_id == organization_id
+            )
+        )
+        invoice = result.scalar_one_or_none()
+
+        if not invoice:
+            raise ValueError("Invoice not found")
+
+        # Only allow adding items to draft invoices
+        if invoice.status != InvoiceStatusEnum.draft:
+            raise ValueError("Can only add items to draft invoices")
+
+        # Create invoice item
+        item = InvoiceItem(
+            organization_id=organization_id,
+            invoice_id=invoice_id,
+            **item_in.model_dump()
+        )
+        db.add(item)
+
+        # Recalculate invoice totals
+        invoice.subtotal_cents += item.total_cents
+        invoice.total_amount_cents = invoice.subtotal_cents + invoice.tax_amount_cents
+
+        await db.commit()
+        await db.refresh(item)
+        return item
+
+    async def update_item(
+        self,
+        db: AsyncSession,
+        invoice_id: UUID,
+        item_id: UUID,
+        organization_id: UUID,
+        item_in: InvoiceItemUpdate
+    ) -> InvoiceItem:
+        """Update an invoice item and recalculate invoice totals."""
+        from app.models.financial import Invoice as InvoiceModel, InvoiceItem, InvoiceStatusEnum
+        from sqlalchemy import select
+
+        # Get invoice and verify ownership
+        result = await db.execute(
+            select(InvoiceModel).where(
+                InvoiceModel.id == invoice_id,
+                InvoiceModel.organization_id == organization_id
+            )
+        )
+        invoice = result.scalar_one_or_none()
+
+        if not invoice:
+            raise ValueError("Invoice not found")
+
+        # Only allow updating items on draft invoices
+        if invoice.status != InvoiceStatusEnum.draft:
+            raise ValueError("Can only update items on draft invoices")
+
+        # Get item
+        result = await db.execute(
+            select(InvoiceItem).where(
+                InvoiceItem.id == item_id,
+                InvoiceItem.invoice_id == invoice_id,
+                InvoiceItem.organization_id == organization_id
+            )
+        )
+        item = result.scalar_one_or_none()
+
+        if not item:
+            raise ValueError("Invoice item not found")
+
+        # Store old total for recalculation
+        old_total = item.total_cents
+
+        # Update item fields
+        update_data = item_in.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(item, field, value)
+
+        # Recalculate invoice totals
+        invoice.subtotal_cents = invoice.subtotal_cents - old_total + item.total_cents
+        invoice.total_amount_cents = invoice.subtotal_cents + invoice.tax_amount_cents
+
+        await db.commit()
+        await db.refresh(item)
+        return item
+
+    async def delete_item(
+        self,
+        db: AsyncSession,
+        invoice_id: UUID,
+        item_id: UUID,
+        organization_id: UUID
+    ) -> InvoiceItem:
+        """Delete an invoice item and recalculate invoice totals."""
+        from app.models.financial import Invoice as InvoiceModel, InvoiceItem, InvoiceStatusEnum
+        from sqlalchemy import select
+
+        # Get invoice and verify ownership
+        result = await db.execute(
+            select(InvoiceModel).where(
+                InvoiceModel.id == invoice_id,
+                InvoiceModel.organization_id == organization_id
+            )
+        )
+        invoice = result.scalar_one_or_none()
+
+        if not invoice:
+            raise ValueError("Invoice not found")
+
+        # Only allow deleting items from draft invoices
+        if invoice.status != InvoiceStatusEnum.draft:
+            raise ValueError("Can only delete items from draft invoices")
+
+        # Get item
+        result = await db.execute(
+            select(InvoiceItem).where(
+                InvoiceItem.id == item_id,
+                InvoiceItem.invoice_id == invoice_id,
+                InvoiceItem.organization_id == organization_id
+            )
+        )
+        item = result.scalar_one_or_none()
+
+        if not item:
+            raise ValueError("Invoice item not found")
+
+        # Recalculate invoice totals
+        invoice.subtotal_cents -= item.total_cents
+        invoice.total_amount_cents = invoice.subtotal_cents + invoice.tax_amount_cents
+
+        # Delete item
+        await db.delete(item)
+        await db.commit()
+
+        return item
 
 
 class FinancialReportService:
