@@ -11,6 +11,11 @@ class StorageService:
     """Service for handling file uploads and storage operations with Supabase Storage."""
 
     def __init__(self):
+        if not settings.SUPABASE_URL or not settings.SUPABASE_KEY:
+            raise ValueError(
+                "SUPABASE_URL and SUPABASE_KEY must be set in environment variables"
+            )
+
         self.supabase: Client = create_client(
             supabase_url=settings.SUPABASE_URL,
             supabase_key=settings.SUPABASE_KEY
@@ -110,8 +115,16 @@ class StorageService:
                 }
             )
 
-            if response.status_code != 200:
-                raise Exception(f"Upload failed: {response.json()}")
+            # The response object structure varies by client version
+            # Check if upload was successful (response should have path or error)
+            if hasattr(response, 'path') or (isinstance(response, dict) and 'path' in response):
+                # Upload successful
+                pass
+            else:
+                # Check for error
+                error_msg = getattr(response, 'error', response.get('error') if isinstance(response, dict) else None)
+                if error_msg:
+                    raise Exception(f"Upload failed: {error_msg}")
 
             # Generate access URL
             bucket_config = self.buckets[bucket]
@@ -148,8 +161,13 @@ class StorageService:
         try:
             response = self.supabase.storage.from_(bucket).remove([file_path])
 
-            if response.status_code != 200:
-                raise Exception(f"Delete failed: {response.json()}")
+            # Check if deletion was successful
+            # Response is usually a list of deleted file info or an error object
+            if isinstance(response, list) and len(response) > 0:
+                return True
+            elif hasattr(response, 'error') or (isinstance(response, dict) and 'error' in response):
+                error_msg = getattr(response, 'error', response.get('error'))
+                raise Exception(f"Delete failed: {error_msg}")
 
             return True
 
@@ -199,18 +217,46 @@ class StorageService:
             File metadata
         """
         try:
-            response = self.supabase.storage.from_(bucket).list(
-                path=str(Path(file_path).parent),
-                search=Path(file_path).name
-            )
+            # List all files in the parent directory
+            folder_path = str(Path(file_path).parent)
+            if folder_path == ".":
+                folder_path = ""
 
-            if response and len(response) > 0:
-                return response[0]
-            else:
-                raise Exception("File not found")
+            response = self.supabase.storage.from_(bucket).list(path=folder_path)
+
+            # Find the specific file by name
+            filename = Path(file_path).name
+            if response:
+                for file_obj in response:
+                    file_name = file_obj.get('name') if isinstance(file_obj, dict) else getattr(file_obj, 'name', None)
+                    if file_name == filename:
+                        return file_obj if isinstance(file_obj, dict) else {
+                            'name': file_name,
+                            'id': getattr(file_obj, 'id', None),
+                            'size': getattr(file_obj, 'metadata', {}).get('size', None)
+                        }
+
+            raise Exception("File not found")
 
         except Exception as e:
             raise Exception(f"File info retrieval failed: {str(e)}")
+
+    async def list_files(self, bucket: str, path: str) -> list[Dict[str, Any]]:
+        """
+        List files in a specific path.
+
+        Args:
+            bucket: Storage bucket
+            path: Directory path to list files from
+
+        Returns:
+            List of file objects with metadata
+        """
+        try:
+            response = self.supabase.storage.from_(bucket).list(path=path)
+            return response or []
+        except Exception as e:
+            raise Exception(f"File listing failed: {str(e)}")
 
 
 # Global storage service instance

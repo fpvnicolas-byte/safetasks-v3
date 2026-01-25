@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_organization, require_admin_or_manager
+from app.api.deps import get_organization_from_profile, require_admin_or_manager
 from app.db.session import get_db
 from app.services.maintenance import (
     kit_item_service, maintenance_service, inventory_health_service
@@ -20,7 +20,7 @@ router = APIRouter()
 
 @router.get("/items/", response_model=List[KitItem])
 async def get_kit_items(
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -52,7 +52,7 @@ async def get_kit_items(
 @router.post("/items/", response_model=KitItem, dependencies=[Depends(require_admin_or_manager)])
 async def create_kit_item(
     kit_item_in: KitItemCreate,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> KitItem:
     """
@@ -76,7 +76,7 @@ async def create_kit_item(
 @router.get("/items/{kit_item_id}", response_model=KitItemWithMaintenance)
 async def get_kit_item(
     kit_item_id: UUID,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> KitItemWithMaintenance:
     """
@@ -101,7 +101,7 @@ async def get_kit_item(
 async def update_kit_item(
     kit_item_id: UUID,
     kit_item_in: KitItemUpdate,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> KitItem:
     """
@@ -133,7 +133,7 @@ async def update_kit_item(
 @router.delete("/items/{kit_item_id}", response_model=KitItem, dependencies=[Depends(require_admin_or_manager)])
 async def delete_kit_item(
     kit_item_id: UUID,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> KitItem:
     """
@@ -159,7 +159,7 @@ async def delete_kit_item(
 async def create_maintenance_log(
     kit_item_id: UUID,
     maintenance_in: MaintenanceLogCreate,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> MaintenanceLog:
     """
@@ -185,7 +185,7 @@ async def create_maintenance_log(
 @router.get("/items/{kit_item_id}/history")
 async def get_maintenance_history(
     kit_item_id: UUID,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> KitItemMaintenanceHistory:
     """
@@ -207,7 +207,7 @@ async def get_maintenance_history(
 
 @router.get("/health-report")
 async def get_inventory_health_report(
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> InventoryHealthReport:
     """
@@ -230,7 +230,7 @@ async def get_inventory_health_report(
 @router.post("/check-alerts", dependencies=[Depends(require_admin_or_manager)])
 async def check_inventory_alerts(
     background_tasks: BackgroundTasks,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
     """
@@ -260,7 +260,7 @@ async def check_inventory_alerts(
 
 @router.get("/maintenance/", response_model=List[MaintenanceLog])
 async def get_maintenance_logs(
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -289,7 +289,7 @@ async def get_maintenance_logs(
 @router.get("/maintenance/{maintenance_id}", response_model=MaintenanceLog)
 async def get_maintenance_log(
     maintenance_id: UUID,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> MaintenanceLog:
     """

@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_organization, require_admin_or_manager
+from app.api.deps import get_organization_from_profile, require_admin_or_manager
 from app.db.session import get_db
 from app.services.production import shooting_day_service, production_service
 from app.schemas.production import ShootingDay, ShootingDayCreate, ShootingDayUpdate
@@ -13,7 +13,7 @@ router = APIRouter()
 
 @router.get("/", response_model=List[ShootingDay])
 async def get_shooting_days(
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -39,7 +39,7 @@ async def get_shooting_days(
 @router.post("/", response_model=ShootingDay, dependencies=[Depends(require_admin_or_manager)])
 async def create_shooting_day(
     shooting_day_in: ShootingDayCreate,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> ShootingDay:
     """
@@ -63,7 +63,7 @@ async def create_shooting_day(
 @router.get("/{shooting_day_id}", response_model=ShootingDay)
 async def get_shooting_day(
     shooting_day_id: UUID,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> ShootingDay:
     """
@@ -88,7 +88,7 @@ async def get_shooting_day(
 async def update_shooting_day(
     shooting_day_id: UUID,
     shooting_day_in: ShootingDayUpdate,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> ShootingDay:
     """
@@ -120,7 +120,7 @@ async def update_shooting_day(
 @router.delete("/{shooting_day_id}", response_model=ShootingDay, dependencies=[Depends(require_admin_or_manager)])
 async def delete_shooting_day(
     shooting_day_id: UUID,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> ShootingDay:
     """
@@ -146,7 +146,7 @@ async def delete_shooting_day(
 async def assign_scenes_to_shooting_day(
     shooting_day_id: UUID,
     scene_ids: List[UUID],
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
     """

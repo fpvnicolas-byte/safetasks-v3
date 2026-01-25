@@ -1,0 +1,209 @@
+'use client'
+
+import React, { useState, useEffect } from 'react'
+import { useRouter, useParams } from 'next/navigation'
+import { useKit, useUpdateKit, useInventoryItems, useUpdateInventoryItem } from '@/lib/api/hooks'
+import { useAuth } from '@/contexts/AuthContext'
+import { KitUpdate, KitStatus } from '@/types'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
+import { AlertCircle, ArrowLeft, Search, Package } from 'lucide-react'
+
+export default function EditKitPage() {
+  const router = useRouter()
+  const params = useParams()
+  const { organizationId } = useAuth()
+  const kitId = params.id as string
+
+  const [error, setError] = useState<string | null>(null)
+  const [selectedItems, setSelectedItems] = useState<string[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const { data: kit, isLoading: kitLoading } = useKit(kitId)
+  const { data: allItems, isLoading: itemsLoading } = useInventoryItems(organizationId || '')
+  const updateKit = useUpdateKit()
+  const updateItem = useUpdateInventoryItem()
+
+  // Initialize selected items with items currently in this kit
+  useEffect(() => {
+    if (allItems) {
+      const itemsInKit = allItems.filter(item => item.kit_id === kitId).map(item => item.id)
+      setSelectedItems(itemsInKit)
+    }
+  }, [allItems, kitId])
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setError(null)
+
+    const formData = new FormData(e.currentTarget)
+
+    try {
+      const kitData: KitUpdate = {
+        name: (formData.get('name') as string).trim(),
+        description: (formData.get('description') as string || '').trim() || undefined,
+        category: (formData.get('category') as string || '').trim() || undefined,
+        status: formData.get('status') as KitStatus,
+      }
+
+      await updateKit.mutateAsync({ kitId, data: kitData })
+      
+      // Calculate which items to add
+      const itemsCurrentlyInKit = allItems?.filter(item => item.kit_id === kitId).map(item => item.id) || []
+      const itemsToAdd = selectedItems.filter(id => !itemsCurrentlyInKit.includes(id))
+
+      if (itemsToAdd.length > 0) {
+        await Promise.all(
+          itemsToAdd.map(itemId => 
+            updateItem.mutateAsync({ itemId, data: { kit_id: kitId } })
+          )
+        )
+      }
+
+      router.push(`/inventory/kits/${kitId}`)
+    } catch (err: unknown) {
+      const error = err as Error
+      setError(error.message || 'Failed to update kit')
+    }
+  }
+
+  if (kitLoading) return <div className="p-8 text-center text-muted-foreground">Loading kit...</div>
+  if (!kit) return <div className="p-8 text-center text-muted-foreground text-destructive">Kit not found</div>
+
+  const filteredItems = allItems?.filter(item => 
+    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.category.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || []
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      <Card>
+        <form onSubmit={handleSubmit}>
+          <CardHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <Button type="button" variant="ghost" size="icon" onClick={() => router.back()} className="h-8 w-8">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <CardTitle>Edit Equipment Kit</CardTitle>
+            </div>
+            <CardDescription>Update details and manage contents for {kit.name}</CardDescription>
+          </CardHeader>
+
+          <CardContent className="space-y-6">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="name">Kit Name *</Label>
+                <Input id="name" name="name" defaultValue={kit.name} required />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <Input id="category" name="category" defaultValue={kit.category || ''} />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select name="status" defaultValue={kit.status}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="available">Available</SelectItem>
+                    <SelectItem value="in_use">In Use</SelectItem>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectItem value="retired">Retired</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea id="description" name="description" defaultValue={kit.description || ''} rows={3} />
+              </div>
+            </div>
+
+            {/* Kit Builder Section */}
+            <div className="space-y-4 pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Manage Contents</h3>
+                <p className="text-sm text-muted-foreground">Select items to include in this kit</p>
+              </div>
+
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search items..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+
+              <div className="border rounded-md max-h-[300px] overflow-y-auto">
+                {itemsLoading ? (
+                  <div className="p-4 text-center text-sm text-muted-foreground">Loading items...</div>
+                ) : filteredItems.length > 0 ? (
+                  <div className="divide-y">
+                    {filteredItems.map((item) => (
+                      <div key={item.id} className="flex items-center space-x-3 p-3 hover:bg-muted/50 transition-colors">
+                        <Checkbox
+                          id={`item-${item.id}`}
+                          checked={selectedItems.includes(item.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedItems([...selectedItems, item.id])
+                            } else {
+                              setSelectedItems(selectedItems.filter(id => id !== item.id))
+                            }
+                          }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <label htmlFor={`item-${item.id}`} className="text-sm font-medium leading-none cursor-pointer block">
+                            {item.name}
+                          </label>
+                          <p className="text-xs text-muted-foreground truncate">{item.category} • S/N: {item.serial_number || 'N/A'}</p>
+                        </div>
+                        {item.kit_id === kitId ? (
+                          <Badge variant="secondary" className="text-[10px]">In this kit</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px]">In another kit</Badge>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-8 text-center">
+                    <Package className="h-8 w-8 text-muted-foreground mx-auto mb-2 opacity-20" />
+                    <p className="text-sm text-muted-foreground">No items found.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+
+          <CardFooter className="flex justify-between">
+            <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
+            <Button type="submit" disabled={updateKit.isPending}>
+              {updateKit.isPending ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </CardFooter>
+        </form>
+      </Card>
+    </div>
+  )
+}

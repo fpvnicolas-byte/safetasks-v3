@@ -3,21 +3,21 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_organization, require_admin_or_manager
+from app.api.deps import get_organization_from_profile, require_admin_or_manager
 from app.db.session import get_db
 from app.services.commercial import supplier_service, supplier_statement_service
-from app.schemas.commercial import Supplier, SupplierCreate, SupplierUpdate, SupplierStatement
+from app.schemas.commercial import Supplier, SupplierCreate, SupplierUpdate, SupplierStatement, SupplierWithTransactions
 
 router = APIRouter()
 
 
-@router.get("/", response_model=List[dict])
+@router.get("/", response_model=List[SupplierWithTransactions])
 async def get_suppliers(
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
     category: str = Query(None, description="Filter by supplier category"),
     active_only: bool = Query(True, description="Show only active suppliers"),
-) -> List[dict]:
+) -> List[SupplierWithTransactions]:
     """
     Get all suppliers for the current user's organization with transaction summaries.
     """
@@ -33,7 +33,7 @@ async def get_suppliers(
 @router.post("/", response_model=Supplier, dependencies=[Depends(require_admin_or_manager)])
 async def create_supplier(
     supplier_in: SupplierCreate,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Supplier:
     """
@@ -51,7 +51,7 @@ async def create_supplier(
 @router.get("/{supplier_id}", response_model=Supplier)
 async def get_supplier(
     supplier_id: UUID,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Supplier:
     """
@@ -76,7 +76,7 @@ async def get_supplier(
 async def update_supplier(
     supplier_id: UUID,
     supplier_in: SupplierUpdate,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Supplier:
     """
@@ -102,7 +102,7 @@ async def update_supplier(
 @router.delete("/{supplier_id}", response_model=Supplier, dependencies=[Depends(require_admin_or_manager)])
 async def delete_supplier(
     supplier_id: UUID,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Supplier:
     """
@@ -127,7 +127,7 @@ async def delete_supplier(
 @router.get("/{supplier_id}/statement")
 async def get_supplier_statement(
     supplier_id: UUID,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
     date_from: str = Query(None, description="Filter from date (YYYY-MM-DD)"),
     date_to: str = Query(None, description="Filter to date (YYYY-MM-DD)"),

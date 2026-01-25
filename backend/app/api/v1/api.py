@@ -4,7 +4,7 @@ from app.api.v1.endpoints import (
     organizations, clients, projects, bank_accounts, transactions,
     kits, call_sheets, proposals, storage, notifications, ai,
     scenes, characters, shooting_days, production, financial,
-    suppliers, stakeholders, inventory, cloud, dashboard
+    suppliers, stakeholders, inventory, cloud, dashboard, profiles
 )
 
 api_router = APIRouter()
@@ -134,4 +134,10 @@ api_router.include_router(
     dashboard.router,
     prefix="/dashboard",
     tags=["dashboard"]
+)
+
+api_router.include_router(
+    profiles.router,
+    prefix="/profiles",
+    tags=["profiles"]
 )

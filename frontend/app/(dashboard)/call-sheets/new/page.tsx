@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { useCreateCallSheet, useProjects } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { CallSheetFormData, convertTimeToBackendFormat } from '@/types'
@@ -103,7 +104,7 @@ function NewCallSheetForm() {
                       <div className="space-y-2">
                         <p className="text-sm">No projects found. Create a project first.</p>
                         <Button asChild size="sm">
-                          <a href="/projects/new">Create Project</a>
+                          <Link href="/projects/new">Create Project</Link>
                         </Button>
                       </div>
                     )}

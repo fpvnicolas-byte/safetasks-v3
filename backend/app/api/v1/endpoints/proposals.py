@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_organization, require_admin_or_manager, require_admin
+from app.api.deps import get_organization_from_profile, require_admin_or_manager, require_admin
 from app.db.session import get_db
 from app.modules.commercial.service import proposal_service
 from app.schemas.proposals import (
@@ -16,7 +16,7 @@ router = APIRouter()
 
 @router.get("/", response_model=List[Proposal])
 async def get_proposals(
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -45,7 +45,7 @@ async def get_proposals(
 @router.post("/", response_model=Proposal)
 async def create_proposal(
     proposal_in: ProposalCreate,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Proposal:
     """
@@ -69,7 +69,7 @@ async def create_proposal(
 @router.get("/{proposal_id}", response_model=Proposal)
 async def get_proposal(
     proposal_id: UUID,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Proposal:
     """
@@ -94,7 +94,7 @@ async def get_proposal(
 async def update_proposal(
     proposal_id: UUID,
     proposal_in: ProposalUpdate,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Proposal:
     """
@@ -126,7 +126,7 @@ async def update_proposal(
 @router.delete("/{proposal_id}", response_model=Proposal)
 async def delete_proposal(
     proposal_id: UUID,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Proposal:
     """
@@ -151,7 +151,7 @@ async def delete_proposal(
 async def approve_proposal(
     proposal_id: UUID,
     approval_data: ProposalApproval,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Proposal:
     """

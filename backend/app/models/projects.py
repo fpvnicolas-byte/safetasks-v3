@@ -34,6 +34,9 @@ class Project(Base):
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
+    # Relationships
+    client = relationship("Client", back_populates="projects")
+
     # Relationships to production entities
     scenes = relationship("Scene", back_populates="project", cascade="all, delete-orphan")
     characters = relationship("Character", back_populates="project", cascade="all, delete-orphan")
@@ -41,6 +44,7 @@ class Project(Base):
 
     # Relationships to financial entities
     invoices = relationship("Invoice", back_populates="project", cascade="all, delete-orphan")
+    transactions = relationship("Transaction", back_populates="project")
 
     __table_args__ = (
         CheckConstraint("status IN ('draft', 'pre-production', 'production', 'post-production', 'delivered', 'archived')"),

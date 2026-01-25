@@ -104,31 +104,35 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
         if obj_in.type == "expense":
             balance_change = -balance_change
 
-        # Use database transaction to ensure atomicity
-        async with db.begin():
-            # Create the transaction
-            transaction_data = obj_in.dict()
-            db_transaction = self.model(**transaction_data)
-            db_transaction.organization_id = organization_id
-            db.add(db_transaction)
-            await db.flush()
-            await db.refresh(db_transaction)
+        # Create the transaction
+        transaction_data = obj_in.dict()
+        db_transaction = self.model(**transaction_data)
+        db_transaction.organization_id = organization_id
+        db.add(db_transaction)
+        await db.flush()
 
-            # Update bank account balance
-            await db.execute(
-                update(BankAccount)
-                .where(
-                    and_(
-                        BankAccount.id == obj_in.bank_account_id,
-                        BankAccount.organization_id == organization_id
-                    )
+        # Update bank account balance
+        await db.execute(
+            update(BankAccount)
+            .where(
+                and_(
+                    BankAccount.id == obj_in.bank_account_id,
+                    BankAccount.organization_id == organization_id
                 )
-                .values(balance_cents=BankAccount.balance_cents + balance_change)
             )
+            .values(balance_cents=BankAccount.balance_cents + balance_change)
+        )
 
-            await db.commit()
-
-        return db_transaction
+        # Reload transaction with relationships
+        result = await db.execute(
+            select(Transaction)
+            .where(Transaction.id == db_transaction.id)
+            .options(
+                selectinload(Transaction.bank_account),
+                selectinload(Transaction.project)
+            )
+        )
+        return result.scalar_one()
 
     async def remove(
         self,
@@ -150,24 +154,20 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
         else:
             balance_change = -balance_change  # Reverse the income (subtract)
 
-        # Use database transaction to ensure atomicity
-        async with db.begin():
-            # Delete the transaction
-            await db.delete(transaction)
+        # Delete the transaction
+        await db.delete(transaction)
 
-            # Rollback bank account balance
-            await db.execute(
-                update(BankAccount)
-                .where(
-                    and_(
-                        BankAccount.id == transaction.bank_account_id,
-                        BankAccount.organization_id == organization_id
-                    )
+        # Rollback bank account balance
+        await db.execute(
+            update(BankAccount)
+            .where(
+                and_(
+                    BankAccount.id == transaction.bank_account_id,
+                    BankAccount.organization_id == organization_id
                 )
-                .values(balance_cents=BankAccount.balance_cents + balance_change)
             )
-
-            await db.commit()
+            .values(balance_cents=BankAccount.balance_cents + balance_change)
+        )
 
         return transaction
 

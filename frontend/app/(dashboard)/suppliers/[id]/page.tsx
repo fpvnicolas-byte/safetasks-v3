@@ -1,0 +1,251 @@
+'use client'
+
+import { useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { useSupplier, useDeleteSupplier, useSupplierStatement } from '@/lib/api/hooks'
+import { useAuth } from '@/contexts/AuthContext'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Pencil, Trash2, ArrowLeft, Briefcase, Mail, Phone, MapPin, FileText, DollarSign } from 'lucide-react'
+import Link from 'next/link'
+import { getSupplierCategoryDisplayName, formatCurrency } from '@/types'
+
+export default function SupplierDetailPage() {
+  const params = useParams()
+  const router = useRouter()
+  const { organizationId } = useAuth()
+  const supplierId = params.id as string
+
+  const [dateFrom, setDateFrom] = useState<string>('')
+  const [dateTo, setDateTo] = useState<string>('')
+  const [showStatement, setShowStatement] = useState(false)
+
+  const { data: supplier, isLoading, error } = useSupplier(supplierId)
+  const deleteSupplier = useDeleteSupplier(organizationId || '')
+  const { data: statement, isLoading: isLoadingStatement } = useSupplierStatement(
+    supplierId,
+    showStatement ? dateFrom || undefined : undefined,
+    showStatement ? dateTo || undefined : undefined
+  )
+
+  if (isLoading) {
+    return <div>Loading supplier...</div>
+  }
+
+  if (error || !supplier) {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>Supplier not found</AlertDescription>
+      </Alert>
+    )
+  }
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this supplier?')) return
+
+    try {
+      await deleteSupplier.mutateAsync(supplierId)
+      router.push('/suppliers')
+    } catch (err) {
+      console.error('Failed to delete supplier:', err)
+    }
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">{supplier.name}</h1>
+            <p className="text-muted-foreground">{getSupplierCategoryDisplayName(supplier.category)}</p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link href={`/suppliers/${supplierId}/edit`}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit
+            </Link>
+          </Button>
+          <Button variant="destructive" onClick={handleDelete}>
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <Badge variant={supplier.is_active ? 'default' : 'secondary'}>
+          {supplier.is_active ? 'Active' : 'Inactive'}
+        </Badge>
+        <Badge variant="outline">
+          {getSupplierCategoryDisplayName(supplier.category)}
+        </Badge>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Contact Information</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {supplier.email && (
+            <div className="flex items-start gap-3">
+              <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <div className="text-sm font-medium text-muted-foreground">Email</div>
+                <div className="text-base">{supplier.email}</div>
+              </div>
+            </div>
+          )}
+
+          {supplier.phone && (
+            <div className="flex items-start gap-3">
+              <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <div className="text-sm font-medium text-muted-foreground">Phone</div>
+                <div className="text-base">{supplier.phone}</div>
+              </div>
+            </div>
+          )}
+
+          {supplier.address && (
+            <div className="flex items-start gap-3">
+              <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <div className="text-sm font-medium text-muted-foreground">Address</div>
+                <div className="text-base whitespace-pre-line">{supplier.address}</div>
+              </div>
+            </div>
+          )}
+
+          {supplier.document_id && (
+            <div className="flex items-start gap-3">
+              <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <div className="text-sm font-medium text-muted-foreground">Tax ID / Document</div>
+                <div className="text-base">{supplier.document_id}</div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {supplier.specialties && supplier.specialties.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Specialties</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {supplier.specialties.map((specialty, index) => (
+                <Badge key={index} variant="secondary">
+                  {specialty}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {supplier.notes && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Notes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-base whitespace-pre-wrap">{supplier.notes}</div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Financial Statement */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5" />
+            Financial Statement
+          </CardTitle>
+          <CardDescription>
+            View transaction history and financial breakdown for this supplier
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="date_from">From Date</Label>
+              <Input
+                id="date_from"
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="date_to">To Date</Label>
+              <Input
+                id="date_to"
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+              />
+            </div>
+            <div className="flex items-end">
+              <Button
+                onClick={() => setShowStatement(true)}
+                className="w-full"
+              >
+                Generate Statement
+              </Button>
+            </div>
+          </div>
+
+          {showStatement && isLoadingStatement && (
+            <div className="text-sm text-muted-foreground">Loading statement...</div>
+          )}
+
+          {showStatement && statement && (
+            <div className="space-y-4 pt-4 border-t">
+              <div className="grid gap-4 md:grid-cols-3">
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">Total Transactions</div>
+                  <div className="text-2xl font-bold">{statement.total_transactions}</div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">Total Amount</div>
+                  <div className="text-2xl font-bold">{formatCurrency(statement.total_amount_cents, statement.currency)}</div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">Period</div>
+                  <div className="text-sm">
+                    {statement.statement_period.from || 'All time'} - {statement.statement_period.to || 'Present'}
+                  </div>
+                </div>
+              </div>
+
+              {statement.project_breakdown && statement.project_breakdown.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2">By Project</h4>
+                  <div className="space-y-2">
+                    {statement.project_breakdown.map((project: Record<string, unknown>, index: number) => (
+                      <div key={index} className="flex items-center justify-between p-2 border rounded">
+                        <span className="text-sm">{project.project_name || 'Unknown Project'}</span>
+                        <span className="font-medium">{formatCurrency(project.total_cents, statement.currency)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_organization, require_admin_or_manager
+from app.api.deps import get_organization_from_profile, require_admin_or_manager
 from app.db.session import get_db
 from app.services.google_drive import google_drive_service
 from app.services.cloud import cloud_sync_service
@@ -21,7 +21,7 @@ router = APIRouter()
 @router.post("/google/auth", response_model=GoogleDriveCredentials, dependencies=[Depends(require_admin_or_manager)])
 async def setup_google_drive_auth(
     credentials_in: GoogleDriveCredentialsCreate,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> GoogleDriveCredentials:
     """
@@ -62,7 +62,7 @@ async def setup_google_drive_auth(
 
 @router.get("/google/auth", response_model=GoogleDriveCredentials)
 async def get_google_drive_auth(
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> GoogleDriveCredentials:
     """
@@ -87,7 +87,7 @@ async def get_google_drive_auth(
 @router.put("/google/auth", response_model=GoogleDriveCredentials, dependencies=[Depends(require_admin_or_manager)])
 async def update_google_drive_auth(
     credentials_in: GoogleDriveCredentialsUpdate,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> GoogleDriveCredentials:
     """
@@ -120,7 +120,7 @@ async def update_google_drive_auth(
 
 @router.delete("/google/auth", dependencies=[Depends(require_admin_or_manager)])
 async def remove_google_drive_auth(
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
     """
@@ -150,7 +150,7 @@ async def remove_google_drive_auth(
 async def sync_file_to_drive(
     sync_request: SyncFileRequest,
     background_tasks: BackgroundTasks,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> SyncResult:
     """
@@ -180,7 +180,7 @@ async def sync_project_files(
     project_id: UUID,
     sync_request: ProjectSyncRequest = None,
     background_tasks: BackgroundTasks = None,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> ProjectSyncResult:
     """
@@ -211,7 +211,7 @@ async def sync_project_files(
 async def get_sync_status(
     project_id: UUID = None,
     file_path: str = None,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> SyncStatusResponse:
     """
@@ -238,7 +238,7 @@ async def get_sync_status(
 @router.post("/check-alerts", dependencies=[Depends(require_admin_or_manager)])
 async def check_sync_alerts(
     background_tasks: BackgroundTasks,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
     """
@@ -264,7 +264,7 @@ async def check_sync_alerts(
 @router.get("/projects/{project_id}/folders")
 async def get_project_drive_folders(
     project_id: UUID,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ):
     """

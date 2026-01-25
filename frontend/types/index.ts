@@ -439,13 +439,243 @@ export interface ProjectBreakdown {
 }
 
 // ============================================================================
+// SUPPLIER TYPES
+// ============================================================================
+
+export type SupplierCategory =
+  | 'rental_house'
+  | 'freelancer'
+  | 'catering'
+  | 'transport'
+  | 'post_production'
+  | 'other'
+
+export interface Supplier {
+  id: UUID
+  organization_id: UUID
+  name: string
+  category: SupplierCategory
+  document_id: string | null
+  email: string | null
+  phone: string | null
+  address: string | null
+  bank_info: Record<string, unknown> | null // JSONB
+  specialties: string[] | null // Array of specialties
+  notes: string | null
+  is_active: boolean
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+
+export interface SupplierWithTransactions extends Supplier {
+  total_transactions: number
+  total_amount_cents: number
+  last_transaction_date: ISODateTime | null
+}
+
+export interface SupplierStatement {
+  supplier_id: UUID
+  supplier_name: string
+  supplier_category: string
+  total_transactions: number
+  total_amount_cents: number
+  currency: string
+  transactions: Record<string, unknown>[]
+  project_breakdown: Record<string, unknown>[]
+  category_breakdown: Record<string, unknown>[]
+  statement_period: Record<string, string>
+  generated_at: ISODateTime
+}
+
+export interface SupplierCreate {
+  name: string
+  category: SupplierCategory
+  document_id?: string
+  email?: string
+  phone?: string
+  address?: string
+  bank_info?: Record<string, unknown>
+  specialties?: string[]
+  notes?: string
+}
+
+export interface SupplierUpdate {
+  name?: string
+  category?: SupplierCategory
+  document_id?: string
+  email?: string
+  phone?: string
+  address?: string
+  bank_info?: Record<string, unknown>
+  specialties?: string[]
+  notes?: string
+  is_active?: boolean
+}
+
+// Helper function to get supplier category display name
+export function getSupplierCategoryDisplayName(category: SupplierCategory): string {
+  const categoryNames: Record<SupplierCategory, string> = {
+    rental_house: 'Rental House',
+    freelancer: 'Freelancer',
+    catering: 'Catering',
+    transport: 'Transport',
+    post_production: 'Post Production',
+    other: 'Other'
+  }
+  return categoryNames[category]
+}
+
+// ============================================================================
+// PROPOSAL TYPES
+// ============================================================================
+
+export type ProposalStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired'
+
+export interface Proposal {
+  id: UUID
+  organization_id: UUID
+  client_id: UUID
+  project_id: UUID | null
+  title: string
+  description: string | null
+  status: ProposalStatus
+  valid_until: ISODate | null
+  total_amount_cents: number | null
+  currency: string
+  terms_conditions: string | null
+  created_at: ISODateTime
+  updated_at: ISODateTime
+  // Relationships (if loaded)
+  client?: Client
+  project?: Project
+}
+
+export interface ProposalCreate {
+  client_id: UUID
+  title: string
+  description?: string
+  status?: ProposalStatus
+  valid_until?: ISODate
+  total_amount_cents?: number
+  currency?: string
+  terms_conditions?: string
+}
+
+export interface ProposalUpdate {
+  client_id?: UUID
+  title?: string
+  description?: string
+  status?: ProposalStatus
+  valid_until?: ISODate
+  total_amount_cents?: number
+  currency?: string
+  terms_conditions?: string
+}
+
+export interface ProposalApproval {
+  notes?: string
+}
+
+// ============================================================================
+// INVENTORY TYPES
+// ============================================================================
+
+export type HealthStatus = 'excellent' | 'good' | 'needs_service' | 'broken' | 'retired'
+export type KitStatus = 'available' | 'in_use' | 'maintenance' | 'retired'
+
+export interface Kit {
+  id: UUID
+  organization_id: UUID
+  name: string
+  description: string | null
+  category: string | null
+  status: KitStatus
+  image_url: string | null
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+
+export interface KitCreate {
+  name: string
+  description?: string
+  category?: string
+  status?: KitStatus
+  image_url?: string
+}
+
+export interface KitUpdate {
+  name?: string
+  description?: string
+  category?: string
+  status?: KitStatus
+}
+
+export interface KitItem {
+  id: UUID
+  organization_id: UUID
+  kit_id: UUID
+  name: string
+  description: string | null
+  category: string
+  serial_number: string | null
+  purchase_date: ISODate | null
+  purchase_cost_cents: number | null
+  warranty_expiry: ISODate | null
+  maintenance_interval_hours: number // default 50.0
+  max_usage_hours: number // default 1000.0
+  current_usage_hours: number
+  last_maintenance_date: ISODate | null
+  health_status: HealthStatus
+  notes: string | null
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+
+export interface KitItemCreate {
+  kit_id: UUID
+  name: string
+  description?: string
+  category: string
+  serial_number?: string
+  purchase_date?: ISODate
+  purchase_cost_cents?: number
+  warranty_expiry?: ISODate
+  maintenance_interval_hours?: number
+  max_usage_hours?: number
+  notes?: string
+}
+
+export interface KitItemUpdate {
+  name?: string
+  description?: string
+  category?: string
+  serial_number?: string
+  purchase_date?: ISODate
+  purchase_cost_cents?: number
+  warranty_expiry?: ISODate
+  maintenance_interval_hours?: number
+  max_usage_hours?: number
+  current_usage_hours?: number
+  last_maintenance_date?: ISODate
+  health_status?: HealthStatus
+  notes?: string
+}
+
+export interface KitItemWithMaintenance extends KitItem {
+  maintenance_count: number
+  last_maintenance_type: string | null
+  days_since_last_maintenance: number | null
+  maintenance_overdue: boolean
+}
+
+// ============================================================================
 // API RESPONSE TYPES
 // ============================================================================
 
 export interface ApiError {
   message: string
   statusCode: number
-  details?: Record<string, any>
+  details?: Record<string, unknown>
 }
 
 export interface PaginatedResponse<T> {
@@ -634,6 +864,7 @@ export interface ShootingDayFormData {
 }
 
 export interface ShootingDayCreate {
+  project_id: UUID // Required by backend service
   date: ISODate
   call_time: TimeString
   wrap_time?: TimeString
@@ -694,3 +925,129 @@ export function convertTimeToFormFormat(backendTime: string | null): string {
 }
 
 // Currency helper functions already defined above in BankAccount section
+
+// ============================================================================
+// STORAGE & FILE TYPES
+// ============================================================================
+
+export interface FileUploadResponse {
+  file_path: string
+  bucket: string
+  access_url: string | null
+  is_public: boolean
+  size_bytes: number
+  content_type: string
+}
+
+export interface SignedUrlRequest {
+  bucket: string
+  file_path: string
+  expires_in?: number // Default 3600 (1 hour)
+}
+
+export interface SignedUrlResponse {
+  signed_url: string
+  expires_in: number
+  file_path: string
+  bucket: string
+}
+
+export interface CloudSyncRequest {
+  file_path: string
+  providers?: string[] // ['google_drive', 'dropbox', etc.]
+}
+
+export interface CloudSyncResponse {
+  file_path: string
+  organization_id: string
+  results: Record<string, unknown> // Provider-specific results
+}
+
+export interface SyncStatusResponse {
+  file_path: string
+  organization_id: string
+  sync_status: string
+  providers: string[]
+  last_sync: string | null
+}
+
+// ============================================================================
+// GOOGLE DRIVE & CLOUD SYNC TYPES
+// ============================================================================
+
+export interface GoogleDriveCredentials {
+  id: UUID
+  organization_id: UUID
+  service_account_key: Record<string, unknown> | null
+  auto_sync_enabled: boolean
+  sync_on_proposal_approval: boolean
+  sync_on_call_sheet_finalized: boolean
+  root_folder_id: string | null
+  root_folder_url: string | null
+  connected_at: ISODateTime | null
+  last_sync_at: ISODateTime | null
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+
+export interface GoogleDriveCredentialsCreate {
+  service_account_key: Record<string, unknown>
+  auto_sync_enabled?: boolean
+  sync_on_proposal_approval?: boolean
+  sync_on_call_sheet_finalized?: boolean
+}
+
+export interface GoogleDriveCredentialsUpdate {
+  service_account_key?: Record<string, unknown>
+  auto_sync_enabled?: boolean
+  sync_on_proposal_approval?: boolean
+  sync_on_call_sheet_finalized?: boolean
+}
+
+export interface SyncFileRequest {
+  file_id: UUID
+  project_id: UUID
+  module: string // proposals, call_sheets, scripts, media
+}
+
+export interface SyncResult {
+  sync_id: string
+  provider: string
+  status: string // completed, failed, pending
+  external_id: string | null
+  external_url: string | null
+  file_name: string | null
+  file_size: number | null
+  synced_at: string | null
+  error: string | null
+}
+
+export interface ProjectSyncRequest {
+  modules?: string[] // proposals, call_sheets, scripts, media
+}
+
+export interface ProjectSyncResult {
+  project_id: string
+  organization_id: string
+  modules_synced: string[]
+  sync_results: Record<string, unknown>[]
+  total_files: number
+  successful_syncs: number
+  failed_syncs: number
+}
+
+export interface ProjectDriveFolder {
+  id: UUID
+  organization_id: UUID
+  project_id: UUID
+  project_folder_id: string | null
+  project_folder_url: string | null
+  scripts_folder_id: string | null
+  scripts_folder_url: string | null
+  call_sheets_folder_id: string | null
+  call_sheets_folder_url: string | null
+  media_folder_id: string | null
+  media_folder_url: string | null
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}

@@ -21,6 +21,8 @@ class Transaction(Base):
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
 
     # Relationships
+    bank_account = relationship("BankAccount", back_populates="transactions")
+    project = relationship("Project", back_populates="transactions")
     maintenance_logs = relationship("MaintenanceLog", back_populates="transaction")
 
     __table_args__ = (

@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_organization
+from app.api.deps import get_organization_from_profile
 from app.db.session import get_db
 from app.services.storage import storage_service
 from app.services.cloud import cloud_sync_service
@@ -17,7 +17,7 @@ router = APIRouter()
 
 @router.post("/upload", response_model=FileUploadResponse)
 async def upload_file(
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     module: str = Form(..., description="Module name: kits, scripts, call-sheets, proposals"),
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
@@ -75,7 +75,7 @@ async def upload_file(
 @router.post("/sign-url", response_model=SignedUrlResponse)
 async def generate_signed_url(
     request: SignedUrlRequest,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> SignedUrlResponse:
     """
@@ -118,7 +118,7 @@ async def generate_signed_url(
 @router.post("/sync-cloud", response_model=CloudSyncResponse)
 async def sync_to_cloud(
     request: CloudSyncRequest,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> CloudSyncResponse:
     """
@@ -164,7 +164,7 @@ async def sync_to_cloud(
 @router.get("/sync-status/{file_path:path}", response_model=SyncStatusResponse)
 async def get_sync_status(
     file_path: str,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> SyncStatusResponse:
     """
@@ -197,11 +197,63 @@ async def get_sync_status(
         )
 
 
+@router.get("/list/{module}")
+async def list_files(
+    module: str,
+    organization_id: UUID = Depends(get_organization_from_profile),
+    db: AsyncSession = Depends(get_db),
+) -> list[dict]:
+    """
+    List files for a specific module and organization.
+    Validates that the files belong to the requesting organization.
+    """
+    try:
+        # Generate organization-specific path prefix
+        path_prefix = f"{organization_id}/{module}/"
+        
+        # Determine bucket based on module
+        if module == "kits":
+            bucket = "public-assets"  # Kit photos are public
+        else:
+            bucket = "production-files"  # Scripts, PDFs, etc. are private
+
+        # List files from storage service
+        files = await storage_service.list_files(bucket, path_prefix)
+        
+        # Add additional metadata to each file
+        enriched_files = []
+        for file_obj in files:
+            file_name = file_obj.get('name') if isinstance(file_obj, dict) else getattr(file_obj, 'name', None)
+            if file_name:
+                file_path = f"{path_prefix}{file_name}"
+                enriched_files.append({
+                    "name": file_name,
+                    "path": file_path,
+                    "bucket": bucket,
+                    "size": file_obj.get('metadata', {}).get('size') if isinstance(file_obj, dict) else getattr(file_obj, 'size', None),
+                    "created_at": file_obj.get('metadata', {}).get('created_at') if isinstance(file_obj, dict) else getattr(file_obj, 'created_at', None),
+                    "is_public": bucket == "public-assets"
+                })
+
+        return enriched_files
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to list files: {str(e)}"
+        )
+
+
 @router.delete("/{bucket}/{file_path:path}")
 async def delete_file(
     bucket: str,
     file_path: str,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
     """

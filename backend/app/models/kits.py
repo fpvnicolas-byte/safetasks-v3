@@ -14,6 +14,7 @@ class Kit(Base):
     description = Column(String)
     category = Column(String)  # camera, lighting, sound, grip, etc.
     status = Column(String, default="available")  # available, in_use, maintenance, retired
+    image_url = Column(String)  # URL to kit photo in Supabase Storage
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
 

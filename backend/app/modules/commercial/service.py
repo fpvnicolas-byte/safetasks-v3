@@ -64,12 +64,12 @@ class ProposalService(BaseService[ProposalModel, ProposalCreate, ProposalUpdate]
         if proposal.status != "sent":
             raise ValueError("Only proposals with 'sent' status can be approved")
 
-        # Use database transaction for atomicity
+        # Use transaction context to ensure atomic operations
         async with db.begin():
             # Update proposal status
             proposal.status = "approved"
             if approval_data.notes:
-                # Could add approval notes to proposal metadata if needed
+                # TODO: Store approval notes in proposal metadata if needed
                 pass
 
             # Create new project from proposal
@@ -86,18 +86,21 @@ class ProposalService(BaseService[ProposalModel, ProposalCreate, ProposalUpdate]
                 obj_in=project_data
             )
 
-            # Optionally link the project back to the proposal
+            # Link the project back to the proposal
             proposal.project_id = project.id
 
-            await db.commit()
+            # Flush changes to database before notifications
+            await db.flush()
+            await db.refresh(proposal)
 
-        # Send notifications after successful approval
-        await self._send_proposal_approval_notifications(
-            db=db,
-            organization_id=organization_id,
-            proposal=proposal,
-            project=project
-        )
+            # Send notifications after successful approval
+            await self._send_proposal_approval_notifications(
+                db=db,
+                organization_id=organization_id,
+                proposal=proposal,
+                project=project
+            )
+            # Transaction auto-commits on success, auto-rollbacks on exception
 
         return proposal
 

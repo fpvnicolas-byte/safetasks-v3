@@ -76,7 +76,11 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         obj_in: CreateSchemaType
     ) -> ModelType:
         """Create a new record, automatically setting organization_id."""
-        obj_in_data = obj_in.dict()
+        # Handle both Pydantic models and dicts
+        if isinstance(obj_in, dict):
+            obj_in_data = obj_in.copy()
+        else:
+            obj_in_data = obj_in.dict()
         obj_in_data["organization_id"] = organization_id
 
         db_obj = self.model(**obj_in_data)

@@ -1,0 +1,20 @@
+[
+  {
+    "test": "Create Bank Account",
+    "success": false,
+    "details": "Status: 403",
+    "timestamp": "2026-01-24T14:56:33.199514"
+  },
+  {
+    "test": "Transaction Filtering",
+    "success": false,
+    "details": "No bank account available",
+    "timestamp": "2026-01-24T14:56:33.199527"
+  },
+  {
+    "test": "Monthly Stats",
+    "success": false,
+    "details": "Status: 403",
+    "timestamp": "2026-01-24T14:56:33.201358"
+  }
+]
