@@ -21,10 +21,9 @@ export default function SuppliersPage() {
   // Get suppliers data
   const { data: allSuppliers, isLoading, error } = useSuppliers(
     organizationId || '',
-    categoryFilter === 'all' ? undefined : categoryFilter,
-    activeOnly
+    categoryFilter === 'all' ? undefined : categoryFilter
   )
-  const deleteSupplier = useDeleteSupplier(organizationId || '')
+  const deleteSupplier = useDeleteSupplier()
 
   // Apply search filter
   const filteredSuppliers = allSuppliers?.filter(supplier => {

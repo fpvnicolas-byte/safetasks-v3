@@ -81,6 +81,7 @@ export default function EditBankAccountPage({ params }: { params: Promise<{ id: 
       }
 
       await updateBankAccount.mutateAsync({
+        organizationId: profile?.organization_id || '',
         accountId: resolvedParams.id,
         data: accountData,
       })

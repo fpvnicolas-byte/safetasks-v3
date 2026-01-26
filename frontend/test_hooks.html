@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hook Test Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        .success { color: green; }
+        .error { color: red; }
+        .loading { color: orange; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>SafeTasks V3 Hook Test Page</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Get All Clients</h2>
+        <button onclick="testGetAllClients()">Test Get All Clients</button>
+        <div id="test1-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Get Single Client</h2>
+        <button onclick="testGetSingleClient()">Test Get Single Client</button>
+        <div id="test2-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: Create Client</h2>
+        <button onclick="testCreateClient()">Test Create Client</button>
+        <div id="test3-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 4: Update Client</h2>
+        <button onclick="testUpdateClient()">Test Update Client</button>
+        <div id="test4-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 5: Delete Client</h2>
+        <button onclick="testDeleteClient()">Test Delete Client</button>
+        <div id="test5-result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        const ORGANIZATION_ID = '4384a92c-df41-444b-b34d-6c80e7820486';
+        const AUTH_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzNDU0YmZhMi1hYWJlLTQyNTQtYjg5ZC1hZjI5Yzk4NTQ4ZmMiLCJlbWFpbCI6Im5pY29sYXNAZGV2LmNvbSIsIm9yZ2FuaXphdGlvbl9pZCI6IjQzODRhOTJjLWRmNDEtNDQ0Yi1iMzRkLTZjODBlNzgyMDQ4NiIsImV4cCI6MTc2OTM5NzU5Nn0.5Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2';
+
+        function getHeaders() {
+            return {
+                'Authorization': `Bearer ${AUTH_TOKEN}`,
+                'Content-Type': 'application/json'
+            };
+        }
+
+        function showResult(elementId, message, type = 'loading') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<span class="${type}">${message}</span>`;
+        }
+
+        async function testGetAllClients() {
+            showResult('test1-result', 'Testing GET /clients/...', 'loading');
+            try {
+                const response = await fetch(`${API_BASE}/clients/?organization_id=${ORGANIZATION_ID}`, {
+                    method: 'GET',
+                    headers: getHeaders()
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult('test1-result', `✅ Success! Found ${data.length} clients`, 'success');
+                    console.log('All clients:', data);
+                } else {
+                    showResult('test1-result', `❌ Error: ${response.status} ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                showResult('test1-result', `❌ Network error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGetSingleClient() {
+            showResult('test2-result', 'Testing GET /clients/{id}...', 'loading');
+            try {
+                const clientId = 'e8264cf3-1016-49e0-89b7-999a9523bbf7';
+                const response = await fetch(`${API_BASE}/clients/${clientId}?organization_id=${ORGANIZATION_ID}`, {
+                    method: 'GET',
+                    headers: getHeaders()
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult('test2-result', `✅ Success! Client: ${data.name}`, 'success');
+                    console.log('Single client:', data);
+                } else {
+                    showResult('test2-result', `❌ Error: ${response.status} ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                showResult('test2-result', `❌ Network error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCreateClient() {
+            showResult('test3-result', 'Testing POST /clients/...', 'loading');
+            try {
+                const newClient = {
+                    name: 'Test Client Created via API',
+                    email: 'test-api@example.com',
+                    organization_id: ORGANIZATION_ID
+                };
+
+                const response = await fetch(`${API_BASE}/clients/?organization_id=${ORGANIZATION_ID}`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(newClient)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult('test3-result', `✅ Success! Created client: ${data.name} (ID: ${data.id})`, 'success');
+                    console.log('Created client:', data);
+                } else {
+                    const errorData = await response.json();
+                    showResult('test3-result', `❌ Error: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`, 'error');
+                }
+            } catch (error) {
+                showResult('test3-result', `❌ Network error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testUpdateClient() {
+            showResult('test4-result', 'Testing PUT /clients/{id}...', 'loading');
+            try {
+                const clientId = 'e8264cf3-1016-49e0-89b7-999a9523bbf7';
+                const updateData = {
+                    name: 'Updated Test Client',
+                    email: 'updated-test@example.com'
+                };
+
+                const response = await fetch(`${API_BASE}/clients/${clientId}?organization_id=${ORGANIZATION_ID}`, {
+                    method: 'PUT',
+                    headers: getHeaders(),
+                    body: JSON.stringify(updateData)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult('test4-result', `✅ Success! Updated client: ${data.name}`, 'success');
+                    console.log('Updated client:', data);
+                } else {
+                    const errorData = await response.json();
+                    showResult('test4-result', `❌ Error: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`, 'error');
+                }
+            } catch (error) {
+                showResult('test4-result', `❌ Network error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDeleteClient() {
+            showResult('test5-result', 'Testing DELETE /clients/{id}...', 'loading');
+            try {
+                const clientId = 'e8264cf3-1016-49e0-89b7-999a9523bbf7';
+
+                const response = await fetch(`${API_BASE}/clients/${clientId}?organization_id=${ORGANIZATION_ID}`, {
+                    method: 'DELETE',
+                    headers: getHeaders()
+                });
+                
+                if (response.ok) {
+                    showResult('test5-result', `✅ Success! Deleted client`, 'success');
+                    console.log('Client deleted successfully');
+                } else {
+                    const errorData = await response.json();
+                    showResult('test5-result', `❌ Error: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`, 'error');
+                }
+            } catch (error) {
+                showResult('test5-result', `❌ Network error: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

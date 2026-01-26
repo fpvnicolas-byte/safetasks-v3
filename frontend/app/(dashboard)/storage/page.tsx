@@ -9,8 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 export default function StoragePage() {
   const [uploadedFiles, setUploadedFiles] = useState<FileUploadResponse[]>([])
 
-  const handleUploadComplete = (filePath: string, fileName: string) => {
-    console.log('Upload complete:', filePath, fileName)
+  const handleUploadComplete = (result: FileUploadResponse) => {
+    console.log('Upload complete:', result)
     // In a real app, you'd refetch the file list here
     // For now, we'll just log it
   }

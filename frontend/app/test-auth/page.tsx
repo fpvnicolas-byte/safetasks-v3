@@ -163,19 +163,19 @@ export default function TestAuthPage() {
                       }`}
                     >
                       <div className="font-semibold mb-2">
-                        {result.ok ? '✅' : '❌'} {result.test}
+                        {result.ok ? '✅' : '❌'} {String(result.test)}
                       </div>
-                      {result.status && (
+                      {result.status !== undefined && (
                         <div className="text-sm mb-2">
-                          Status: <code className="bg-white px-2 py-1 rounded">{result.status}</code>
+                          Status: <code className="bg-white px-2 py-1 rounded">{String(result.status)}</code>
                         </div>
                       )}
-                      {result.error && (
+                      {result.error !== undefined && (
                         <div className="text-sm text-red-700">
-                          Error: {result.error}
+                          Error: {String(result.error)}
                         </div>
                       )}
-                      {result.data && (
+                      {result.data !== undefined && (
                         <details className="mt-2">
                           <summary className="cursor-pointer text-sm font-semibold">
                             View Response

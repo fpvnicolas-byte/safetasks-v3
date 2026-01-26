@@ -13,9 +13,9 @@ import { EquipmentUtilization } from '@/components/dashboard/EquipmentUtilizatio
 import { QuickActions } from '@/components/dashboard/QuickActions'
 
 // Helper function to safely format numbers
-const safeToFixed = (value: any, decimals: number = 1): string => {
+const safeToFixed = (value: number | string | null | undefined, decimals: number = 1): string => {
   // Convert to number
-  const num = typeof value === 'number' ? value : parseFloat(value)
+  const num = typeof value === 'number' ? value : parseFloat(value ?? '0')
 
   // Check if valid number
   if (isNaN(num) || !isFinite(num)) {
@@ -42,7 +42,7 @@ export default function DashboardPage() {
   // Fallback to simple dashboard if analytics fail
   if (error || !dashboard) {
     const activeProjects = projects?.filter(p =>
-      p.status !== 'archived' && p.status !== 'completed'
+      p.status !== 'archived' && p.status !== 'delivered'
     ).length || 0
 
     return (

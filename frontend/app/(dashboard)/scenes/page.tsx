@@ -10,26 +10,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Plus, Search, Edit, Trash2, Film, Clock, MapPin, Eye } from 'lucide-react'
 import Link from 'next/link'
-import { Scene, SceneLocation, SceneTimeOfDay } from '@/types'
+import { Scene } from '@/types'
 
-const locationColors: Record<SceneLocation, string> = {
-  INT: 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200',
-  EXT: 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200',
+const locationColors: Record<string, string> = {
+  internal: 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200',
+  external: 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200',
 }
 
-const timeOfDayColors: Record<SceneTimeOfDay, string> = {
-  DAY: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200',
-  NIGHT: 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-200',
-  DAWN: 'bg-orange-100 text-orange-800 dark:bg-orange-800 dark:text-orange-200',
-  DUSK: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-800 dark:text-indigo-200',
+const timeOfDayColors: Record<string, string> = {
+  day: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200',
+  night: 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-200',
+  dawn: 'bg-orange-100 text-orange-800 dark:bg-orange-800 dark:text-orange-200',
+  dusk: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-800 dark:text-indigo-200',
 }
 
 function ScenesContent() {
   const searchParams = useSearchParams()
   const projectId = searchParams.get('project') || ''
 
-  const [locationFilter, setLocationFilter] = useState<SceneLocation | 'all'>('all')
-  const [timeOfDayFilter, setTimeOfDayFilter] = useState<SceneTimeOfDay | 'all'>('all')
+  const [locationFilter, setLocationFilter] = useState<string | 'all'>('all')
+  const [timeOfDayFilter, setTimeOfDayFilter] = useState<string | 'all'>('all')
   const [searchQuery, setSearchQuery] = useState('')
 
   // Get scenes data
@@ -38,10 +38,10 @@ function ScenesContent() {
 
   // Apply filters
   const filteredScenes = allScenes?.filter(scene => {
-    const matchesLocation = locationFilter === 'all' || scene.location === locationFilter
-    const matchesTimeOfDay = timeOfDayFilter === 'all' || scene.time_of_day === timeOfDayFilter
+    const matchesLocation = locationFilter === 'all' || scene.internal_external === locationFilter
+    const matchesTimeOfDay = timeOfDayFilter === 'all' || scene.day_night === timeOfDayFilter
     const matchesSearch = !searchQuery ||
-      scene.scene_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      scene.scene_number.toString().includes(searchQuery.toLowerCase()) ||
       scene.description.toLowerCase().includes(searchQuery.toLowerCase())
 
     return matchesLocation && matchesTimeOfDay && matchesSearch
@@ -128,30 +128,30 @@ function ScenesContent() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Location</label>
-              <Select value={locationFilter} onValueChange={(value) => setLocationFilter(value as SceneLocation | 'all')}>
+              <Select value={locationFilter} onValueChange={(value) => setLocationFilter(value as string | 'all')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Locations</SelectItem>
-                  <SelectItem value="INT">Interior (INT)</SelectItem>
-                  <SelectItem value="EXT">Exterior (EXT)</SelectItem>
+                  <SelectItem value="internal">Interior</SelectItem>
+                  <SelectItem value="external">Exterior</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Time of Day</label>
-              <Select value={timeOfDayFilter} onValueChange={(value) => setTimeOfDayFilter(value as SceneTimeOfDay | 'all')}>
+              <Select value={timeOfDayFilter} onValueChange={(value) => setTimeOfDayFilter(value as string | 'all')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Times</SelectItem>
-                  <SelectItem value="DAY">Day</SelectItem>
-                  <SelectItem value="NIGHT">Night</SelectItem>
-                  <SelectItem value="DAWN">Dawn</SelectItem>
-                  <SelectItem value="DUSK">Dusk</SelectItem>
+                  <SelectItem value="day">Day</SelectItem>
+                  <SelectItem value="night">Night</SelectItem>
+                  <SelectItem value="dawn">Dawn</SelectItem>
+                  <SelectItem value="dusk">Dusk</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -179,7 +179,7 @@ function ScenesContent() {
             <SceneCard
               key={scene.id}
               scene={scene}
-              onDelete={() => handleDeleteScene(scene.id, scene.scene_number)}
+              onDelete={() => handleDeleteScene(scene.id, scene.scene_number.toString())}
             />
           ))}
         </div>
@@ -233,11 +233,11 @@ function SceneCard({ scene, onDelete }: SceneCardProps) {
             </CardDescription>
           </div>
           <div className="flex gap-1">
-            <Badge className={locationColors[scene.location]}>
-              {scene.location}
+            <Badge className={locationColors[scene.internal_external]}>
+              {scene.internal_external}
             </Badge>
-            <Badge className={timeOfDayColors[scene.time_of_day]}>
-              {scene.time_of_day}
+            <Badge className={timeOfDayColors[scene.day_night]}>
+              {scene.day_night}
             </Badge>
           </div>
         </div>
@@ -252,13 +252,13 @@ function SceneCard({ scene, onDelete }: SceneCardProps) {
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-muted-foreground" />
             <span>
-              {scene.estimated_duration_minutes ? `${scene.estimated_duration_minutes} min` : 'No estimate'}
+              {scene.estimated_time_minutes ? `${scene.estimated_time_minutes} min` : 'No estimate'}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4 text-muted-foreground" />
             <span>
-              {scene.estimated_duration_minutes ? `${scene.estimated_duration_minutes} min` : 'No duration'}
+              {scene.estimated_time_minutes ? `${scene.estimated_time_minutes} min` : 'No duration'}
             </span>
           </div>
         </div>

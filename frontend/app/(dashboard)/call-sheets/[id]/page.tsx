@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Edit, Trash2, Clock, MapPin, Phone, User, Cloud, FileText } from 'lucide-react'
+import { Edit, Trash2, Clock, MapPin, Cloud, FileText } from 'lucide-react'
 import Link from 'next/link'
 import { formatTime } from '@/lib/utils/time'
 import { useState } from 'react'
@@ -121,34 +121,22 @@ export default function CallSheetDetailPage() {
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="font-medium">Crew Call:</span>
-              <span className="text-lg">{formatTime(callSheet.crew_call_time)}</span>
+              <span className="text-lg">{formatTime(callSheet.crew_call)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="font-medium">Talent Call:</span>
-              <span className="text-lg">{formatTime(callSheet.talent_call_time)}</span>
+              <span className="font-medium">On Set:</span>
+              <span className="text-lg">{formatTime(callSheet.on_set)}</span>
             </div>
-            {callSheet.breakfast_time && (
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Breakfast:</span>
-                <span>{formatTime(callSheet.breakfast_time)}</span>
-              </div>
-            )}
             {callSheet.lunch_time && (
               <div className="flex justify-between items-center">
                 <span className="font-medium">Lunch:</span>
                 <span>{formatTime(callSheet.lunch_time)}</span>
               </div>
             )}
-            {callSheet.sunrise_time && (
+            {callSheet.wrap_time && (
               <div className="flex justify-between items-center">
-                <span className="font-medium">Sunrise:</span>
-                <span>{formatTime(callSheet.sunrise_time)}</span>
-              </div>
-            )}
-            {callSheet.sunset_time && (
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Sunset:</span>
-                <span>{formatTime(callSheet.sunset_time)}</span>
+                <span className="font-medium">Wrap:</span>
+                <span>{formatTime(callSheet.wrap_time)}</span>
               </div>
             )}
           </CardContent>
@@ -171,67 +159,18 @@ export default function CallSheetDetailPage() {
                 </div>
               )}
             </div>
-            {callSheet.weather_forecast && (
+            {callSheet.weather && (
               <>
                 <Separator />
                 <div className="flex items-center gap-2">
                   <Cloud className="h-4 w-4" />
-                  <span className="text-sm">{callSheet.weather_forecast}</span>
+                  <span className="text-sm">{callSheet.weather}</span>
                 </div>
               </>
             )}
           </CardContent>
         </Card>
 
-        {/* Key Contacts */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Key Contacts
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {callSheet.director_name && (
-              <div>
-                <div className="font-medium">Director</div>
-                <div className="text-sm">{callSheet.director_name}</div>
-                {callSheet.director_phone && (
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                    <Phone className="h-3 w-3" />
-                    {callSheet.director_phone}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {callSheet.producer_name && (
-              <div>
-                <div className="font-medium">Producer</div>
-                <div className="text-sm">{callSheet.producer_name}</div>
-                {callSheet.producer_phone && (
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                    <Phone className="h-3 w-3" />
-                    {callSheet.producer_phone}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {callSheet.production_manager_name && (
-              <div>
-                <div className="font-medium">Production Manager</div>
-                <div className="text-sm">{callSheet.production_manager_name}</div>
-                {callSheet.production_manager_phone && (
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                    <Phone className="h-3 w-3" />
-                    {callSheet.production_manager_phone}
-                  </div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
 
       {/* Emergency Information */}

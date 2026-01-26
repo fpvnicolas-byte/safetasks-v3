@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Plus, Search, Edit, Trash2, FileText } from 'lucide-react'
 import Link from 'next/link'
-import { TaxTable, getTaxTypeDisplayName } from '@/types'
+import { getTaxTypeDisplayName } from '@/types'
 
 export default function TaxTablesPage() {
   const { organizationId } = useAuth()

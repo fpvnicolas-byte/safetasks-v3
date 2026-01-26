@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Plus, Search, Edit, Trash2, Wallet, TrendingUp, DollarSign } from 'lucide-react'
 import Link from 'next/link'
-import { BankAccount, formatCurrency } from '@/types'
+import { formatCurrency } from '@/types'
 
 export default function BankAccountsPage() {
   const { organizationId } = useAuth()
@@ -45,7 +45,10 @@ export default function BankAccountsPage() {
     }
 
     try {
-      await deleteBankAccount.mutateAsync(accountId)
+      await deleteBankAccount.mutateAsync({
+        organizationId: organizationId || '',
+        accountId: accountId
+      })
     } catch (err: unknown) {
       const error = err as Error
       alert(`Failed to delete bank account: ${error.message}`)

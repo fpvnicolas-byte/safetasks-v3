@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Plus, Search, Edit, Trash2, Eye, Users, Mail, Phone, FileText } from 'lucide-react'
 import Link from 'next/link'
-import { Client } from '@/types'
 
 export default function ClientsPage() {
   const { organizationId } = useAuth()
@@ -156,19 +155,19 @@ export default function ClientsPage() {
                 <div className="space-y-2 text-sm">
                   {client.email && (
                     <div className="flex items-center text-muted-foreground">
-                      <Mail className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <Mail className="h-4 w-4 mr-2 shrink-0" />
                       <span className="truncate">{client.email}</span>
                     </div>
                   )}
                   {client.phone && (
                     <div className="flex items-center text-muted-foreground">
-                      <Phone className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <Phone className="h-4 w-4 mr-2 shrink-0" />
                       <span>{client.phone}</span>
                     </div>
                   )}
                   {client.document && (
                     <div className="flex items-center text-muted-foreground">
-                      <FileText className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <FileText className="h-4 w-4 mr-2 shrink-0" />
                       <span>{client.document}</span>
                     </div>
                   )}

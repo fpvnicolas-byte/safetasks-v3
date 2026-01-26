@@ -89,6 +89,7 @@ export interface ClientCreate {
   email?: string
   document?: string
   phone?: string
+  organization_id?: UUID
 }
 
 export interface ClientUpdate {
@@ -696,6 +697,7 @@ export interface KitItemUpdate {
   last_maintenance_date?: ISODate
   health_status?: HealthStatus
   notes?: string
+  kit_id?: UUID
 }
 
 export interface KitItemWithMaintenance extends KitItem {

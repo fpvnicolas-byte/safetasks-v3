@@ -3,8 +3,7 @@
 import { useParams, useRouter } from 'next/navigation'
 import { useCharacter, useDeleteCharacter } from '@/lib/api/hooks'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Pencil, Trash2, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
@@ -41,12 +40,6 @@ export default function CharacterDetailPage() {
     }
   }
 
-  const roleColors: Record<string, string> = {
-    lead: 'bg-purple-100 text-purple-800',
-    supporting: 'bg-blue-100 text-blue-800',
-    extra: 'bg-gray-100 text-gray-800',
-  }
-
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
@@ -75,12 +68,6 @@ export default function CharacterDetailPage() {
         </div>
       </div>
 
-      {character.role_type && (
-        <Badge className={roleColors[character.role_type]}>
-          {character.role_type.charAt(0).toUpperCase() + character.role_type.slice(1)}
-        </Badge>
-      )}
-
       <Card>
         <CardHeader>
           <CardTitle>Character Details</CardTitle>
@@ -100,19 +87,10 @@ export default function CharacterDetailPage() {
             )}
           </div>
 
-          {character.contact_info && (
-            <div>
-              <div className="text-sm font-medium text-muted-foreground mb-2">Contact Information</div>
-              <div className="text-base whitespace-pre-wrap">{character.contact_info}</div>
-            </div>
-          )}
-
-          {character.notes && (
-            <div>
-              <div className="text-sm font-medium text-muted-foreground mb-2">Notes</div>
-              <div className="text-base whitespace-pre-wrap">{character.notes}</div>
-            </div>
-          )}
+          <div>
+            <div className="text-sm font-medium text-muted-foreground mb-2">Character Description</div>
+            <div className="text-base whitespace-pre-wrap">{character.description}</div>
+          </div>
         </CardContent>
       </Card>
     </div>

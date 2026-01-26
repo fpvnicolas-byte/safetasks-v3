@@ -145,7 +145,7 @@ export default function EditInvoicePage() {
 
     try {
       const data: Partial<Invoice> = {
-        status: formData.get('status') as string,
+        status: formData.get('status') as Invoice['status'],
         due_date: formData.get('due_date') as string,
       }
 

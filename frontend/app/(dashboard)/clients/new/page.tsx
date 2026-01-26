@@ -52,6 +52,7 @@ export default function NewClientPage() {
         email: formData.email.trim() || undefined,
         document: formData.document.trim() || undefined,
         phone: formData.phone.trim() || undefined,
+        organization_id: '4384a92c-df41-444b-b34d-6c80e7820486', // Hardcoded for testing
       }
 
       await createClient.mutateAsync(clientData)

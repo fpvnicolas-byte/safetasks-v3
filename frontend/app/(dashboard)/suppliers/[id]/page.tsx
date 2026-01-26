@@ -25,11 +25,12 @@ export default function SupplierDetailPage() {
   const [showStatement, setShowStatement] = useState(false)
 
   const { data: supplier, isLoading, error } = useSupplier(supplierId)
-  const deleteSupplier = useDeleteSupplier(organizationId || '')
+  const deleteSupplier = useDeleteSupplier()
   const { data: statement, isLoading: isLoadingStatement } = useSupplierStatement(
     supplierId,
-    showStatement ? dateFrom || undefined : undefined,
-    showStatement ? dateTo || undefined : undefined
+    organizationId || '',
+    showStatement && dateFrom ? dateFrom : undefined,
+    showStatement && dateTo ? dateTo : undefined
   )
 
   if (isLoading) {
@@ -233,12 +234,17 @@ export default function SupplierDetailPage() {
                 <div>
                   <h4 className="font-semibold mb-2">By Project</h4>
                   <div className="space-y-2">
-                    {statement.project_breakdown.map((project: Record<string, unknown>, index: number) => (
-                      <div key={index} className="flex items-center justify-between p-2 border rounded">
-                        <span className="text-sm">{project.project_name || 'Unknown Project'}</span>
-                        <span className="font-medium">{formatCurrency(project.total_cents, statement.currency)}</span>
-                      </div>
-                    ))}
+                    {statement.project_breakdown.map((project, index) => {
+                      const projectRecord = project as Record<string, unknown>
+                      const projectName = (projectRecord.project_name as string) || 'Unknown Project'
+                      const totalCents = (projectRecord.total_cents as number) || 0
+                      return (
+                        <div key={index} className="flex items-center justify-between p-2 border rounded">
+                          <span className="text-sm">{projectName}</span>
+                          <span className="font-medium">{formatCurrency(totalCents, statement.currency)}</span>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               )}

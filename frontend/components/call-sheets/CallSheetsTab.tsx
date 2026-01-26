@@ -109,17 +109,17 @@ interface CallSheetCardProps {
 }
 
 function CallSheetCard({ callSheet, onDelete, isDeleting }: CallSheetCardProps) {
-  const shootDate = new Date(callSheet.shoot_date).toLocaleDateString()
+  const shootDate = new Date(callSheet.shooting_day).toLocaleDateString()
 
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div>
-            <CardTitle className="text-lg">Day {callSheet.shooting_day_number}</CardTitle>
+            <CardTitle className="text-lg">Call Sheet</CardTitle>
             <CardDescription>{shootDate}</CardDescription>
           </div>
-          <Badge variant={callSheet.status === 'published' ? 'default' : 'secondary'}>
+          <Badge variant={callSheet.status === 'confirmed' ? 'default' : 'secondary'}>
             {callSheet.status}
           </Badge>
         </div>
@@ -127,39 +127,45 @@ function CallSheetCard({ callSheet, onDelete, isDeleting }: CallSheetCardProps) 
 
       <CardContent className="space-y-3">
         {/* Location */}
-        <div className="flex items-start gap-2">
-          <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-          <div>
-            <div className="font-medium">{callSheet.location_name}</div>
-            {callSheet.location_address && (
-              <div className="text-sm text-muted-foreground">{callSheet.location_address}</div>
-            )}
+        {callSheet.location && (
+          <div className="flex items-start gap-2">
+            <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+            <div>
+              <div className="font-medium">{callSheet.location}</div>
+              {callSheet.location_address && (
+                <div className="text-sm text-muted-foreground">{callSheet.location_address}</div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Call Times */}
         <div className="grid grid-cols-2 gap-2 text-sm">
-          <div>
-            <div className="font-medium text-muted-foreground">Crew Call</div>
-            <div className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {formatTime(callSheet.crew_call_time)}
+          {callSheet.crew_call && (
+            <div>
+              <div className="font-medium text-muted-foreground">Crew Call</div>
+              <div className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {formatTime(callSheet.crew_call)}
+              </div>
             </div>
-          </div>
-          <div>
-            <div className="font-medium text-muted-foreground">Talent Call</div>
-            <div className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {formatTime(callSheet.talent_call_time)}
+          )}
+          {callSheet.on_set && (
+            <div>
+              <div className="font-medium text-muted-foreground">On Set</div>
+              <div className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {formatTime(callSheet.on_set)}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Weather */}
-        {callSheet.weather_forecast && (
+        {callSheet.weather && (
           <div className="text-sm">
             <span className="font-medium text-muted-foreground">Weather: </span>
-            {callSheet.weather_forecast}
+            {callSheet.weather}
           </div>
         )}
 

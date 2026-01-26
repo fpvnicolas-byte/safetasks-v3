@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Edit, Trash2, ArrowLeft, Download, Mail, DollarSign, CreditCard } from 'lucide-react'
 import Link from 'next/link'
-import { formatCurrency, centsToDollars } from '@/lib/utils/money'
+import { formatCurrency } from '@/lib/utils/money'
 import { useState } from 'react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { InvoiceStatus } from '@/types'

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCreateProject, useClients } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
-import { ProjectFormData, ProjectStatus } from '@/types'
+import { ProjectFormData, ProjectStatus, ProjectCreate } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -43,7 +43,7 @@ export default function NewProjectPage() {
     try {
       const budgetDollars = parseFloat(formData.get('budget') as string) || 0
 
-      const data: Partial<ProjectFormData> = {
+      const data: ProjectCreate = {
         client_id: formData.get('client_id') as string,
         title: (formData.get('title') as string).trim(),
         description: (formData.get('description') as string || '').trim() || undefined,

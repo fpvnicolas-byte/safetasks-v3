@@ -129,7 +129,9 @@ export default function GoogleDriveSettingsPage() {
               <div>
                 <span className="text-muted-foreground">Project ID:</span>
                 <p className="font-mono text-xs mt-1">
-                  {credentials.service_account_key?.project_id || 'N/A'}
+                  {credentials.service_account_key && typeof credentials.service_account_key === 'object' && 'project_id' in credentials.service_account_key
+                    ? (credentials.service_account_key as { project_id?: string }).project_id || 'N/A'
+                    : 'N/A'}
                 </p>
               </div>
               <div>

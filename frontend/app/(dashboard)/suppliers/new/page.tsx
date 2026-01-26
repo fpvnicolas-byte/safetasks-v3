@@ -19,7 +19,7 @@ export default function NewSupplierPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<SupplierCategory>('rental_house')
 
-  const createSupplier = useCreateSupplier(organizationId || '')
+  const createSupplier = useCreateSupplier()
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()

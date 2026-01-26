@@ -8,25 +8,16 @@ import { Badge } from '@/components/ui/badge'
 import { Plus, FolderOpen } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency } from '@/lib/utils/money'
-import { ProjectStatus, ProjectType } from '@/types'
+import { ProjectStatus } from '@/types'
 import { ProjectsListSkeleton } from '@/components/LoadingSkeletons'
 
 const statusColors: Record<ProjectStatus, string> = {
-  planning: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-  pre_production: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+  draft: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+  'pre-production': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
   production: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  post_production: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-  completed: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200',
+  'post-production': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+  delivered: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200',
   archived: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
-}
-
-const typeLabels: Record<ProjectType, string> = {
-  feature: 'Feature Film',
-  short: 'Short Film',
-  documentary: 'Documentary',
-  commercial: 'Commercial',
-  series: 'Series',
-  other: 'Other',
 }
 
 export default function ProjectsPage() {
@@ -85,7 +76,6 @@ export default function ProjectsPage() {
                       {project.status.replace('_', ' ')}
                     </Badge>
                   </div>
-                  <CardDescription>{typeLabels[project.project_type]}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 text-sm">

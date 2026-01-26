@@ -25,7 +25,7 @@ export default function EditSupplierPage() {
   const [isActive, setIsActive] = useState(true)
 
   const { data: supplier, isLoading } = useSupplier(supplierId)
-  const updateSupplier = useUpdateSupplier(supplierId, organizationId || '')
+  const updateSupplier = useUpdateSupplier()
 
   // Initialize state when supplier loads
   if (supplier && selectedCategory !== supplier.category) {
@@ -83,7 +83,7 @@ export default function EditSupplierPage() {
         is_active: isActive,
       }
 
-      await updateSupplier.mutateAsync(data)
+      await updateSupplier.mutateAsync({ supplierId, data })
       router.push(`/suppliers/${supplierId}`)
     } catch (err: unknown) {
       const error = err as Error

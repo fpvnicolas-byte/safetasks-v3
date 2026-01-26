@@ -41,12 +41,11 @@ export default function SceneDetailPage() {
     }
   }
 
-  const locationColor = scene.location === 'INT' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
   const timeColors = {
-    DAY: 'bg-yellow-100 text-yellow-800',
-    NIGHT: 'bg-purple-100 text-purple-800',
-    DAWN: 'bg-orange-100 text-orange-800',
-    DUSK: 'bg-pink-100 text-pink-800',
+    day: 'bg-yellow-100 text-yellow-800',
+    night: 'bg-purple-100 text-purple-800',
+    dawn: 'bg-orange-100 text-orange-800',
+    dusk: 'bg-pink-100 text-pink-800',
   }
 
   return (
@@ -75,36 +74,30 @@ export default function SceneDetailPage() {
         </div>
       </div>
 
-      <div className="flex gap-2">
-        <Badge className={locationColor}>{scene.location}</Badge>
-        <Badge className={timeColors[scene.time_of_day]}>{scene.time_of_day}</Badge>
-      </div>
-
       <Card>
         <CardHeader>
           <CardTitle>Scene Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-3">
+            <div>
+              <div className="text-sm font-medium text-muted-foreground">Location</div>
+              <div className="text-lg">{scene.internal_external}</div>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-muted-foreground">Time</div>
+              <div className="text-lg">{scene.day_night}</div>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-muted-foreground">Duration</div>
+              <div className="text-lg">{scene.estimated_time_minutes} minutes</div>
+            </div>
+          </div>
+
           <div>
             <div className="text-sm font-medium text-muted-foreground mb-2">Description</div>
-            <div className="text-lg">{scene.description}</div>
+            <div className="text-base whitespace-pre-wrap">{scene.description}</div>
           </div>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            {scene.estimated_duration_minutes && (
-              <div>
-                <div className="text-sm font-medium text-muted-foreground">Duration</div>
-                <div className="text-lg">{scene.estimated_duration_minutes} minutes</div>
-              </div>
-            )}
-          </div>
-
-          {scene.description && (
-            <div>
-              <div className="text-sm font-medium text-muted-foreground mb-2">Description</div>
-              <div className="text-base whitespace-pre-wrap">{scene.description}</div>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

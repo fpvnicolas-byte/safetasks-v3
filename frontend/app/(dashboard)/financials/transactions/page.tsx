@@ -84,7 +84,10 @@ export default function TransactionsPage() {
     }
 
     try {
-      await deleteTransaction.mutateAsync(transactionId)
+      await deleteTransaction.mutateAsync({
+        organizationId: organizationId || '',
+        transactionId: transactionId
+      })
     } catch (err: unknown) {
       const error = err as Error
       alert(`Failed to delete transaction: ${error.message}`)
