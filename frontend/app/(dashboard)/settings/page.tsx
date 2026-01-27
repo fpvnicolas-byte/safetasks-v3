@@ -79,24 +79,26 @@ export default function SettingsPage() {
           </Card>
         </Link>
 
-        <Card className="opacity-60">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
-                <Bell className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+        <Link href="/notifications">
+          <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-orange-100 dark:bg-orange-900 rounded-lg">
+                  <Bell className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <CardTitle>Notifications</CardTitle>
+                  <CardDescription>Real-time alerts and updates</CardDescription>
+                </div>
               </div>
-              <div>
-                <CardTitle>Notifications</CardTitle>
-                <CardDescription>Notification preferences</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Configure notification delivery and preferences (Coming soon)
-            </p>
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Manage your notification preferences and view recent alerts
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
     </div>
   )

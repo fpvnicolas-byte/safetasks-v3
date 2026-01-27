@@ -1,5 +1,5 @@
 from app.services.base import BaseService
-from app.models.financial import TaxTable, Invoice, InvoiceItem
+from app.models.financial import TaxTable, Invoice, InvoiceItem, InvoiceStatusEnum
 from app.models.transactions import Transaction
 from app.schemas.financial import (
     TaxTableCreate, TaxTableUpdate,

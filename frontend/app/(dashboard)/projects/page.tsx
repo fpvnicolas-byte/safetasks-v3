@@ -65,7 +65,7 @@ export default function ProjectsPage() {
       </div>
 
       {projects && projects.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => (
             <Link key={project.id} href={`/projects/${project.id}`}>
               <Card className="hover:bg-muted/50 transition-colors cursor-pointer">

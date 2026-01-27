@@ -13,10 +13,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { User, Settings, LogOut } from 'lucide-react'
+import { User, Settings, LogOut, Menu } from 'lucide-react'
 import Link from 'next/link'
+import { useState } from 'react'
 
-export function Header() {
+interface HeaderProps {
+  onSidebarToggle: () => void
+}
+
+export function Header({ onSidebarToggle }: HeaderProps) {
   const { user } = useAuth()
 
   return (
@@ -54,6 +59,14 @@ export function Header() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
+          {/* Mobile Navigation Toggle */}
+          <button
+            onClick={onSidebarToggle}
+            className="lg:hidden p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+
           {user && <NotificationsBell />}
           <ThemeToggle />
           {user && (

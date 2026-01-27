@@ -166,6 +166,219 @@ async def get_analysis_status(
         )
 
 
+@router.get("/analysis/")
+async def get_ai_analysis(
+    organization_id: UUID = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """
+    Get AI analysis results for an organization.
+    """
+    try:
+        # For now, return a mock response since we don't have persistent storage for analysis results
+        return {
+            "message": "AI analysis endpoint working",
+            "organization_id": str(organization_id),
+            "analyses": [],
+            "total": 0
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get AI analysis: {str(e)}"
+        )
+
+
+@router.get("/suggestions/{project_id}")
+async def get_ai_suggestions(
+    project_id: UUID,
+    organization_id: UUID = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """
+    Get AI suggestions for a specific project.
+    """
+    try:
+        # Validate project ownership
+        from app.modules.commercial.service import project_service
+        project = await project_service.get(db=db, organization_id=organization_id, id=project_id)
+        if not project:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Project not found"
+            )
+
+        # For now, return mock suggestions
+        return {
+            "message": "AI suggestions endpoint working",
+            "project_id": str(project_id),
+            "suggestions": [],
+            "total": 0
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get AI suggestions: {str(e)}"
+        )
+
+
+@router.get("/recommendations/{project_id}")
+async def get_ai_recommendations(
+    project_id: UUID,
+    organization_id: UUID = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """
+    Get AI recommendations for a specific project.
+    """
+    try:
+        # Validate project ownership
+        from app.modules.commercial.service import project_service
+        project = await project_service.get(db=db, organization_id=organization_id, id=project_id)
+        if not project:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Project not found"
+            )
+
+        # For now, return mock recommendations
+        return {
+            "message": "AI recommendations endpoint working",
+            "project_id": str(project_id),
+            "recommendations": [],
+            "total": 0
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get AI recommendations: {str(e)}"
+        )
+
+
+@router.post("/budget-estimation")
+async def estimate_budget(
+    project_id: UUID,
+    estimation_type: str,
+    script_content: str,
+    organization_id: UUID = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """
+    Generate AI-powered budget estimation for a project.
+    """
+    try:
+        # Validate project ownership
+        from app.modules.commercial.service import project_service
+        project = await project_service.get(db=db, organization_id=organization_id, id=project_id)
+        if not project:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Project not found"
+            )
+
+        # For now, return mock budget estimation
+        return {
+            "message": "Budget estimation endpoint working",
+            "project_id": str(project_id),
+            "estimation_type": estimation_type,
+            "estimated_budget_cents": 5000000,  # $50,000
+            "breakdown": [
+                {"category": "crew_hire", "estimated_amount_cents": 2000000},
+                {"category": "equipment_rental", "estimated_amount_cents": 1500000},
+                {"category": "logistics", "estimated_amount_cents": 1000000},
+                {"category": "post_production", "estimated_amount_cents": 500000}
+            ],
+            "risk_factors": ["Weather delays", "Location permits"],
+            "recommendations": ["Book equipment early", "Plan for weather contingencies"]
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to estimate budget: {str(e)}"
+        )
+
+
+@router.post("/call-sheet-suggestions")
+async def generate_call_sheet_suggestions(
+    project_id: UUID,
+    suggestion_type: str,
+    script_content: str,
+    organization_id: UUID = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """
+    Generate AI-powered call sheet suggestions for a project.
+    """
+    try:
+        # Validate project ownership
+        from app.modules.commercial.service import project_service
+        project = await project_service.get(db=db, organization_id=organization_id, id=project_id)
+        if not project:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Project not found"
+            )
+
+        # For now, return mock call sheet suggestions
+        return {
+            "message": "Call sheet suggestions endpoint working",
+            "project_id": str(project_id),
+            "suggestion_type": suggestion_type,
+            "day": 1,
+            "suggested_scenes": [1, 2, 3],
+            "crew_needed": ["Director", "DP", "Sound"],
+            "equipment_needed": ["Camera A", "Lights", "Audio"],
+            "estimated_duration": "8 hours"
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate call sheet suggestions: {str(e)}"
+        )
+
+
+@router.post("/script-analysis")
+async def analyze_script_content(
+    project_id: UUID,
+    analysis_type: str,
+    script_content: str,
+    organization_id: UUID = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """
+    Analyze script content and extract production elements.
+    """
+    try:
+        # Validate project ownership
+        from app.modules.commercial.service import project_service
+        project = await project_service.get(db=db, organization_id=organization_id, id=project_id)
+        if not project:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Project not found"
+            )
+
+        # Analyze the script with AI
+        analysis_result = await ai_engine_service.analyze_script_content(
+            organization_id=organization_id,
+            script_content=script_content,
+            project_id=project_id
+        )
+
+        return {
+            "message": "Script analysis completed",
+            "project_id": str(project_id),
+            "analysis_type": analysis_type,
+            "analysis_result": analysis_result
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Script analysis failed: {str(e)}"
+        )
+
+
 @router.post("/analyze-text")
 async def analyze_text_content(
     text: str,

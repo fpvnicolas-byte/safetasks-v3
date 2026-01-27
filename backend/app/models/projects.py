@@ -36,6 +36,7 @@ class Project(Base):
 
     # Relationships
     client = relationship("Client", back_populates="projects")
+    call_sheets = relationship("CallSheet", back_populates="project", cascade="all, delete-orphan")
 
     # Relationships to production entities
     scenes = relationship("Scene", back_populates="project", cascade="all, delete-orphan")

@@ -123,7 +123,7 @@ export function useDeleteCallSheet(organizationId: string) {
 
   return useMutation({
     mutationFn: (callSheetId: string) =>
-      apiClient.delete(`/api/v1/call-sheets/${callSheetId}`),
+      apiClient.delete(`/api/v1/call-sheets/${callSheetId}?organization_id=${organizationId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [CALL_SHEETS_KEY, organizationId] })
     },

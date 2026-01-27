@@ -26,7 +26,7 @@ export function QuickActions() {
       title: 'Create Invoice',
       description: 'Bill a client',
       icon: <FileText className="h-5 w-5" />,
-      href: '/financials/invoices/new',
+      href: '/financials/new-invoice',
       color: 'bg-green-100 text-green-600 hover:bg-green-200'
     },
     {
@@ -47,7 +47,7 @@ export function QuickActions() {
       title: 'Add Equipment',
       description: 'Register new kit item',
       icon: <Package className="h-5 w-5" />,
-      href: '/inventory/kit-items/new',
+      href: '/inventory/items/new',
       color: 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200'
     },
     {

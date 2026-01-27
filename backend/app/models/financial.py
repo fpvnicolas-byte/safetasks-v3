@@ -45,7 +45,7 @@ class TaxTable(Base):
     applies_to_income = Column(TEXT, nullable=True)  # JSON: {"categories": ["production_revenue"]}
     applies_to_expenses = Column(TEXT, nullable=True)  # JSON: {"categories": ["crew_hire"]}
 
-    # Status management (FIXED: was TEXT, now Boolean)
+    # Status management
     is_active = Column(Boolean, default=True, nullable=False)
 
     # Audit

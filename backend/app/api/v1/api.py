@@ -4,7 +4,8 @@ from app.api.v1.endpoints import (
     organizations, clients, projects, bank_accounts, transactions,
     kits, call_sheets, proposals, storage, notifications, ai,
     scenes, characters, shooting_days, production, financial,
-    suppliers, stakeholders, inventory, cloud, dashboard, profiles
+    suppliers, stakeholders, inventory, cloud, dashboard, profiles,
+    ai_monitoring
 )
 
 api_router = APIRouter()
@@ -140,4 +141,11 @@ api_router.include_router(
     profiles.router,
     prefix="/profiles",
     tags=["profiles"]
+)
+
+# Include AI monitoring endpoints
+api_router.include_router(
+    ai_monitoring.router,
+    prefix="/ai/monitoring",
+    tags=["ai_monitoring"]
 )

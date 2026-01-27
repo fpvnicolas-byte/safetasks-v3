@@ -24,7 +24,7 @@ export default function EditProjectPage() {
   const [error, setError] = useState<string | null>(null)
   const { data: project, isLoading } = useProject(projectId)
   const { data: clients, isLoading: isLoadingClients } = useClients(organizationId || '')
-  const updateProject = useUpdateProject(projectId)
+  const updateProject = useUpdateProject(projectId, organizationId || '')
 
   if (isLoading || isLoadingClients) {
     return (

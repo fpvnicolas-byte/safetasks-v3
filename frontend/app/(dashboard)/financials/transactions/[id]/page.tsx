@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTransaction, useDeleteTransaction } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
@@ -12,16 +12,19 @@ import { ArrowLeft, Trash2, Receipt, Calendar, Wallet, FolderOpen, ArrowUpCircle
 import Link from 'next/link'
 import { formatCurrency, getCategoryDisplayName, TransactionCategory } from '@/types'
 
-interface TransactionViewPageProps {
-  params: {
-    id: string
-  }
-}
-
-export default function TransactionViewPage({ params }: TransactionViewPageProps) {
+export default function TransactionViewPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const { organizationId } = useAuth()
-  const { data: transaction, isLoading, error } = useTransaction(params.id)
+  const [transactionId, setTransactionId] = useState<string | null>(null)
+  
+  // Resolve the promise in useEffect
+  React.useEffect(() => {
+    params.then(({ id }) => {
+      setTransactionId(id)
+    })
+  }, [params])
+
+  const { data: transaction, isLoading, error } = useTransaction(transactionId || '')
   const deleteTransaction = useDeleteTransaction()
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -45,7 +48,7 @@ export default function TransactionViewPage({ params }: TransactionViewPageProps
     try {
       await deleteTransaction.mutateAsync({
         organizationId,
-        transactionId: params.id
+        transactionId: transactionId || ''
       })
       router.push('/financials/transactions')
     } catch (err: unknown) {

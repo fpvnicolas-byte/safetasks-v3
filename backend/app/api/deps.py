@@ -29,16 +29,36 @@ async def get_current_user_id(
         if not payload.get("sub"):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token: missing user ID"
+                detail="Invalid token: missing user ID. Please use an authenticated user token, not an anon token."
             )
 
         return UUID(payload["sub"])
 
-    except JWTError:
+    except JWTError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token"
+            detail=f"Invalid token: {str(e)}"
         )
+
+
+async def get_current_profile(
+    user_id: UUID = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db)
+) -> Profile:
+    """
+    Get the current user's profile.
+    """
+    query = select(Profile).where(Profile.id == user_id)
+    result = await db.execute(query)
+    profile = result.scalar_one_or_none()
+
+    if not profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Profile not found"
+        )
+
+    return profile
 
 
 async def get_current_organization(
@@ -66,26 +86,6 @@ async def get_current_organization(
         )
 
     return organization_id
-
-
-async def get_current_profile(
-    user_id: UUID = Depends(get_current_user_id),
-    db: AsyncSession = Depends(get_db)
-) -> Profile:
-    """
-    Get the current user's profile.
-    """
-    query = select(Profile).where(Profile.id == user_id)
-    result = await db.execute(query)
-    profile = result.scalar_one_or_none()
-
-    if not profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Profile not found"
-        )
-
-    return profile
 
 
 async def get_organization_from_profile(

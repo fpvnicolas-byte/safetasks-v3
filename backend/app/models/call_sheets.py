@@ -1,5 +1,6 @@
 from sqlalchemy import Column, String, TEXT, TIMESTAMP, DATE, TIME, func, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 import uuid
 from app.core.base import Base
 
@@ -39,3 +40,6 @@ class CallSheet(Base):
     # Audit Fields
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # Relationships
+    project = relationship("Project", back_populates="call_sheets")

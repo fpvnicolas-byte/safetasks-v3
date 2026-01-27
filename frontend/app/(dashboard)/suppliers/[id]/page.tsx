@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useSupplier, useDeleteSupplier, useSupplierStatement } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
@@ -17,21 +17,65 @@ import { getSupplierCategoryDisplayName, formatCurrency } from '@/types'
 export default function SupplierDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { organizationId } = useAuth()
   const supplierId = params.id as string
 
-  const [dateFrom, setDateFrom] = useState<string>('')
-  const [dateTo, setDateTo] = useState<string>('')
-  const [showStatement, setShowStatement] = useState(false)
+  // Get dates from URL parameters
+  const urlDateFrom = searchParams.get('date_from') || ''
+  const urlDateTo = searchParams.get('date_to') || ''
+  
+  // State for form inputs (synced with URL)
+  const [dateFrom, setDateFrom] = useState<string>(urlDateFrom)
+  const [dateTo, setDateTo] = useState<string>(urlDateTo)
+  
+  // Only show statement when explicitly generated (not from URL)
+  const [showStatement, setShowStatement] = useState<boolean>(false)
 
-  const { data: supplier, isLoading, error } = useSupplier(supplierId)
+  const { data: supplier, isLoading, error } = useSupplier(supplierId, organizationId || undefined)
   const deleteSupplier = useDeleteSupplier()
+  
+  // Only fetch statement when explicitly requested
   const { data: statement, isLoading: isLoadingStatement } = useSupplierStatement(
     supplierId,
     organizationId || '',
-    showStatement && dateFrom ? dateFrom : undefined,
-    showStatement && dateTo ? dateTo : undefined
+    showStatement ? (dateFrom || undefined) : undefined,
+    showStatement ? (dateTo || undefined) : undefined,
+    showStatement
   )
+
+  // Update URL only when statement is generated (not on date input)
+  useEffect(() => {
+    if (showStatement && dateFrom && dateTo) {
+      const params = new URLSearchParams(searchParams.toString())
+      
+      params.set('date_from', dateFrom)
+      params.set('date_to', dateTo)
+      
+      // Update URL without triggering a page reload
+      router.replace(`${window.location.pathname}?${params.toString()}`)
+    }
+  }, [showStatement, dateFrom, dateTo, router, searchParams])
+
+  // Sync local state with URL when URL changes (only on initial load or URL change)
+  useEffect(() => {
+    const newUrlDateFrom = searchParams.get('date_from') || ''
+    const newUrlDateTo = searchParams.get('date_to') || ''
+    
+    // Only update state if URL dates are different and we're not in the middle of user input
+    if (newUrlDateFrom !== dateFrom && newUrlDateFrom !== '') {
+      setDateFrom(newUrlDateFrom)
+    }
+    if (newUrlDateTo !== dateTo && newUrlDateTo !== '') {
+      setDateTo(newUrlDateTo)
+    }
+    
+    // Auto-show statement if both dates are in URL (only on initial load)
+    if (newUrlDateFrom && newUrlDateTo && !showStatement) {
+      setShowStatement(true)
+    }
+  }, [searchParams]) // Only depend on searchParams, not dateFrom/dateTo
+
 
   if (isLoading) {
     return <div>Loading supplier...</div>
@@ -201,6 +245,7 @@ export default function SupplierDetailPage() {
               <Button
                 onClick={() => setShowStatement(true)}
                 className="w-full"
+                disabled={!dateFrom || !dateTo}
               >
                 Generate Statement
               </Button>

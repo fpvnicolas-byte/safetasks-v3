@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useCallSheets } from '@/lib/api/hooks'
-import { apiClient } from '@/lib/api/client'
+import { useCallSheets, useDeleteCallSheet } from '@/lib/api/hooks'
+import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -10,15 +10,15 @@ import { Plus, FileText, Edit, Trash2, Clock, MapPin } from 'lucide-react'
 import Link from 'next/link'
 import { formatTime } from '@/lib/utils/time'
 import { CallSheet } from '@/types'
-import { useQueryClient } from '@tanstack/react-query'
 
 interface CallSheetsTabProps {
   projectId: string
 }
 
 export function CallSheetsTab({ projectId }: CallSheetsTabProps) {
-  const { data: callSheets, isLoading, error } = useCallSheets(projectId)
-  const queryClient = useQueryClient()
+  const { organizationId } = useAuth()
+  const { data: callSheets, isLoading, error } = useCallSheets(organizationId || '', projectId)
+  const deleteCallSheet = useDeleteCallSheet(organizationId || '')
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   async function handleDelete(callSheetId: string) {
@@ -28,9 +28,7 @@ export function CallSheetsTab({ projectId }: CallSheetsTabProps) {
 
     try {
       setDeletingId(callSheetId)
-      await apiClient.delete(`/call-sheets/${callSheetId}`)
-      // Invalidate and refetch call sheets
-      queryClient.invalidateQueries({ queryKey: ['callSheets', projectId] })
+      await deleteCallSheet.mutateAsync(callSheetId)
     } catch (err: unknown) {
       console.error('Failed to delete call sheet:', err)
     } finally {

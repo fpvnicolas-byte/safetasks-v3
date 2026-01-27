@@ -16,7 +16,7 @@ export function useProjects(organizationId?: string) {
 export function useProject(projectId: string, organizationId?: string) {
   return useQuery({
     queryKey: [PROJECTS_KEY, projectId],
-    queryFn: () => apiClient.get<ProjectWithClient>(`/api/v1/projects/${projectId}${organizationId ? `?organization_id=${organizationId}` : ''}`),
+    queryFn: () => apiClient.get<ProjectWithClient>(`/api/v1/projects/${projectId}?organization_id=${organizationId}`),
     enabled: !!organizationId,
   })
 }
@@ -26,30 +26,30 @@ export function useCreateProject(organizationId: string) {
 
   return useMutation({
     mutationFn: (data: ProjectCreate) =>
-      apiClient.post<Project>(`/api/v1/projects/`, data),
+      apiClient.post<Project>(`/api/v1/projects/?organization_id=${organizationId}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [PROJECTS_KEY, organizationId] })
     },
   })
 }
 
-export function useUpdateProject(projectId: string) {
+export function useUpdateProject(projectId: string, organizationId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (data: ProjectUpdate) =>
-      apiClient.put<Project>(`/api/v1/projects/${projectId}`, data),
+      apiClient.put<Project>(`/api/v1/projects/${projectId}?organization_id=${organizationId}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [PROJECTS_KEY, projectId] })
     },
   })
 }
 
-export function useDeleteProject(projectId: string) {
+export function useDeleteProject(projectId: string, organizationId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: () => apiClient.delete(`/api/v1/projects/${projectId}`),
+    mutationFn: () => apiClient.delete(`/api/v1/projects/${projectId}?organization_id=${organizationId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [PROJECTS_KEY] })
     },

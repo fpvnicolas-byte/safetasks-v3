@@ -87,6 +87,7 @@ app.add_middleware(
         "Origin",
         "X-Requested-With",
         "X-CSRF-Token",
+        "Access-Control-Allow-Origin",
     ],
 )
 

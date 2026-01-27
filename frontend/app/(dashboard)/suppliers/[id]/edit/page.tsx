@@ -24,7 +24,7 @@ export default function EditSupplierPage() {
   const [selectedCategory, setSelectedCategory] = useState<SupplierCategory>('rental_house')
   const [isActive, setIsActive] = useState(true)
 
-  const { data: supplier, isLoading } = useSupplier(supplierId)
+  const { data: supplier, isLoading } = useSupplier(supplierId, organizationId || undefined)
   const updateSupplier = useUpdateSupplier()
 
   // Initialize state when supplier loads

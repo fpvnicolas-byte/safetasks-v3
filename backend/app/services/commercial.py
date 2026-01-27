@@ -1,6 +1,9 @@
 from app.services.base import BaseService
 from app.models.commercial import Supplier, Stakeholder
 from app.models.transactions import Transaction
+from app.models.clients import Client
+from app.models.profiles import Profile
+from app.models.projects import Project
 from app.schemas.commercial import (
     SupplierCreate, SupplierUpdate,
     SupplierStatement, StakeholderSummary,
@@ -61,18 +64,28 @@ class SupplierService(BaseService[Supplier, SupplierCreate, SupplierUpdate]):
             tx_result = await db.execute(tx_summary_query)
             tx_row = tx_result.first()
 
-            enriched_suppliers.append({
+            # Create complete supplier data with all required fields
+            supplier_data = {
                 "id": supplier.id,
+                "organization_id": supplier.organization_id,
                 "name": supplier.name,
                 "category": supplier.category,
+                "document_id": supplier.document_id,
                 "email": supplier.email,
                 "phone": supplier.phone,
+                "address": supplier.address,
+                "bank_info": supplier.bank_info,
+                "specialties": supplier.specialties,
+                "notes": supplier.notes,
                 "is_active": supplier.is_active,
+                "created_at": supplier.created_at,
+                "updated_at": supplier.updated_at,
                 "total_transactions": tx_row.total_transactions or 0,
                 "total_amount_cents": tx_row.total_amount_cents or 0,
-                "last_transaction_date": tx_row.last_transaction_date,
-                "created_at": supplier.created_at
-            })
+                "last_transaction_date": tx_row.last_transaction_date
+            }
+
+            enriched_suppliers.append(supplier_data)
 
         return enriched_suppliers
 

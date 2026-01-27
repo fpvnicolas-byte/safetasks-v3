@@ -251,10 +251,8 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
         self, db: AsyncSession, organization_id: UUID, bank_account_id: UUID
     ) -> BankAccount:
         """Validate that bank account belongs to the organization."""
-        from app.services.financial import BankAccountService
-        bank_service = BankAccountService()
-
-        account = await bank_service.get(
+        # Use self to access the bank_account_service instance
+        account = await bank_account_service.get(
             db=db,
             organization_id=organization_id,
             id=bank_account_id

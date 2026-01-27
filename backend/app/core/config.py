@@ -49,6 +49,10 @@ class Settings(BaseSettings):
     
     # AI (Gemini)
     GEMINI_API_KEY: Optional[str] = None
+    AI_ENABLED: bool = True
+    AI_MODEL: str = "gemini-pro"
+    AI_MAX_TOKENS: int = 4000
+    AI_TEMPERATURE: float = 0.7
 
     # ✅ CORREÇÃO AQUI: Adicionando as variáveis de Storage para parar o erro
     # Supabase

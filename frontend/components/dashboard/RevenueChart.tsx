@@ -58,7 +58,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
       <CardContent>
         <div className="space-y-4">
           {/* Simple bar chart visualization */}
-          <div className="space-y-3">
+          <div className="space-y-4">
             {trends.slice(-6).map((trend, index) => {
               const revenueHeight = (trend.revenue_cents / maxValue) * 100
               const expenseHeight = (trend.expenses_cents / maxValue) * 100
@@ -67,40 +67,42 @@ export function RevenueChart({ data }: RevenueChartProps) {
               return (
                 <div key={index} className="space-y-1">
                   <div className="text-xs text-muted-foreground">{trend.month}</div>
-                  <div className="flex gap-2 h-12 items-end">
+                  <div className="grid grid-cols-3 gap-1 h-16 sm:h-20 items-end">
                     {/* Revenue bar */}
-                    <div className="flex-1 flex flex-col justify-end">
+                    <div className="flex flex-col justify-end">
                       <div
                         className="bg-green-500 rounded-t transition-all"
-                        style={{ height: `${revenueHeight}%` }}
+                        style={{ height: `${Math.max(revenueHeight, 8)}%` }}
                         title={`Revenue: ${formatCurrency(trend.revenue_cents)}`}
                       />
-                      <div className="text-xs text-center mt-1 text-green-700">
+                      <div className="text-xs text-center mt-1 text-green-700 truncate">
                         {formatCurrency(trend.revenue_cents)}
                       </div>
                     </div>
 
                     {/* Expense bar */}
-                    <div className="flex-1 flex flex-col justify-end">
+                    <div className="flex flex-col justify-end">
                       <div
                         className="bg-red-500 rounded-t transition-all"
-                        style={{ height: `${expenseHeight}%` }}
+                        style={{ height: `${Math.max(expenseHeight, 8)}%` }}
                         title={`Expenses: ${formatCurrency(trend.expenses_cents)}`}
                       />
-                      <div className="text-xs text-center mt-1 text-red-700">
+                      <div className="text-xs text-center mt-1 text-red-700 truncate">
                         {formatCurrency(trend.expenses_cents)}
                       </div>
                     </div>
 
                     {/* Profit bar */}
-                    <div className="flex-1 flex flex-col justify-end">
+                    <div className="flex flex-col justify-end">
                       <div
                         className={`${profitHeight >= 0 ? 'bg-blue-500' : 'bg-orange-500'} rounded-t transition-all`}
-                        style={{ height: `${Math.abs(profitHeight)}%` }}
+                        style={{ height: `${Math.max(Math.abs(profitHeight), 8)}%` }}
                         title={`Net: ${formatCurrency(trend.net_profit_cents)}`}
                       />
-                      <div className="text-xs text-center mt-1 text-blue-700">
-                        {formatCurrency(trend.net_profit_cents)}
+                      <div className="text-xs text-center mt-1 truncate">
+                        <span className={profitHeight >= 0 ? 'text-blue-700' : 'text-orange-700'}>
+                          {formatCurrency(trend.net_profit_cents)}
+                        </span>
                       </div>
                     </div>
                   </div>

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Edit, Trash2, FileText, DollarSign, Film, FolderOpen } from 'lucide-react'
+import { Edit, Trash2, FileText, DollarSign, Film, FolderOpen, Users, Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency } from '@/lib/utils/money'
 import { useState, useEffect } from 'react'
@@ -26,7 +26,7 @@ export default function ProjectDetailPage() {
   const projectId = params.id as string
 
   const { data: project, isLoading, error } = useProject(projectId, organizationId || undefined)
-  const deleteProject = useDeleteProject(projectId)
+  const deleteProject = useDeleteProject(projectId, organizationId || '')
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
   // Separate state for each file type
@@ -229,6 +229,7 @@ export default function ProjectDetailPage() {
         <TabsList>
           <TabsTrigger value="details">Details</TabsTrigger>
           <TabsTrigger value="call-sheets">Call Sheets</TabsTrigger>
+          <TabsTrigger value="shooting-days">Shooting Days</TabsTrigger>
           <TabsTrigger value="financials">Financials</TabsTrigger>
           <TabsTrigger value="production">Production</TabsTrigger>
           <TabsTrigger value="files">Files</TabsTrigger>
@@ -316,17 +317,123 @@ export default function ProjectDetailPage() {
         </TabsContent>
 
         <TabsContent value="production">
-          <Card>
-            <CardHeader>
-              <CardTitle>Production Details</CardTitle>
-              <CardDescription>Scenes, characters, and shooting days</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Production features coming in Phase 7
-              </p>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {/* Scenes */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Film className="h-5 w-5" />
+                    Scenes
+                  </CardTitle>
+                  <CardDescription>
+                    Manage production scenes and script breakdown
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <Button asChild variant="outline" className="w-full justify-start">
+                      <Link href={`/scenes?project=${projectId}`}>
+                        View All Scenes
+                      </Link>
+                    </Button>
+                    <Button asChild className="w-full justify-start">
+                      <Link href={`/scenes/new?project=${projectId}`}>
+                        Create New Scene
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Characters */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Characters
+                  </CardTitle>
+                  <CardDescription>
+                    Manage cast and character requirements
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <Button asChild variant="outline" className="w-full justify-start">
+                      <Link href={`/characters?project=${projectId}`}>
+                        View All Characters
+                      </Link>
+                    </Button>
+                    <Button asChild className="w-full justify-start">
+                      <Link href={`/characters/new?project=${projectId}`}>
+                        Create New Character
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Shooting Days */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    Shooting Days
+                  </CardTitle>
+                  <CardDescription>
+                    Schedule and organize production days
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <Button asChild variant="outline" className="w-full justify-start">
+                      <Link href={`/shooting-days?project=${projectId}`}>
+                        View All Shooting Days
+                      </Link>
+                    </Button>
+                    <Button asChild className="w-full justify-start">
+                      <Link href={`/shooting-days/new?project=${projectId}`}>
+                        Schedule New Day
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Production Summary */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Production Summary</CardTitle>
+                <CardDescription>
+                  Quick overview of production status and next steps
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <div className="text-center p-4 border rounded-lg">
+                    <div className="text-2xl font-bold">0</div>
+                    <div className="text-sm text-muted-foreground">Scenes Created</div>
+                  </div>
+                  <div className="text-center p-4 border rounded-lg">
+                    <div className="text-2xl font-bold">0</div>
+                    <div className="text-sm text-muted-foreground">Characters Defined</div>
+                  </div>
+                  <div className="text-center p-4 border rounded-lg">
+                    <div className="text-2xl font-bold">0</div>
+                    <div className="text-sm text-muted-foreground">Shooting Days</div>
+                  </div>
+                  <div className="text-center p-4 border rounded-lg">
+                    <div className="text-2xl font-bold">0</div>
+                    <div className="text-sm text-muted-foreground">Call Sheets</div>
+                  </div>
+                </div>
+                <div className="mt-4 text-sm text-muted-foreground">
+                  Start by creating scenes and characters, then schedule shooting days to organize your production.
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="files" className="space-y-6">

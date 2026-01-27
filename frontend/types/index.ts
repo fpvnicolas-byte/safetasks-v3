@@ -967,6 +967,122 @@ export function convertTimeToFormFormat(backendTime: string | null): string {
 // Currency helper functions already defined above in BankAccount section
 
 // ============================================================================
+// AI FEATURES TYPES
+// ============================================================================
+
+export type AiAnalysisType = 'full' | 'characters' | 'scenes' | 'locations'
+
+export interface ScriptAnalysis {
+  id: UUID
+  organization_id: UUID
+  project_id: UUID
+  script_text: string
+  analysis_result: string
+  analysis_type: AiAnalysisType
+  confidence: number
+  created_at: ISODateTime
+}
+
+export interface AiSuggestion {
+  id: UUID
+  organization_id: UUID
+  project_id: UUID
+  suggestion_type: 'budget' | 'schedule' | 'casting' | 'logistics' | 'equipment' | 'other'
+  suggestion_text: string
+  confidence: number
+  priority: 'low' | 'medium' | 'high'
+  related_scenes: number[]
+  estimated_savings_cents?: number
+  estimated_time_saved_minutes?: number
+  created_at: ISODateTime
+}
+
+export interface AiRecommendation {
+  id: UUID
+  organization_id: UUID
+  project_id: UUID
+  recommendation_type: 'call_sheet' | 'budget' | 'schedule' | 'equipment'
+  title: string
+  description: string
+  confidence: number
+  priority: 'low' | 'medium' | 'high'
+  action_items: string[]
+  estimated_impact: {
+    time_saved_minutes?: number
+    cost_saved_cents?: number
+    risk_reduction?: string
+  }
+  created_at: ISODateTime
+}
+
+export interface AiScriptAnalysisRequest {
+  project_id: UUID
+  analysis_type: AiAnalysisType
+  script_content: string
+}
+
+export interface AiAnalysisResponse {
+  analysis_id: UUID
+  status: 'processing' | 'completed' | 'failed'
+  result?: {
+    characters: Array<{
+      name: string
+      description: string
+      scenes_present: number[]
+      importance: 'main' | 'secondary' | 'extra'
+    }>
+    locations: Array<{
+      name: string
+      description: string
+      scenes: number[]
+      day_night: 'day' | 'night' | 'interior'
+      special_requirements: string[]
+    }>
+    scenes: Array<{
+      number: number
+      heading: string
+      description: string
+      characters: string[]
+      estimated_time: string
+      complexity: 'low' | 'medium' | 'high'
+    }>
+    suggested_equipment: Array<{
+      category: string
+      items: string[]
+      reasoning: string
+    }>
+    production_notes: string[]
+  }
+  suggestions?: AiSuggestion[]
+  recommendations?: AiRecommendation[]
+  error?: string
+}
+
+export interface AiBudgetEstimation {
+  project_id: UUID
+  estimated_budget_cents: number
+  breakdown: Array<{
+    category: string
+    estimated_amount_cents: number
+    confidence: number
+    notes: string
+  }>
+  risk_factors: string[]
+  recommendations: string[]
+  created_at: ISODateTime
+}
+
+export interface AiCallSheetSuggestion {
+  day: number
+  suggested_scenes: number[]
+  crew_needed: string[]
+  equipment_needed: string[]
+  estimated_duration: string
+  weather_considerations: string[]
+  notes: string
+}
+
+// ============================================================================
 // STORAGE & FILE TYPES
 // ============================================================================
 

@@ -137,11 +137,10 @@ class MaintenanceService(BaseService[MaintenanceLog, MaintenanceLogCreate, None]
         # If maintenance has a cost, create a financial transaction
         if maintenance_data.cost_cents > 0:
             # Create maintenance expense transaction
-            from app.services.financial import transaction_service
+            from app.services.financial import transaction_service, bank_account_service
             from app.schemas.transactions import TransactionCreate
 
             # Find a bank account (use the first available)
-            from app.services.financial import bank_account_service
             bank_accounts = await bank_account_service.get_multi(
                 db=db, organization_id=organization_id, limit=1
             )

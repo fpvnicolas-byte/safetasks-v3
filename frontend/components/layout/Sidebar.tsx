@@ -14,10 +14,12 @@ import {
   Calendar,
   Briefcase,
   Box,
+  Sparkles,
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'AI Features', href: '/ai', icon: Sparkles },
   { name: 'Projects', href: '/projects', icon: FolderOpen },
   { name: 'Proposals', href: '/proposals', icon: FileText },
   { name: 'Call Sheets', href: '/call-sheets', icon: FileText },
@@ -34,8 +36,9 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="w-64 border-r bg-slate-50 dark:bg-slate-900">
-      <nav className="space-y-1 p-4">
+    <aside className="w-[288px] h-screen border-r bg-slate-50 dark:bg-slate-900 
+      hidden lg:block lg:sticky lg:top-0 lg:h-screen lg:w-[288px] lg:translate-x-0">
+      <nav className="space-y-1 p-4 h-full overflow-y-auto">
         {navigation.map((item) => {
           const isActive = pathname.startsWith(item.href)
           return (

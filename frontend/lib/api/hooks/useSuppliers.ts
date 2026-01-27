@@ -26,11 +26,20 @@ export function useSuppliers(organizationId?: string, category?: string) {
   })
 }
 
-export function useSupplier(supplierId: string) {
+export function useSupplier(supplierId: string, organizationId?: string) {
   return useQuery({
-    queryKey: [SUPPLIERS_KEY, supplierId],
-    queryFn: () => apiClient.get<Supplier>(`/api/v1/suppliers/${supplierId}`),
-    enabled: !!supplierId,
+    queryKey: [SUPPLIERS_KEY, supplierId, organizationId],
+    queryFn: () => {
+      const params = new URLSearchParams()
+      if (organizationId) params.append('organization_id', organizationId)
+
+      const queryString = params.toString()
+      const url = queryString ? `/api/v1/suppliers/${supplierId}?${queryString}` : `/api/v1/suppliers/${supplierId}`
+      return apiClient.get<Supplier>(url)
+    },
+    enabled: !!supplierId && !!organizationId,
+    // Handle 404 errors properly
+    throwOnError: true,
   })
 }
 
@@ -70,7 +79,7 @@ export function useDeleteSupplier() {
   })
 }
 
-export function useSupplierStatement(supplierId: string, organizationId: string, dateFrom?: string, dateTo?: string) {
+export function useSupplierStatement(supplierId: string, organizationId: string, dateFrom?: string, dateTo?: string, showStatement?: boolean) {
   return useQuery({
     queryKey: [SUPPLIERS_KEY, supplierId, 'statement', dateFrom, dateTo],
     queryFn: () => {
@@ -80,6 +89,6 @@ export function useSupplierStatement(supplierId: string, organizationId: string,
 
       return apiClient.get<SupplierStatement>(`/api/v1/suppliers/${supplierId}/statement?${params.toString()}`)
     },
-    enabled: !!supplierId && !!organizationId,
+    enabled: !!supplierId && !!organizationId && !!dateFrom && !!dateTo && !!showStatement,
   })
 }

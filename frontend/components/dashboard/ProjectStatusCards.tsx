@@ -112,16 +112,16 @@ export function ProjectStatusCards({ data }: ProjectStatusCardsProps) {
           <CardDescription>Breakdown of all projects</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+          <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
             {Object.entries(statusConfig).map(([key, config]) => {
               const count = data.projects_by_status[key] || 0
               return (
-                <div key={key} className="space-y-2">
-                  <div className={`flex items-center justify-center h-12 w-12 rounded-lg ${config.color}`}>
+                <div key={key} className="space-y-2 text-center">
+                  <div className={`flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 rounded-lg ${config.color} mx-auto`}>
                     {config.icon}
                   </div>
-                  <div className="text-2xl font-bold">{count}</div>
-                  <div className="text-xs text-muted-foreground">{config.label}</div>
+                  <div className="text-lg sm:text-2xl font-bold">{count}</div>
+                  <div className="text-xs text-muted-foreground leading-tight">{config.label}</div>
                 </div>
               )
             })}

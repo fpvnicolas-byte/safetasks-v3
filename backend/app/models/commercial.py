@@ -1,5 +1,6 @@
 from sqlalchemy import Column, String, TIMESTAMP, Boolean, func, ForeignKey, TEXT
 from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.orm import relationship
 from app.core.base import Base
 import uuid
 
@@ -29,8 +30,11 @@ class Supplier(Base):
     specialties = Column(JSONB)  # ["drone_rental", "camera_gear", "lighting"] for rental houses
     notes = Column(TEXT)
 
-    # Status management (FIXED: was TEXT, now Boolean)
+    # Status management
     is_active = Column(Boolean, default=True, nullable=False)
+
+    # Relationships
+    transactions = relationship("Transaction", back_populates="supplier")
 
     # Audit
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)

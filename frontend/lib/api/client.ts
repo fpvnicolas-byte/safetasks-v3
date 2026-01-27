@@ -64,7 +64,20 @@ class ApiClient {
       throw new Error('Not authenticated - please log in again')
     }
 
+    // IMPORTANT: Check if this is an anon token (which won't work for our API)
     const token = session.access_token
+    if (token) {
+      try {
+        // Decode the token to check if it's an anon token
+        const payload = JSON.parse(atob(token.split('.')[1]))
+        if (payload.role === 'anon') {
+          throw new Error('Invalid token: Cannot use anon token for API requests. Please ensure you are logged in with a user account.')
+        }
+      } catch (e) {
+        console.warn('Could not decode token to check role:', e)
+      }
+    }
+
     console.log('📤 API Client - Sending request with token:', {
       endpoint: endpoint,
       hasToken: !!token,
