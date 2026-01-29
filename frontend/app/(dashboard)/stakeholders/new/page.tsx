@@ -51,6 +51,7 @@ export default function NewStakeholderPage() {
     }
 
     try {
+      console.log('Creating stakeholder with data:', formData)
       await createStakeholder.mutateAsync(formData)
       toast.success('Stakeholder created successfully')
       router.push('/stakeholders')
@@ -154,14 +155,14 @@ export default function NewStakeholderPage() {
                 <div className="space-y-2 pl-6">
                   <Label htmlFor="supplier_id">Link to Supplier (Optional)</Label>
                   <Select
-                    value={formData.supplier_id || ''}
-                    onValueChange={(value) => setFormData({ ...formData, supplier_id: value || undefined })}
+                    value={formData.supplier_id || '__auto_create__'}
+                    onValueChange={(value) => setFormData({ ...formData, supplier_id: value === '__auto_create__' ? undefined : value })}
                   >
                     <SelectTrigger id="supplier_id">
                       <SelectValue placeholder="Select existing supplier or leave blank to auto-create" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Auto-create new supplier</SelectItem>
+                      <SelectItem value="__auto_create__">Auto-create new supplier</SelectItem>
                       {suppliers?.filter(s => s.category === 'freelancer').map((supplier) => (
                         <SelectItem key={supplier.id} value={supplier.id}>
                           {supplier.name}
