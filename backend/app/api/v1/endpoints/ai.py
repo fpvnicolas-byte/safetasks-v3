@@ -1,13 +1,28 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+import time
 
-from app.api.deps import get_current_organization, get_current_profile
+from app.api.deps import get_current_organization, get_current_profile, get_organization_from_profile
 from app.db.session import get_db
 from app.services.ai_engine import ai_engine_service
 from app.services.notifications import notification_service
 from app.services.storage import storage_service
+from app.modules.ai.service import (
+    script_analysis_service,
+    ai_suggestion_service,
+    ai_recommendation_service,
+    ai_usage_log_service
+)
+from app.models.ai import ScriptAnalysis, AiSuggestion, AiRecommendation
+from app.api.v1.endpoints.ai_schemas import (
+    ScriptAnalysisRequest,
+    BudgetEstimationRequest,
+    CallSheetSuggestionRequest,
+    TextAnalysisRequest
+)
 
 
 router = APIRouter()
@@ -18,11 +33,14 @@ async def process_script_analysis(
     project_id: UUID,
     script_content: str,
     profile_id: UUID,
-    db: AsyncSession
+    db: AsyncSession,
+    analysis_type: str = "full"
 ):
     """
     Background task to process script analysis and send notifications.
+    Now saves results to database for persistence.
     """
+    start_time = time.time()
     try:
         # Analyze the script with AI
         analysis_result = await ai_engine_service.analyze_script_content(
@@ -38,6 +56,49 @@ async def process_script_analysis(
             project_context={"project_id": str(project_id)}
         )
 
+        # Save script analysis to database
+        saved_analysis = await script_analysis_service.create_from_ai_result(
+            db=db,
+            organization_id=organization_id,
+            project_id=project_id,
+            script_text=script_content[:5000],  # Limit stored text
+            analysis_result=analysis_result,
+            analysis_type=analysis_type,
+            confidence=analysis_result.get('confidence', 0.85),
+            token_count=len(script_content.split()) * 2,  # Rough estimate
+            cost_cents=int(len(script_content.split()) * 0.0005)  # Rough cost estimate
+        )
+
+        # Save suggestions to database if any
+        if suggestions and isinstance(suggestions, list):
+            for suggestion in suggestions[:10]:  # Limit to 10 suggestions
+                await ai_suggestion_service.create_from_ai_result(
+                    db=db,
+                    organization_id=organization_id,
+                    project_id=project_id,
+                    suggestion_type=suggestion.get('type', 'other'),
+                    suggestion_text=suggestion.get('text', ''),
+                    confidence=suggestion.get('confidence', 0.75),
+                    priority=suggestion.get('priority', 'medium'),
+                    related_scenes=suggestion.get('related_scenes', []),
+                    estimated_savings_cents=suggestion.get('estimated_savings_cents'),
+                    estimated_time_saved_minutes=suggestion.get('estimated_time_saved_minutes')
+                )
+
+        # Log successful usage
+        processing_time_ms = int((time.time() - start_time) * 1000)
+        await ai_usage_log_service.log_request(
+            db=db,
+            organization_id=organization_id,
+            project_id=project_id,
+            request_type="script_analysis",
+            endpoint="/api/v1/ai/projects/{project_id}/analyze-script",
+            token_count=len(script_content.split()) * 2,
+            cost_cents=int(len(script_content.split()) * 0.0005),
+            processing_time_ms=processing_time_ms,
+            success=True
+        )
+
         # Create notification for the user
         await notification_service.create_for_user(
             db=db,
@@ -47,6 +108,7 @@ async def process_script_analysis(
             message=f"AI analysis of your script is ready. Found {len(analysis_result.get('characters', []))} characters and {len(analysis_result.get('scenes', []))} scenes.",
             type="success",
             metadata={
+                "analysis_id": str(saved_analysis.id),
                 "analysis_result": analysis_result,
                 "suggestions": suggestions,
                 "project_id": str(project_id)
@@ -54,6 +116,19 @@ async def process_script_analysis(
         )
 
     except Exception as e:
+        # Log failed usage
+        processing_time_ms = int((time.time() - start_time) * 1000)
+        await ai_usage_log_service.log_request(
+            db=db,
+            organization_id=organization_id,
+            project_id=project_id,
+            request_type="script_analysis",
+            endpoint="/api/v1/ai/projects/{project_id}/analyze-script",
+            processing_time_ms=processing_time_ms,
+            success=False,
+            error_message=str(e)
+        )
+        
         # Create error notification
         await notification_service.create_for_user(
             db=db,
@@ -168,20 +243,36 @@ async def get_analysis_status(
 
 @router.get("/analysis/")
 async def get_ai_analysis(
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
-) -> Dict[str, Any]:
+) -> List[Dict[str, Any]]:
     """
     Get AI analysis results for an organization.
+    Returns persisted script analyses from database.
     """
     try:
-        # For now, return a mock response since we don't have persistent storage for analysis results
-        return {
-            "message": "AI analysis endpoint working",
-            "organization_id": str(organization_id),
-            "analyses": [],
-            "total": 0
-        }
+        # Query script analyses from database
+        query = select(ScriptAnalysis).where(
+            ScriptAnalysis.organization_id == organization_id
+        ).order_by(ScriptAnalysis.created_at.desc()).limit(50)
+        
+        result = await db.execute(query)
+        analyses = result.scalars().all()
+        
+        # Convert to dict format matching frontend types
+        return [
+            {
+                "id": str(analysis.id),
+                "organization_id": str(analysis.organization_id),
+                "project_id": str(analysis.project_id),
+                "script_text": analysis.script_text,
+                "analysis_result": analysis.analysis_result,
+                "analysis_type": analysis.analysis_type,
+                "confidence": analysis.confidence,
+                "created_at": analysis.created_at.isoformat()
+            }
+            for analysis in analyses
+        ]
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -192,11 +283,12 @@ async def get_ai_analysis(
 @router.get("/suggestions/{project_id}")
 async def get_ai_suggestions(
     project_id: UUID,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
-) -> Dict[str, Any]:
+) -> List[Dict[str, Any]]:
     """
     Get AI suggestions for a specific project.
+    Returns persisted suggestions from database.
     """
     try:
         # Validate project ownership
@@ -208,13 +300,31 @@ async def get_ai_suggestions(
                 detail="Project not found"
             )
 
-        # For now, return mock suggestions
-        return {
-            "message": "AI suggestions endpoint working",
-            "project_id": str(project_id),
-            "suggestions": [],
-            "total": 0
-        }
+        # Query suggestions from database
+        query = select(AiSuggestion).where(
+            AiSuggestion.project_id == project_id
+        ).order_by(AiSuggestion.created_at.desc())
+        
+        result = await db.execute(query)
+        suggestions = result.scalars().all()
+        
+        # Convert to dict format matching frontend types
+        return [
+            {
+                "id": str(suggestion.id),
+                "organization_id": str(suggestion.organization_id),
+                "project_id": str(suggestion.project_id),
+                "suggestion_type": suggestion.suggestion_type,
+                "suggestion_text": suggestion.suggestion_text,
+                "confidence": suggestion.confidence,
+                "priority": suggestion.priority,
+                "related_scenes": suggestion.related_scenes or [],
+                "estimated_savings_cents": suggestion.estimated_savings_cents,
+                "estimated_time_saved_minutes": suggestion.estimated_time_saved_minutes,
+                "created_at": suggestion.created_at.isoformat()
+            }
+            for suggestion in suggestions
+        ]
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -225,11 +335,12 @@ async def get_ai_suggestions(
 @router.get("/recommendations/{project_id}")
 async def get_ai_recommendations(
     project_id: UUID,
-    organization_id: UUID = Depends(get_current_organization),
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
-) -> Dict[str, Any]:
+) -> List[Dict[str, Any]]:
     """
     Get AI recommendations for a specific project.
+    Returns persisted recommendations from database.
     """
     try:
         # Validate project ownership
@@ -241,13 +352,31 @@ async def get_ai_recommendations(
                 detail="Project not found"
             )
 
-        # For now, return mock recommendations
-        return {
-            "message": "AI recommendations endpoint working",
-            "project_id": str(project_id),
-            "recommendations": [],
-            "total": 0
-        }
+        # Query recommendations from database
+        query = select(AiRecommendation).where(
+            AiRecommendation.project_id == project_id
+        ).order_by(AiRecommendation.created_at.desc())
+        
+        result = await db.execute(query)
+        recommendations = result.scalars().all()
+        
+        # Convert to dict format matching frontend types
+        return [
+            {
+                "id": str(recommendation.id),
+                "organization_id": str(recommendation.organization_id),
+                "project_id": str(recommendation.project_id),
+                "recommendation_type": recommendation.recommendation_type,
+                "title": recommendation.title,
+                "description": recommendation.description,
+                "confidence": recommendation.confidence,
+                "priority": recommendation.priority,
+                "action_items": recommendation.action_items or [],
+                "estimated_impact": recommendation.estimated_impact or {},
+                "created_at": recommendation.created_at.isoformat()
+            }
+            for recommendation in recommendations
+        ]
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -257,9 +386,7 @@ async def get_ai_recommendations(
 
 @router.post("/budget-estimation")
 async def estimate_budget(
-    project_id: UUID,
-    estimation_type: str,
-    script_content: str,
+    request: BudgetEstimationRequest,
     organization_id: UUID = Depends(get_current_organization),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
@@ -269,7 +396,7 @@ async def estimate_budget(
     try:
         # Validate project ownership
         from app.modules.commercial.service import project_service
-        project = await project_service.get(db=db, organization_id=organization_id, id=project_id)
+        project = await project_service.get(db=db, organization_id=organization_id, id=request.project_id)
         if not project:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -279,8 +406,8 @@ async def estimate_budget(
         # For now, return mock budget estimation
         return {
             "message": "Budget estimation endpoint working",
-            "project_id": str(project_id),
-            "estimation_type": estimation_type,
+            "project_id": str(request.project_id),
+            "estimation_type": request.estimation_type,
             "estimated_budget_cents": 5000000,  # $50,000
             "breakdown": [
                 {"category": "crew_hire", "estimated_amount_cents": 2000000},
@@ -300,9 +427,7 @@ async def estimate_budget(
 
 @router.post("/call-sheet-suggestions")
 async def generate_call_sheet_suggestions(
-    project_id: UUID,
-    suggestion_type: str,
-    script_content: str,
+    request: CallSheetSuggestionRequest,
     organization_id: UUID = Depends(get_current_organization),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
@@ -312,7 +437,7 @@ async def generate_call_sheet_suggestions(
     try:
         # Validate project ownership
         from app.modules.commercial.service import project_service
-        project = await project_service.get(db=db, organization_id=organization_id, id=project_id)
+        project = await project_service.get(db=db, organization_id=organization_id, id=request.project_id)
         if not project:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -322,8 +447,8 @@ async def generate_call_sheet_suggestions(
         # For now, return mock call sheet suggestions
         return {
             "message": "Call sheet suggestions endpoint working",
-            "project_id": str(project_id),
-            "suggestion_type": suggestion_type,
+            "project_id": str(request.project_id),
+            "suggestion_type": request.suggestion_type,
             "day": 1,
             "suggested_scenes": [1, 2, 3],
             "crew_needed": ["Director", "DP", "Sound"],
@@ -339,19 +464,19 @@ async def generate_call_sheet_suggestions(
 
 @router.post("/script-analysis")
 async def analyze_script_content(
-    project_id: UUID,
-    analysis_type: str,
-    script_content: str,
-    organization_id: UUID = Depends(get_current_organization),
+    request: ScriptAnalysisRequest,
+    organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
     """
     Analyze script content and extract production elements.
+    Now saves results to database for persistence.
     """
+    start_time = time.time()
     try:
         # Validate project ownership
         from app.modules.commercial.service import project_service
-        project = await project_service.get(db=db, organization_id=organization_id, id=project_id)
+        project = await project_service.get(db=db, organization_id=organization_id, id=request.project_id)
         if not project:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -361,18 +486,120 @@ async def analyze_script_content(
         # Analyze the script with AI
         analysis_result = await ai_engine_service.analyze_script_content(
             organization_id=organization_id,
-            script_content=script_content,
-            project_id=project_id
+            script_content=request.script_content,
+            project_id=request.project_id
+        )
+
+        # Save script analysis to database
+        saved_analysis = await script_analysis_service.create_from_ai_result(
+            db=db,
+            organization_id=organization_id,
+            project_id=request.project_id,
+            script_text=request.script_content[:5000],  # Limit stored text
+            analysis_result=analysis_result,
+            analysis_type=request.analysis_type,
+            confidence=analysis_result.get('confidence', 0.85),
+            token_count=len(request.script_content.split()) * 2,  # Rough estimate
+            cost_cents=int(len(request.script_content.split()) * 0.0005)  # Rough cost estimate
+        )
+
+        # Extract and save suggestions if present in the analysis
+        suggestions_data = analysis_result.get('production_notes', [])
+        if suggestions_data and isinstance(suggestions_data, list):
+            for idx, suggestion_text in enumerate(suggestions_data[:10]):  # Limit to 10
+                if isinstance(suggestion_text, str):
+                    await ai_suggestion_service.create_from_ai_result(
+                        db=db,
+                        organization_id=organization_id,
+                        project_id=request.project_id,
+                        suggestion_type='logistics',  # Changed from 'production' to match DB constraint
+                        suggestion_text=suggestion_text,
+                        confidence=0.75,
+                        priority='medium',
+                        related_scenes=[]
+                    )
+
+        # Create recommendations from analysis results
+        # Equipment recommendations
+        equipment_data = analysis_result.get('suggested_equipment', [])
+        if equipment_data and isinstance(equipment_data, list) and len(equipment_data) > 0:
+            equipment_list = [eq.get('item', str(eq)) if isinstance(eq, dict) else str(eq) for eq in equipment_data[:5]]
+            await ai_recommendation_service.create_from_ai_result(
+                db=db,
+                organization_id=organization_id,
+                project_id=request.project_id,
+                recommendation_type='equipment',
+                title='Equipment Recommendations',
+                description=f'Based on script analysis, the following equipment is recommended: {", ".join(equipment_list)}',
+                confidence=0.80,
+                priority='high',
+                action_items=equipment_list
+            )
+
+        # Schedule recommendations based on scenes
+        scenes_data = analysis_result.get('scenes', [])
+        if scenes_data and isinstance(scenes_data, list) and len(scenes_data) > 0:
+            scene_count = len(scenes_data)
+            locations = set()
+            for scene in scenes_data:
+                if isinstance(scene, dict) and 'location' in scene:
+                    locations.add(scene['location'])
+            
+            action_items = [
+                f'Plan for {scene_count} scenes',
+                f'Coordinate {len(locations)} unique locations',
+                'Schedule location permits',
+                'Plan crew and talent availability'
+            ]
+            
+            await ai_recommendation_service.create_from_ai_result(
+                db=db,
+                organization_id=organization_id,
+                project_id=request.project_id,
+                recommendation_type='schedule',
+                title='Production Schedule Recommendations',
+                description=f'Your script contains {scene_count} scenes across {len(locations)} locations. Proper scheduling will be critical for efficiency.',
+                confidence=0.85,
+                priority='high',
+                action_items=action_items
+            )
+
+        # Log successful usage
+        processing_time_ms = int((time.time() - start_time) * 1000)
+        await ai_usage_log_service.log_request(
+            db=db,
+            organization_id=organization_id,
+            project_id=request.project_id,
+            request_type="script_analysis",
+            endpoint="/api/v1/ai/script-analysis",
+            token_count=len(request.script_content.split()) * 2,
+            cost_cents=int(len(request.script_content.split()) * 0.0005),
+            processing_time_ms=processing_time_ms,
+            success=True
         )
 
         return {
             "message": "Script analysis completed",
-            "project_id": str(project_id),
-            "analysis_type": analysis_type,
-            "analysis_result": analysis_result
+            "project_id": str(request.project_id),
+            "analysis_type": request.analysis_type,
+            "result": analysis_result,
+            "analysis_id": str(saved_analysis.id)
         }
 
     except Exception as e:
+        # Log failed usage
+        processing_time_ms = int((time.time() - start_time) * 1000)
+        await ai_usage_log_service.log_request(
+            db=db,
+            organization_id=organization_id,
+            project_id=request.project_id,
+            request_type="script_analysis",
+            endpoint="/api/v1/ai/script-analysis",
+            processing_time_ms=processing_time_ms,
+            success=False,
+            error_message=str(e)
+        )
+        
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Script analysis failed: {str(e)}"
@@ -381,7 +608,7 @@ async def analyze_script_content(
 
 @router.post("/analyze-text")
 async def analyze_text_content(
-    text: str,
+    request: TextAnalysisRequest,
     organization_id: UUID = Depends(get_current_organization),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
@@ -391,7 +618,7 @@ async def analyze_text_content(
     """
     try:
         # For small text analysis, do it synchronously
-        if len(text) > 10000:
+        if len(request.text) > 10000:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Text too long for synchronous analysis. Use project script analysis instead."
@@ -399,7 +626,7 @@ async def analyze_text_content(
 
         result = await ai_engine_service.analyze_script_content(
             organization_id=organization_id,
-            script_content=text
+            script_content=request.text
         )
 
         return result

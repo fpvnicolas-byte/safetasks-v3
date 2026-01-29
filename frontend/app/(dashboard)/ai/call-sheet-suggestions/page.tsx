@@ -11,12 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
-import { 
-  Calendar, 
-  FileText, 
-  Clock, 
-  Users, 
-  MapPin, 
+import {
+  Calendar,
+  FileText,
+  Clock,
+  Users,
+  MapPin,
   Loader2,
   Sparkles,
   Target
@@ -32,7 +32,7 @@ export default function AiCallSheetSuggestionsPage() {
   const [suggestionType, setSuggestionType] = useState<'optimized' | 'weather' | 'cast' | 'location'>('optimized')
 
   // Queries
-  const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId)
+  const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId || undefined)
   const { mutateAsync: generateCallSheetSuggestions, isPending: isGenerating } = useAiCallSheetSuggestions()
 
   const handleGenerateSuggestions = async () => {
@@ -52,7 +52,7 @@ export default function AiCallSheetSuggestionsPage() {
         suggestion_type: suggestionType,
         script_content: scriptText
       })
-      
+
       toast.success('Call sheet suggestions generated!')
       console.log('Call sheet suggestions result:', result)
     } catch (error) {
@@ -282,7 +282,7 @@ export default function AiCallSheetSuggestionsPage() {
                 <div className="text-2xl font-bold">{scriptText.match(/INT\.|EXT\./g)?.length || 0}</div>
                 <div className="text-xs text-gray-500">Estimated scenes</div>
               </div>
-              
+
               <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Users className="h-4 w-4 text-gray-600" />

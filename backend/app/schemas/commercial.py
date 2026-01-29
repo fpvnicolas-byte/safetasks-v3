@@ -92,6 +92,7 @@ class StakeholderBase(BaseModel):
     name: str = Field(min_length=1)
     role: str = Field(min_length=1)
     project_id: UUID
+    supplier_id: Optional[UUID] = None  # Link to payment-enabled entity
     email: Optional[str] = None
     phone: Optional[str] = None
     notes: Optional[str] = None
@@ -109,6 +110,7 @@ class StakeholderUpdate(BaseModel):
     name: Optional[str] = Field(default=None, min_length=1)
     role: Optional[str] = Field(default=None, min_length=1)
     project_id: Optional[UUID] = None
+    supplier_id: Optional[UUID] = None  # Link to payment-enabled entity
     email: Optional[str] = None
     phone: Optional[str] = None
     notes: Optional[str] = None

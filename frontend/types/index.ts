@@ -534,6 +534,7 @@ export interface Stakeholder {
   id: UUID
   organization_id: UUID
   project_id: UUID
+  supplier_id: UUID | null
   name: string
   role: string
   email: string | null
@@ -546,6 +547,7 @@ export interface Stakeholder {
 
 export interface StakeholderCreate {
   project_id: UUID
+  supplier_id?: UUID | null
   name: string
   role: string
   email?: string
@@ -557,6 +559,7 @@ export interface StakeholderUpdate {
   name?: string
   role?: string
   project_id?: UUID
+  supplier_id?: UUID | null
   email?: string
   phone?: string
   notes?: string
@@ -977,7 +980,29 @@ export interface ScriptAnalysis {
   organization_id: UUID
   project_id: UUID
   script_text: string
-  analysis_result: string
+  analysis_result: {
+    scenes?: Array<{
+      scene_number: number
+      description: string
+      location: string
+      time_of_day: string
+      characters: string[]
+    }>
+    characters?: Array<{
+      name: string
+      description: string
+    }>
+    locations?: Array<{
+      name: string
+      description: string
+    }>
+    suggested_equipment?: Array<{
+      item: string
+      quantity: number
+    }>
+    production_notes?: string[]
+    metadata?: Record<string, any>
+  }
   analysis_type: AiAnalysisType
   confidence: number
   created_at: ISODateTime

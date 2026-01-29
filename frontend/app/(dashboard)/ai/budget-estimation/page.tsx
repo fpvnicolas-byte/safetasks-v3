@@ -11,10 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
-import { 
-  DollarSign, 
-  FileText, 
-  Calculator, 
+import {
+  DollarSign,
+  FileText,
+  Calculator,
   Loader2,
   Sparkles
 } from 'lucide-react'
@@ -29,7 +29,7 @@ export default function AiBudgetEstimationPage() {
   const [estimationType, setEstimationType] = useState<'detailed' | 'quick'>('detailed')
 
   // Queries
-  const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId)
+  const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId || undefined)
   const { mutateAsync: estimateBudget, isPending: isEstimating } = useAiBudgetEstimation()
 
   const handleBudgetEstimation = async () => {
@@ -49,7 +49,7 @@ export default function AiBudgetEstimationPage() {
         estimation_type: estimationType,
         script_content: scriptText
       })
-      
+
       toast.success('Budget estimation completed!')
       console.log('Budget estimation result:', result)
     } catch (error) {
@@ -241,7 +241,7 @@ export default function AiBudgetEstimationPage() {
                 <div className="text-2xl font-bold">{scriptText.match(/\b[A-Z][A-Z\s]+\b/g)?.length || 0}</div>
                 <div className="text-xs text-gray-500">Estimated characters</div>
               </div>
-              
+
               <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles className="h-4 w-4 text-gray-600" />

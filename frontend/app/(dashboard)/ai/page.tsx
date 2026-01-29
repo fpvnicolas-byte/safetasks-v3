@@ -12,12 +12,12 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Sparkles, 
-  Brain, 
-  FileText, 
-  DollarSign, 
-  Calendar, 
+import {
+  Sparkles,
+  Brain,
+  FileText,
+  DollarSign,
+  Calendar,
   AlertCircle,
   Loader2,
   CheckCircle
@@ -31,13 +31,13 @@ export default function AiFeaturesPage() {
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [scriptText, setScriptText] = useState<string>('')
-  const [analysisType, setAnalysisType] = useState<'script' | 'scene' | 'character' | 'budget' | 'schedule'>('script')
+  const [analysisType, setAnalysisType] = useState<string>('full')
 
   // Queries
-  const { data: analyses, isLoading: isLoadingAnalyses } = useAiAnalysis(organizationId)
+  const { data: analyses, isLoading: isLoadingAnalyses } = useAiAnalysis(organizationId!)
   const { data: suggestions, isLoading: isLoadingSuggestions } = useAiSuggestions(selectedProjectId)
   const { data: recommendations, isLoading: isLoadingRecommendations } = useAiRecommendations(selectedProjectId)
-  const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId)
+  const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId || undefined)
   const { mutateAsync: analyzeScript, isPending: isAnalyzing } = useAnalyzeScript()
 
   const handleScriptAnalysis = async () => {
@@ -54,8 +54,8 @@ export default function AiFeaturesPage() {
     try {
       await analyzeScript({
         project_id: selectedProjectId,
-        analysis_type: analysisType,
-        content: scriptText
+        analysis_type: analysisType as 'full' | 'characters' | 'scenes' | 'locations',
+        script_content: scriptText
       })
       toast.success('Script analysis started. Check notifications for results.')
       setScriptText('')
@@ -123,7 +123,7 @@ export default function AiFeaturesPage() {
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer"
-                    onClick={() => router.push('/ai/script-analysis')}>
+                onClick={() => router.push('/ai/script-analysis')}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm">Script Analysis</CardTitle>
@@ -136,7 +136,7 @@ export default function AiFeaturesPage() {
               </Card>
 
               <Card className="hover:shadow-lg transition-shadow cursor-pointer"
-                    onClick={() => router.push('/ai/budget-estimation')}>
+                onClick={() => router.push('/ai/budget-estimation')}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm">Budget Estimation</CardTitle>
@@ -149,7 +149,7 @@ export default function AiFeaturesPage() {
               </Card>
 
               <Card className="hover:shadow-lg transition-shadow cursor-pointer"
-                    onClick={() => router.push('/ai/call-sheet-suggestions')}>
+                onClick={() => router.push('/ai/call-sheet-suggestions')}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm">Call Sheet Suggestions</CardTitle>
@@ -192,19 +192,18 @@ export default function AiFeaturesPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="analysis-type">Analysis Type</Label>
-                  <Select value={analysisType} onValueChange={(value) => setAnalysisType(value as 'script' | 'scene' | 'character' | 'budget' | 'schedule')}>
+                  <Select value={analysisType} onValueChange={setAnalysisType}>
                     <SelectTrigger id="analysis-type">
                       <SelectValue placeholder="Select analysis type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="script">Full Script Analysis</SelectItem>
-                      <SelectItem value="scene">Scene Analysis</SelectItem>
-                      <SelectItem value="character">Character Analysis</SelectItem>
-                      <SelectItem value="budget">Budget Analysis</SelectItem>
-                      <SelectItem value="schedule">Schedule Analysis</SelectItem>
+                      <SelectItem value="full">Full Script Analysis</SelectItem>
+                      <SelectItem value="scenes">Scene Analysis</SelectItem>
+                      <SelectItem value="characters">Character Analysis</SelectItem>
+                      <SelectItem value="locations">Location Analysis</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -406,7 +405,7 @@ export default function AiFeaturesPage() {
                           <li key={index}>{item}</li>
                         ))}
                       </ul>
-                      
+
                       {recommendation.estimated_impact.time_saved_minutes && (
                         <div className="text-sm text-blue-600 mt-2">
                           Time saved: {recommendation.estimated_impact.time_saved_minutes} minutes
@@ -469,8 +468,21 @@ export default function AiFeaturesPage() {
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <h4 className="font-semibold mb-2">Analysis Result</h4>
-                        <p className="text-sm text-muted-foreground">{analysis.analysis_result}</p>
+                        <h4 className="font-semibold mb-2">Analysis Summary</h4>
+                        <div className="text-sm text-muted-foreground space-y-1">
+                          {analysis.analysis_result?.scenes && (
+                            <p>Scenes: {analysis.analysis_result.scenes.length}</p>
+                          )}
+                          {analysis.analysis_result?.characters && (
+                            <p>Characters: {analysis.analysis_result.characters.length}</p>
+                          )}
+                          {analysis.analysis_result?.locations && (
+                            <p>Locations: {analysis.analysis_result.locations.length}</p>
+                          )}
+                          {analysis.analysis_result?.suggested_equipment && (
+                            <p>Equipment: {analysis.analysis_result.suggested_equipment.length}</p>
+                          )}
+                        </div>
                       </div>
                       <div>
                         <h4 className="font-semibold mb-2">Script Preview</h4>

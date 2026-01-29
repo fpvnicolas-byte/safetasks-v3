@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useStakeholder, useUpdateStakeholder } from '@/lib/api/hooks/useStakeholders'
 import { useProjects } from '@/lib/api/hooks'
+import { useSupplier, useSupplierStatement } from '@/lib/api/hooks/useSuppliers'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
@@ -31,6 +33,19 @@ export default function EditStakeholderPage() {
   const { data: stakeholder, isLoading } = useStakeholder(stakeholderId)
   const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId || undefined)
   const updateStakeholder = useUpdateStakeholder()
+
+  // Fetch supplier and payment data if linked
+  const { data: supplier } = useSupplier(
+    stakeholder?.supplier_id || '',
+    organizationId || ''
+  )
+  const { data: statement } = useSupplierStatement(
+    stakeholder?.supplier_id || '',
+    organizationId || '',
+    undefined, // date_from
+    undefined, // date_to
+    !!stakeholder?.supplier_id // showStatement - enables query when supplier_id exists
+  )
 
   const [formData, setFormData] = useState<StakeholderUpdate>({
     project_id: '',
@@ -209,6 +224,63 @@ export default function EditStakeholderPage() {
           </form>
         </CardContent>
       </Card>
+
+      {/* Payment Information Card */}
+      {stakeholder.supplier_id && (
+        <Card className="max-w-2xl">
+          <CardHeader>
+            <CardTitle>Payment Information</CardTitle>
+            <CardDescription>
+              Linked to supplier for payment tracking
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {supplier && (
+              <div className="grid gap-2">
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium">Supplier:</span>
+                  <span className="text-sm">{supplier.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium">Category:</span>
+                  <Badge variant="secondary">{supplier.category}</Badge>
+                </div>
+                {supplier.email && (
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium">Email:</span>
+                    <span className="text-sm">{supplier.email}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {statement && (
+              <div className="grid gap-2 border-t pt-4">
+                <h4 className="font-semibold">Payment Summary</h4>
+                <div className="flex justify-between">
+                  <span className="text-sm">Total Transactions:</span>
+                  <span className="text-sm font-medium">{statement.total_transactions}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">Total Paid:</span>
+                  <span className="text-sm font-medium">
+                    R$ {(statement.total_amount_cents / 100).toFixed(2)}
+                  </span>
+                </div>
+                {statement.transactions.length > 0 && (
+                  <div className="mt-2">
+                    <Link href={`/suppliers/${stakeholder.supplier_id}`}>
+                      <Button variant="outline" size="sm" className="w-full">
+                        View Full Payment History
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../client'
-import { 
-  AiScriptAnalysisRequest, 
-  AiAnalysisResponse, 
-  AiSuggestion, 
+import {
+  AiScriptAnalysisRequest,
+  AiAnalysisResponse,
+  AiSuggestion,
   AiRecommendation,
   ScriptAnalysis,
   AiBudgetEstimation,
@@ -14,9 +14,10 @@ export function useAiAnalysis(organizationId: string) {
   return useQuery({
     queryKey: ['ai-analysis', organizationId],
     queryFn: async () => {
-      const result = await apiClient.get<ScriptAnalysis[]>(`/api/v1/ai/analysis/?organization_id=${organizationId}`)
+      const result = await apiClient.get<ScriptAnalysis[]>('/api/v1/ai/analysis/')
       return result
-    }
+    },
+    enabled: !!organizationId
   })
 }
 
@@ -26,7 +27,10 @@ export function useAiSuggestions(projectId: string) {
     queryFn: async () => {
       const result = await apiClient.get<AiSuggestion[]>(`/api/v1/ai/suggestions/${projectId}`)
       return result
-    }
+    },
+    enabled: !!projectId,
+    retry: false,
+    staleTime: 30000 // 30 seconds
   })
 }
 
@@ -36,7 +40,10 @@ export function useAiRecommendations(projectId: string) {
     queryFn: async () => {
       const result = await apiClient.get<AiRecommendation[]>(`/api/v1/ai/recommendations/${projectId}`)
       return result
-    }
+    },
+    enabled: !!projectId,
+    retry: false,
+    staleTime: 30000 // 30 seconds
   })
 }
 

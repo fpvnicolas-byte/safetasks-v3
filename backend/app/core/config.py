@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     # Environment
     ENVIRONMENT: str = "development"
     
+    # Logging
+    LOG_LEVEL: str = "INFO"
+    
     # CORS
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
 

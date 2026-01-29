@@ -278,8 +278,7 @@ async def test_transaction_supplier_linking():
 
             supplier_summary = next((s for s in suppliers_with_summary if s['id'] == supplier_id), None)
             if supplier_summary:
-                print("
-Supplier transaction summary updated:")
+                print("\nSupplier transaction summary updated:")
                 print(f"   Total transactions: {supplier_summary['total_transactions']}")
                 print(f"   Total amount: R$ {supplier_summary['total_amount_cents'] / 100:.2f}")
 

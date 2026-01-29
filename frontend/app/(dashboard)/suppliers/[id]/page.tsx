@@ -24,17 +24,17 @@ export default function SupplierDetailPage() {
   // Get dates from URL parameters
   const urlDateFrom = searchParams.get('date_from') || ''
   const urlDateTo = searchParams.get('date_to') || ''
-  
+
   // State for form inputs (synced with URL)
   const [dateFrom, setDateFrom] = useState<string>(urlDateFrom)
   const [dateTo, setDateTo] = useState<string>(urlDateTo)
-  
+
   // Only show statement when explicitly generated (not from URL)
   const [showStatement, setShowStatement] = useState<boolean>(false)
 
   const { data: supplier, isLoading, error } = useSupplier(supplierId, organizationId || undefined)
   const deleteSupplier = useDeleteSupplier()
-  
+
   // Only fetch statement when explicitly requested
   const { data: statement, isLoading: isLoadingStatement } = useSupplierStatement(
     supplierId,
@@ -48,10 +48,10 @@ export default function SupplierDetailPage() {
   useEffect(() => {
     if (showStatement && dateFrom && dateTo) {
       const params = new URLSearchParams(searchParams.toString())
-      
+
       params.set('date_from', dateFrom)
       params.set('date_to', dateTo)
-      
+
       // Update URL without triggering a page reload
       router.replace(`${window.location.pathname}?${params.toString()}`)
     }
@@ -61,7 +61,7 @@ export default function SupplierDetailPage() {
   useEffect(() => {
     const newUrlDateFrom = searchParams.get('date_from') || ''
     const newUrlDateTo = searchParams.get('date_to') || ''
-    
+
     // Only update state if URL dates are different and we're not in the middle of user input
     if (newUrlDateFrom !== dateFrom && newUrlDateFrom !== '') {
       setDateFrom(newUrlDateFrom)
@@ -69,11 +69,12 @@ export default function SupplierDetailPage() {
     if (newUrlDateTo !== dateTo && newUrlDateTo !== '') {
       setDateTo(newUrlDateTo)
     }
-    
+
     // Auto-show statement if both dates are in URL (only on initial load)
     if (newUrlDateFrom && newUrlDateTo && !showStatement) {
       setShowStatement(true)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]) // Only depend on searchParams, not dateFrom/dateTo
 
 

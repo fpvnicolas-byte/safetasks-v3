@@ -35,6 +35,7 @@ class Supplier(Base):
 
     # Relationships
     transactions = relationship("Transaction", back_populates="supplier")
+    stakeholders = relationship("Stakeholder", back_populates="supplier")
 
     # Audit
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
@@ -50,12 +51,14 @@ class Stakeholder(Base):
     Stakeholder model for project team members and collaborators.
 
     Represents directors, producers, DPs, and other key project personnel.
+    Can be optionally linked to a Supplier for payment tracking.
     """
     __tablename__ = "stakeholders"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False)
+    supplier_id = Column(UUID(as_uuid=True), ForeignKey("suppliers.id"), nullable=True)  # Link to payment records
 
     name = Column(String, nullable=False)
     role = Column(String, nullable=False)  # Director, Producer, DP, Gaffer, Sound, etc.
@@ -64,6 +67,9 @@ class Stakeholder(Base):
     notes = Column(TEXT)
 
     is_active = Column(Boolean, default=True, nullable=False)
+
+    # Relationships
+    supplier = relationship("Supplier", back_populates="stakeholders")
 
     # Audit
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)

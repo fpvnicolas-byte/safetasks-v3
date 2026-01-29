@@ -1,5 +1,6 @@
 import { ApiError } from '@/types'
 import { createClient } from '@/lib/supabase/client'
+import { logger } from '@/lib/utils/logger'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
 const API_TIMEOUT = 30000 // 30 seconds
@@ -29,7 +30,7 @@ class ApiClient {
     let session = sessionResult.data.session
     const error = sessionResult.error
 
-    console.log('🔍 API Client - Session check:', {
+    logger.debug('API Client - Session check', {
       hasSession: !!session,
       sessionError: error,
       endpoint: endpoint
@@ -43,24 +44,24 @@ class ApiClient {
 
       // Refresh if token expires in less than 5 minutes
       if (expiresAt - now < fiveMinutes) {
-        console.log('🔄 API Client - Refreshing token...')
+        logger.debug('API Client - Refreshing token')
         const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
         if (refreshError) {
-          console.error('Token refresh error:', refreshError)
+          logger.error('Token refresh error', refreshError)
         } else if (refreshData.session) {
           session = refreshData.session
-          console.log('✅ API Client - Token refreshed')
+          logger.debug('API Client - Token refreshed')
         }
       }
     }
 
     if (error) {
-      console.error('Supabase session error:', error)
+      logger.error('Supabase session error', error)
       throw new Error('Authentication error: ' + error.message)
     }
 
     if (!session) {
-      console.error('❌ API Client - No session found')
+      logger.error('API Client - No session found')
       throw new Error('Not authenticated - please log in again')
     }
 
@@ -74,11 +75,11 @@ class ApiClient {
           throw new Error('Invalid token: Cannot use anon token for API requests. Please ensure you are logged in with a user account.')
         }
       } catch (e) {
-        console.warn('Could not decode token to check role:', e)
+        logger.warn('Could not decode token to check role', { error: e })
       }
     }
 
-    console.log('📤 API Client - Sending request with token:', {
+    logger.debug('API Client - Sending request', {
       endpoint: endpoint,
       hasToken: !!token,
       tokenLength: token ? token.length : 0
@@ -110,10 +111,19 @@ class ApiClient {
 
       // Handle errors
       if (!response.ok) {
+        // FastAPI uses 'detail' (singular) for validation errors
+        const errorDetail = data.detail || data.details || data.message
+
         const error: ApiError = {
-          message: data.message || response.statusText,
+          message: typeof errorDetail === 'string' ? errorDetail : (data.message || response.statusText),
           statusCode: response.status,
-          details: data.details,
+          details: errorDetail,
+        }
+
+        // Log full error response for debugging
+        if (response.status === 422) {
+          console.error('422 Validation Error - Full response:', data)
+          console.error('422 Validation Error - Detail:', errorDetail)
         }
 
         // Handle specific status codes
@@ -124,6 +134,13 @@ class ApiClient {
           error.message = 'You do not have permission to perform this action'
         } else if (response.status === 404) {
           error.message = 'Resource not found'
+        } else if (response.status === 422) {
+          // Provide more helpful validation error message
+          if (Array.isArray(errorDetail)) {
+            error.message = `Validation error: ${errorDetail.map((e: { msg?: string }) => e.msg || JSON.stringify(e)).join(', ')}`
+          } else if (typeof errorDetail === 'object') {
+            error.message = `Validation error: ${JSON.stringify(errorDetail)}`
+          }
         } else if (response.status === 429) {
           error.message = 'Too many requests. Please try again later.'
         } else if (response.status >= 500) {

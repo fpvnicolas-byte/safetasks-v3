@@ -20,6 +20,12 @@ from app.core.logging_config import (
 # Get specialized logger for AI service
 logger = get_logger("app.services.ai_engine")
 
+# AI Service Configuration Constants
+MAX_SCRIPT_LENGTH = 50000  # Maximum characters for script content
+MAX_RESPONSE_TOKENS = 4096  # Maximum tokens for AI response
+TIMEOUT_SECONDS = 30  # Request timeout in seconds
+MAX_RETRY_ATTEMPTS = 3  # Maximum retry attempts for failed requests
+
 
 class AIEngineService:
     """

@@ -11,12 +11,12 @@ import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { 
-  Sparkles, 
-  DollarSign, 
-  Calendar, 
-  Users, 
-  Settings, 
+import {
+  Sparkles,
+  DollarSign,
+  Calendar,
+  Users,
+  Settings,
   FileText,
   Loader2,
   TrendingUp,
@@ -33,7 +33,7 @@ export default function AiSuggestionsPage() {
   const [suggestionType, setSuggestionType] = useState<'all' | 'budget' | 'schedule' | 'casting' | 'logistics' | 'equipment' | 'other'>('all')
 
   // Queries
-  const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId)
+  const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId || undefined)
   const { data: suggestions, isLoading: isLoadingSuggestions } = useAiSuggestions(selectedProjectId)
   const { mutateAsync: generateBudgetEstimation, isPending: isGeneratingBudget } = useAiBudgetEstimation()
   const { mutateAsync: generateCallSheet, isPending: isGeneratingCallSheet } = useAiCallSheetSuggestions()
@@ -105,7 +105,7 @@ export default function AiSuggestionsPage() {
     }
   }
 
-  const filteredSuggestions = suggestions?.filter((s: AiSuggestion) => 
+  const filteredSuggestions = suggestions?.filter((s: AiSuggestion) =>
     suggestionType === 'all' || s.suggestion_type === suggestionType
   ) || []
 
@@ -245,7 +245,7 @@ export default function AiSuggestionsPage() {
                   <div className="bg-blue-100 p-2 rounded">
                     <span className="text-blue-600">Avg Confidence</span>
                     <div className="font-bold">
-                      {suggestions.length > 0 
+                      {suggestions.length > 0
                         ? Math.round(suggestions.reduce((acc: number, s: AiSuggestion) => acc + s.confidence, 0) / suggestions.length * 100)
                         : 0}%
                     </div>
@@ -351,7 +351,7 @@ export default function AiSuggestionsPage() {
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">No Suggestions Available</h3>
                 <p className="text-gray-600 mb-4">
-                  {selectedProjectId 
+                  {selectedProjectId
                     ? "No suggestions found for this project. Generate suggestions using the quick actions."
                     : "Please select a project to view suggestions."
                   }
@@ -426,7 +426,7 @@ export default function AiSuggestionsPage() {
                   </div>
                   <div className="text-2xl font-bold">
                     {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
-                       suggestions.reduce((acc: number, s: AiSuggestion) => acc + (s.estimated_savings_cents || 0), 0) / 100
+                      suggestions.reduce((acc: number, s: AiSuggestion) => acc + (s.estimated_savings_cents || 0), 0) / 100
                     )}
                   </div>
                   <CardDescription>

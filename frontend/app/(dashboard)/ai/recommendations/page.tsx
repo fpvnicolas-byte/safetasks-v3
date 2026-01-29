@@ -11,10 +11,10 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { 
-  Sparkles, 
-  CheckCircle, 
-  AlertTriangle, 
+import {
+  Sparkles,
+  CheckCircle,
+  AlertTriangle,
   TrendingUp,
   Calendar,
   FileText,
@@ -33,7 +33,7 @@ export default function AiRecommendationsPage() {
   const [recommendationType, setRecommendationType] = useState<'call_sheet' | 'budget' | 'schedule' | 'equipment' | 'all'>('all')
 
   // Queries
-  const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId)
+  const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId || undefined)
   const { data: recommendations, isLoading: isLoadingRecommendations } = useAiRecommendations(selectedProjectId)
 
   const getConfidenceColor = (confidence: number) => {
@@ -61,7 +61,7 @@ export default function AiRecommendationsPage() {
     }
   }
 
-  const filteredRecommendations = recommendations?.filter((r: AiRecommendation) => 
+  const filteredRecommendations = recommendations?.filter((r: AiRecommendation) =>
     recommendationType === 'all' || r.recommendation_type === recommendationType
   ) || []
 
@@ -80,7 +80,7 @@ export default function AiRecommendationsPage() {
     const exportData = {
       project_id: selectedProjectId,
       generated_at: new Date().toISOString(),
-        recommendations: recommendations.map((r: AiRecommendation) => ({
+      recommendations: recommendations.map((r: AiRecommendation) => ({
         title: r.title,
         description: r.description,
         type: r.recommendation_type,
@@ -101,7 +101,7 @@ export default function AiRecommendationsPage() {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-    
+
     toast.success('Recommendations exported successfully')
   }
 
@@ -215,20 +215,20 @@ export default function AiRecommendationsPage() {
                   <div className="bg-red-100 p-2 rounded">
                     <span className="text-red-600">High Priority</span>
                     <div className="font-bold">
-                       {recommendations.filter((r: AiRecommendation) => r.priority === 'high').length}
+                      {recommendations.filter((r: AiRecommendation) => r.priority === 'high').length}
                     </div>
                   </div>
                   <div className="bg-yellow-100 p-2 rounded">
                     <span className="text-yellow-600">Medium Priority</span>
                     <div className="font-bold">
-                       {recommendations.filter((r: AiRecommendation) => r.priority === 'medium').length}
+                      {recommendations.filter((r: AiRecommendation) => r.priority === 'medium').length}
                     </div>
                   </div>
                   <div className="bg-green-100 p-2 rounded">
                     <span className="text-green-600">Avg Confidence</span>
                     <div className="font-bold">
-                      {recommendations.length > 0 
-                         ? Math.round(recommendations.reduce((acc: number, r: AiRecommendation) => acc + r.confidence, 0) / recommendations.length * 100)
+                      {recommendations.length > 0
+                        ? Math.round(recommendations.reduce((acc: number, r: AiRecommendation) => acc + r.confidence, 0) / recommendations.length * 100)
                         : 0}%
                     </div>
                   </div>
@@ -258,7 +258,7 @@ export default function AiRecommendationsPage() {
               </div>
             ) : filteredRecommendations.length > 0 ? (
               <div className="space-y-4">
-                 {filteredRecommendations.map((recommendation: AiRecommendation) => (
+                {filteredRecommendations.map((recommendation: AiRecommendation) => (
                   <Card key={recommendation.id} className="hover:shadow-lg transition-shadow">
                     <CardHeader>
                       <div className="flex items-center justify-between">
@@ -359,7 +359,7 @@ export default function AiRecommendationsPage() {
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">No Recommendations Available</h3>
                 <p className="text-gray-600 mb-4">
-                  {selectedProjectId 
+                  {selectedProjectId
                     ? "No recommendations found for this project. Analyze your script to generate recommendations."
                     : "Please select a project to view recommendations."
                   }
@@ -397,7 +397,7 @@ export default function AiRecommendationsPage() {
                     <CardTitle className="text-sm font-medium">High Priority</CardTitle>
                   </div>
                   <div className="text-2xl font-bold text-red-600">
-                     {recommendations.filter((r: AiRecommendation) => r.priority === 'high').length}
+                    {recommendations.filter((r: AiRecommendation) => r.priority === 'high').length}
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -413,7 +413,7 @@ export default function AiRecommendationsPage() {
                     <CardTitle className="text-sm font-medium">Medium Priority</CardTitle>
                   </div>
                   <div className="text-2xl font-bold text-yellow-600">
-                     {recommendations.filter((r: AiRecommendation) => r.priority === 'medium').length}
+                    {recommendations.filter((r: AiRecommendation) => r.priority === 'medium').length}
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -429,7 +429,7 @@ export default function AiRecommendationsPage() {
                     <CardTitle className="text-sm font-medium">Low Priority</CardTitle>
                   </div>
                   <div className="text-2xl font-bold text-green-600">
-                     {recommendations.filter((r: AiRecommendation) => r.priority === 'low').length}
+                    {recommendations.filter((r: AiRecommendation) => r.priority === 'low').length}
                   </div>
                 </CardHeader>
                 <CardContent>

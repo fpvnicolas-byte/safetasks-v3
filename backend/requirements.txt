@@ -55,6 +55,7 @@ pyparsing==3.3.2
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.1
 python-jose==3.3.0
+python-json-logger==2.0.7
 python-multipart==0.0.20
 PyYAML==6.0.3
 realtime==2.5.3

@@ -4,12 +4,14 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCreateStakeholder } from '@/lib/api/hooks/useStakeholders'
 import { useProjects } from '@/lib/api/hooks'
+import { useSuppliers } from '@/lib/api/hooks/useSuppliers'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select,
   SelectContent,
@@ -26,8 +28,10 @@ export default function NewStakeholderPage() {
   const router = useRouter()
   const { organizationId } = useAuth()
   const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId || undefined)
+  const { data: suppliers, isLoading: isLoadingSuppliers } = useSuppliers(organizationId || undefined)
   const createStakeholder = useCreateStakeholder()
 
+  const [enablePayments, setEnablePayments] = useState(false)
   const [formData, setFormData] = useState<StakeholderCreate>({
     project_id: '',
     name: '',
@@ -35,6 +39,7 @@ export default function NewStakeholderPage() {
     email: '',
     phone: '',
     notes: '',
+    supplier_id: undefined,
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -55,7 +60,7 @@ export default function NewStakeholderPage() {
     }
   }
 
-  if (isLoadingProjects) {
+  if (isLoadingProjects || isLoadingSuppliers) {
     return <div className="p-8">Loading...</div>
   }
 
@@ -125,6 +130,52 @@ export default function NewStakeholderPage() {
                 placeholder="Director, Producer, DP, etc."
                 required
               />
+            </div>
+
+            {/* Payment Tracking Section */}
+            <div className="space-y-4 rounded-lg border border-border bg-muted/50 p-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="enable_payments"
+                  checked={enablePayments}
+                  onCheckedChange={(checked) => {
+                    setEnablePayments(!!checked)
+                    if (!checked) {
+                      setFormData({ ...formData, supplier_id: undefined })
+                    }
+                  }}
+                />
+                <Label htmlFor="enable_payments" className="cursor-pointer font-medium">
+                  Enable payment tracking for this stakeholder
+                </Label>
+              </div>
+
+              {enablePayments && (
+                <div className="space-y-2 pl-6">
+                  <Label htmlFor="supplier_id">Link to Supplier (Optional)</Label>
+                  <Select
+                    value={formData.supplier_id || ''}
+                    onValueChange={(value) => setFormData({ ...formData, supplier_id: value || undefined })}
+                  >
+                    <SelectTrigger id="supplier_id">
+                      <SelectValue placeholder="Select existing supplier or leave blank to auto-create" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Auto-create new supplier</SelectItem>
+                      {suppliers?.filter(s => s.category === 'freelancer').map((supplier) => (
+                        <SelectItem key={supplier.id} value={supplier.id}>
+                          {supplier.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground">
+                    {formData.supplier_id
+                      ? "Will link to existing supplier for payment tracking"
+                      : "A new supplier will be created automatically with this stakeholder's information"}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">

@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
+import { logger } from '@/lib/utils/logger'
 
 interface Profile {
   id: string
@@ -48,10 +49,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(profileData)
         setOrganizationId(profileData.organization_id)
       } else {
-        console.error('Failed to fetch profile:', response.status, response.statusText)
+        logger.error('Failed to fetch profile', undefined, { status: response.status, statusText: response.statusText })
       }
     } catch (error) {
-      console.error('Error fetching profile:', error)
+      logger.error('Error fetching profile', error)
     }
   }
 

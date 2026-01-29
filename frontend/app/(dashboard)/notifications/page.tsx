@@ -1,19 +1,19 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Bell, 
-  BellRing, 
-  Check, 
-  CheckCheck, 
-  Clock, 
-  AlertCircle, 
-  Info, 
+import {
+  Bell,
+  BellRing,
+  Check,
+  CheckCheck,
+  Clock,
+  AlertCircle,
+  Info,
   X,
-  RefreshCw 
+  RefreshCw
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { useNotifications, useNotificationStats, useMarkAsRead, useMarkAllAsRead } from '@/lib/api/hooks/useNotifications'
@@ -65,8 +65,8 @@ export default function NotificationsPage() {
             <div className="flex items-center gap-3 text-red-600">
               <AlertCircle className="h-5 w-5" />
               <span>Failed to load notifications: {error.message}</span>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => window.location.reload()}
                 className="ml-auto"
@@ -102,7 +102,7 @@ export default function NotificationsPage() {
               <div className="text-2xl font-bold">{stats.total_count}</div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Unread</CardTitle>
@@ -112,7 +112,7 @@ export default function NotificationsPage() {
               <div className="text-2xl font-bold text-orange-600">{stats.unread_count}</div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Read</CardTitle>
@@ -138,7 +138,7 @@ export default function NotificationsPage() {
                 <BellRing className="h-4 w-4 mr-2" />
                 {unreadOnly ? "Show All" : "Unread Only"}
               </Button>
-              
+
               {stats && stats.unread_count > 0 && (
                 <Button
                   variant="outline"
@@ -151,7 +151,7 @@ export default function NotificationsPage() {
                 </Button>
               )}
             </div>
-            
+
             <div className="text-sm text-muted-foreground">
               {isLoading ? "Loading..." : `${notifications?.length || 0} notifications`}
             </div>
@@ -182,18 +182,17 @@ export default function NotificationsPage() {
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 rounded-lg border transition-all ${
-                    !notification.is_read 
-                      ? 'bg-orange-50 border-orange-200 dark:bg-orange-900/20' 
-                      : 'bg-muted/50 border-transparent'
-                  }`}
+                  className={`p-4 rounded-lg border transition-all ${!notification.is_read
+                    ? 'bg-orange-50 border-orange-200 dark:bg-orange-900/20'
+                    : 'bg-muted/50 border-transparent'
+                    }`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3 flex-1">
                       <div className={`p-2 rounded-full ${getNotificationColor(notification.type)}`}>
                         {getNotificationIcon(notification.type)}
                       </div>
-                      
+
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-semibold">{notification.title}</h3>
@@ -215,7 +214,7 @@ export default function NotificationsPage() {
                         </div>
                       </div>
                     </div>
-                    
+
                     {!notification.is_read && (
                       <Button
                         variant="ghost"
@@ -235,7 +234,7 @@ export default function NotificationsPage() {
             <div className="text-center py-8 text-muted-foreground">
               <Bell className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
               <p>No notifications yet</p>
-              <p className="text-sm">You'll see updates and alerts here when they become available</p>
+              <p className="text-sm">You&apos;ll see updates and alerts here when they become available</p>
             </div>
           )}
         </CardContent>

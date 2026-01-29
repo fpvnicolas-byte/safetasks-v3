@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { User, Settings, LogOut, Menu } from 'lucide-react'
 import Link from 'next/link'
-import { useState } from 'react'
+
 
 interface HeaderProps {
   onSidebarToggle: () => void

@@ -11,26 +11,33 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
-import { 
-  FileText, 
-  Users, 
-  Calendar, 
-  Target, 
+import {
+  FileText,
+  Users,
+  Calendar,
+  Target,
   Loader2,
   Sparkles,
   Clock,
   DollarSign
 } from 'lucide-react'
-import type { ScriptAnalysis } from '@/types'
+
 
 export default function AiScriptAnalysisPage() {
   const router = useRouter()
-  const { user, organizationId } = useAuth()
+  const { organizationId } = useAuth()
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [scriptText, setScriptText] = useState<string>('')
   const [analysisType, setAnalysisType] = useState<'full' | 'characters' | 'scenes' | 'locations'>('full')
-  const [aiAnalysisResult, setAiAnalysisResult] = useState<any>(null)
+  const [aiAnalysisResult, setAiAnalysisResult] = useState<{
+    result?: {
+      characters?: unknown[]
+      scenes?: unknown[]
+      locations?: unknown[]
+    }
+    error?: string
+  } | null>(null)
 
   // Queries
   const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId || '')
@@ -53,21 +60,40 @@ export default function AiScriptAnalysisPage() {
         analysis_type: analysisType,
         script_content: scriptText
       })
-      
+
       // Handle backend error response
       if (result.error) {
         toast.error(`AI Analysis Error: ${result.error}`)
         return
       }
-      
+
       // Store AI analysis result for preview
       setAiAnalysisResult(result)
-      
+
       toast.success('Script analysis completed!')
       console.log('Script analysis result:', result)
     } catch (error) {
-      toast.error('Failed to analyze script')
-      console.error('Script analysis error:', error)
+      // Enhanced error logging
+      console.error('Script analysis error (full):', error)
+      console.error('Error type:', typeof error)
+      console.error('Error keys:', error ? Object.keys(error) : 'null')
+      console.error('Error stringified:', JSON.stringify(error, null, 2))
+
+      // Check if it's an ApiError with details
+      if (error && typeof error === 'object') {
+        const apiError = error as { message?: string; detail?: string; statusCode?: number; status?: number }
+        const errorMsg = apiError.message || apiError.detail || 'Unknown error'
+        const statusCode = apiError.statusCode || apiError.status || 'unknown'
+        toast.error(`Failed to analyze script (${statusCode}): ${errorMsg}`)
+        console.error('API Error Details:', {
+          message: apiError.message,
+          statusCode: apiError.statusCode,
+          detail: apiError.detail,
+          status: apiError.status
+        })
+      } else {
+        toast.error('Failed to analyze script')
+      }
     }
   }
 
@@ -291,28 +317,28 @@ export default function AiScriptAnalysisPage() {
                 </div>
                 {/* AI-Assisted Detection (Option 5) */}
                 <div className="text-2xl font-bold">
-                  {aiAnalysisResult?.result?.characters?.length || 
-                   scriptText.match(/\b[A-Z][A-Z\s]+\b/g)?.length || 0}
+                  {aiAnalysisResult?.result?.characters?.length ||
+                    scriptText.match(/\b[A-Z][A-Z\s]+\b/g)?.length || 0}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {aiAnalysisResult?.result?.characters?.length 
-                    ? 'AI-analyzed characters' 
+                  {aiAnalysisResult?.result?.characters?.length
+                    ? 'AI-analyzed characters'
                     : 'Estimated characters (regex-based)'}
                 </div>
               </div>
-              
+
               <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Calendar className="h-4 w-4 text-gray-600" />
                   <span className="text-sm font-medium">Scenes</span>
                 </div>
                 <div className="text-2xl font-bold">
-                  {aiAnalysisResult?.result?.scenes?.length || 
-                   scriptText.match(/INT\.|EXT\./g)?.length || 0}
+                  {aiAnalysisResult?.result?.scenes?.length ||
+                    scriptText.match(/INT\.|EXT\./g)?.length || 0}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {aiAnalysisResult?.result?.scenes?.length 
-                    ? 'AI-analyzed scenes' 
+                  {aiAnalysisResult?.result?.scenes?.length
+                    ? 'AI-analyzed scenes'
                     : 'Estimated scenes'}
                 </div>
               </div>
@@ -337,7 +363,7 @@ export default function AiScriptAnalysisPage() {
                 <div className="text-xs text-gray-500">Analysis complexity</div>
               </div>
             </div>
-            
+
             {/* AI Analysis Status */}
             {aiAnalysisResult && (
               <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
@@ -346,8 +372,8 @@ export default function AiScriptAnalysisPage() {
                   <span className="font-semibold text-blue-900 dark:text-blue-100">AI Analysis Complete</span>
                 </div>
                 <div className="text-sm text-blue-800 dark:text-blue-200">
-                  {aiAnalysisResult.result?.characters?.length || 0} characters, 
-                  {aiAnalysisResult.result?.scenes?.length || 0} scenes, 
+                  {aiAnalysisResult.result?.characters?.length || 0} characters,
+                  {aiAnalysisResult.result?.scenes?.length || 0} scenes,
                   {aiAnalysisResult.result?.locations?.length || 0} locations identified
                 </div>
               </div>

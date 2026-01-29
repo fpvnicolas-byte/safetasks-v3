@@ -89,6 +89,6 @@ export function useSupplierStatement(supplierId: string, organizationId: string,
 
       return apiClient.get<SupplierStatement>(`/api/v1/suppliers/${supplierId}/statement?${params.toString()}`)
     },
-    enabled: !!supplierId && !!organizationId && !!dateFrom && !!dateTo && !!showStatement,
+    enabled: !!supplierId && !!organizationId && (showStatement !== false),
   })
 }
