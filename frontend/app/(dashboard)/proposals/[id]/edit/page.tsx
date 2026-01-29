@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useProposal, useUpdateProposal } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { ProposalUpdate, ProposalStatus, dollarsToCents, centsToDollars } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,7 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 
 export default function EditProposalPage() {
   const router = useRouter()
@@ -19,7 +20,7 @@ export default function EditProposalPage() {
   const { organizationId } = useAuth()
   const proposalId = params.id as string
 
-  const [error, setError] = useState<string | null>(null)
+  const { errorDialog, showError, closeError } = useErrorDialog()
   const { data: proposal, isLoading } = useProposal(proposalId)
   const updateProposal = useUpdateProposal()
 
@@ -28,22 +29,17 @@ export default function EditProposalPage() {
   }
 
   if (!proposal) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription>Proposal not found</AlertDescription>
-      </Alert>
-    )
+    return <div className="p-8 text-destructive">Proposal not found</div>
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError(null)
 
     const formData = new FormData(e.currentTarget)
 
     try {
       const amountDollars = parseFloat(formData.get('total_amount') as string || '0')
-      
+
       const data: ProposalUpdate = {
         title: (formData.get('title') as string).trim(),
         description: (formData.get('description') as string || '').trim() || undefined,
@@ -56,9 +52,9 @@ export default function EditProposalPage() {
 
       await updateProposal.mutateAsync({ proposalId, data })
       router.push(`/proposals/${proposalId}`)
-    } catch (err: unknown) {
-      const error = err as Error
-      setError(error.message || 'Failed to update proposal')
+    } catch (err: any) {
+      console.error('Update proposal error:', err)
+      showError(err, 'Error Updating Proposal')
     }
   }
 
@@ -72,11 +68,6 @@ export default function EditProposalPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
 
             {/* Basic Info */}
             <div className="space-y-4">
@@ -189,6 +180,15 @@ export default function EditProposalPage() {
           </CardFooter>
         </form>
       </Card>
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }

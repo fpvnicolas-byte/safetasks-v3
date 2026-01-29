@@ -3,12 +3,13 @@
 import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useCharacter, useUpdateCharacter } from '@/lib/api/hooks'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 import { FormSkeleton } from '@/components/LoadingSkeletons'
 
 export default function EditCharacterPage() {
@@ -16,7 +17,7 @@ export default function EditCharacterPage() {
   const params = useParams()
   const characterId = params.id as string
 
-  const [error, setError] = useState<string | null>(null)
+  const { errorDialog, showError, closeError } = useErrorDialog()
   const { data: character, isLoading } = useCharacter(characterId)
   const updateCharacter = useUpdateCharacter()
 
@@ -37,16 +38,11 @@ export default function EditCharacterPage() {
   }
 
   if (!character) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription>Character not found</AlertDescription>
-      </Alert>
-    )
+    return <div className="p-8 text-destructive">Character not found</div>
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError(null)
 
     const formData = new FormData(e.currentTarget)
 
@@ -59,9 +55,9 @@ export default function EditCharacterPage() {
 
       await updateCharacter.mutateAsync({ characterId, data: characterData })
       router.push(`/characters/${characterId}`)
-    } catch (err: unknown) {
-      const error = err as Error
-      setError(error.message || 'Failed to update character')
+    } catch (err: any) {
+      console.error('Update character error:', err)
+      showError(err, 'Error Updating Character')
     }
   }
 
@@ -75,11 +71,6 @@ export default function EditCharacterPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
 
             <div className="space-y-2">
               <Label htmlFor="name">Character Name *</Label>
@@ -128,6 +119,15 @@ export default function EditCharacterPage() {
           </CardFooter>
         </form>
       </Card>
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }

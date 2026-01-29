@@ -3,13 +3,14 @@
 import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCreateScene } from '@/lib/api/hooks'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 import { DayNight, InternalExternal } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -19,20 +20,15 @@ function NewSceneForm() {
   const searchParams = useSearchParams()
   const projectId = searchParams.get('project') || ''
 
-  const [error, setError] = useState<string | null>(null)
+  const { errorDialog, showError, closeError } = useErrorDialog()
   const createScene = useCreateScene()
 
   if (!projectId) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription>Project ID is required. Please select a project first.</AlertDescription>
-      </Alert>
-    )
+    return <div className="p-8 text-destructive">Project ID is required. Please select a project first.</div>
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError(null)
 
     const formData = new FormData(e.currentTarget)
 
@@ -41,12 +37,12 @@ function NewSceneForm() {
       const estimatedTime = parseInt(formData.get('estimated_time_minutes') as string)
 
       if (!sceneNumber || sceneNumber <= 0) {
-        setError('Scene number must be a positive integer')
+        showError({ message: 'Scene number must be a positive integer' }, 'Validation Error')
         return
       }
 
       if (!estimatedTime || estimatedTime <= 0) {
-        setError('Estimated time must be a positive number')
+        showError({ message: 'Estimated time must be a positive number' }, 'Validation Error')
         return
       }
 
@@ -61,9 +57,9 @@ function NewSceneForm() {
 
       await createScene.mutateAsync(data)
       router.push(`/scenes?project=${projectId}`)
-    } catch (err: unknown) {
-      const error = err as Error
-      setError(error.message || 'Failed to create scene')
+    } catch (err: any) {
+      console.error('Create scene error:', err)
+      showError(err, 'Error Creating Scene')
     }
   }
 
@@ -77,11 +73,6 @@ function NewSceneForm() {
           </CardHeader>
 
           <CardContent className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
@@ -190,6 +181,15 @@ function NewSceneForm() {
           </CardFooter>
         </form>
       </Card>
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }

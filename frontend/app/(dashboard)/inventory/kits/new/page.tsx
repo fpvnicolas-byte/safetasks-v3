@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCreateKit, useInventoryItems, useUpdateInventoryItem } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { KitCreate, KitStatus } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { Package, Search, AlertCircle } from 'lucide-react'
@@ -19,7 +21,7 @@ import { Package, Search, AlertCircle } from 'lucide-react'
 export default function NewKitPage() {
   const router = useRouter()
   const { organizationId } = useAuth()
-  const [error, setError] = useState<string | null>(null)
+  const { errorDialog, showError, closeError } = useErrorDialog()
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -29,7 +31,6 @@ export default function NewKitPage() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError(null)
 
     const formData = new FormData(e.currentTarget)
 
@@ -42,24 +43,24 @@ export default function NewKitPage() {
       }
 
       const newKit = await createKit.mutateAsync(kitData)
-      
+
       // Update selected items to use this new kit_id
       if (selectedItems.length > 0) {
         await Promise.all(
-          selectedItems.map(itemId => 
+          selectedItems.map(itemId =>
             updateItem.mutateAsync({ itemId, data: { kit_id: newKit.id } })
           )
         )
       }
 
       router.push('/inventory/kits')
-    } catch (err: unknown) {
-      const error = err as Error
-      setError(error.message || 'Failed to create kit')
+    } catch (err: any) {
+      console.error('Create kit error:', err)
+      showError(err, 'Error Creating Kit')
     }
   }
 
-  const filteredItems = allItems?.filter(item => 
+  const filteredItems = allItems?.filter(item =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.category.toLowerCase().includes(searchQuery.toLowerCase())
   ) || []
@@ -74,13 +75,6 @@ export default function NewKitPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2 md:col-span-2">
@@ -183,6 +177,15 @@ export default function NewKitPage() {
           </CardFooter>
         </form>
       </Card>
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }

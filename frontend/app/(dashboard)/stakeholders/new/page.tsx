@@ -6,12 +6,14 @@ import { useCreateStakeholder } from '@/lib/api/hooks/useStakeholders'
 import { useProjects } from '@/lib/api/hooks'
 import { useSuppliers } from '@/lib/api/hooks/useSuppliers'
 import { useAuth } from '@/contexts/AuthContext'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 import {
   Select,
   SelectContent,
@@ -30,8 +32,10 @@ export default function NewStakeholderPage() {
   const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId || undefined)
   const { data: suppliers, isLoading: isLoadingSuppliers } = useSuppliers(organizationId || undefined)
   const createStakeholder = useCreateStakeholder()
+  const { errorDialog, showError, closeError } = useErrorDialog()
 
   const [enablePayments, setEnablePayments] = useState(false)
+
   const [formData, setFormData] = useState<StakeholderCreate>({
     project_id: '',
     name: '',
@@ -51,13 +55,24 @@ export default function NewStakeholderPage() {
     }
 
     try {
-      console.log('Creating stakeholder with data:', formData)
-      await createStakeholder.mutateAsync(formData)
+      // Clean up the data before sending - convert empty strings to undefined
+      const cleanedData: StakeholderCreate = {
+        project_id: formData.project_id,
+        name: formData.name.trim(),
+        role: formData.role.trim(),
+        email: formData.email?.trim() || undefined,
+        phone: formData.phone?.trim() || undefined,
+        notes: formData.notes?.trim() || undefined,
+        supplier_id: formData.supplier_id || undefined,
+      }
+
+      console.log('Creating stakeholder with cleaned data:', cleanedData)
+      await createStakeholder.mutateAsync(cleanedData)
       toast.success('Stakeholder created successfully')
       router.push('/stakeholders')
-    } catch (error) {
-      toast.error('Failed to create stakeholder')
+    } catch (error: any) {
       console.error('Create error:', error)
+      showError(error, 'Error Creating Stakeholder')
     }
   }
 
@@ -222,6 +237,15 @@ export default function NewStakeholderPage() {
           </form>
         </CardContent>
       </Card>
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }

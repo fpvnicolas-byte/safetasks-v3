@@ -4,11 +4,13 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCreateBankAccount } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
@@ -32,23 +34,22 @@ export default function NewBankAccountPage() {
     name: '',
     currency: 'BRL', // Default to BRL as per backend
   })
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const { errorDialog, showError, closeError } = useErrorDialog()
 
   const createBankAccount = useCreateBankAccount()
 
   const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {}
-
     if (!formData.name.trim()) {
-      newErrors.name = 'Account name is required'
+      showError({ message: 'Account name is required' }, 'Validation Error')
+      return false
     }
 
     if (!formData.currency) {
-      newErrors.currency = 'Currency is required'
+      showError({ message: 'Currency is required' }, 'Validation Error')
+      return false
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    return true
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,7 +60,7 @@ export default function NewBankAccountPage() {
     }
 
     if (!organizationId) {
-      setErrors({ submit: 'Organization not found. Please log in again.' })
+      showError({ message: 'Organization not found. Please log in again.' }, 'Authentication Error')
       return
     }
 
@@ -74,17 +75,14 @@ export default function NewBankAccountPage() {
         account: accountData
       })
       router.push('/financials/bank-accounts')
-    } catch (err: unknown) {
-      const error = err as Error
-      setErrors({ submit: error.message || 'Failed to create bank account' })
+    } catch (err: any) {
+      console.error('Create bank account error:', err)
+      showError(err, 'Error Creating Bank Account')
     }
   }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }))
-    }
   }
 
   return (
@@ -108,11 +106,6 @@ export default function NewBankAccountPage() {
           </CardHeader>
 
           <CardContent className="space-y-4">
-            {errors.submit && (
-              <Alert variant="destructive">
-                <AlertDescription>{errors.submit}</AlertDescription>
-              </Alert>
-            )}
 
             <Alert>
               <AlertDescription>
@@ -132,9 +125,6 @@ export default function NewBankAccountPage() {
                 placeholder="Business Checking Account"
                 required
               />
-              {errors.name && (
-                <p className="text-sm text-destructive">{errors.name}</p>
-              )}
               <p className="text-xs text-muted-foreground">
                 A descriptive name for this bank account (e.g., &quot;Main Checking&quot;, &quot;Savings&quot;, &quot;PayPal&quot;)
               </p>
@@ -160,9 +150,6 @@ export default function NewBankAccountPage() {
                   ))}
                 </SelectContent>
               </Select>
-              {errors.currency && (
-                <p className="text-sm text-destructive">{errors.currency}</p>
-              )}
               <p className="text-xs text-muted-foreground">
                 Select the currency for this account. Cannot be changed after creation.
               </p>
@@ -192,6 +179,15 @@ export default function NewBankAccountPage() {
           </CardFooter>
         </form>
       </Card>
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }

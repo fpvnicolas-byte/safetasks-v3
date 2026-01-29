@@ -3,11 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCreateClient } from '@/lib/api/hooks'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
@@ -20,6 +21,7 @@ export default function NewClientPage() {
     phone: '',
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const { errorDialog, showError, closeError } = useErrorDialog()
 
   const createClient = useCreateClient()
 
@@ -57,9 +59,9 @@ export default function NewClientPage() {
 
       await createClient.mutateAsync(clientData)
       router.push('/clients')
-    } catch (err: unknown) {
-      const error = err as Error
-      setErrors({ submit: error.message || 'Failed to create client' })
+    } catch (err: any) {
+      console.error('Create client error:', err)
+      showError(err, 'Error Creating Client')
     }
   }
 
@@ -91,11 +93,6 @@ export default function NewClientPage() {
           </CardHeader>
 
           <CardContent className="space-y-4">
-            {errors.submit && (
-              <Alert variant="destructive">
-                <AlertDescription>{errors.submit}</AlertDescription>
-              </Alert>
-            )}
 
             {/* Name - Required */}
             <div className="space-y-2">
@@ -175,6 +172,15 @@ export default function NewClientPage() {
           </CardFooter>
         </form>
       </Card>
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }

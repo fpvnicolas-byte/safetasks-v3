@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useCreateInventoryItem, useKits } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { KitItemCreate } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,12 +14,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 import { AlertCircle } from 'lucide-react'
 
 export default function NewInventoryItemPage() {
   const router = useRouter()
   const { organizationId } = useAuth()
-  const [error, setError] = useState<string | null>(null)
+  const { errorDialog, showError, closeError } = useErrorDialog()
   const [selectedKitId, setSelectedKitId] = useState<string>('')
 
   const { data: kits, isLoading: kitsLoading } = useKits(organizationId || '')
@@ -26,10 +28,9 @@ export default function NewInventoryItemPage() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError(null)
 
     if (!selectedKitId) {
-      setError('Please select a kit to assign this item to')
+      showError({ message: 'Please select a kit to assign this item to' }, 'Validation Error')
       return
     }
 
@@ -52,9 +53,9 @@ export default function NewInventoryItemPage() {
 
       await createItem.mutateAsync(data)
       router.push('/inventory/items')
-    } catch (err: unknown) {
-      const error = err as Error
-      setError(error.message || 'Failed to create inventory item')
+    } catch (err: any) {
+      console.error('Create item error:', err)
+      showError(err, 'Error Creating Item')
     }
   }
 
@@ -68,13 +69,6 @@ export default function NewInventoryItemPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
 
             {/* Basic Info */}
             <div className="space-y-4">
@@ -177,6 +171,15 @@ export default function NewInventoryItemPage() {
           </CardFooter>
         </form>
       </Card>
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useInventoryItem, useUpdateInventoryItem, useKits } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { KitItemUpdate } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 import { FormSkeleton } from '@/components/LoadingSkeletons'
 
 export default function EditInventoryItemPage() {
@@ -21,7 +23,7 @@ export default function EditInventoryItemPage() {
   const itemId = params.id as string
   const { organizationId } = useAuth()
 
-  const [error, setError] = useState<string | null>(null)
+  const { errorDialog, showError, closeError } = useErrorDialog()
   const { data: item, isLoading } = useInventoryItem(itemId)
   const { data: kits, isLoading: isLoadingKits } = useKits(organizationId || '')
   const updateItem = useUpdateInventoryItem()
@@ -43,16 +45,11 @@ export default function EditInventoryItemPage() {
   }
 
   if (!item) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription>Equipment item not found</AlertDescription>
-      </Alert>
-    )
+    return <div className="p-8 text-destructive">Equipment item not found</div>
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError(null)
 
     const formData = new FormData(e.currentTarget)
 
@@ -72,9 +69,9 @@ export default function EditInventoryItemPage() {
 
       await updateItem.mutateAsync({ itemId, data })
       router.push('/inventory/items')
-    } catch (err: unknown) {
-      const error = err as Error
-      setError(error.message || 'Failed to update equipment item')
+    } catch (err: any) {
+      console.error('Update item error:', err)
+      showError(err, 'Error Updating Item')
     }
   }
 
@@ -88,11 +85,6 @@ export default function EditInventoryItemPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
 
             {/* Basic Info */}
             <div className="space-y-4">
@@ -195,6 +187,15 @@ export default function EditInventoryItemPage() {
           </CardFooter>
         </form>
       </Card>
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }

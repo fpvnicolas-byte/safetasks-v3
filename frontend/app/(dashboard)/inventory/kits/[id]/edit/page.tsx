@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useKit, useUpdateKit, useInventoryItems, useUpdateInventoryItem } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { KitUpdate, KitStatus } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { AlertCircle, ArrowLeft, Search, Package } from 'lucide-react'
@@ -22,7 +24,7 @@ export default function EditKitPage() {
   const { organizationId } = useAuth()
   const kitId = params.id as string
 
-  const [error, setError] = useState<string | null>(null)
+  const { errorDialog, showError, closeError } = useErrorDialog()
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -41,7 +43,6 @@ export default function EditKitPage() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError(null)
 
     const formData = new FormData(e.currentTarget)
 
@@ -54,30 +55,30 @@ export default function EditKitPage() {
       }
 
       await updateKit.mutateAsync({ kitId, data: kitData })
-      
+
       // Calculate which items to add
       const itemsCurrentlyInKit = allItems?.filter(item => item.kit_id === kitId).map(item => item.id) || []
       const itemsToAdd = selectedItems.filter(id => !itemsCurrentlyInKit.includes(id))
 
       if (itemsToAdd.length > 0) {
         await Promise.all(
-          itemsToAdd.map(itemId => 
+          itemsToAdd.map(itemId =>
             updateItem.mutateAsync({ itemId, data: { kit_id: kitId } })
           )
         )
       }
 
       router.push(`/inventory/kits/${kitId}`)
-    } catch (err: unknown) {
-      const error = err as Error
-      setError(error.message || 'Failed to update kit')
+    } catch (err: any) {
+      console.error('Update kit error:', err)
+      showError(err, 'Error Updating Kit')
     }
   }
 
   if (kitLoading) return <div className="p-8 text-center text-muted-foreground">Loading kit...</div>
   if (!kit) return <div className="p-8 text-center text-muted-foreground text-destructive">Kit not found</div>
 
-  const filteredItems = allItems?.filter(item => 
+  const filteredItems = allItems?.filter(item =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.category.toLowerCase().includes(searchQuery.toLowerCase())
   ) || []
@@ -97,13 +98,6 @@ export default function EditKitPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2 md:col-span-2">
@@ -204,6 +198,15 @@ export default function EditKitPage() {
           </CardFooter>
         </form>
       </Card>
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }

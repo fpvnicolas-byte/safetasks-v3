@@ -6,6 +6,8 @@ import { useStakeholder, useUpdateStakeholder } from '@/lib/api/hooks/useStakeho
 import { useProjects } from '@/lib/api/hooks'
 import { useSupplier, useSupplierStatement } from '@/lib/api/hooks/useSuppliers'
 import { useAuth } from '@/contexts/AuthContext'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -33,6 +35,7 @@ export default function EditStakeholderPage() {
   const { data: stakeholder, isLoading } = useStakeholder(stakeholderId)
   const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId || undefined)
   const updateStakeholder = useUpdateStakeholder()
+  const { errorDialog, showError, closeError } = useErrorDialog()
 
   // Fetch supplier and payment data if linked
   const { data: supplier } = useSupplier(
@@ -86,9 +89,9 @@ export default function EditStakeholderPage() {
       })
       toast.success('Stakeholder updated successfully')
       router.push('/stakeholders')
-    } catch (error) {
-      toast.error('Failed to update stakeholder')
+    } catch (error: any) {
       console.error('Update error:', error)
+      showError(error, 'Error Updating Stakeholder')
     }
   }
 
@@ -281,6 +284,15 @@ export default function EditStakeholderPage() {
           </CardContent>
         </Card>
       )}
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }

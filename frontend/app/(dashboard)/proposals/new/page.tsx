@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useCreateProposal, useClients } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { ProposalCreate, ProposalStatus } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,13 +13,13 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 import { dollarsToCents } from '@/types'
 
 export default function NewProposalPage() {
   const router = useRouter()
   const { organizationId } = useAuth()
-  const [error, setError] = useState<string | null>(null)
+  const { errorDialog, showError, closeError } = useErrorDialog()
   const [selectedClientId, setSelectedClientId] = useState<string>('')
   const [status, setStatus] = useState<ProposalStatus>('draft')
 
@@ -27,10 +28,9 @@ export default function NewProposalPage() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError(null)
 
     if (!selectedClientId) {
-      setError('Please select a client')
+      showError({ message: 'Please select a client' }, 'Validation Error')
       return
     }
 
@@ -38,7 +38,7 @@ export default function NewProposalPage() {
 
     try {
       const amountDollars = parseFloat(formData.get('total_amount') as string || '0')
-      
+
       const data: ProposalCreate = {
         client_id: selectedClientId,
         title: (formData.get('title') as string).trim(),
@@ -52,9 +52,9 @@ export default function NewProposalPage() {
 
       await createProposal.mutateAsync(data)
       router.push('/proposals')
-    } catch (err: unknown) {
-      const error = err as Error
-      setError(error.message || 'Failed to create proposal')
+    } catch (err: any) {
+      console.error('Create proposal error:', err)
+      showError(err, 'Error Creating Proposal')
     }
   }
 
@@ -68,11 +68,6 @@ export default function NewProposalPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
 
             {/* Client Selection */}
             <div className="space-y-2">
@@ -209,6 +204,15 @@ export default function NewProposalPage() {
           </CardFooter>
         </form>
       </Card>
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }

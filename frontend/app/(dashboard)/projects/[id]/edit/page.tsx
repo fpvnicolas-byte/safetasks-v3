@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useProject, useUpdateProject, useClients } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { ProjectFormData, ProjectStatus } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,7 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 import { dollarsToCents, centsToDollars } from '@/lib/utils/money'
 import { FormSkeleton } from '@/components/LoadingSkeletons'
 
@@ -20,8 +21,7 @@ export default function EditProjectPage() {
   const params = useParams()
   const projectId = params.id as string
   const { organizationId } = useAuth()
-
-  const [error, setError] = useState<string | null>(null)
+  const { errorDialog, showError, closeError } = useErrorDialog()
   const { data: project, isLoading } = useProject(projectId)
   const { data: clients, isLoading: isLoadingClients } = useClients(organizationId || '')
   const updateProject = useUpdateProject(projectId, organizationId || '')
@@ -43,16 +43,11 @@ export default function EditProjectPage() {
   }
 
   if (!project) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription>Project not found</AlertDescription>
-      </Alert>
-    )
+    return <div className="p-8 text-destructive">Project not found</div>
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError(null)
 
     const formData = new FormData(e.currentTarget)
 
@@ -71,9 +66,9 @@ export default function EditProjectPage() {
 
       await updateProject.mutateAsync(data)
       router.push(`/projects/${projectId}`)
-    } catch (err: unknown) {
-      const error = err as Error
-      setError(error.message || 'Failed to update project')
+    } catch (err: any) {
+      console.error('Update project error:', err)
+      showError(err, 'Error Updating Project')
     }
   }
 
@@ -87,11 +82,6 @@ export default function EditProjectPage() {
           </CardHeader>
 
           <CardContent className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
 
             <div className="space-y-2">
               <Label htmlFor="client_id">Client *</Label>
@@ -201,6 +191,15 @@ export default function EditProjectPage() {
           </CardFooter>
         </form>
       </Card>
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }

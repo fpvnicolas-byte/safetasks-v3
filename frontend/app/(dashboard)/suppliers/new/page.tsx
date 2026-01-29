@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCreateSupplier } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { SupplierCreate, SupplierCategory } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,19 +12,18 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 
 export default function NewSupplierPage() {
   const router = useRouter()
   const { organizationId } = useAuth()
-  const [error, setError] = useState<string | null>(null)
+  const { errorDialog, showError, closeError } = useErrorDialog()
   const [selectedCategory, setSelectedCategory] = useState<SupplierCategory>('rental_house')
 
   const createSupplier = useCreateSupplier()
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError(null)
 
     const formData = new FormData(e.currentTarget)
 
@@ -46,9 +46,9 @@ export default function NewSupplierPage() {
 
       await createSupplier.mutateAsync(data)
       router.push('/suppliers')
-    } catch (err: unknown) {
-      const error = err as Error
-      setError(error.message || 'Failed to create supplier')
+    } catch (err: any) {
+      console.error('Create supplier error:', err)
+      showError(err, 'Error Creating Supplier')
     }
   }
 
@@ -62,11 +62,6 @@ export default function NewSupplierPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
 
             {/* Basic Information */}
             <div className="space-y-4">
@@ -194,6 +189,15 @@ export default function NewSupplierPage() {
           </CardFooter>
         </form>
       </Card>
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }

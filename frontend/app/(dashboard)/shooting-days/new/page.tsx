@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useCreateShootingDay, useProjects } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { ShootingDayFormData } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,7 +25,7 @@ function NewShootingDayForm() {
   const projectIdFromUrl = searchParams.get('project') || ''
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>(projectIdFromUrl)
-  const [error, setError] = useState<string | null>(null)
+  const { errorDialog, showError, closeError } = useErrorDialog()
 
   // Fetch projects for the dropdown
   const { data: projects, isLoading: projectsLoading } = useProjects(organizationId || undefined)
@@ -34,7 +36,6 @@ function NewShootingDayForm() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError(null)
 
     const formData = new FormData(e.currentTarget)
 
@@ -51,9 +52,9 @@ function NewShootingDayForm() {
 
       await createShootingDay.mutateAsync(data)
       router.push(`/projects/${selectedProjectId}?tab=shooting-days`)
-    } catch (err: unknown) {
-      const error = err as Error
-      setError(error.message || 'Failed to create shooting day')
+    } catch (err: any) {
+      console.error('Create shooting day error:', err)
+      showError(err, 'Error Creating Shooting Day')
     }
   }
 
@@ -67,11 +68,6 @@ function NewShootingDayForm() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
 
             {/* Project Selection (if not from URL) */}
             {needsProjectSelection && (
@@ -231,6 +227,15 @@ function NewShootingDayForm() {
           </CardFooter>
         </form>
       </Card>
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }

@@ -4,12 +4,13 @@ import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useShootingDay, useUpdateShootingDay } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 import { convertTimeToFormFormat } from '@/types'
 
 export default function EditShootingDayPage() {
@@ -18,7 +19,7 @@ export default function EditShootingDayPage() {
   const { organizationId } = useAuth()
   const shootingDayId = params.id as string
 
-  const [error, setError] = useState<string | null>(null)
+  const { errorDialog, showError, closeError } = useErrorDialog()
   const { data: shootingDay, isLoading } = useShootingDay(shootingDayId)
   const updateShootingDay = useUpdateShootingDay(shootingDayId, organizationId || '')
 
@@ -39,16 +40,11 @@ export default function EditShootingDayPage() {
   }
 
   if (!shootingDay) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription>Shooting day not found</AlertDescription>
-      </Alert>
-    )
+    return <div className="p-8 text-destructive">Shooting day not found</div>
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError(null)
 
     const formData = new FormData(e.currentTarget)
 
@@ -65,9 +61,9 @@ export default function EditShootingDayPage() {
 
       await updateShootingDay.mutateAsync(data)
       router.push(`/shooting-days/${shootingDayId}`)
-    } catch (err: unknown) {
-      const error = err as Error
-      setError(error.message || 'Failed to update shooting day')
+    } catch (err: any) {
+      console.error('Update shooting day error:', err)
+      showError(err, 'Error Updating Shooting Day')
     }
   }
 
@@ -81,11 +77,6 @@ export default function EditShootingDayPage() {
           </CardHeader>
 
           <CardContent className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
@@ -181,6 +172,15 @@ export default function EditShootingDayPage() {
           </CardFooter>
         </form>
       </Card>
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }

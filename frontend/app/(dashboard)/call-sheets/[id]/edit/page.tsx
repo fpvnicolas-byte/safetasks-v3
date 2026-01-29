@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useCallSheet, useUpdateCallSheet } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { CallSheetFormData, convertTimeToBackendFormat, convertTimeToFormFormat } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,7 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 
 export default function EditCallSheetPage() {
   const params = useParams()
@@ -22,7 +23,7 @@ export default function EditCallSheetPage() {
   const { data: callSheet, isLoading: isLoadingCallSheet, error: callSheetError } = useCallSheet(callSheetId)
   const updateCallSheet = useUpdateCallSheet(callSheetId, organizationId || '')
 
-  const [error, setError] = useState<string | null>(null)
+  const { errorDialog, showError, closeError } = useErrorDialog()
   const [isInitialized, setIsInitialized] = useState(false)
 
   // Initialize form data when call sheet loads
@@ -47,7 +48,6 @@ export default function EditCallSheetPage() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError(null)
 
     const formData = new FormData(e.currentTarget)
 
@@ -69,9 +69,9 @@ export default function EditCallSheetPage() {
 
       await updateCallSheet.mutateAsync(data)
       router.push(`/call-sheets/${callSheetId}`)
-    } catch (err: unknown) {
-      const error = err as Error
-      setError(error.message || 'Failed to update call sheet')
+    } catch (err: any) {
+      console.error('Update call sheet error:', err)
+      showError(err, 'Error Updating Call Sheet')
     }
   }
 
@@ -87,11 +87,6 @@ export default function EditCallSheetPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
 
             {/* Basic Information */}
             <div className="space-y-4">
@@ -272,6 +267,15 @@ export default function EditCallSheetPage() {
           </CardFooter>
         </form>
       </Card>
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }

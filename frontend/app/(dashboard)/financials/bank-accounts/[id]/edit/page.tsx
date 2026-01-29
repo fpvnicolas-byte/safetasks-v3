@@ -4,12 +4,14 @@ import { use, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useBankAccount, useUpdateBankAccount } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 import { ArrowLeft, Shield } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency } from '@/types'
@@ -37,7 +39,7 @@ export default function EditBankAccountPage({ params }: { params: Promise<{ id: 
     name: '',
     currency: 'BRL',
   })
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const { errorDialog, showError, closeError } = useErrorDialog()
 
   // Check if user is admin
   const isAdmin = profile?.role === 'admin'
@@ -53,18 +55,17 @@ export default function EditBankAccountPage({ params }: { params: Promise<{ id: 
   }, [account])
 
   const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {}
-
     if (!formData.name.trim()) {
-      newErrors.name = 'Account name is required'
+      showError({ message: 'Account name is required' }, 'Validation Error')
+      return false
     }
 
     if (!formData.currency) {
-      newErrors.currency = 'Currency is required'
+      showError({ message: 'Currency is required' }, 'Validation Error')
+      return false
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    return true
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,17 +87,14 @@ export default function EditBankAccountPage({ params }: { params: Promise<{ id: 
         data: accountData,
       })
       router.push('/financials/bank-accounts')
-    } catch (err: unknown) {
-      const error = err as Error
-      setErrors({ submit: error.message || 'Failed to update bank account' })
+    } catch (err: any) {
+      console.error('Update bank account error:', err)
+      showError(err, 'Error Updating Bank Account')
     }
   }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }))
-    }
   }
 
   if (accountLoading) {
@@ -188,11 +186,6 @@ export default function EditBankAccountPage({ params }: { params: Promise<{ id: 
           </CardHeader>
 
           <CardContent className="space-y-4">
-            {errors.submit && (
-              <Alert variant="destructive">
-                <AlertDescription>{errors.submit}</AlertDescription>
-              </Alert>
-            )}
 
             {/* Current Balance Display */}
             <div className="rounded-lg border p-4 bg-muted/50">
@@ -217,9 +210,6 @@ export default function EditBankAccountPage({ params }: { params: Promise<{ id: 
                 placeholder="Business Checking Account"
                 required
               />
-              {errors.name && (
-                <p className="text-sm text-destructive">{errors.name}</p>
-              )}
               <p className="text-xs text-muted-foreground">
                 A descriptive name for this bank account
               </p>
@@ -245,9 +235,6 @@ export default function EditBankAccountPage({ params }: { params: Promise<{ id: 
                   ))}
                 </SelectContent>
               </Select>
-              {errors.currency && (
-                <p className="text-sm text-destructive">{errors.currency}</p>
-              )}
               <p className="text-xs text-muted-foreground">
                 The currency for this account
               </p>
@@ -273,6 +260,15 @@ export default function EditBankAccountPage({ params }: { params: Promise<{ id: 
           </CardFooter>
         </form>
       </Card>
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }

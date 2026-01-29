@@ -4,12 +4,13 @@ import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCreateCharacter } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
@@ -27,6 +28,7 @@ function NewCharacterForm() {
     actor_name: '',
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const { errorDialog, showError, closeError } = useErrorDialog()
 
   const createCharacter = useCreateCharacter()
 
@@ -70,9 +72,9 @@ function NewCharacterForm() {
 
       await createCharacter.mutateAsync(characterData)
       router.push('/characters')
-    } catch (err: unknown) {
-      const error = err as Error
-      setErrors({ submit: error.message || 'Failed to create character' })
+    } catch (err: any) {
+      console.error('Create character error:', err)
+      showError(err, 'Error Creating Character')
     }
   }
 
@@ -137,11 +139,6 @@ function NewCharacterForm() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {errors.submit && (
-              <Alert variant="destructive">
-                <AlertDescription>{errors.submit}</AlertDescription>
-              </Alert>
-            )}
 
             {/* Character Name */}
             <div className="space-y-2">
@@ -209,6 +206,15 @@ function NewCharacterForm() {
           </CardFooter>
         </form>
       </Card>
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useSupplier, useUpdateSupplier } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { SupplierUpdate, SupplierCategory } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,7 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 import { Switch } from '@/components/ui/switch'
 
 export default function EditSupplierPage() {
@@ -20,7 +21,7 @@ export default function EditSupplierPage() {
   const { organizationId } = useAuth()
   const supplierId = params.id as string
 
-  const [error, setError] = useState<string | null>(null)
+  const { errorDialog, showError, closeError } = useErrorDialog()
   const [selectedCategory, setSelectedCategory] = useState<SupplierCategory>('rental_house')
   const [isActive, setIsActive] = useState(true)
 
@@ -52,16 +53,11 @@ export default function EditSupplierPage() {
   }
 
   if (!supplier) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription>Supplier not found</AlertDescription>
-      </Alert>
-    )
+    return <div className="p-8 text-destructive">Supplier not found</div>
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError(null)
 
     const formData = new FormData(e.currentTarget)
 
@@ -85,9 +81,9 @@ export default function EditSupplierPage() {
 
       await updateSupplier.mutateAsync({ supplierId, data })
       router.push(`/suppliers/${supplierId}`)
-    } catch (err: unknown) {
-      const error = err as Error
-      setError(error.message || 'Failed to update supplier')
+    } catch (err: any) {
+      console.error('Update supplier error:', err)
+      showError(err, 'Error Updating Supplier')
     }
   }
 
@@ -101,11 +97,6 @@ export default function EditSupplierPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
 
             {/* Active Status */}
             <div className="flex items-center justify-between">
@@ -252,6 +243,15 @@ export default function EditSupplierPage() {
           </CardFooter>
         </form>
       </Card>
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCreateProject, useClients } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { ProjectStatus, ProjectCreate } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,13 +12,13 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 import { dollarsToCents } from '@/lib/utils/money'
 
 export default function NewProjectPage() {
   const router = useRouter()
-  const [error, setError] = useState<string | null>(null)
   const { organizationId, isLoading: isLoadingOrg } = useAuth()
+  const { errorDialog, showError, closeError } = useErrorDialog()
 
   const createProject = useCreateProject(organizationId || '')
   const { data: clients, isLoading: isLoadingClients } = useClients(organizationId || '')
@@ -27,16 +28,11 @@ export default function NewProjectPage() {
   }
 
   if (!organizationId) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription>No organization found. Please contact support.</AlertDescription>
-      </Alert>
-    )
+    return <div className="p-8 text-destructive">No organization found. Please contact support.</div>
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError(null)
 
     const formData = new FormData(e.currentTarget)
 
@@ -55,9 +51,9 @@ export default function NewProjectPage() {
 
       await createProject.mutateAsync(data)
       router.push('/projects')
-    } catch (err: unknown) {
-      const error = err as Error
-      setError(error.message || 'Failed to create project')
+    } catch (err: any) {
+      console.error('Create project error:', err)
+      showError(err, 'Error Creating Project')
     }
   }
 
@@ -71,11 +67,6 @@ export default function NewProjectPage() {
           </CardHeader>
 
           <CardContent className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
 
             <div className="space-y-2">
               <Label htmlFor="client_id">Client *</Label>
@@ -180,6 +171,15 @@ export default function NewProjectPage() {
           </CardFooter>
         </form>
       </Card>
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }

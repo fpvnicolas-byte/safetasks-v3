@@ -3,12 +3,13 @@
 import { use, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useClient, useUpdateClient } from '@/lib/api/hooks'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
@@ -26,6 +27,7 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
     is_active: true,
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const { errorDialog, showError, closeError } = useErrorDialog()
 
   // Populate form when client data loads
   useEffect(() => {
@@ -77,9 +79,9 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
         data: clientData,
       })
       router.push(`/clients/${resolvedParams.id}`)
-    } catch (err: unknown) {
-      const error = err as Error
-      setErrors({ submit: error.message || 'Failed to update client' })
+    } catch (err: any) {
+      console.error('Update client error:', err)
+      showError(err, 'Error Updating Client')
     }
   }
 
@@ -141,11 +143,6 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
           </CardHeader>
 
           <CardContent className="space-y-4">
-            {errors.submit && (
-              <Alert variant="destructive">
-                <AlertDescription>{errors.submit}</AlertDescription>
-              </Alert>
-            )}
 
             {/* Name - Required */}
             <div className="space-y-2">
@@ -240,6 +237,15 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
           </CardFooter>
         </form>
       </Card>
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }
