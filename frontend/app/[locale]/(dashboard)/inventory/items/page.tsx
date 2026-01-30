@@ -12,9 +12,15 @@ import { Plus, Search, Edit, Trash2, Box, Eye, AlertCircle, CheckCircle, Setting
 import Link from 'next/link'
 import { KitItem, HealthStatus } from '@/types'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
+import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
+import { ErrorDialog } from '@/components/ui/error-dialog'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
+import { useTranslations } from 'next-intl'
 
 export default function InventoryItemsPage() {
   const { organizationId } = useAuth()
+  const t = useTranslations('inventory.items')
   const [searchQuery, setSearchQuery] = useState('')
   const [healthFilter, setHealthFilter] = useState<HealthStatus | 'all'>('all')
 
@@ -35,28 +41,39 @@ export default function InventoryItemsPage() {
     return matchesSearch
   }) || []
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete "${name}"?`)) return
+  const { errorDialog, showError, closeError } = useErrorDialog()
+  const {
+    open: deleteOpen,
+    onOpenChange: setDeleteOpen,
+    askConfirmation: confirmDelete,
+    closeConfirmation: cancelDelete,
+    targetId: idToDelete,
+    additionalData: itemName
+  } = useConfirmDelete()
+
+  const handleDeleteItem = async () => {
+    if (!idToDelete) return
     try {
-      await deleteItem.mutateAsync(id)
+      await deleteItem.mutateAsync(idToDelete)
+      cancelDelete()
     } catch (err) {
-      console.error('Failed to delete item:', err)
-      alert('Failed to delete item')
+      cancelDelete()
+      showError(err, t('delete.error'))
     }
   }
 
   const getHealthBadge = (status: HealthStatus) => {
     switch (status) {
       case 'excellent':
-        return <Badge className="bg-green-500 hover:bg-green-600"><CheckCircle className="w-3 h-3 mr-1" /> Excellent</Badge>
+        return <Badge className="bg-green-500 hover:bg-green-600"><CheckCircle className="w-3 h-3 mr-1" /> {t('health.excellent')}</Badge>
       case 'good':
-        return <Badge className="bg-blue-500 hover:bg-blue-600"><CheckCircle className="w-3 h-3 mr-1" /> Good</Badge>
+        return <Badge className="bg-blue-500 hover:bg-blue-600"><CheckCircle className="w-3 h-3 mr-1" /> {t('health.good')}</Badge>
       case 'needs_service':
-        return <Badge className="bg-yellow-500 hover:bg-yellow-600 text-black"><AlertCircle className="w-3 h-3 mr-1" /> Service Needed</Badge>
+        return <Badge className="bg-yellow-500 hover:bg-yellow-600 text-black"><AlertCircle className="w-3 h-3 mr-1" /> {t('health.needs_service')}</Badge>
       case 'broken':
-        return <Badge variant="destructive"><AlertCircle className="w-3 h-3 mr-1" /> Broken</Badge>
+        return <Badge variant="destructive"><AlertCircle className="w-3 h-3 mr-1" /> {t('health.broken')}</Badge>
       case 'retired':
-        return <Badge variant="secondary">Retired</Badge>
+        return <Badge variant="secondary">{t('health.retired')}</Badge>
       default:
         return <Badge variant="outline">{status}</Badge>
     }
@@ -66,18 +83,18 @@ export default function InventoryItemsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Inventory Items</h1>
-          <p className="text-muted-foreground">Manage individual equipment assets and their health status</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('description')}</p>
         </div>
         <div className="flex gap-2">
           <Button asChild variant="outline">
             <Link href="/inventory/kits">
-              View Kits
+              {t('viewKits')}
             </Link>
           </Button>
           <Button asChild>
             <Link href="/inventory/items/new">
-              <Plus className="mr-2 h-4 w-4" /> New Item
+              <Plus className="mr-2 h-4 w-4" /> {t('newItem')}
             </Link>
           </Button>
         </div>
@@ -85,14 +102,14 @@ export default function InventoryItemsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle>{t('filters.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by name, serial, or category..."
+                placeholder={t('filters.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -100,30 +117,30 @@ export default function InventoryItemsPage() {
             </div>
             <Select value={healthFilter} onValueChange={(v) => setHealthFilter(v as HealthStatus | 'all')}>
               <SelectTrigger>
-                <SelectValue placeholder="Filter by health" />
+                <SelectValue placeholder={t('filters.healthPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Health Statuses</SelectItem>
-                <SelectItem value="excellent">Excellent</SelectItem>
-                <SelectItem value="good">Good</SelectItem>
-                <SelectItem value="needs_service">Needs Service</SelectItem>
-                <SelectItem value="broken">Broken</SelectItem>
-                <SelectItem value="retired">Retired</SelectItem>
+                <SelectItem value="all">{t('filters.allHealthStatuses')}</SelectItem>
+                <SelectItem value="excellent">{t('health.excellent')}</SelectItem>
+                <SelectItem value="good">{t('health.good')}</SelectItem>
+                <SelectItem value="needs_service">{t('health.needs_service')}</SelectItem>
+                <SelectItem value="broken">{t('health.broken')}</SelectItem>
+                <SelectItem value="retired">{t('health.retired')}</SelectItem>
               </SelectContent>
             </Select>
             <div className="flex items-center justify-end h-10">
-              <p className="text-sm font-medium">{filteredItems.length} items found</p>
+              <p className="text-sm font-medium">{t('filters.itemsFound', { count: filteredItems.length })}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {isLoading ? (
-        <div>Loading inventory...</div>
+        <div>{t('loading')}</div>
       ) : error ? (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
+          <AlertTitle>{t('error')}</AlertTitle>
           <AlertDescription>{(error as Error).message}</AlertDescription>
         </Alert>
       ) : filteredItems.length > 0 ? (
@@ -143,12 +160,12 @@ export default function InventoryItemsPage() {
                 <div className="text-sm space-y-1">
                   {item.serial_number && (
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">S/N:</span>
+                      <span className="text-muted-foreground">{t('card.serialNumber')}</span>
                       <span className="font-mono">{item.serial_number}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Usage:</span>
+                    <span className="text-muted-foreground">{t('card.usage')}</span>
                     <span>{item.current_usage_hours.toFixed(1)} / {item.max_usage_hours} hrs</span>
                   </div>
                 </div>
@@ -156,18 +173,18 @@ export default function InventoryItemsPage() {
                 <div className="flex gap-2 pt-2">
                   <Button asChild variant="outline" size="sm" className="flex-1">
                     <Link href={`/inventory/items/${item.id}`}>
-                      <Eye className="mr-2 h-3 w-3" /> View
+                      <Eye className="mr-2 h-3 w-3" /> {t('card.view')}
                     </Link>
                   </Button>
                   <Button asChild variant="outline" size="sm" className="flex-1">
                     <Link href={`/inventory/items/${item.id}/edit`}>
-                      <Edit className="mr-2 h-3 w-3" /> Edit
+                      <Edit className="mr-2 h-3 w-3" /> {t('card.edit')}
                     </Link>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleDelete(item.id, item.name)}
+                    onClick={() => confirmDelete(item.id, item.name)}
                     className="text-destructive hover:text-destructive"
                   >
                     <Trash2 className="h-3 w-3" />
@@ -181,16 +198,36 @@ export default function InventoryItemsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <Box className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium">No items found</p>
-            <p className="text-sm text-muted-foreground mb-4">Start by adding your first equipment item to the inventory</p>
+            <p className="text-lg font-medium">{t('empty.title')}</p>
+            <p className="text-sm text-muted-foreground mb-4">{t('empty.description')}</p>
             <Button asChild>
               <Link href="/inventory/items/new">
-                <Plus className="mr-2 h-4 w-4" /> Add First Item
+                <Plus className="mr-2 h-4 w-4" /> {t('empty.addFirst')}
               </Link>
             </Button>
           </CardContent>
         </Card>
-      )}
-    </div>
+
+      )
+      }
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
+
+      <ConfirmDeleteDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onConfirm={handleDeleteItem}
+        title={t('delete.title', { name: itemName || '' })}
+        description={t('delete.description', { name: itemName || '' })}
+        loading={deleteItem.isPending}
+      />
+    </div >
   )
 }

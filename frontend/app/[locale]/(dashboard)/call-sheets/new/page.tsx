@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ErrorDialog } from '@/components/ui/error-dialog'
+import { useTranslations } from 'next-intl'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,6 +24,9 @@ function NewCallSheetForm() {
   const searchParams = useSearchParams()
   const { organizationId } = useAuth()
   const projectIdFromUrl = searchParams.get('project') || ''
+  const t = useTranslations('callSheets.edit') // Reusing edit keys where applicable
+  const tCommon = useTranslations('common')
+  const tFeedback = useTranslations('common.feedback')
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>(projectIdFromUrl)
   const { errorDialog, showError, closeError } = useErrorDialog()
@@ -59,8 +63,7 @@ function NewCallSheetForm() {
       await createCallSheet.mutateAsync(data)
       router.push(`/projects/${selectedProjectId}?tab=call-sheets`)
     } catch (err: any) {
-      console.error('Create call sheet error:', err)
-      showError(err, 'Error Creating Call Sheet')
+      showError(err, tFeedback('actionError', { message: tCommon('create') }))
     }
   }
 

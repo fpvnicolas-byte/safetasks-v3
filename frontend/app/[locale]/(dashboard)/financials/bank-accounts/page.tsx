@@ -10,9 +10,11 @@ import { Badge } from '@/components/ui/badge'
 import { Plus, Search, Edit, Trash2, Wallet, TrendingUp, DollarSign } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency } from '@/types'
+import { useLocale } from 'next-intl'
 
 export default function BankAccountsPage() {
   const { organizationId } = useAuth()
+  const locale = useLocale()
   const [searchQuery, setSearchQuery] = useState('')
 
   // Get bank accounts data
@@ -195,7 +197,7 @@ export default function BankAccountsPage() {
 
                   {/* Account Info */}
                   <div className="text-xs text-muted-foreground pt-2 border-t">
-                    <p>Created: {new Date(account.created_at).toLocaleDateString()}</p>
+                    <p>Created: {new Date(account.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</p>
                   </div>
 
                   {/* Actions */}

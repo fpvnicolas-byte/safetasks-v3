@@ -11,18 +11,27 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Pencil, Trash2, ArrowLeft, CheckCircle, AlertCircle, Calendar, Clock, Activity, FileText, Info, Plus, Settings as Tool } from 'lucide-react'
 import Link from 'next/link'
 import { HealthStatus, formatCurrency } from '@/types'
+import { useLocale, useTranslations } from 'next-intl'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
+import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 
 export default function InventoryItemDetailPage() {
   const params = useParams()
   const router = useRouter()
   const { organizationId } = useAuth()
+  const locale = useLocale()
   const itemId = params.id as string
 
   const { data: item, isLoading, error } = useInventoryItem(itemId)
   const deleteItem = useDeleteInventoryItem()
+  const { errorDialog, showError, closeError } = useErrorDialog()
+  const t = useTranslations('inventory.items')
+  const tCommon = useTranslations('common.feedback')
 
   if (isLoading) {
-    return <div className="p-8 text-center text-muted-foreground">Loading item details...</div>
+    return <div className="p-8 text-center text-muted-foreground">{t('loading')}</div>
   }
 
   if (error || !item) {
@@ -30,26 +39,36 @@ export default function InventoryItemDetailPage() {
       <div className="max-w-4xl mx-auto p-4">
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>Equipment item not found</AlertDescription>
+          <AlertTitle>{tCommon('error')}</AlertTitle>
+          <AlertDescription>{t('notFound')}</AlertDescription>
         </Alert>
-        <Button variant="ghost" onClick={() => router.push('/inventory/items')} className="mt-4">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Inventory
+        <Button variant="ghost" onClick={() => router.push(`/${locale}/inventory/items`)} className="mt-4">
+          <ArrowLeft className="mr-2 h-4 w-4" /> {t('back')}
         </Button>
       </div>
     )
   }
 
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this item?')) return
+  const {
+    open: deleteOpen,
+    onOpenChange: setDeleteOpen,
+    askConfirmation: confirmDelete,
+    closeConfirmation: cancelDelete
+  } = useConfirmDelete()
 
+  const handleDelete = async () => {
     try {
       await deleteItem.mutateAsync(itemId)
-      router.push('/inventory/items')
-    } catch (err) {
+      router.push(`/${locale}/inventory/items`)
+    } catch (err: any) {
       console.error('Failed to delete item:', err)
-      alert('Failed to delete item')
+      cancelDelete()
+      alert(tCommon('actionError', { message: err.message || 'Unknown error' }))
     }
+  }
+
+  const requestDelete = () => {
+    confirmDelete(itemId)
   }
 
   const getHealthBadge = (status: HealthStatus) => {
@@ -87,7 +106,7 @@ export default function InventoryItemDetailPage() {
               <Pencil className="mr-2 h-4 w-4" /> Edit
             </Link>
           </Button>
-          <Button variant="destructive" onClick={handleDelete}>
+          <Button variant="destructive" onClick={requestDelete}>
             <Trash2 className="mr-2 h-4 w-4" /> Delete
           </Button>
         </div>
@@ -142,7 +161,7 @@ export default function InventoryItemDetailPage() {
                 <span className="font-semibold">{item.current_usage_hours.toFixed(1)} / {item.max_usage_hours} hours</span>
               </div>
               <div className="w-full bg-muted rounded-full h-2">
-                <div 
+                <div
                   className={`h-2 rounded-full ${item.current_usage_hours / item.max_usage_hours > 0.9 ? 'bg-red-500' : 'bg-blue-500'}`}
                   style={{ width: `${Math.min((item.current_usage_hours / item.max_usage_hours) * 100, 100)}%` }}
                 ></div>
@@ -157,7 +176,7 @@ export default function InventoryItemDetailPage() {
               <div>
                 <div className="text-muted-foreground">Last Maintenance</div>
                 <div className="font-medium mt-1">
-                  {item.last_maintenance_date ? new Date(item.last_maintenance_date).toLocaleDateString() : 'Never'}
+                  {item.last_maintenance_date ? new Date(item.last_maintenance_date).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : 'Never'}
                 </div>
               </div>
               {item.days_since_last_maintenance !== null && (
@@ -181,7 +200,7 @@ export default function InventoryItemDetailPage() {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <div className="font-medium text-muted-foreground">Purchase Date</div>
-                <div className="mt-1">{item.purchase_date ? new Date(item.purchase_date).toLocaleDateString() : 'N/A'}</div>
+                <div className="mt-1">{item.purchase_date ? new Date(item.purchase_date).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}</div>
               </div>
               <div>
                 <div className="font-medium text-muted-foreground">Purchase Cost</div>
@@ -194,7 +213,7 @@ export default function InventoryItemDetailPage() {
                 <div className="mt-1 flex items-center">
                   {item.warranty_expiry ? (
                     <>
-                      {new Date(item.warranty_expiry).toLocaleDateString()}
+                      {new Date(item.warranty_expiry).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                       {new Date(item.warranty_expiry) < new Date() && (
                         <Badge variant="outline" className="ml-2 text-destructive border-destructive text-[10px] h-4">Expired</Badge>
                       )}
@@ -258,6 +277,25 @@ export default function InventoryItemDetailPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
+
+      <ConfirmDeleteDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onConfirm={handleDelete}
+        title="Delete Item?"
+        description={tCommon('confirmDelete')}
+        loading={deleteItem.isPending}
+      />
+    </div >
   )
 }

@@ -26,9 +26,14 @@ import { Plus, Edit, Trash2, Search, DollarSign } from 'lucide-react'
 import Link from 'next/link'
 import { useDeleteStakeholder } from '@/lib/api/hooks/useStakeholders'
 import { toast } from 'sonner'
+import { useLocale, useTranslations } from 'next-intl'
 
 export default function StakeholdersPage() {
   const { organizationId, isLoading: isLoadingOrg } = useAuth()
+  const locale = useLocale()
+  const t = useTranslations('stakeholders')
+  const tCommon = useTranslations('common')
+  const tFeedback = useTranslations('common.feedback')
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -44,19 +49,19 @@ export default function StakeholdersPage() {
   )
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete ${name}?`)) return
+    if (!confirm(tFeedback('confirmDelete'))) return
 
     try {
       await deleteStakeholder.mutateAsync(id)
-      toast.success('Stakeholder deleted successfully')
-    } catch (error) {
-      toast.error('Failed to delete stakeholder')
+      toast.success(tFeedback('actionSuccess'))
+    } catch (error: any) {
+      toast.error(tFeedback('actionError', { message: 'Failed to delete stakeholder' }))
       console.error('Delete error:', error)
     }
   }
 
   const getProjectName = (projectId: string) => {
-    return projects?.find((p) => p.id === projectId)?.title || 'Unknown Project'
+    return projects?.find((p) => p.id === projectId)?.title || t('table.unknownProject')
   }
 
   if (isLoadingOrg || isLoadingProjects) {
@@ -64,8 +69,8 @@ export default function StakeholdersPage() {
       <div className="space-y-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Stakeholders</h1>
-            <p className="text-muted-foreground">Loading...</p>
+            <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+            <p className="text-muted-foreground">{t('loading')}</p>
           </div>
         </div>
       </div>
@@ -73,40 +78,40 @@ export default function StakeholdersPage() {
   }
 
   if (!organizationId) {
-    return <div>Error: No organization found. Please contact support.</div>
+    return <div>{t('error')}</div>
   }
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Stakeholders</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground">
-            Manage project team members and collaborators
+            {t('description')}
           </p>
         </div>
         <Button asChild>
           <Link href="/stakeholders/new">
             <Plus className="mr-2 h-4 w-4" />
-            Add Stakeholder
+            {t('addStakeholder')}
           </Link>
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
-          <CardDescription>Filter stakeholders by project or search by name</CardDescription>
+          <CardTitle>{t('filters.title')}</CardTitle>
+          <CardDescription>{t('filters.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-4 flex-col sm:flex-row">
             <div className="flex-1">
               <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Projects" />
+                  <SelectValue placeholder={t('filters.allProjects')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Projects</SelectItem>
+                  <SelectItem value="">{t('filters.allProjects')}</SelectItem>
                   {projects?.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.title}
@@ -119,7 +124,7 @@ export default function StakeholdersPage() {
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by name or role..."
+                  placeholder={t('filters.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-8"
@@ -132,24 +137,24 @@ export default function StakeholdersPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Team Members</CardTitle>
+          <CardTitle>{t('table.title')}</CardTitle>
           <CardDescription>
-            {filteredStakeholders?.length || 0} stakeholder(s) found
+            {t('table.count', { count: filteredStakeholders?.length || 0 })}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoadingStakeholders ? (
-            <div className="text-center py-8 text-muted-foreground">Loading stakeholders...</div>
+            <div className="text-center py-8 text-muted-foreground">{t('table.loading')}</div>
           ) : filteredStakeholders && filteredStakeholders.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Project</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t('table.headers.name')}</TableHead>
+                  <TableHead>{t('table.headers.role')}</TableHead>
+                  <TableHead>{t('table.headers.project')}</TableHead>
+                  <TableHead>{t('table.headers.email')}</TableHead>
+                  <TableHead>{t('table.headers.phone')}</TableHead>
+                  <TableHead className="text-right">{t('table.headers.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -174,7 +179,7 @@ export default function StakeholdersPage() {
                             <Edit className="h-4 w-4" />
                           </Link>
                         </Button>
-                        <Button variant="ghost" size="icon" asChild title="Add Payment">
+                        <Button variant="ghost" size="icon" asChild title={t('table.addPayment')}>
                           <Link href={`/financials/transactions/new?project_id=${stakeholder.project_id}&stakeholder_id=${stakeholder.id}`}>
                             <DollarSign className="h-4 w-4 text-green-600" />
                           </Link>
@@ -195,11 +200,11 @@ export default function StakeholdersPage() {
             </Table>
           ) : (
             <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">No stakeholders found</p>
+              <p className="text-muted-foreground mb-4">{t('empty.noStakeholders')}</p>
               <Button asChild>
                 <Link href="/stakeholders/new">
                   <Plus className="mr-2 h-4 w-4" />
-                  Add Your First Stakeholder
+                  {t('empty.addFirst')}
                 </Link>
               </Button>
             </div>

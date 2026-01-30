@@ -1,7 +1,9 @@
 from typing import List
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.api.deps import get_organization_from_profile, require_admin_manager_or_crew, require_admin_or_manager
 from app.db.session import get_db
@@ -31,7 +33,10 @@ async def get_call_sheets(
         organization_id=organization_id,
         skip=skip,
         limit=limit,
-        filters=filters
+        filters=filters,
+        options=[
+            selectinload(call_sheet_service.model.project).selectinload(call_sheet_service.model.project.property.mapper.class_.client)
+        ]
     )
     return call_sheets
 
@@ -52,7 +57,15 @@ async def create_call_sheet(
             organization_id=organization_id,
             obj_in=call_sheet_in
         )
-        return call_sheet
+        # Fetch with relationships for response
+        return await call_sheet_service.get(
+            db=db,
+            organization_id=organization_id,
+            id=call_sheet.id,
+            options=[
+                selectinload(call_sheet_service.model.project).selectinload(call_sheet_service.model.project.property.mapper.class_.client)
+            ]
+        )
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -72,7 +85,10 @@ async def get_call_sheet(
     call_sheet = await call_sheet_service.get(
         db=db,
         organization_id=organization_id,
-        id=call_sheet_id
+        id=call_sheet_id,
+        options=[
+            selectinload(call_sheet_service.model.project).selectinload(call_sheet_service.model.project.property.mapper.class_.client)
+        ]
     )
 
     if not call_sheet:
@@ -103,6 +119,15 @@ async def update_call_sheet(
             obj_in=call_sheet_in
         )
 
+        call_sheet = await call_sheet_service.get(
+            db=db,
+            organization_id=organization_id,
+            id=call_sheet_id,
+            options=[
+                selectinload(call_sheet_service.model.project).selectinload(call_sheet_service.model.project.property.mapper.class_.client)
+            ]
+        )
+
         if not call_sheet:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -126,10 +151,14 @@ async def delete_call_sheet(
     """
     Delete call sheet (must belong to current user's organization).
     """
-    call_sheet = await call_sheet_service.remove(
+    # Fetch first with relationships to return valid response
+    call_sheet = await call_sheet_service.get(
         db=db,
         organization_id=organization_id,
-        id=call_sheet_id
+        id=call_sheet_id,
+        options=[
+            selectinload(call_sheet_service.model.project).selectinload(call_sheet_service.model.project.property.mapper.class_.client)
+        ]
     )
 
     if not call_sheet:
@@ -137,5 +166,11 @@ async def delete_call_sheet(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Call sheet not found"
         )
+
+    await call_sheet_service.remove(
+        db=db,
+        organization_id=organization_id,
+        id=call_sheet_id
+    )
 
     return call_sheet

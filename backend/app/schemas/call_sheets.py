@@ -66,12 +66,15 @@ class CallSheetUpdate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+from app.schemas.production import ProjectSummary
+
 class CallSheet(CallSheetBase):
     """Schema for Call Sheet response."""
     id: UUID
     organization_id: UUID
     created_at: datetime
     updated_at: datetime
+    project: Optional[ProjectSummary] = None
 
     model_config = ConfigDict(from_attributes=True)
 

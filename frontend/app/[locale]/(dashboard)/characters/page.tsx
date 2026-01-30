@@ -9,10 +9,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Plus, Users } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 
 export default function CharactersPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const { organizationId } = useAuth()
+  const t = useTranslations('characters')
 
   // Fetch projects for selection
   const { data: projects, isLoading: projectsLoading } = useProjects(organizationId || undefined)
@@ -24,15 +26,15 @@ export default function CharactersPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Characters</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground">
-            Manage your film production characters and cast
+            {t('description')}
           </p>
         </div>
         <Button asChild disabled={!selectedProjectId}>
           <Link href={selectedProjectId ? `/characters/new?project=${selectedProjectId}` : '#'}>
             <Plus className="mr-2 h-4 w-4" />
-            New Character
+            {t('newCharacter')}
           </Link>
         </Button>
       </div>
@@ -40,18 +42,18 @@ export default function CharactersPage() {
       {/* Project Selection */}
       <Card>
         <CardHeader>
-          <CardTitle>Select Project</CardTitle>
+          <CardTitle>{t('projectSelection.title')}</CardTitle>
           <CardDescription>
-            Choose a project to view and manage its characters
+            {t('projectSelection.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {projectsLoading ? (
-            <div className="text-sm text-muted-foreground">Loading projects...</div>
+            <div className="text-sm text-muted-foreground">{t('projectSelection.loading')}</div>
           ) : projects && projects.length > 0 ? (
             <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
               <SelectTrigger className="w-full max-w-md">
-                <SelectValue placeholder="Select a project" />
+                <SelectValue placeholder={t('projectSelection.placeholder')} />
               </SelectTrigger>
               <SelectContent>
                 {projects.map((project) => (
@@ -63,7 +65,7 @@ export default function CharactersPage() {
             </Select>
           ) : (
             <div className="text-sm text-muted-foreground">
-              No projects found. <Link href="/projects/new" className="text-blue-600 hover:underline">Create a project</Link> first.
+              {t('projectSelection.noProjects')} <Link href="/projects/new" className="text-blue-600 hover:underline">{t('projectSelection.createFirst')}</Link>
             </div>
           )}
         </CardContent>
@@ -74,7 +76,7 @@ export default function CharactersPage() {
         <div className="space-y-6">
           {isLoading ? (
             <div className="text-center py-8">
-              <div className="text-sm text-muted-foreground">Loading characters...</div>
+              <div className="text-sm text-muted-foreground">{t('list.loading')}</div>
             </div>
           ) : characters && characters.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -105,22 +107,22 @@ export default function CharactersPage() {
           ) : (
             <Card>
               <CardHeader>
-                <CardTitle>No Characters Found</CardTitle>
+                <CardTitle>{t('empty.title')}</CardTitle>
                 <CardDescription>
-                  This project doesn&apos;t have any characters yet.
+                  {t('empty.description')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <Users className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-lg font-medium mb-2">No characters yet</p>
+                  <p className="text-lg font-medium mb-2">{t('empty.noCharactersYet')}</p>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Start building your cast by adding the first character
+                    {t('empty.helpText')}
                   </p>
                   <Button asChild>
                     <Link href={`/characters/new?project=${selectedProjectId}`}>
                       <Plus className="mr-2 h-4 w-4" />
-                      Add Character
+                      {t('addCharacter')}
                     </Link>
                   </Button>
                 </div>

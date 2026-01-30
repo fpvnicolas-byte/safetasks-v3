@@ -7,10 +7,11 @@ import { useAuth } from '@/contexts/AuthContext'
 import { formatCurrency } from '@/lib/utils/money'
 import { ArrowUpRight, ArrowDownRight, ExternalLink } from 'lucide-react'
 import { LocaleLink } from '@/components/LocaleLink'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 
 export function RecentTransactions() {
   const { organizationId } = useAuth()
+  const locale = useLocale()
   const t = useTranslations('dashboard')
   const { data: transactions, isLoading } = useTransactions(
     organizationId ? { organizationId } : {}
@@ -57,7 +58,7 @@ export function RecentTransactions() {
                         {transaction.description || t('recentTransactions.noDescription')}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {transaction.category} • {new Date(transaction.transaction_date).toLocaleDateString()}
+                        {transaction.category} • {new Date(transaction.transaction_date).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                       </div>
                     </div>
                   </div>

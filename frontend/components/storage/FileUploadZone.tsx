@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { useUploadFile } from '@/lib/api/hooks'
 import { FileUploadResponse } from '@/types'
 import { cn } from '@/lib/utils'
+import { useTranslations } from 'next-intl'
 
 interface FileUploadZoneProps {
   module: string // kits, scripts, call-sheets, proposals
@@ -40,6 +41,7 @@ export function FileUploadZone({
 }: FileUploadZoneProps) {
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([])
   const uploadFile = useUploadFile()
+  const t = useTranslations('storage.fileUpload')
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
@@ -135,14 +137,14 @@ export function FileUploadZone({
           <div className="space-y-2">
             <p className="text-lg font-medium">
               {isDragActive
-                ? 'Drop files here'
-                : 'Drag & drop files here'}
+                ? t('dragActive')
+                : t('dragInactive')}
             </p>
             <p className="text-sm text-muted-foreground">
-              or click to browse
+              {t('clickToBrowse')}
             </p>
             <p className="text-xs text-muted-foreground">
-              Max size: {maxSize}MB
+              {t('maxSize', { size: maxSize })}
             </p>
           </div>
         </div>
@@ -161,9 +163,9 @@ export function FileUploadZone({
                     {errors.map((error) => (
                       <li key={error.code}>
                         {error.code === 'file-too-large'
-                          ? `File too large (max ${maxSize}MB)`
+                          ? t('fileTooLarge', { size: maxSize })
                           : error.code === 'file-invalid-type'
-                          ? 'Invalid file type'
+                          ? t('invalidFileType')
                           : error.message}
                       </li>
                     ))}
@@ -195,7 +197,7 @@ export function FileUploadZone({
                         <div className="h-full bg-primary animate-pulse w-full" />
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Uploading...
+                        {t('uploading')}
                       </p>
                     </div>
                   )}
@@ -204,7 +206,7 @@ export function FileUploadZone({
                   )}
                   {status === 'success' && (
                     <p className="text-xs text-green-600 mt-1">
-                      Upload complete!
+                      {t('uploadComplete')}
                     </p>
                   )}
                 </div>

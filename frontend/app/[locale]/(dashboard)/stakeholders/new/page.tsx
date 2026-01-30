@@ -25,10 +25,14 @@ import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { StakeholderCreate } from '@/types'
+import { useTranslations, useLocale } from 'next-intl'
 
 export default function NewStakeholderPage() {
   const router = useRouter()
   const { organizationId } = useAuth()
+  const locale = useLocale()
+  const tCommon = useTranslations('common')
+  const tFeedback = useTranslations('common.feedback')
   const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId || undefined)
   const { data: suppliers, isLoading: isLoadingSuppliers } = useSuppliers(organizationId || undefined)
   const createStakeholder = useCreateStakeholder()
@@ -50,7 +54,7 @@ export default function NewStakeholderPage() {
     e.preventDefault()
 
     if (!formData.project_id || !formData.name || !formData.role) {
-      toast.error('Please fill in all required fields')
+      toast.error(tFeedback('enterText')) // Generic "please enter text" or "fill required" - using enterText as proxy or add new key
       return
     }
 
@@ -68,16 +72,16 @@ export default function NewStakeholderPage() {
 
       console.log('Creating stakeholder with cleaned data:', cleanedData)
       await createStakeholder.mutateAsync(cleanedData)
-      toast.success('Stakeholder created successfully')
-      router.push('/stakeholders')
+      toast.success(tFeedback('actionSuccess'))
+      router.push(`/${locale}/stakeholders`)
     } catch (error: any) {
       console.error('Create error:', error)
-      showError(error, 'Error Creating Stakeholder')
+      showError(error, tFeedback('actionError', { message: 'Error Creating Stakeholder' }))
     }
   }
 
   if (isLoadingProjects || isLoadingSuppliers) {
-    return <div className="p-8">Loading...</div>
+    return <div className="p-8">{tCommon('loading')}</div>
   }
 
   return (
@@ -124,7 +128,7 @@ export default function NewStakeholderPage() {
 
             <div className="space-y-2">
               <Label htmlFor="name">
-                Name <span className="text-red-500">*</span>
+                {tCommon('name')} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"
@@ -195,7 +199,7 @@ export default function NewStakeholderPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{tCommon('email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -206,7 +210,7 @@ export default function NewStakeholderPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone">{tCommon('phone')}</Label>
               <Input
                 id="phone"
                 value={formData.phone}
@@ -216,7 +220,7 @@ export default function NewStakeholderPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
+              <Label htmlFor="notes">{tCommon('notes')}</Label>
               <Textarea
                 id="notes"
                 value={formData.notes}
@@ -228,10 +232,10 @@ export default function NewStakeholderPage() {
 
             <div className="flex gap-4">
               <Button type="submit" disabled={createStakeholder.isPending}>
-                {createStakeholder.isPending ? 'Creating...' : 'Create Stakeholder'}
+                {createStakeholder.isPending ? tCommon('saving') : tCommon('create')}
               </Button>
               <Button type="button" variant="outline" asChild>
-                <Link href="/stakeholders">Cancel</Link>
+                <Link href="/stakeholders">{tCommon('cancel')}</Link>
               </Button>
             </div>
           </form>

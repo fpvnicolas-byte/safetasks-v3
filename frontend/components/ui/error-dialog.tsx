@@ -48,7 +48,7 @@ export function ErrorDialog({
                         <AlertDialogTitle>{title}</AlertDialogTitle>
                     </div>
                     <AlertDialogDescription className="text-left space-y-3 pt-2">
-                        <p className="text-base">{message}</p>
+                        <div className="text-base">{message}</div>
 
                         {isValidationError && (
                             <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950 dark:border-amber-800 p-3 space-y-2">

@@ -1,29 +1,34 @@
+'use client'
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Plus, Calendar, FileText, FolderOpen } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 
 export default function ProductionPage() {
+  const t = useTranslations('production')
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Production Management</h1>
+          <h1 className="text-3xl font-bold">{t('title')}</h1>
           <p className="text-muted-foreground">
-            Manage all production-related activities and workflows
+            {t('description')}
           </p>
         </div>
         <div className="flex gap-2">
           <Button asChild>
             <Link href="/call-sheets/new">
               <Plus className="mr-2 h-4 w-4" />
-              New Call Sheet
+              {t('newCallSheet')}
             </Link>
           </Button>
           <Button asChild variant="outline">
             <Link href="/shooting-days/new">
               <Calendar className="mr-2 h-4 w-4" />
-              New Shooting Day
+              {t('newShootingDay')}
             </Link>
           </Button>
         </div>
@@ -34,19 +39,19 @@ export default function ProductionPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Call Sheets
+              {t('callSheets.title')}
             </CardTitle>
             <CardDescription>
-              Create and manage daily call sheets for your productions
+              {t('callSheets.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <Button asChild variant="outline" className="w-full justify-start">
-                <Link href="/call-sheets">View All Call Sheets</Link>
+                <Link href="/call-sheets">{t('callSheets.viewAll')}</Link>
               </Button>
               <Button asChild className="w-full justify-start">
-                <Link href="/call-sheets/new">Create New Call Sheet</Link>
+                <Link href="/call-sheets/new">{t('callSheets.createNew')}</Link>
               </Button>
             </div>
           </CardContent>
@@ -56,19 +61,19 @@ export default function ProductionPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              Shooting Days
+              {t('shootingDays.title')}
             </CardTitle>
             <CardDescription>
-              Schedule and organize your shooting days
+              {t('shootingDays.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <Button asChild variant="outline" className="w-full justify-start">
-                <Link href="/shooting-days">View All Shooting Days</Link>
+                <Link href="/shooting-days">{t('shootingDays.viewAll')}</Link>
               </Button>
               <Button asChild className="w-full justify-start">
-                <Link href="/shooting-days/new">Create New Shooting Day</Link>
+                <Link href="/shooting-days/new">{t('shootingDays.createNew')}</Link>
               </Button>
             </div>
           </CardContent>
@@ -78,19 +83,19 @@ export default function ProductionPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FolderOpen className="h-5 w-5" />
-              Projects
+              {t('projects.title')}
             </CardTitle>
             <CardDescription>
-              Manage your active production projects
+              {t('projects.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <Button asChild variant="outline" className="w-full justify-start">
-                <Link href="/projects">View All Projects</Link>
+                <Link href="/projects">{t('projects.viewAll')}</Link>
               </Button>
               <Button asChild className="w-full justify-start">
-                <Link href="/projects/new">Create New Project</Link>
+                <Link href="/projects/new">{t('projects.createNew')}</Link>
               </Button>
             </div>
           </CardContent>
@@ -99,31 +104,31 @@ export default function ProductionPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
+          <CardTitle>{t('quickActions.title')}</CardTitle>
           <CardDescription>
-            Common production tasks and workflows
+            {t('quickActions.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Button asChild variant="outline" className="justify-start">
               <Link href="/scenes">
-                Manage Scenes
+                {t('quickActions.manageScenes')}
               </Link>
             </Button>
             <Button asChild variant="outline" className="justify-start">
               <Link href="/characters">
-                Manage Characters
+                {t('quickActions.manageCharacters')}
               </Link>
             </Button>
             <Button asChild variant="outline" className="justify-start">
               <Link href="/inventory/items">
-                Equipment Inventory
+                {t('quickActions.equipmentInventory')}
               </Link>
             </Button>
             <Button asChild variant="outline" className="justify-start">
               <Link href="/suppliers">
-                Production Vendors
+                {t('quickActions.productionVendors')}
               </Link>
             </Button>
           </div>

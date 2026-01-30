@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { useTranslations, useLocale } from 'next-intl'
 import { useCharacter, useUpdateCharacter } from '@/lib/api/hooks'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { Button } from '@/components/ui/button'
@@ -15,6 +16,9 @@ import { FormSkeleton } from '@/components/LoadingSkeletons'
 export default function EditCharacterPage() {
   const router = useRouter()
   const params = useParams()
+  const locale = useLocale()
+  const t = useTranslations('characters.edit')
+  const tCommon = useTranslations('common')
   const characterId = params.id as string
 
   const { errorDialog, showError, closeError } = useErrorDialog()
@@ -26,8 +30,8 @@ export default function EditCharacterPage() {
       <div className="max-w-2xl mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle>Edit Character</CardTitle>
-            <CardDescription>Update character details</CardDescription>
+            <CardTitle>{t('title')}</CardTitle>
+            <CardDescription>{t('description')}</CardDescription>
           </CardHeader>
           <CardContent>
             <FormSkeleton />
@@ -38,7 +42,7 @@ export default function EditCharacterPage() {
   }
 
   if (!character) {
-    return <div className="p-8 text-destructive">Character not found</div>
+    return <div className="p-8 text-destructive">{t('errors.notFound', { defaultMessage: 'Character not found' })}</div>
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -54,10 +58,10 @@ export default function EditCharacterPage() {
       }
 
       await updateCharacter.mutateAsync({ characterId, data: characterData })
-      router.push(`/characters/${characterId}`)
+      router.push(`/${locale}/characters/${characterId}`)
     } catch (err: any) {
       console.error('Update character error:', err)
-      showError(err, 'Error Updating Character')
+      showError(err, t('errors.updateTitle'))
     }
   }
 
@@ -66,14 +70,14 @@ export default function EditCharacterPage() {
       <Card>
         <form onSubmit={handleSubmit}>
           <CardHeader>
-            <CardTitle>Edit Character</CardTitle>
-            <CardDescription>Update character details</CardDescription>
+            <CardTitle>{t('title')}</CardTitle>
+            <CardDescription>{t('description')}</CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-6">
 
             <div className="space-y-2">
-              <Label htmlFor="name">Character Name *</Label>
+              <Label htmlFor="name">{t('name')}</Label>
               <Input
                 id="name"
                 name="name"
@@ -83,11 +87,11 @@ export default function EditCharacterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description *</Label>
+              <Label htmlFor="description">{t('descriptionLabel')}</Label>
               <Textarea
                 id="description"
                 name="description"
-                placeholder="Character description, role in the story..."
+                placeholder={t('descriptionPlaceholder')}
                 rows={4}
                 defaultValue={character.description}
                 required
@@ -95,7 +99,7 @@ export default function EditCharacterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="actor_name">Actor Name</Label>
+              <Label htmlFor="actor_name">{t('actorName')}</Label>
               <Input
                 id="actor_name"
                 name="actor_name"
@@ -111,10 +115,10 @@ export default function EditCharacterPage() {
               variant="outline"
               onClick={() => router.back()}
             >
-              Cancel
+              {tCommon('cancel')}
             </Button>
             <Button type="submit" disabled={updateCharacter.isPending}>
-              {updateCharacter.isPending ? 'Saving...' : 'Save Changes'}
+              {updateCharacter.isPending ? tCommon('saving') : tCommon('save')}
             </Button>
           </CardFooter>
         </form>

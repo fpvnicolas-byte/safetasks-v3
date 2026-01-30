@@ -1,6 +1,7 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
+import { useTranslations, useLocale } from 'next-intl'
 import { useCharacter, useDeleteCharacter } from '@/lib/api/hooks'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,10 +9,15 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Pencil, Trash2, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { DetailPageSkeleton } from '@/components/LoadingSkeletons'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
+import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
 
 export default function CharacterDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const locale = useLocale()
+  const t = useTranslations('characters.detail')
+  const tCommon = useTranslations('common')
   const characterId = params.id as string
 
   const { data: character, isLoading, error } = useCharacter(characterId)
@@ -24,20 +30,30 @@ export default function CharacterDetailPage() {
   if (error || !character) {
     return (
       <Alert variant="destructive">
-        <AlertDescription>Character not found</AlertDescription>
+        <AlertDescription>{t('notFound')}</AlertDescription>
       </Alert>
     )
   }
 
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this character?')) return
+  const {
+    open: deleteOpen,
+    onOpenChange: setDeleteOpen,
+    askConfirmation: confirmDelete,
+    closeConfirmation: cancelDelete
+  } = useConfirmDelete()
 
+  const handleDelete = async () => {
     try {
       await deleteCharacter.mutateAsync(characterId)
-      router.push('/characters')
+      router.push(`/${locale}/characters`)
     } catch (err) {
       console.error('Failed to delete character:', err)
+      cancelDelete()
     }
+  }
+
+  const requestDelete = () => {
+    confirmDelete(characterId)
   }
 
   return (
@@ -50,49 +66,57 @@ export default function CharacterDetailPage() {
           <div>
             <h1 className="text-3xl font-bold">{character.name}</h1>
             <p className="text-muted-foreground">
-              {character.actor_name ? `Played by ${character.actor_name}` : 'No actor assigned'}
+              {character.actor_name ? t('playedBy', { actor: character.actor_name }) : t('noActor')}
             </p>
           </div>
         </div>
         <div className="flex gap-2">
           <Button asChild variant="outline">
-            <Link href={`/characters/${characterId}/edit`}>
+            <Link href={`/${locale}/characters/${characterId}/edit`}>
               <Pencil className="mr-2 h-4 w-4" />
-              Edit
+              {tCommon('edit')}
             </Link>
           </Button>
-          <Button variant="destructive" onClick={handleDelete}>
+          <Button variant="destructive" onClick={requestDelete}>
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete
+            {tCommon('delete')}
           </Button>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Character Details</CardTitle>
+          <CardTitle>{t('cardTitle')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <div className="text-sm font-medium text-muted-foreground">Character Name</div>
+              <div className="text-sm font-medium text-muted-foreground">{t('name')}</div>
               <div className="text-lg">{character.name}</div>
             </div>
 
             {character.actor_name && (
               <div>
-                <div className="text-sm font-medium text-muted-foreground">Actor Name</div>
+                <div className="text-sm font-medium text-muted-foreground">{t('actorName')}</div>
                 <div className="text-lg">{character.actor_name}</div>
               </div>
             )}
           </div>
 
           <div>
-            <div className="text-sm font-medium text-muted-foreground mb-2">Character Description</div>
+            <div className="text-sm font-medium text-muted-foreground mb-2">{t('description')}</div>
             <div className="text-base whitespace-pre-wrap">{character.description}</div>
           </div>
         </CardContent>
       </Card>
+
+      <ConfirmDeleteDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onConfirm={handleDelete}
+        title={t('deleteConfirm')}
+        loading={deleteCharacter.isPending}
+      />
     </div>
   )
 }

@@ -11,11 +11,19 @@ import { Badge } from '@/components/ui/badge'
 import { Plus, Search, Edit, Trash2, FileText, Eye } from 'lucide-react'
 import Link from 'next/link'
 import { Proposal, ProposalStatus, formatCurrency } from '@/types'
+import { useLocale, useTranslations } from 'next-intl'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
+import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
+import { ErrorDialog } from '@/components/ui/error-dialog'
 
 export default function ProposalsPage() {
   const { organizationId } = useAuth()
+  const locale = useLocale()
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<ProposalStatus | 'all'>('all')
+  const t = useTranslations('proposals')
+  const tCommon = useTranslations('common.feedback')
 
   const { data: allProposals, isLoading, error } = useProposals(
     organizationId || '',
@@ -32,16 +40,25 @@ export default function ProposalsPage() {
     return matchesSearch
   }) || []
 
-  const handleDeleteProposal = async (proposalId: string, title: string) => {
-    if (!confirm(`Are you sure you want to delete proposal "${title}"? This action cannot be undone.`)) {
-      return
-    }
+  const { errorDialog, showError, closeError } = useErrorDialog()
+  const {
+    open: deleteOpen,
+    onOpenChange: setDeleteOpen,
+    askConfirmation: confirmDelete,
+    closeConfirmation: cancelDelete,
+    targetId: idToDelete,
+    additionalData: proposalTitle
+  } = useConfirmDelete()
+
+  const handleDeleteProposal = async () => {
+    if (!idToDelete) return
 
     try {
-      await deleteProposal.mutateAsync(proposalId)
+      await deleteProposal.mutateAsync(idToDelete)
+      cancelDelete()
     } catch (err: unknown) {
-      const error = err as Error
-      alert(`Failed to delete proposal: ${error.message}`)
+      cancelDelete()
+      showError(err, tCommon('actionError', { message: 'Failed to delete' }))
     }
   }
 
@@ -49,15 +66,15 @@ export default function ProposalsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Proposals</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground">
-            Create and manage client proposals
+            {t('description')}
           </p>
         </div>
         <Button asChild>
           <Link href="/proposals/new">
             <Plus className="mr-2 h-4 w-4" />
-            New Proposal
+            {t('newProposal')}
           </Link>
         </Button>
       </div>
@@ -65,19 +82,19 @@ export default function ProposalsPage() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Filter Proposals</CardTitle>
+          <CardTitle>{t('filter.title')}</CardTitle>
           <CardDescription>
-            Find proposals by title or status
+            {t('filter.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-4">
             <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-medium">Search</label>
+              <label className="text-sm font-medium">{t('filter.search')}</label>
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Title or description..."
+                  placeholder={t('filter.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-9"
@@ -86,27 +103,27 @@ export default function ProposalsPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Status</label>
+              <label className="text-sm font-medium">{t('filter.status')}</label>
               <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as ProposalStatus | 'all')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="sent">Sent</SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                  <SelectItem value="expired">Expired</SelectItem>
+                  <SelectItem value="all">{t('filter.allStatuses')}</SelectItem>
+                  <SelectItem value="draft">{t('draft')}</SelectItem>
+                  <SelectItem value="sent">{t('sent')}</SelectItem>
+                  <SelectItem value="approved">{t('approved')}</SelectItem>
+                  <SelectItem value="rejected">{t('rejected')}</SelectItem>
+                  <SelectItem value="expired">{t('expired')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Results</label>
+              <label className="text-sm font-medium">{t('filter.results')}</label>
               <div className="flex items-center justify-center h-10 px-3 py-2 bg-muted rounded-md">
                 <span className="text-sm font-medium">
-                  {filteredProposals.length} proposal{filteredProposals.length !== 1 ? 's' : ''}
+                  {filteredProposals.length} {filteredProposals.length !== 1 ? t('filter.proposalCount_other', { count: filteredProposals.length }) : t('filter.proposalCount', { count: 1 })}
                 </span>
               </div>
             </div>
@@ -116,27 +133,29 @@ export default function ProposalsPage() {
 
       {/* Proposals Grid */}
       {isLoading ? (
-        <div>Loading proposals...</div>
+        <div>{t('loading')}</div>
       ) : error ? (
-        <div>Error loading proposals: {error.message}</div>
+        <div>{t('error', { message: error.message })}</div>
       ) : filteredProposals.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredProposals.map((proposal) => (
             <ProposalCard
               key={proposal.id}
               proposal={proposal}
-              onDelete={() => handleDeleteProposal(proposal.id, proposal.title)}
+              onDelete={() => confirmDelete(proposal.id, proposal.title)}
+              t={t}
+              locale={locale}
             />
           ))}
         </div>
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>No Proposals Found</CardTitle>
+            <CardTitle>{t('empty.title')}</CardTitle>
             <CardDescription>
               {searchQuery || statusFilter !== 'all'
-                ? 'No proposals match your current filters'
-                : 'Get started by creating your first proposal'
+                ? t('empty.noMatches')
+                : t('empty.getStarted')
               }
             </CardDescription>
           </CardHeader>
@@ -144,18 +163,35 @@ export default function ProposalsPage() {
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <FileText className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-sm text-muted-foreground mb-4">
-                Proposals allow you to send estimates to clients and track approvals
+                {t('empty.helpText')}
               </p>
               <Button asChild>
                 <Link href="/proposals/new">
                   <Plus className="mr-2 h-4 w-4" />
-                  Create Proposal
+                  {t('empty.createProposal')}
                 </Link>
               </Button>
             </div>
           </CardContent>
         </Card>
       )}
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
+
+      <ConfirmDeleteDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onConfirm={handleDeleteProposal}
+        title={t('delete.title')}
+        description={t('delete.description')}
+        loading={deleteProposal.isPending}
+      />
     </div>
   )
 }
@@ -163,9 +199,11 @@ export default function ProposalsPage() {
 interface ProposalCardProps {
   proposal: Proposal
   onDelete: () => void
+  t: (key: string, values?: Record<string, string | number>) => string
+  locale: string
 }
 
-function ProposalCard({ proposal, onDelete }: ProposalCardProps) {
+function ProposalCard({ proposal, onDelete, t, locale }: ProposalCardProps) {
   const getStatusVariant = (status: ProposalStatus) => {
     switch (status) {
       case 'approved': return 'default' // Greenish (default is black/primary, but usually good for success in shadcn themes if customized, otherwise use outline/secondary)
@@ -178,7 +216,7 @@ function ProposalCard({ proposal, onDelete }: ProposalCardProps) {
   }
 
   // Assuming backend returns valid_until as ISO date string
-  const validUntil = proposal.valid_until ? new Date(proposal.valid_until).toLocaleDateString() : 'N/A'
+  const validUntil = proposal.valid_until ? new Date(proposal.valid_until).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -187,19 +225,18 @@ function ProposalCard({ proposal, onDelete }: ProposalCardProps) {
           <div className="flex-1 mr-2">
             <CardTitle className="text-lg line-clamp-1">{proposal.title}</CardTitle>
             <CardDescription className="line-clamp-1">
-              {/* If client name was available in list, we'd show it. For now show date */}
-              Created {new Date(proposal.created_at).toLocaleDateString()}
+              {t('card.created')} {new Date(proposal.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
             </CardDescription>
           </div>
           <Badge variant={getStatusVariant(proposal.status)}>
-            {proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
+            {t(proposal.status)}
           </Badge>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
         <div className="flex justify-between items-center text-sm">
-          <span className="text-muted-foreground">Total Amount</span>
+          <span className="text-muted-foreground">{t('card.totalAmount')}</span>
           <span className="font-semibold text-lg">
             {proposal.total_amount_cents !== null ? formatCurrency(proposal.total_amount_cents, proposal.currency) : 'N/A'}
           </span>
@@ -207,7 +244,7 @@ function ProposalCard({ proposal, onDelete }: ProposalCardProps) {
 
         {proposal.valid_until && (
           <div className="text-sm text-muted-foreground">
-            Valid until: {validUntil}
+            {t('card.validUntil')} {validUntil}
           </div>
         )}
 
@@ -215,13 +252,13 @@ function ProposalCard({ proposal, onDelete }: ProposalCardProps) {
           <Button asChild variant="outline" size="sm" className="flex-1">
             <Link href={`/proposals/${proposal.id}`}>
               <Eye className="mr-2 h-3 w-3" />
-              View
+              {t('card.view')}
             </Link>
           </Button>
           <Button asChild variant="outline" size="sm" className="flex-1">
             <Link href={`/proposals/${proposal.id}/edit`}>
               <Edit className="mr-2 h-3 w-3" />
-              Edit
+              {t('card.edit')}
             </Link>
           </Button>
           <Button

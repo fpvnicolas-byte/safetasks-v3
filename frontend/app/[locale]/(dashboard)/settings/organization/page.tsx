@@ -10,6 +10,7 @@ import { ArrowLeft, Building2 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/api/client'
+import { useLocale, useTranslations } from 'next-intl'
 
 interface Organization {
   id: string
@@ -20,6 +21,10 @@ interface Organization {
 
 export default function OrganizationSettingsPage() {
   const { organizationId } = useAuth()
+  const locale = useLocale()
+  const t = useTranslations('settings.organizationPage')
+  const tCommon = useTranslations('common.feedback')
+  const tSettings = useTranslations('settings')
   const [organization, setOrganization] = useState<Organization | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -45,7 +50,7 @@ export default function OrganizationSettingsPage() {
       })
     } catch (error) {
       console.error('Failed to load organization:', error)
-      toast.error('Failed to load organization details')
+      toast.error(tCommon('actionError', { message: 'Failed to load organization details' }))
     } finally {
       setIsLoading(false)
     }
@@ -62,18 +67,18 @@ export default function OrganizationSettingsPage() {
         name: formData.name,
         tax_id: formData.tax_id || null,
       })
-      toast.success('Organization updated successfully')
+      toast.success(tCommon('actionSuccess'))
       await loadOrganization()
     } catch (error) {
       console.error('Failed to update organization:', error)
-      toast.error('Failed to update organization')
+      toast.error(tCommon('actionError', { message: 'Failed to update organization' }))
     } finally {
       setIsSaving(false)
     }
   }
 
   if (isLoading) {
-    return <div className="p-8">Loading...</div>
+    return <div className="p-8">{t('loading')}</div>
   }
 
   return (
@@ -85,8 +90,8 @@ export default function OrganizationSettingsPage() {
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Organization Settings</h1>
-          <p className="text-muted-foreground">Manage your organization details</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('description')}</p>
         </div>
       </div>
 
@@ -97,15 +102,15 @@ export default function OrganizationSettingsPage() {
               <Building2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <CardTitle>Organization Information</CardTitle>
-              <CardDescription>Update your organization&apos;s basic information</CardDescription>
+              <CardTitle>{t('card.title')}</CardTitle>
+              <CardDescription>{t('card.description')}</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="organization_id">Organization ID</Label>
+              <Label htmlFor="organization_id">{t('fields.organizationId')}</Label>
               <Input
                 id="organization_id"
                 value={organization?.id || ''}
@@ -113,49 +118,49 @@ export default function OrganizationSettingsPage() {
                 className="bg-muted"
               />
               <p className="text-xs text-muted-foreground">
-                This is your unique organization identifier
+                {t('fields.organizationIdHelp')}
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="name">Organization Name *</Label>
+              <Label htmlFor="name">{t('fields.organizationNameRequired')}</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="My Production Company"
+                placeholder={t('fields.organizationNamePlaceholder')}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="tax_id">CNPJ / Tax ID</Label>
+              <Label htmlFor="tax_id">{t('fields.taxId')}</Label>
               <Input
                 id="tax_id"
                 value={formData.tax_id}
                 onChange={(e) => setFormData({ ...formData, tax_id: e.target.value })}
-                placeholder="12-3456789"
+                placeholder={t('fields.taxIdPlaceholder')}
               />
               <p className="text-xs text-muted-foreground">
-                Optional: Your organization&apos;s tax identification number
+                {t('fields.taxIdHelp')}
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label>Created</Label>
+              <Label>{t('fields.created')}</Label>
               <p className="text-sm text-muted-foreground">
                 {organization?.created_at
-                  ? new Date(organization.created_at).toLocaleDateString()
-                  : 'Unknown'}
+                  ? new Date(organization.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+                  : t('fields.createdUnknown')}
               </p>
             </div>
 
             <div className="flex gap-4 pt-4">
               <Button type="submit" disabled={isSaving}>
-                {isSaving ? 'Saving...' : 'Save Changes'}
+                {isSaving ? tSettings('saving') : tSettings('saveChanges')}
               </Button>
               <Button type="button" variant="outline" asChild>
-                <Link href="/settings">Cancel</Link>
+                <Link href="/settings">{tSettings('cancel')}</Link>
               </Button>
             </div>
           </form>

@@ -53,7 +53,6 @@ function NewShootingDayForm() {
       await createShootingDay.mutateAsync(data)
       router.push(`/projects/${selectedProjectId}?tab=shooting-days`)
     } catch (err: any) {
-      console.error('Create shooting day error:', err)
       showError(err, 'Error Creating Shooting Day')
     }
   }

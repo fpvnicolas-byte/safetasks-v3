@@ -10,7 +10,7 @@ import { LocaleLink } from '@/components/LocaleLink'
 import { formatCurrency } from '@/lib/utils/money'
 import { ProjectStatus } from '@/types'
 import { ProjectsListSkeleton } from '@/components/LoadingSkeletons'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 
 const statusColors: Record<ProjectStatus, string> = {
   draft: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
@@ -24,6 +24,7 @@ const statusColors: Record<ProjectStatus, string> = {
 export default function ProjectsPage() {
   const t = useTranslations('projects')
   const tCommon = useTranslations('common')
+  const locale = useLocale()
   const { organizationId, isLoading: isLoadingOrg } = useAuth()
 
   const { data: projects, isLoading, error } = useProjects(organizationId || undefined)
@@ -70,9 +71,13 @@ export default function ProjectsPage() {
       {projects && projects.length > 0 ? (
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => {
-            const statusKey = project.status.replace(/-/g, '')
-              .replace(/^(.)/, (match) => match.toLowerCase())
-              .replace(/-(.)/g, (match, p1) => p1.toUpperCase())
+            // Convert status to camelCase: "pre-production" -> "preProduction"
+            const statusKey = project.status
+              .split('-')
+              .map((part, index) =>
+                index === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1)
+              )
+              .join('')
             const statusLabel = t(`statusLabels.${statusKey}`, { defaultMessage: project.status.replace(/-/g, ' ') })
 
             return (
@@ -91,7 +96,7 @@ export default function ProjectsPage() {
                       {project.start_date && (
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">{t('start')}:</span>
-                          <span>{new Date(project.start_date).toLocaleDateString()}</span>
+                          <span>{new Date(project.start_date).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
                         </div>
                       )}
                       <div className="flex justify-between font-medium">

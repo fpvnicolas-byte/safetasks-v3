@@ -1,7 +1,8 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from typing import Dict, Any, Optional
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_, text, case
@@ -14,6 +15,9 @@ from app.models.inventory import KitItem
 from app.models.cloud import CloudSyncStatus
 
 logger = logging.getLogger(__name__)
+
+# Default timezone - can be made configurable per organization
+DEFAULT_TIMEZONE = ZoneInfo("America/Sao_Paulo")
 
 
 class AnalyticsService:
@@ -42,8 +46,8 @@ class AnalyticsService:
         Returns:
             Executive dashboard data
         """
-        # Calculate date range
-        end_date = datetime.now()
+        # Calculate date range using timezone-aware datetime
+        end_date = datetime.now(DEFAULT_TIMEZONE)
         start_date = end_date - timedelta(days=30 * months_back)
 
         dashboard_data = {
@@ -72,9 +76,13 @@ class AnalyticsService:
     ) -> Dict[str, Any]:
         """Calculate financial metrics for the dashboard."""
 
-        # Get current month transactions
-        current_month_start = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        current_month_end = (current_month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        # Get current date in the organization's timezone
+        now = datetime.now(DEFAULT_TIMEZONE)
+        today = now.date()
+
+        # Get current month transactions (from 1st to today, inclusive)
+        current_month_start = today.replace(day=1)
+        current_month_end = today  # Include today's transactions
 
         # Revenue and expenses for current month
         monthly_query = select(
@@ -93,8 +101,8 @@ class AnalyticsService:
         ).where(
             and_(
                 Transaction.organization_id == organization_id,
-                Transaction.transaction_date >= current_month_start.date(),
-                Transaction.transaction_date <= current_month_end.date()
+                Transaction.transaction_date >= current_month_start,
+                Transaction.transaction_date <= current_month_end
             )
         )
 
@@ -105,8 +113,14 @@ class AnalyticsService:
         expenses_mtd = monthly_row.expenses_cents or 0
         net_profit_mtd = revenue_mtd - expenses_mtd
 
-        # Year-to-date calculations
-        year_start = datetime.now().replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+        logger.info(
+            f"MTD Financial Metrics for org {organization_id}: "
+            f"Revenue: {revenue_mtd}, Expenses: {expenses_mtd}, "
+            f"Date range: {current_month_start} to {current_month_end}"
+        )
+
+        # Year-to-date calculations (from January 1st to today, inclusive)
+        year_start = today.replace(month=1, day=1)
 
         ytd_query = select(
             func.sum(
@@ -124,8 +138,8 @@ class AnalyticsService:
         ).where(
             and_(
                 Transaction.organization_id == organization_id,
-                Transaction.transaction_date >= year_start.date(),
-                Transaction.transaction_date <= end_date.date()
+                Transaction.transaction_date >= year_start,
+                Transaction.transaction_date <= today
             )
         )
 
@@ -135,6 +149,12 @@ class AnalyticsService:
         revenue_ytd = ytd_row.revenue_ytd_cents or 0
         expenses_ytd = ytd_row.expenses_ytd_cents or 0
         net_profit_ytd = revenue_ytd - expenses_ytd
+
+        logger.info(
+            f"YTD Financial Metrics for org {organization_id}: "
+            f"Revenue: {revenue_ytd}, Expenses: {expenses_ytd}, "
+            f"Date range: {year_start} to {today}"
+        )
 
         # Cash flow projection (simple - can be enhanced with more complex logic)
         cash_flow_projection = revenue_ytd - expenses_ytd
@@ -196,8 +216,6 @@ class AnalyticsService:
         projects_by_status = {row.status: row.count for row in status_result}
 
         # Pending call sheets for the week (next 7 days)
-        week_from_now = datetime.now() + timedelta(days=7)
-
         # This would need to be implemented based on your call sheet scheduling
         # For now, return a placeholder
         pending_call_sheets = 0
@@ -327,7 +345,7 @@ class AnalyticsService:
         storage_used_gb = total_syncs * 0.1  # Rough estimate: 100MB per sync
 
         # Recent sync activity (last 30 days)
-        thirty_days_ago = datetime.now() - timedelta(days=30)
+        thirty_days_ago = datetime.now(DEFAULT_TIMEZONE) - timedelta(days=30)
         recent_syncs_query = select(func.count(CloudSyncStatus.id)).where(
             and_(
                 CloudSyncStatus.organization_id == organization_id,
@@ -360,9 +378,26 @@ class AnalyticsService:
         # Monthly revenue/expense trends
         monthly_trends = []
 
+        # Calculate the start month based on months_back parameter
+        today = datetime.now(DEFAULT_TIMEZONE).date()
+
         for i in range(12):
-            month_start = (start_date + timedelta(days=30 * i)).replace(day=1)
-            month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+            # Calculate month boundaries properly
+            if i == 0:
+                month_start = start_date.date() if hasattr(start_date, 'date') else start_date
+                if not isinstance(month_start, type(today)):
+                    month_start = today.replace(day=1) - timedelta(days=365)
+            else:
+                # Move to next month
+                month_start = (month_start.replace(day=1) + timedelta(days=32)).replace(day=1)
+
+            # Calculate last day of the month
+            next_month = (month_start.replace(day=1) + timedelta(days=32)).replace(day=1)
+            month_end = next_month - timedelta(days=1)
+
+            # Don't query future months
+            if month_start > today:
+                break
 
             month_query = select(
                 extract('month', Transaction.transaction_date).label('month'),
@@ -382,8 +417,8 @@ class AnalyticsService:
             ).where(
                 and_(
                     Transaction.organization_id == organization_id,
-                    Transaction.transaction_date >= month_start.date(),
-                    Transaction.transaction_date <= month_end.date()
+                    Transaction.transaction_date >= month_start,
+                    Transaction.transaction_date <= month_end
                 )
             ).group_by(
                 extract('month', Transaction.transaction_date),

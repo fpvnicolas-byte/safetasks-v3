@@ -41,7 +41,19 @@
     "success": "Sucesso",
     "error": "Erro",
     "warning": "Aviso",
-    "info": "Informação"
+    "info": "Informação",
+    "saving": "Salvando...",
+    "feedback": {
+      "success": "Sucesso",
+      "error": "Erro",
+      "confirmDelete": "Tem certeza que deseja excluir este item?",
+      "confirmAction": "Tem certeza que deseja realizar esta ação?",
+      "actionSuccess": "Ação concluída com sucesso",
+      "actionError": "Falha na ação: {message}",
+      "selectProject": "Por favor, selecione um projeto primeiro",
+      "enterText": "Por favor, insira o texto",
+      "fillRequired": "Por favor, preencha todos os campos obrigatórios"
+    }
   },
   "auth": {
     "login": {
@@ -162,6 +174,15 @@
         "broken": "Quebrado",
         "retired": "Aposentado"
       }
+    },
+    "revenueChart": {
+      "title": "Tendências de Receita",
+      "noData": "Nenhum dado disponível",
+      "lastMonths": "Últimos {count} meses",
+      "revenue": "Receita",
+      "expenses": "Despesas",
+      "netProfit": "Lucro Líquido",
+      "keyInsights": "Insights Principais"
     },
     "recentTransactions": {
       "title": "Transações Recentes",
@@ -366,10 +387,90 @@
     "crew": "Equipe",
     "equipment": "Equipamento",
     "notes": "Observações",
-    "noCallSheets": "Nenhuma ordem do dia encontrada"
+    "noCallSheets": "Nenhuma ordem do dia encontrada",
+    "tab": {
+      "description": "Gerencie cronogramas de filmagem e logística",
+      "loading": "Carregando ordens do dia...",
+      "error": "Erro ao carregar ordens do dia: {message}",
+      "deleteConfirm": "Tem certeza que deseja excluir esta ordem do dia?",
+      "empty": {
+        "title": "Nenhuma Ordem do Dia",
+        "description": "Crie sua primeira ordem do dia para organizar os cronogramas de filmagem",
+        "help": "As ordens do dia ajudam a coordenar equipe, elenco e logística para cada dia de filmagem",
+        "action": "Criar Primeira Ordem do Dia"
+      },
+      "card": {
+        "title": "Ordem do Dia",
+        "crewCall": "Chamada da Equipe",
+        "onSet": "No Set",
+        "weather": "Clima:"
+      }
+    },
+    "detail": {
+      "title": "Ordem do Dia",
+      "loading": "Carregando ordem do dia...",
+      "error": "Erro ao carregar ordem do dia: {message}",
+      "notFound": "Ordem do dia não encontrada",
+      "deleteConfirm": "Tem certeza que deseja excluir esta ordem do dia? Esta ação não pode ser desfeita.",
+      "created": "Criado em",
+      "callTimes": "Horários de Chamada",
+      "crewCall": "Chamada da Equipe",
+      "onSet": "No Set",
+      "lunch": "Almoço",
+      "wrap": "Encerramento",
+      "location": "Localização",
+      "weather": "Clima",
+      "emergencyInfo": "Informação de Emergência",
+      "productionNotes": "Notas de Produção",
+      "status": {
+        "draft": "Rascunho",
+        "confirmed": "Confirmado",
+        "completed": "Concluído"
+      },
+      "deleteError": "Falha ao excluir ordem do dia"
+    },
+    "edit": {
+      "title": "Editar Ordem do Dia",
+      "description": "Atualizar detalhes da ordem do dia para {date}",
+      "loading": "Carregando ordem do dia...",
+      "error": "Erro ao carregar ordem do dia: {message}",
+      "notFound": "Ordem do dia não encontrada",
+      "basicInfo": "Informações Básicas",
+      "shootingDay": "Dia de Filmagem *",
+      "status": "Status *",
+      "selectStatus": "Selecionar status",
+      "statusConfirmed": "Confirmado",
+      "callTimes": "Horários de Chamada",
+      "crewCall": "Chamada da Equipe *",
+      "crewCallHelp": "Inputs de hora usam HH:MM, será convertido para HH:MM:SS para o backend",
+      "onSet": "No Set *",
+      "lunch": "Almoço *",
+      "wrap": "Encerramento",
+      "location": "Localização",
+      "locationName": "Nome do Local *",
+      "locationPlaceholder": "Estúdio A",
+      "locationAddress": "Endereço do Local",
+      "locationAddressPlaceholder": "Rua do Filme, 123, São Paulo, SP",
+      "parking": "Informações de Estacionamento",
+      "parkingPlaceholder": "Detalhes e instruções de estacionamento...",
+      "weather": "Previsão do Tempo",
+      "weatherPlaceholder": "Ensolarado, 25°C",
+      "safety": "🚨 Segurança e Emergência",
+      "hospital": "Hospital Mais Próximo/Contato de Emergência *",
+      "hospitalPlaceholder": "Nome do hospital, endereço, telefone e direções...",
+      "hospitalHelp": "Obrigatório para ordens do dia profissionais - informação crítica de emergência",
+      "notes": "Notas de Produção",
+      "notesPlaceholder": "Notas adicionais de produção...",
+      "updating": "Atualizando...",
+      "update": "Atualizar Ordem do Dia",
+      "errors": {
+        "updateTitle": "Erro ao Atualizar Ordem do Dia"
+      }
+    }
   },
   "shootingDays": {
     "title": "Dias de Filmagem",
+    "description": "Agende e gerencie dias de filmagem da produção",
     "newShootingDay": "Novo Dia de Filmagem",
     "createShootingDay": "Criar Dia de Filmagem",
     "editShootingDay": "Editar Dia de Filmagem",
@@ -380,39 +481,221 @@
     "crewMembers": "Membros da Equipe",
     "equipmentUsed": "Equipamento Utilizado",
     "status": "Status",
-    "noShootingDays": "Nenhum dia de filmagem encontrado"
+    "noShootingDays": "Nenhum dia de filmagem encontrado",
+    "list": {
+      "searchTitle": "Buscar Dias de Filmagem",
+      "searchDescription": "Encontre dias de filmagem por localização, data, projeto ou notas",
+      "searchPlaceholder": "Buscar por localização, data, projeto ou notas...",
+      "dayCount": "{count} dia",
+      "dayCount_other": "{count} dias",
+      "loading": "Carregando dias de filmagem...",
+      "error": "Erro ao carregar dias de filmagem: {message}",
+      "noResults": "Nenhum Dia de Filmagem Encontrado",
+      "noMatches": "Nenhum dia de filmagem corresponde à sua busca atual",
+      "noDays": "Nenhum dia de filmagem agendado ainda.",
+      "call": "Chamada:",
+      "wrap": "Encerramento:",
+      "view": "Visualizar",
+      "edit": "Editar",
+      "deleteTitle": "Excluir Dia de Filmagem?",
+      "deleteDescription": "Tem certeza que deseja excluir o dia de filmagem em {date}? Esta ação não pode ser desfeita.",
+      "deleteConfirmGeneric": "Tem certeza?",
+      "deleteError": "Falha ao excluir dia de filmagem"
+    },
+    "tab": {
+      "title": "Cronograma de Filmagem",
+      "description": "Gerencie dias de filmagem e atribuições de cenas",
+      "loading": "Carregando dias de filmagem...",
+      "error": "Erro ao carregar dias de filmagem: {message}",
+      "deleteConfirm": "Tem certeza que deseja excluir este dia de filmagem?",
+      "empty": {
+        "title": "Nenhum Dia de Filmagem Agendado",
+        "description": "Crie seu primeiro dia de filmagem para começar a planejar o cronograma de produção",
+        "help": "Organize cenas em dias de filmagem para uma produção eficiente",
+        "action": "Agendar Primeiro Dia"
+      },
+      "card": {
+        "call": "Chamada:",
+        "wrap": "Encerramento:"
+      }
+    },
+    "detail": {
+      "loading": "Carregando dia de filmagem...",
+      "notFound": "Dia de filmagem não encontrado",
+      "deleteConfirm": "Tem certeza que deseja excluir este dia de filmagem?",
+      "scheduleDetails": "Detalhes do Cronograma",
+      "scheduleDescription": "Horários de chamada e cronograma de filmagem",
+      "callTime": "Horário de Chamada",
+      "wrapTime": "Horário de Encerramento",
+      "locationInfo": "Informações de Localização",
+      "locationDescription": "Detalhes da localização de filmagem",
+      "location": "Localização",
+      "weatherForecast": "Previsão do Tempo",
+      "productionNotes": "Notas de Produção",
+      "sceneAssignment": "Atribuição de Cenas",
+      "sceneAssignmentDescription": "Atribuir cenas a este dia de filmagem",
+      "scene": "Cena",
+      "currentlyAssigned": "Atualmente Atribuída",
+      "assign": "Atribuir",
+      "assigning": "Atribuindo...",
+      "assignScenes": "Atribuir {count} Cena(s)",
+      "assignSuccess": "Atribuídas com sucesso {count} cena(s)",
+      "assignError": "Erro: {message}",
+      "noScenes": "Nenhuma cena encontrada para este projeto.",
+      "createScene": "Criar uma cena"
+    }
   },
   "scenes": {
     "title": "Cenas",
+    "description": "Gerencie suas cenas de produção e quebra de roteiro",
     "newScene": "Nova Cena",
     "createScene": "Criar Cena",
     "editScene": "Editar Cena",
     "sceneNumber": "Número da Cena",
-    "description": "Descrição",
     "location": "Localização",
     "timeOfDay": "Período do Dia",
     "intExt": "Interior/Exterior",
     "interior": "Interior",
     "exterior": "Exterior",
+    "internal": "interno",
+    "external": "externo",
+    "day": "dia",
+    "night": "noite",
+    "dawn": "amanhecer",
+    "dusk": "anoitecer",
     "characters": "Personagens",
     "props": "Objetos de Cena",
-    "noScenes": "Nenhuma cena encontrada"
+    "noProjectContext": {
+      "title": "Cenas",
+      "description": "O gerenciamento de cenas requer um contexto de projeto",
+      "message": "Por favor, selecione um projeto para gerenciar cenas",
+      "goToProjects": "Ir para Projetos"
+    },
+    "filter": {
+      "title": "Filtrar Cenas",
+      "description": "Encontre cenas específicas por localização, período do dia ou termos de pesquisa",
+      "search": "Pesquisar",
+      "searchPlaceholder": "Número da cena ou descrição...",
+      "location": "Localização",
+      "allLocations": "Todas as Localizações",
+      "timeOfDay": "Período do Dia",
+      "allTimes": "Todos os Períodos",
+      "results": "Resultados",
+      "sceneCount": "{count} cena",
+      "sceneCount_other": "{count} cenas"
+    },
+    "list": {
+      "loading": "Carregando cenas...",
+      "error": "Erro ao carregar cenas: {message}",
+      "noEstimate": "Sem estimativa",
+      "noDuration": "Sem duração",
+      "view": "Ver",
+      "edit": "Editar",
+      "deleteConfirm": "Tem certeza de que deseja excluir a Cena {number}? Esta ação não pode ser desfeita.",
+      "deleteError": "Falha ao excluir cena: {message}",
+      "noDescription": "Sem descrição"
+    },
+    "empty": {
+      "title": "Nenhuma Cena Encontrada",
+      "noMatches": "Nenhuma cena corresponde aos seus filtros atuais",
+      "getStarted": "Comece criando sua primeira cena",
+      "helpText": "Cenas ajudam a dividir seu roteiro em unidades de produção gerenciáveis",
+      "createFirst": "Criar Primeira Cena"
+    },
+    "noScenes": "Nenhuma cena encontrada",
+    "detail": {
+      "title": "Cena {number}",
+      "cardTitle": "Detalhes da Cena",
+      "location": "Localização",
+      "time": "Horário",
+      "duration": "Duração",
+      "minutes": "minutos",
+      "description": "Descrição",
+      "notFound": "Cena não encontrada",
+      "deleteConfirm": "Tem certeza que deseja excluir esta cena?"
+    },
+    "edit": {
+      "title": "Editar Cena",
+      "description": "Atualizar detalhes da cena",
+      "sceneNumber": "Número da Cena *",
+      "integerOnly": "(Apenas inteiros)",
+      "sceneNumberHelp": "Use apenas números inteiros (1, 2, 3...). Para variações use o cabeçalho.",
+      "heading": "Cabeçalho da Cena *",
+      "descriptionLabel": "Descrição *",
+      "intExt": "Interno/Externo *",
+      "selectLocation": "Selecione o tipo de local",
+      "internal": "Interno (Interior)",
+      "external": "Externo (Exterior)",
+      "dayNight": "Dia/Noite *",
+      "selectTime": "Selecione o período",
+      "day": "Dia",
+      "night": "Noite",
+      "dawn": "Amanhecer",
+      "dusk": "Anoitecer",
+      "estimatedTime": "Tempo Estimado (minutos) *",
+      "estimatedTimeHelp": "Obrigatório. Deve ser maior que 0.",
+      "errors": {
+        "sceneNumberPositive": "O número da cena deve ser um inteiro positivo",
+        "estimatedTimePositive": "O tempo estimado deve ser um número positivo",
+        "updateTitle": "Erro ao Atualizar Cena"
+      }
+    }
   },
   "characters": {
     "title": "Personagens",
+    "description": "Gerencie seus personagens e elenco da produção",
     "newCharacter": "Novo Personagem",
     "createCharacter": "Criar Personagem",
     "editCharacter": "Editar Personagem",
+    "addCharacter": "Adicionar Personagem",
     "characterName": "Nome do Personagem",
-    "description": "Descrição",
     "actor": "Ator/Atriz",
     "role": "Papel",
     "costume": "Figurino",
     "makeup": "Maquiagem",
-    "noCharacters": "Nenhum personagem encontrado"
+    "projectSelection": {
+      "title": "Selecionar Projeto",
+      "description": "Escolha um projeto para visualizar e gerenciar seus personagens",
+      "loading": "Carregando projetos...",
+      "placeholder": "Selecione um projeto",
+      "noProjects": "Nenhum projeto encontrado.",
+      "createFirst": "Criar um projeto"
+    },
+    "list": {
+      "loading": "Carregando personagens..."
+    },
+    "empty": {
+      "title": "Nenhum Personagem Encontrado",
+      "description": "Este projeto ainda não possui personagens.",
+      "noCharactersYet": "Ainda sem personagens",
+      "helpText": "Comece a construir seu elenco adicionando o primeiro personagem"
+    },
+    "noCharacters": "Nenhum personagem encontrado",
+    "detail": {
+      "cardTitle": "Detalhes do Personagem",
+      "playedBy": "Interpretado por {actor}",
+      "noActor": "Nenhum ator atribuído",
+      "name": "Nome do Personagem",
+      "actorName": "Nome do Ator/Atriz",
+      "description": "Descrição do Personagem",
+      "notFound": "Personagem não encontrado",
+      "deleteConfirm": "Tem certeza que deseja excluir este personagem?"
+    },
+    "edit": {
+      "title": "Editar Personagem",
+      "description": "Atualizar detalhes do personagem",
+      "name": "Nome do Personagem *",
+      "descriptionLabel": "Descrição *",
+      "descriptionPlaceholder": "Descrição do personagem, papel na história...",
+      "actorName": "Nome do Ator/Atriz",
+      "errors": {
+        "updateTitle": "Erro ao Atualizar Personagem"
+      }
+    }
   },
   "financials": {
     "title": "Financeiro",
+    "description": "Acompanhe orçamentos, faturas e despesas",
     "transactions": "Transações",
     "bankAccounts": "Contas Bancárias",
     "taxTables": "Tabelas de Impostos",
@@ -424,18 +707,144 @@
     "type": "Tipo",
     "income": "Receita",
     "expense": "Despesa",
+    "expenses": "Despesas",
     "balance": "Saldo",
     "taxRate": "Taxa de Imposto",
     "dueDate": "Data de Vencimento",
     "paid": "Pago",
     "pending": "Pendente",
     "noTransactions": "Nenhuma transação encontrada",
-    "noInvoices": "Nenhuma fatura encontrada"
+    "noInvoices": "Nenhuma fatura encontrada",
+    "overview": {
+      "tab": "Visão Geral",
+      "totalBudget": "Orçamento Total",
+      "totalSpent": "Total Gasto",
+      "remaining": "Restante"
+    },
+    "invoicesTab": {
+      "tab": "Faturas",
+      "filterByStatus": "Filtrar por Status",
+      "allStatuses": "Todos os Status",
+      "draft": "Rascunho",
+      "sent": "Enviado",
+      "overdue": "Vencido",
+      "canceled": "Cancelado",
+      "loading": "Carregando faturas...",
+      "error": "Erro ao carregar faturas: {message}",
+      "noInvoicesFound": "Nenhuma Fatura Encontrada",
+      "createFirst": "Crie sua primeira fatura para começar",
+      "noInvoicesWithStatus": "Nenhuma fatura com status \"{status}\"",
+      "helpText": "Faturas profissionais ajudam a rastrear pagamentos e gerenciar relacionamentos com clientes",
+      "createFirstInvoice": "Criar Primeira Fatura",
+      "invoice": {
+        "invoiceNumber": "Fatura #{number}",
+        "issued": "Emitida",
+        "due": "Vencimento",
+        "overdue": "(Vencida)",
+        "client": "Cliente",
+        "noClient": "Nenhum cliente atribuído",
+        "project": "Projeto",
+        "noProject": "Nenhum projeto atribuído",
+        "notes": "Notas:",
+        "view": "Visualizar",
+        "edit": "Editar",
+        "deleteConfirm": "Tem certeza que deseja excluir a fatura #{number}? Esta ação não pode ser desfeita.",
+        "deleteError": "Falha ao excluir fatura. Por favor, tente novamente."
+      }
+    },
+    "bankAccountsTab": {
+      "tab": "Contas Bancárias",
+      "title": "Contas Bancárias",
+      "description": "Gerencie suas contas bancárias e acompanhe saldos",
+      "noBankAccounts": "Nenhuma conta bancária encontrada.",
+      "viewBankAccounts": "Ver Contas Bancárias"
+    },
+    "transactionsTab": {
+      "tab": "Transações",
+      "title": "Transações",
+      "description": "Registre receitas e despesas para acompanhar o fluxo de caixa",
+      "noDescription": "Sem descrição",
+      "noRecentTransactions": "Nenhuma transação recente.",
+      "viewTransactions": "Ver Transações"
+    },
+    "expensesTab": {
+      "tab": "Despesas",
+      "title": "Despesas",
+      "description": "Acompanhe custos e despesas de produção",
+      "noRecentExpenses": "Nenhuma despesa recente.",
+      "viewExpenses": "Ver Despesas"
+    }
   },
   "inventory": {
     "title": "Inventário",
-    "items": "Itens",
-    "kits": "Kits",
+    "items": {
+      "title": "Itens do Inventário",
+      "description": "Gerencie ativos de equipamentos individuais e seu status de saúde",
+      "viewKits": "Ver Kits",
+      "newItem": "Novo Item",
+      "filters": {
+        "title": "Filtros",
+        "searchPlaceholder": "Pesquisar por nome, série ou categoria...",
+        "healthPlaceholder": "Filtrar por saúde",
+        "allHealthStatuses": "Todos os Status de Saúde",
+        "itemsFound": "{count} itens encontrados"
+      },
+      "health": {
+        "excellent": "Excelente",
+        "good": "Bom",
+        "needs_service": "Necessita Serviço",
+        "broken": "Quebrado",
+        "retired": "Aposentado"
+      },
+      "card": {
+        "serialNumber": "N/S:",
+        "usage": "Uso:",
+        "view": "Ver",
+        "edit": "Editar"
+      },
+      "loading": "Carregando inventário...",
+      "error": "Erro",
+      "empty": {
+        "title": "Nenhum item encontrado",
+        "description": "Comece adicionando seu primeiro item de equipamento ao inventário",
+        "addFirst": "Adicionar Primeiro Item"
+      },
+      "delete": {
+        "title": "Excluir {name}?",
+        "description": "Tem certeza de que deseja excluir \"{name}\"?",
+        "error": "Falha ao excluir item"
+      }
+    },
+    "kits": {
+      "title": "Kits de Equipamentos",
+      "description": "Gerencie coleções de equipamentos para necessidades específicas de filmagem",
+      "viewAllItems": "Ver Todos os Itens",
+      "newKit": "Novo Kit",
+      "status": {
+        "available": "Disponível",
+        "in_use": "Em Uso",
+        "maintenance": "Manutenção",
+        "retired": "Aposentado"
+      },
+      "card": {
+        "noCategory": "Sem categoria",
+        "noDescription": "Nenhuma descrição fornecida.",
+        "view": "Ver",
+        "edit": "Editar"
+      },
+      "loading": "Carregando kits...",
+      "error": "Erro",
+      "empty": {
+        "title": "Nenhum kit encontrado",
+        "description": "Crie seu primeiro kit de equipamentos (ex: \"Kit Drone Padrão\")",
+        "createFirst": "Criar Primeiro Kit"
+      },
+      "delete": {
+        "title": "Excluir {name}?",
+        "description": "Tem certeza de que deseja excluir o kit \"{name}\"? Os itens dentro serão preservados.",
+        "error": "Falha ao excluir kit"
+      }
+    },
     "newItem": "Novo Item",
     "newKit": "Novo Kit",
     "itemName": "Nome do Item",
@@ -452,6 +861,7 @@
   },
   "clients": {
     "title": "Clientes",
+    "description": "Gerencie seus relacionamentos com clientes e informações de contato",
     "newClient": "Novo Cliente",
     "createClient": "Criar Cliente",
     "editClient": "Editar Cliente",
@@ -462,10 +872,46 @@
     "address": "Endereço",
     "projects": "Projetos",
     "activeProjects": "Projetos Ativos",
-    "noClients": "Nenhum cliente encontrado"
+    "noClients": "Nenhum cliente encontrado",
+    "loading": "Carregando clientes...",
+    "loadingError": "Falha ao carregar clientes. Por favor, tente novamente.",
+    "search": {
+      "title": "Buscar Clientes",
+      "description": "Encontre clientes por nome, e-mail, documento ou número de telefone",
+      "placeholder": "Buscar por nome, e-mail, documento ou telefone..."
+    },
+    "empty": {
+      "noResults": "Nenhum cliente encontrado",
+      "noClients": "Nenhum cliente ainda",
+      "tryAdjusting": "Tente ajustar sua busca",
+      "getStarted": "Comece criando seu primeiro cliente",
+      "helpText": "Clientes são organizações ou indivíduos com quem você trabalha em projetos",
+      "createFirst": "Criar Primeiro Cliente"
+    },
+    "card": {
+      "active": "Ativo",
+      "inactive": "Inativo",
+      "activeProjects": "{count} projeto ativo",
+      "activeProjects_other": "{count} projetos ativos",
+      "noActiveProjects": "Nenhum projeto ativo",
+      "noContactInfo": "Nenhuma informação de contato",
+      "document": "Documento",
+      "view": "Visualizar",
+      "edit": "Editar"
+    },
+    "summary": {
+      "showing": "Mostrando {filtered} de {total} cliente",
+      "showing_other": "Mostrando {filtered} de {total} clientes",
+      "activeInactive": "{active} ativos • {inactive} inativos"
+    },
+    "delete": {
+      "confirm": "Tem certeza que deseja excluir o cliente \"{name}\"? Esta ação não pode ser desfeita.",
+      "error": "Falha ao excluir cliente: {message}"
+    }
   },
   "suppliers": {
     "title": "Fornecedores",
+    "description": "Gerencie fornecedores, locadoras e prestadores de serviços",
     "newSupplier": "Novo Fornecedor",
     "createSupplier": "Criar Fornecedor",
     "editSupplier": "Editar Fornecedor",
@@ -475,10 +921,57 @@
     "equipment": "Equipamento",
     "rates": "Tarifas",
     "contract": "Contrato",
+    "filters": {
+      "title": "Filtrar Fornecedores",
+      "description": "Encontre fornecedores por nome, categoria ou informações de contato",
+      "search": "Pesquisar",
+      "searchPlaceholder": "Nome, e-mail ou telefone...",
+      "category": "Categoria",
+      "allCategories": "Todas as Categorias",
+      "rentalHouse": "Locadora",
+      "freelancer": "Freelancer",
+      "catering": "Catering",
+      "transport": "Transporte",
+      "postProduction": "Pós-Produção",
+      "other": "Outro",
+      "status": "Status",
+      "activeOnly": "Apenas Ativos",
+      "allSuppliers": "Todos os Fornecedores",
+      "results": "Resultados",
+      "supplierCount": "{count} fornecedor",
+      "supplierCount_other": "{count} fornecedores"
+    },
+    "list": {
+      "loading": "Carregando fornecedores...",
+      "error": "Erro ao carregar fornecedores: {message}",
+      "view": "Ver",
+      "edit": "Editar"
+    },
+    "card": {
+      "inactive": "Inativo",
+      "transactionSummary": "Resumo de Transações",
+      "transaction": "{count} transação",
+      "transaction_other": "{count} transações"
+    },
+    "empty": {
+      "title": "Nenhum Fornecedor Encontrado",
+      "noMatches": "Nenhum fornecedor corresponde aos seus filtros atuais",
+      "getStarted": "Comece adicionando seu primeiro fornecedor",
+      "helpText": "Fornecedores ajudam você a rastrear vendedores, freelancers e prestadores de serviços",
+      "addFirst": "Adicionar Primeiro Fornecedor"
+    },
+    "delete": {
+      "confirm": "Tem certeza de que deseja excluir \"{name}\"? Esta ação não pode ser desfeita.",
+      "error": "Falha ao excluir fornecedor: {message}"
+    },
     "noSuppliers": "Nenhum fornecedor encontrado"
   },
   "stakeholders": {
     "title": "Partes Interessadas",
+    "description": "Gerencie membros da equipe e colaboradores do projeto",
+    "loading": "Carregando...",
+    "error": "Erro: Nenhuma organização encontrada. Entre em contato com o suporte.",
+    "addStakeholder": "Adicionar Parte Interessada",
     "newStakeholder": "Nova Parte Interessada",
     "createStakeholder": "Criar Parte Interessada",
     "editStakeholder": "Editar Parte Interessada",
@@ -491,10 +984,35 @@
     "investor": "Investidor",
     "partner": "Parceiro",
     "advisor": "Consultor",
-    "noStakeholders": "Nenhuma parte interessada encontrada"
+    "filters": {
+      "title": "Filtros",
+      "description": "Filtre partes interessadas por projeto ou pesquise por nome",
+      "allProjects": "Todos os Projetos",
+      "searchPlaceholder": "Pesquisar por nome ou função..."
+    },
+    "table": {
+      "title": "Membros da Equipe",
+      "count": "{count} parte(s) interessada(s) encontrada(s)",
+      "loading": "Carregando partes interessadas...",
+      "headers": {
+        "name": "Nome",
+        "role": "Função",
+        "project": "Projeto",
+        "email": "E-mail",
+        "phone": "Telefone",
+        "actions": "Ações"
+      },
+      "addPayment": "Adicionar Pagamento",
+      "unknownProject": "Projeto Desconhecido"
+    },
+    "empty": {
+      "noStakeholders": "Nenhuma parte interessada encontrada",
+      "addFirst": "Adicione Sua Primeira Parte Interessada"
+    }
   },
   "proposals": {
     "title": "Propostas",
+    "description": "Crie e gerencie propostas de clientes",
     "newProposal": "Nova Proposta",
     "createProposal": "Criar Proposta",
     "editProposal": "Editar Proposta",
@@ -506,29 +1024,267 @@
     "draft": "Rascunho",
     "sent": "Enviado",
     "accepted": "Aceito",
+    "approved": "Aprovado",
     "rejected": "Rejeitado",
+    "expired": "Expirado",
     "scope": "Escopo",
-    "noProposals": "Nenhuma proposta encontrada"
+    "noProposals": "Nenhuma proposta encontrada",
+    "filter": {
+      "title": "Filtrar Propostas",
+      "description": "Encontre propostas por título ou status",
+      "search": "Buscar",
+      "searchPlaceholder": "Título ou descrição...",
+      "status": "Status",
+      "allStatuses": "Todos os Status",
+      "results": "Resultados",
+      "proposalCount": "{count} proposta",
+      "proposalCount_other": "{count} propostas"
+    },
+    "loading": "Carregando propostas...",
+    "error": "Erro ao carregar propostas: {message}",
+    "empty": {
+      "title": "Nenhuma Proposta Encontrada",
+      "noMatches": "Nenhuma proposta corresponde aos seus filtros atuais",
+      "getStarted": "Comece criando sua primeira proposta",
+      "helpText": "Propostas permitem que você envie estimativas para clientes e acompanhe aprovações",
+      "createProposal": "Criar Proposta"
+    },
+    "card": {
+      "created": "Criado",
+      "totalAmount": "Valor Total",
+      "validUntil": "Válido até:",
+      "view": "Visualizar",
+      "edit": "Editar"
+    },
+    "delete": {
+      "title": "Excluir Proposta?",
+      "description": "Tem certeza que deseja excluir esta proposta? Esta ação não pode ser desfeita."
+    }
   },
   "production": {
-    "title": "Produção",
+    "title": "Gestão de Produção",
+    "description": "Gerencie todas as atividades e fluxos de trabalho relacionados à produção",
     "schedule": "Cronograma",
     "resources": "Recursos",
     "progress": "Progresso",
     "timeline": "Linha do Tempo",
-    "milestones": "Marcos"
+    "milestones": "Marcos",
+    "newCallSheet": "Novo Call Sheet",
+    "newShootingDay": "Novo Dia de Filmagem",
+    "callSheets": {
+      "title": "Call Sheets",
+      "description": "Crie e gerencie call sheets diários para suas produções",
+      "viewAll": "Ver Todos os Call Sheets",
+      "createNew": "Criar Novo Call Sheet"
+    },
+    "shootingDays": {
+      "title": "Dias de Filmagem",
+      "description": "Agende e organize seus dias de filmagem",
+      "viewAll": "Ver Todos os Dias de Filmagem",
+      "createNew": "Criar Novo Dia de Filmagem"
+    },
+    "projects": {
+      "title": "Projetos",
+      "description": "Gerencie seus projetos de produção ativos",
+      "viewAll": "Ver Todos os Projetos",
+      "createNew": "Criar Novo Projeto"
+    },
+    "quickActions": {
+      "title": "Ações Rápidas",
+      "description": "Tarefas e fluxos de trabalho comuns de produção",
+      "manageScenes": "Gerenciar Cenas",
+      "manageCharacters": "Gerenciar Personagens",
+      "equipmentInventory": "Inventário de Equipamentos",
+      "productionVendors": "Fornecedores de Produção"
+    }
   },
   "settings": {
     "title": "Configurações",
+    "description": "Gerencie suas configurações de conta e organização",
     "profile": "Perfil",
     "organization": "Organização",
     "integrations": "Integrações",
     "googleDrive": "Google Drive",
     "saveChanges": "Salvar Alterações",
+    "saving": "Salvando...",
+    "cancel": "Cancelar",
     "account": "Conta",
     "preferences": "Preferências",
     "notifications": "Notificações",
-    "security": "Segurança"
+    "security": "Segurança",
+    "main": {
+      "organization": {
+        "title": "Organização",
+        "description": "Gerenciar detalhes da organização",
+        "content": "Atualize o nome, configurações e preferências da organização"
+      },
+      "profile": {
+        "title": "Perfil",
+        "description": "Gerenciar seu perfil",
+        "content": "Atualize suas informações pessoais e preferências"
+      },
+      "googleDrive": {
+        "title": "Google Drive",
+        "description": "Integração de armazenamento em nuvem",
+        "content": "Conecte e gerencie a sincronização com o Google Drive"
+      },
+      "services": {
+        "title": "Serviços",
+        "description": "Gerenciar serviços disponíveis",
+        "content": "Defina os serviços disponíveis para propostas"
+      },
+      "notifications": {
+        "title": "Notificações",
+        "description": "Alertas e atualizações em tempo real",
+        "content": "Gerencie suas preferências de notificação e veja alertas recentes"
+      }
+    },
+    "organizationPage": {
+      "title": "Configurações da Organização",
+      "description": "Gerencie os detalhes da sua organização",
+      "loading": "Carregando...",
+      "card": {
+        "title": "Informações da Organização",
+        "description": "Atualize as informações básicas da sua organização"
+      },
+      "fields": {
+        "organizationId": "ID da Organização",
+        "organizationIdHelp": "Este é o identificador único da sua organização",
+        "organizationName": "Nome da Organização",
+        "organizationNameRequired": "Nome da Organização *",
+        "organizationNamePlaceholder": "Minha Empresa de Produção",
+        "taxId": "CNPJ / ID Fiscal",
+        "taxIdPlaceholder": "12-3456789",
+        "taxIdHelp": "Opcional: Número de identificação fiscal da sua organização",
+        "created": "Criado em",
+        "createdUnknown": "Desconhecido"
+      }
+    },
+    "profilePage": {
+      "title": "Configurações de Perfil",
+      "description": "Gerencie suas informações pessoais",
+      "card": {
+        "title": "Informações Pessoais",
+        "description": "Visualize os detalhes do seu perfil"
+      },
+      "fields": {
+        "email": "E-mail",
+        "emailHelp": "Seu endereço de e-mail é gerenciado através da autenticação",
+        "userId": "ID do Usuário",
+        "accountStatus": "Status da Conta",
+        "active": "Ativo"
+      },
+      "futureFeatures": {
+        "intro": "Os recursos de gerenciamento de perfil serão expandidos em futuras atualizações, incluindo:",
+        "displayName": "Atualizar nome de exibição e avatar",
+        "notifications": "Preferências de notificação",
+        "languageTimezone": "Configurações de idioma e fuso horário",
+        "passwordManagement": "Gerenciamento de senha"
+      },
+      "backButton": "Voltar para Configurações"
+    },
+    "servicesPage": {
+      "title": "Serviços",
+      "description": "Gerencie os serviços disponíveis para propostas.",
+      "addService": "Adicionar Serviço",
+      "card": {
+        "title": "Serviços Disponíveis",
+        "description": "Valores que podem ser selecionados ao criar uma proposta."
+      },
+      "table": {
+        "name": "Nome",
+        "description": "Descrição",
+        "actions": "Ações",
+        "noDescription": "-"
+      },
+      "empty": "Nenhum serviço encontrado. Crie um para começar.",
+      "dialog": {
+        "addTitle": "Adicionar Serviço",
+        "editTitle": "Editar Serviço",
+        "addDescription": "Adicione um novo serviço à sua organização.",
+        "editDescription": "Atualize os detalhes do serviço.",
+        "nameLabel": "Nome *",
+        "namePlaceholder": "ex: Produção de Longa-Metragem",
+        "descriptionLabel": "Descrição",
+        "descriptionPlaceholder": "Descrição do serviço...",
+        "cancel": "Cancelar",
+        "save": "Salvar",
+        "saving": "Salvando..."
+      },
+      "delete": {
+        "confirm": "Tem certeza de que deseja excluir este serviço?",
+        "error": "Erro ao Excluir Serviço"
+      },
+      "errors": {
+        "creating": "Erro ao Criar Serviço",
+        "updating": "Erro ao Atualizar Serviço"
+      }
+    },
+    "googleDrivePage": {
+      "title": "Integração com Google Drive",
+      "description": "Conecte seu Google Drive para sincronizar automaticamente arquivos de produção",
+      "loading": "Carregando...",
+      "status": {
+        "title": "Status da Conexão",
+        "connected": "Google Drive está conectado",
+        "notConnected": "Não conectado ao Google Drive",
+        "connectedBadge": "Conectado",
+        "notConnectedBadge": "Não Conectado",
+        "projectId": "ID do Projeto:",
+        "connectedAt": "Conectado em:",
+        "lastSync": "Última Sincronização:",
+        "rootFolder": "Pasta Raiz:",
+        "viewInDrive": "Ver no Drive",
+        "notCreatedYet": "Ainda não criado",
+        "never": "Nunca"
+      },
+      "setup": {
+        "title": "Configurar Google Drive",
+        "description": "Envie suas credenciais JSON da Conta de Serviço do Google para conectar",
+        "howTo": {
+          "title": "Como obter credenciais de Conta de Serviço",
+          "step1": "Vá para o Google Cloud Console",
+          "step2": "Crie ou selecione um projeto",
+          "step3": "Habilite a API do Google Drive",
+          "step4": "Crie uma Conta de Serviço",
+          "step5": "Crie e baixe a chave JSON",
+          "step6": "Compartilhe sua pasta do Drive com o e-mail da conta de serviço"
+        },
+        "serviceAccountLabel": "JSON da Conta de Serviço",
+        "serviceAccountPlaceholder": "Cole o JSON da sua conta de serviço aqui...",
+        "invalidJson": "Formato JSON inválido. Por favor, cole um JSON válido.",
+        "invalidFields": "JSON da conta de serviço inválido. Campos obrigatórios ausentes.",
+        "setupFailed": "Falha na configuração",
+        "settingUp": "Configurando...",
+        "connectButton": "Conectar Google Drive",
+        "setupError": "Falha na Configuração",
+        "setupErrorMessage": "Falha ao conectar Google Drive"
+      },
+      "syncSettings": {
+        "title": "Configurações de Sincronização",
+        "description": "Configure quando os arquivos devem sincronizar automaticamente com o Google Drive",
+        "autoSync": {
+          "label": "Sincronização automática ativada",
+          "description": "Sincronizar arquivos automaticamente quando enviados"
+        },
+        "proposalSync": {
+          "label": "Sincronizar ao aprovar proposta",
+          "description": "Sincronizar arquivos de proposta quando aprovados"
+        },
+        "callSheetSync": {
+          "label": "Sincronizar ao finalizar boletim",
+          "description": "Sincronizar boletins quando finalizados"
+        }
+      },
+      "dangerZone": {
+        "title": "Zona de Perigo",
+        "description": "Ações irreversíveis para sua integração com Google Drive",
+        "removeButton": "Remover Integração com Google Drive",
+        "removing": "Removendo...",
+        "removeConfirm": "Tem certeza de que deseja remover a integração com Google Drive? Isso não excluirá seus arquivos do Drive.",
+        "removeNote": "Isso desconectará o Google Drive, mas não excluirá seus arquivos do Drive."
+      }
+    }
   },
   "storage": {
     "title": "Armazenamento",
@@ -539,10 +1295,50 @@
     "type": "Tipo",
     "lastModified": "Última Modificação",
     "folder": "Pasta",
-    "noFiles": "Nenhum arquivo encontrado"
+    "noFiles": "Nenhum arquivo encontrado",
+    "fileUpload": {
+      "dragActive": "Solte os arquivos aqui",
+      "dragInactive": "Arraste e solte arquivos aqui",
+      "clickToBrowse": "ou clique para procurar",
+      "maxSize": "Tamanho máximo: {size}MB",
+      "fileTooLarge": "Arquivo muito grande (máx {size}MB)",
+      "invalidFileType": "Tipo de arquivo inválido",
+      "uploading": "Enviando...",
+      "uploadComplete": "Envio concluído!",
+      "noFilesYet": "Nenhum arquivo enviado ainda",
+      "fileCount": "{count} {count, plural, =1 {arquivo} other {arquivos}}",
+      "viewList": "Lista",
+      "viewGrid": "Grade"
+    }
   },
   "notifications": {
     "title": "Notificações",
+    "description": "Fique atualizado com alertas em tempo real e atualizações importantes",
+    "unableToLoad": "Não foi possível carregar notificações",
+    "failedToLoad": "Falha ao carregar notificações: {message}",
+    "retry": "Tentar Novamente",
+    "stats": {
+      "total": "Total",
+      "unread": "Não Lidas",
+      "read": "Lidas"
+    },
+    "controls": {
+      "showAll": "Mostrar Todas",
+      "unreadOnly": "Apenas Não Lidas",
+      "markAllRead": "Marcar Todas como Lidas",
+      "loading": "Carregando...",
+      "count": "{count} notificações"
+    },
+    "list": {
+      "title": "Notificações Recentes",
+      "showingUnread": "Mostrando apenas notificações não lidas",
+      "showingAll": "Todas as notificações",
+      "newBadge": "Nova"
+    },
+    "empty": {
+      "title": "Nenhuma notificação ainda",
+      "description": "Você verá atualizações e alertas aqui quando estiverem disponíveis"
+    },
     "markAsRead": "Marcar como Lida",
     "clearAll": "Limpar Tudo",
     "unread": "Não Lida",
@@ -664,6 +1460,187 @@
       "suggestions": "Nenhuma sugestão disponível. Analise um roteiro para obter sugestões de IA.",
       "recommendations": "Nenhuma recomendação disponível. Analise um roteiro para obter recomendações de IA.",
       "analyses": "Nenhuma análise de roteiro disponível. Inicie uma análise de roteiro para ver os resultados."
+    },
+    "callSheetSuggestions": {
+      "pageTitle": "Sugestões de Ordem do Dia com IA",
+      "pageSubtitle": "Gere cronogramas de filmagem e ordens do dia otimizados",
+      "settings": {
+        "title": "Configurações de Sugestão",
+        "description": "Configure seus parâmetros para sugestão de ordem do dia",
+        "projectLabel": "Projeto",
+        "selectProjectPlaceholder": "Selecione um projeto",
+        "suggestionTypeLabel": "Tipo de Sugestão",
+        "selectTypePlaceholder": "Selecione o tipo de sugestão",
+        "types": {
+          "optimized": "Cronograma Otimizado",
+          "weather": "Com Previsão do Tempo",
+          "cast": "Gerenciamento de Elenco",
+          "location": "Eficiência de Localização"
+        },
+        "descriptions": {
+          "optimized": "Cronograma de filmagem otimizado com base na análise de cenas e eficiência de localização",
+          "weather": "Agendamento ciente do clima com planos de contingência para filmagens externas",
+          "cast": "Disponibilidade de elenco e gerenciamento de fadiga para desempenho ideal",
+          "location": "Agendamento baseado em localização para minimizar tempo de viagem e configuração"
+        }
+      },
+      "features": {
+        "title": "Recursos de Sugestão",
+        "sequencing": "Sequenciamento ideal de dias de filmagem",
+        "timeEfficient": "Horários de chamada e encerramento eficientes",
+        "castCrew": "Otimização da disponibilidade de elenco e equipe",
+        "locationBased": "Agendamento baseado em localização para eficiência"
+      },
+      "scriptAnalysis": {
+        "title": "Análise de Roteiro",
+        "description": "Cole o texto do seu roteiro abaixo para análise de IA e otimização da ordem do dia",
+        "label": "Texto do Roteiro",
+        "placeholder": "Cole o texto do seu roteiro aqui... A IA analisará cenas, locais, requisitos de elenco e gerará sugestões otimizadas de ordem do dia."
+      },
+      "tips": {
+        "title": "Dicas de Sugestão",
+        "location": "Inclua detalhes de localização para agendamento preciso",
+        "cast": "Mencione requisitos de elenco e necessidades especiais",
+        "weather": "Observe quaisquer cenas sensíveis ao clima",
+        "optimized": "Cronogramas otimizados minimizam o tempo de viagem",
+        "weatherAware": "Sugestões cientes do clima incluem contingências"
+      },
+      "analysisPreview": {
+        "title": "Prévia da Análise",
+        "description": "A IA analisará este roteiro para otimização da ordem do dia",
+        "estimatedScenes": "Cenas estimadas",
+        "estimatedCharacters": "Personagens estimados",
+        "estimatedLocations": "Locais estimados",
+        "selectedType": "Tipo de sugestão selecionado"
+      }
+    },
+    "recommendations": {
+      "pageTitle": "Recomendações de IA",
+      "pageSubtitle": "Recomendações de IA de alta prioridade para otimizar seu fluxo de trabalho de produção",
+      "filter": {
+        "title": "Filtrar Recomendações",
+        "description": "Filtre e gerencie recomendações de IA para seu projeto",
+        "typeLabel": "Tipo de Recomendação",
+        "typePlaceholder": "Filtrar por tipo",
+        "types": {
+          "all": "Todos os Tipos",
+          "callSheet": "Ordem do Dia",
+          "budget": "Orçamento",
+          "schedule": "Cronograma",
+          "equipment": "Equipamento"
+        }
+      },
+      "stats": {
+        "title": "Estatísticas",
+        "total": "Total",
+        "highPriority": "Alta Prioridade",
+        "mediumPriority": "Média Prioridade",
+        "avgConfidence": "Confiança Média"
+      },
+      "list": {
+        "title": "Recomendações",
+        "description": "Recomendações de IA de alta prioridade com insights acionáveis",
+        "apply": "Aplicar",
+        "details": "Detalhes",
+        "actionItems": "Itens de Ação",
+        "estimatedImpact": "Impacto Estimado",
+        "created": "Criado",
+        "timeSaved": "Tempo Economizado:",
+        "costSaved": "Custo Economizado:",
+        "riskReduction": "Redução de Risco:"
+      },
+      "noRecommendations": {
+        "title": "Nenhuma Recomendação Disponível",
+        "description": "Nenhuma recomendação encontrada para este projeto. Analise seu roteiro para gerar recomendações.",
+        "selectProject": "Por favor, selecione um projeto para visualizar recomendações."
+      },
+      "priorityMatrix": {
+        "title": "Matriz de Prioridade",
+        "description": "Visualize recomendações por prioridade e confiança",
+        "high": "Alta Prioridade",
+        "highDesc": "Recomendações críticas que devem ser abordadas imediatamente",
+        "medium": "Média Prioridade",
+        "mediumDesc": "Recomendações importantes para implementação a médio prazo",
+        "low": "Baixa Prioridade",
+        "lowDesc": "Recomendações desejáveis para otimização"
+      },
+      "guide": {
+        "title": "Guia de Implementação",
+        "description": "Como implementar recomendações de IA efetivamente",
+        "highPriority": "Comece com Alta Prioridade",
+        "highPriorityDesc": "Concentre-se primeiro nas recomendações de alta prioridade para impacto máximo",
+        "actionItems": "Siga os Itens de Ação",
+        "actionItemsDesc": "Cada recomendação inclui itens de ação específicos a seguir",
+        "trackImpact": "Monitore o Impacto",
+        "trackImpactDesc": "Monitore as métricas de impacto estimado para medir o sucesso"
+      }
+    },
+    "suggestions": {
+      "pageTitle": "Sugestões de IA",
+      "pageSubtitle": "Sugestões impulsionadas por IA para otimizar seu fluxo de trabalho de produção",
+      "generate": {
+        "title": "Gerar Sugestões",
+        "description": "Gere sugestões impulsionadas por IA para seu projeto"
+      },
+      "filter": {
+        "typeLabel": "Tipo de Sugestão",
+        "typePlaceholder": "Filtrar por tipo",
+        "types": {
+          "all": "Todos os Tipos",
+          "budget": "Orçamento",
+          "schedule": "Cronograma",
+          "casting": "Elenco",
+          "logistics": "Logística",
+          "equipment": "Equipamento",
+          "other": "Outros"
+        }
+      },
+      "list": {
+        "title": "Sugestões",
+        "description": "Sugestões geradas por IA para melhorar sua eficiência de produção",
+        "details": "Detalhes",
+        "impact": "Impacto",
+        "costEfficiency": "Eficiência de Custo",
+        "timeSavings": "Economia de Tempo",
+        "riskReduction": "Redução de Risco",
+        "relatedScenes": "Cenas Relacionadas:",
+        "estimatedSavings": "Economia Estimada:",
+        "timeSaved": "Tempo Economizado:",
+        "scenes": "Cenas",
+        "characters": "Personagens",
+        "locations": "Locações",
+        "equipment": "Equipamento"
+      },
+      "noSuggestions": {
+        "title": "Nenhuma Sugestão Disponível",
+        "description": "Nenhuma sugestão encontrada para este projeto. Gere sugestões usando as ações rápidas.",
+        "selectProject": "Por favor, selecione um projeto para visualizar sugestões."
+      },
+      "insights": {
+        "title": "Insights de IA",
+        "description": "Insights principais das suas sugestões de IA",
+        "topPriority": "Prioridade Máxima",
+        "timeSavings": "Economia de Tempo",
+        "timeSavingsDesc": "Economia total de tempo estimada de todas as sugestões",
+        "costSavings": "Economia de Custo",
+        "costSavingsDesc": "Economia total de custo estimada de todas as sugestões"
+      }
+    },
+    "actions": {
+      "generateBudget": "Gerar Orçamento",
+      "generateCallSheet": "Gerar Ordem do Dia",
+      "generatingBudget": "Gerando Orçamento...",
+      "generatingCallSheet": "Gerando Ordem do Dia...",
+      "viewAiDashboard": "Ver Painel de IA",
+      "viewShootingDays": "Ver Dias de Filmagem",
+      "analyzeScriptRecommendations": "Analisar Roteiro para Recomendações",
+      "viewAiSuggestions": "Ver Sugestões de IA",
+      "exportRecommendations": "Exportar Recomendações",
+      "generateSuggestions": "Gerar Sugestões",
+      "generating": "Gerando...",
+      "clear": "Limpar",
+      "generateBudgetSuggestions": "Gerar Sugestões de Orçamento",
+      "generateScheduleSuggestions": "Gerar Sugestões de Cronograma"
     }
   }
 }

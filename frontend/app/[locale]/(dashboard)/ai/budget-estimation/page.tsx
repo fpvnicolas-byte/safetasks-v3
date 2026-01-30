@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProjects } from '@/lib/api/hooks/useProjects'
 import { useAiBudgetEstimation } from '@/lib/api/hooks/useAiFeatures'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -23,6 +24,7 @@ import type { AiBudgetEstimation } from '@/types'
 export default function AiBudgetEstimationPage() {
   const router = useRouter()
   const { user, organizationId } = useAuth()
+  const tCommon = useTranslations('common.feedback')
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [scriptText, setScriptText] = useState<string>('')
@@ -34,12 +36,12 @@ export default function AiBudgetEstimationPage() {
 
   const handleBudgetEstimation = async () => {
     if (!selectedProjectId) {
-      toast.error('Please select a project first')
+      toast.error(tCommon('selectProject'))
       return
     }
 
     if (!scriptText.trim()) {
-      toast.error('Please enter script text to analyze')
+      toast.error(tCommon('enterText'))
       return
     }
 
@@ -50,10 +52,11 @@ export default function AiBudgetEstimationPage() {
         script_content: scriptText
       })
 
-      toast.success('Budget estimation completed!')
+      toast.success(tCommon('actionSuccess'))
       console.log('Budget estimation result:', result)
-    } catch (error) {
-      toast.error('Failed to estimate budget')
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Failed to estimate budget'
+      toast.error(tCommon('actionError', { message: errorMsg }))
       console.error('Budget estimation error:', error)
     }
   }

@@ -16,16 +16,23 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { FileUploadZone, FileList } from '@/components/storage'
+import { useLocale } from 'next-intl'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
+import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
+import { ErrorDialog } from '@/components/ui/error-dialog'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 
 export default function ProposalDetailPage() {
   const params = useParams()
   const router = useRouter()
   const { organizationId } = useAuth()
+  const locale = useLocale()
   const proposalId = params.id as string
 
   const { data: proposal, isLoading, error } = useProposal(proposalId)
   const deleteProposal = useDeleteProposal()
   const approveProposal = useApproveProposal()
+  const { errorDialog, showError, closeError } = useErrorDialog()
 
   // File persistence hook for proposal attachments
   const { data: proposalFiles = [] } = useFiles('proposals', organizationId || undefined)
@@ -38,7 +45,7 @@ export default function ProposalDetailPage() {
   useEffect(() => {
     if (proposalFiles.length > 0) {
       const existingFiles: FileUploadResponse[] = []
-      
+
       // Convert proposal files
       proposalFiles.forEach(file => {
         existingFiles.push({
@@ -76,15 +83,25 @@ export default function ProposalDetailPage() {
     )
   }
 
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this proposal?')) return
+  const {
+    open: deleteOpen,
+    onOpenChange: setDeleteOpen,
+    askConfirmation: confirmDelete,
+    closeConfirmation: cancelDelete
+  } = useConfirmDelete()
 
+  const handleDelete = async () => {
     try {
       await deleteProposal.mutateAsync(proposalId)
       router.push('/proposals')
     } catch (err) {
       console.error('Failed to delete proposal:', err)
+      cancelDelete()
     }
+  }
+
+  const requestDelete = () => {
+    confirmDelete(proposalId)
   }
 
   const handleApprove = async () => {
@@ -97,7 +114,7 @@ export default function ProposalDetailPage() {
       // The proposal data will be invalidated and refreshed
     } catch (err) {
       console.error('Failed to approve proposal:', err)
-      alert('Failed to approve proposal')
+      showError(err, 'Failed to approve proposal')
     }
   }
 
@@ -124,7 +141,7 @@ export default function ProposalDetailPage() {
           <div>
             <h1 className="text-3xl font-bold">{proposal.title}</h1>
             <p className="text-muted-foreground">
-              Created {new Date(proposal.created_at).toLocaleDateString()}
+              Created {new Date(proposal.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
             </p>
           </div>
         </div>
@@ -164,14 +181,14 @@ export default function ProposalDetailPage() {
               </DialogContent>
             </Dialog>
           )}
-          
+
           <Button asChild variant="outline">
             <Link href={`/proposals/${proposalId}/edit`}>
               <Pencil className="mr-2 h-4 w-4" />
               Edit
             </Link>
           </Button>
-          <Button variant="destructive" onClick={handleDelete}>
+          <Button variant="destructive" onClick={requestDelete}>
             <Trash2 className="mr-2 h-4 w-4" />
             Delete
           </Button>
@@ -184,7 +201,7 @@ export default function ProposalDetailPage() {
         </Badge>
         {proposal.valid_until && (
           <Badge variant="outline" className="text-base px-3 py-1">
-            Valid until: {new Date(proposal.valid_until).toLocaleDateString()}
+            Valid until: {new Date(proposal.valid_until).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
           </Badge>
         )}
       </div>
@@ -283,6 +300,24 @@ export default function ProposalDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDeleteDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onConfirm={handleDelete}
+        title="Delete Proposal?"
+        description="Are you sure you want to delete this proposal? This action cannot be undone."
+        loading={deleteProposal.isPending}
+      />
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
     </div>
   )
 }

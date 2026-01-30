@@ -32,7 +32,7 @@ class SceneBase(BaseModel):
 
 class SceneCreate(SceneBase):
     """Schema for creating a Scene."""
-    pass
+    project_id: UUID
 
 
 class SceneUpdate(BaseModel):
@@ -126,7 +126,7 @@ class ShootingDayBase(BaseModel):
 
 class ShootingDayCreate(ShootingDayBase):
     """Schema for creating a Shooting Day."""
-    pass
+    project_id: UUID
 
 
 class ShootingDayUpdate(BaseModel):
@@ -142,6 +142,23 @@ class ShootingDayUpdate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ProjectSummary(BaseModel):
+    """Simplified project information."""
+    id: UUID
+    title: str
+    client: Optional["ClientSummary"] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ClientSummary(BaseModel):
+    """Simplified client information."""
+    id: UUID
+    name: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class ShootingDay(ShootingDayBase):
     """Schema for Shooting Day response."""
     id: UUID
@@ -149,6 +166,7 @@ class ShootingDay(ShootingDayBase):
     project_id: UUID
     created_at: datetime
     updated_at: datetime
+    project: Optional[ProjectSummary] = None
 
 
 class ShootingDayWithScenes(ShootingDay):

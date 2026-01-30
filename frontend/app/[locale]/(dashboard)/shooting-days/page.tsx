@@ -11,11 +11,18 @@ import { Badge } from '@/components/ui/badge'
 import { Plus, Search, Edit, Trash2, Calendar, Clock, MapPin, Eye } from 'lucide-react'
 import Link from 'next/link'
 import { ShootingDay, convertTimeToFormFormat } from '@/types'
+import { useLocale, useTranslations } from 'next-intl'
+import { ErrorDialog } from '@/components/ui/error-dialog'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
+import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
 
 function ShootingDaysContent() {
   const searchParams = useSearchParams()
   const projectId = searchParams.get('project') || ''
   const { organizationId } = useAuth()
+  const locale = useLocale()
+  const t = useTranslations('shootingDays')
 
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -38,68 +45,53 @@ function ShootingDaysContent() {
     new Date(b.date).getTime() - new Date(a.date).getTime()
   )
 
-  const handleDeleteShootingDay = async (dayId: string, date: string) => {
-    if (!confirm(`Are you sure you want to delete shooting day on ${new Date(date).toLocaleDateString()}? This action cannot be undone.`)) {
-      return
-    }
+  const { errorDialog, showError, closeError } = useErrorDialog()
+  const {
+    open: deleteOpen,
+    onOpenChange: setDeleteOpen,
+    askConfirmation: confirmDelete,
+    closeConfirmation: cancelDelete,
+    targetId: idToDelete,
+    additionalData
+  } = useConfirmDelete()
+
+  const handleDeleteShootingDay = async () => {
+    if (!idToDelete) return
 
     try {
-      await deleteShootingDay.mutateAsync(dayId)
+      await deleteShootingDay.mutateAsync(idToDelete)
+      cancelDelete()
     } catch (err: unknown) {
-      const error = err as Error
-      alert(`Failed to delete shooting day: ${error.message}`)
+      cancelDelete()
+      showError(err, t('list.deleteError'))
     }
-  }
-
-  if (!projectId) {
-    return (
-      <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Shooting Days</h1>
-          <p className="text-muted-foreground">
-            Schedule and manage production shooting days
-          </p>
-        </div>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-sm text-muted-foreground mb-4">
-                Please select a project to manage shooting days
-              </p>
-              <Button asChild>
-                <Link href="/projects">Go to Projects</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
   }
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Shooting Days</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground">
-            Schedule and manage production shooting days
+            {t('description')}
           </p>
         </div>
-        <Button asChild>
-          <Link href={`/shooting-days/new?project=${projectId}`}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Shooting Day
-          </Link>
-        </Button>
+        {projectId && (
+          <Button asChild>
+            <Link href={`/shooting-days/new?project=${projectId}`}>
+              <Plus className="mr-2 h-4 w-4" />
+              {t('newShootingDay')}
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* Search Filter */}
       <Card>
         <CardHeader>
-          <CardTitle>Search Shooting Days</CardTitle>
+          <CardTitle>{t('list.searchTitle')}</CardTitle>
           <CardDescription>
-            Find shooting days by date, location, or notes
+            {t('list.searchDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -107,7 +99,7 @@ function ShootingDaysContent() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by location, date, or notes..."
+                placeholder={t('list.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -115,7 +107,7 @@ function ShootingDaysContent() {
             </div>
             <div className="flex items-center justify-center h-10 px-4 bg-muted rounded-md">
               <span className="text-sm font-medium">
-                {sortedShootingDays.length} day{sortedShootingDays.length !== 1 ? 's' : ''}
+                {sortedShootingDays.length !== 1 ? t('list.dayCount_other', { count: sortedShootingDays.length }) : t('list.dayCount', { count: 1 })}
               </span>
             </div>
           </div>
@@ -124,46 +116,52 @@ function ShootingDaysContent() {
 
       {/* Shooting Days Grid */}
       {isLoading ? (
-        <div>Loading shooting days...</div>
+        <div>{t('list.loading')}</div>
       ) : error ? (
-        <div>Error loading shooting days: {error.message}</div>
+        <div>{t('list.error', { message: error.message })}</div>
       ) : sortedShootingDays.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {sortedShootingDays.map((day) => (
             <ShootingDayCard
               key={day.id}
               shootingDay={day}
-              onDelete={() => handleDeleteShootingDay(day.id, day.date)}
+              onDelete={() => confirmDelete(day.id, day.date)}
+              t={t}
+              locale={locale}
             />
           ))}
         </div>
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>No Shooting Days Found</CardTitle>
+            <CardTitle>{t('list.noResults')}</CardTitle>
             <CardDescription>
               {searchQuery
-                ? 'No shooting days match your current search'
-                : 'Get started by scheduling your first shooting day'
+                ? t('list.noMatches')
+                : t('list.noDays')
               }
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-sm text-muted-foreground mb-4">
-                Shooting days help you plan and organize your production schedule
-              </p>
-              <Button asChild>
-                <Link href={`/shooting-days/new?project=${projectId}`}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Schedule First Day
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
         </Card>
       )}
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
+
+      <ConfirmDeleteDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onConfirm={handleDeleteShootingDay}
+        title={t('list.deleteTitle')}
+        description={additionalData ? t('list.deleteDescription', { date: new Date(additionalData).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) }) : t('list.deleteConfirmGeneric')}
+        loading={deleteShootingDay.isPending}
+      />
     </div>
   )
 }
@@ -171,10 +169,12 @@ function ShootingDaysContent() {
 interface ShootingDayCardProps {
   shootingDay: ShootingDay
   onDelete: () => void
+  t: (key: string, values?: Record<string, string | number>) => string
+  locale: string
 }
 
-function ShootingDayCard({ shootingDay, onDelete }: ShootingDayCardProps) {
-  const formattedDate = new Date(shootingDay.date).toLocaleDateString('en-US', {
+function ShootingDayCard({ shootingDay, onDelete, t, locale }: ShootingDayCardProps) {
+  const formattedDate = new Date(shootingDay.date).toLocaleDateString(locale, {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -182,73 +182,89 @@ function ShootingDayCard({ shootingDay, onDelete }: ShootingDayCardProps) {
   })
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div>
-            <CardTitle className="text-lg">
-              {formattedDate}
-            </CardTitle>
-            <CardDescription className="font-medium">
-              {shootingDay.location_name}
-            </CardDescription>
-          </div>
-          <Badge variant="outline">
-            {new Date(shootingDay.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          </Badge>
-        </div>
-      </CardHeader>
-
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <span>Call: {convertTimeToFormFormat(shootingDay.call_time)}</span>
-          </div>
-          {shootingDay.wrap_time && (
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span>Wrap: {convertTimeToFormFormat(shootingDay.wrap_time)}</span>
+    <Card className="hover:shadow-md transition-shadow flex flex-col h-full">
+      <Link href={`/projects/${shootingDay.project_id}`} className="flex-1 cursor-pointer">
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle className="text-lg">
+                {formattedDate}
+              </CardTitle>
+              {shootingDay.project && (
+                <div className="mt-1">
+                  <p className="text-sm font-semibold text-primary">{shootingDay.project.title}</p>
+                  {shootingDay.project.client && (
+                    <p className="text-xs text-muted-foreground">{shootingDay.project.client.name}</p>
+                  )}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-
-        {shootingDay.location_address && (
-          <div className="flex items-start gap-2 text-sm">
-            <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-            <span className="text-muted-foreground line-clamp-2">{shootingDay.location_address}</span>
+            <Badge variant="outline">
+              {new Date(shootingDay.date).toLocaleDateString(locale, { month: 'short', day: 'numeric' })}
+            </Badge>
           </div>
-        )}
+        </CardHeader>
 
-        {shootingDay.notes && (
-          <p className="text-sm text-muted-foreground line-clamp-2">
-            {shootingDay.notes}
-          </p>
-        )}
+        <CardContent className="space-y-4 pb-2">
+          <div className="space-y-1">
+            <p className="font-medium text-sm">{shootingDay.location_name}</p>
+            {shootingDay.location_address && (
+              <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                <MapPin className="h-3 w-3 mt-0.5" />
+                <span className="line-clamp-1">{shootingDay.location_address}</span>
+              </div>
+            )}
+          </div>
 
-        <div className="flex gap-2 pt-2">
+          <div className="grid grid-cols-2 gap-4 text-xs">
+            <div className="flex items-center gap-2">
+              <Clock className="h-3 w-3 text-muted-foreground" />
+              <span>{t('list.call')} {convertTimeToFormFormat(shootingDay.call_time)}</span>
+            </div>
+            {shootingDay.wrap_time && (
+              <div className="flex items-center gap-2">
+                <Clock className="h-3 w-3 text-muted-foreground" />
+                <span>{t('list.wrap')} {convertTimeToFormFormat(shootingDay.wrap_time)}</span>
+              </div>
+            )}
+          </div>
+
+          {shootingDay.notes && (
+            <p className="text-xs text-muted-foreground line-clamp-2 italic">
+              "{shootingDay.notes}"
+            </p>
+          )}
+        </CardContent>
+      </Link>
+
+      <div className="p-6 pt-0 mt-auto">
+        <div className="flex gap-2">
           <Button asChild variant="outline" size="sm" className="flex-1">
             <Link href={`/shooting-days/${shootingDay.id}`}>
               <Eye className="mr-2 h-3 w-3" />
-              View
+              {t('list.view')}
             </Link>
           </Button>
           <Button asChild variant="outline" size="sm" className="flex-1">
             <Link href={`/shooting-days/${shootingDay.id}/edit`}>
               <Edit className="mr-2 h-3 w-3" />
-              Edit
+              {t('list.edit')}
             </Link>
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={onDelete}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onDelete();
+            }}
             className="text-destructive hover:text-destructive"
           >
             <Trash2 className="h-3 w-3" />
           </Button>
         </div>
-      </CardContent>
+      </div>
     </Card>
   )
 }

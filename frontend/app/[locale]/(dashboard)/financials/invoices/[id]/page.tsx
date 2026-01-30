@@ -19,6 +19,7 @@ import { formatCurrency } from '@/lib/utils/money'
 import { useState } from 'react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { InvoiceStatus } from '@/types'
+import { useLocale } from 'next-intl'
 
 const statusColors: Record<InvoiceStatus, string> = {
   draft: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
@@ -32,6 +33,7 @@ export default function InvoiceDetailPage() {
   const params = useParams()
   const router = useRouter()
   const invoiceId = params.id as string
+  const locale = useLocale()
 
   const { organizationId } = useAuth()
   const { data: invoice, isLoading, error } = useInvoice(invoiceId, organizationId || undefined)
@@ -90,7 +92,7 @@ export default function InvoiceDetailPage() {
               Invoice #{invoice.invoice_number}
             </h1>
             <p className="text-muted-foreground">
-              Issued {issueDate.toLocaleDateString()} • Due {dueDate.toLocaleDateString()}
+              Issued {issueDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} • Due {dueDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
             </p>
           </div>
         </div>
@@ -131,7 +133,7 @@ export default function InvoiceDetailPage() {
           )}
           {paidDate && (
             <span className="text-sm text-muted-foreground">
-              Paid on {paidDate.toLocaleDateString()}
+              Paid on {paidDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
             </span>
           )}
         </div>
@@ -177,12 +179,12 @@ export default function InvoiceDetailPage() {
                 </div>
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">Issue Date</div>
-                  <div>{issueDate.toLocaleDateString()}</div>
+                  <div>{issueDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</div>
                 </div>
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">Due Date</div>
                   <div className={isOverdue ? 'text-red-600 dark:text-red-400 font-medium' : ''}>
-                    {dueDate.toLocaleDateString()}
+                    {dueDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                     {isOverdue && ' (Overdue)'}
                   </div>
                 </div>
@@ -264,7 +266,7 @@ export default function InvoiceDetailPage() {
                   <Separator />
                   <div className="text-center">
                     <Badge className="bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200">
-                      Paid on {paidDate.toLocaleDateString()}
+                      Paid on {paidDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                     </Badge>
                   </div>
                 </>
@@ -290,7 +292,7 @@ export default function InvoiceDetailPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Payment Date</span>
                     <span className="text-sm">
-                      {paidDate?.toLocaleDateString()}
+                      {paidDate?.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                     </span>
                   </div>
                 )}

@@ -14,6 +14,10 @@ import { Pencil, Trash2, ArrowLeft, Package, CheckCircle, AlertCircle, Info, Eye
 import Link from 'next/link'
 import { KitStatus, FileUploadResponse } from '@/types'
 import { FileUploadZone, FileList } from '@/components/storage'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
+import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
+import { ErrorDialog } from '@/components/ui/error-dialog'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 
 export default function KitDetailPage() {
   const params = useParams()
@@ -25,6 +29,13 @@ export default function KitDetailPage() {
   const { data: kit, isLoading, error } = useKit(kitId)
   const { data: items, isLoading: itemsLoading } = useInventoryItems(organizationId || '', kitId)
   const deleteKit = useDeleteKit()
+  const { errorDialog, showError, closeError } = useErrorDialog()
+  const {
+    open: deleteOpen,
+    onOpenChange: setDeleteOpen,
+    askConfirmation: confirmDelete,
+    closeConfirmation: cancelDelete
+  } = useConfirmDelete()
 
   // File persistence hook for kit photos
   const { data: kitPhotos = [] } = useFiles('kits', organizationId || undefined)
@@ -33,7 +44,7 @@ export default function KitDetailPage() {
   useEffect(() => {
     if (kitPhotos.length > 0) {
       const existingFiles: FileUploadResponse[] = []
-      
+
       // Convert kit photos
       kitPhotos.forEach(file => {
         existingFiles.push({
@@ -79,15 +90,18 @@ export default function KitDetailPage() {
   }
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this kit? Items inside will be preserved but marked as having no kit.')) return
-
     try {
       await deleteKit.mutateAsync(kitId)
       router.push('/inventory/kits')
     } catch (err) {
       console.error('Failed to delete kit:', err)
-      alert('Failed to delete kit')
+      cancelDelete()
+      showError(err, 'Failed to delete kit')
     }
+  }
+
+  const requestDelete = () => {
+    confirmDelete(kitId)
   }
 
   const getStatusBadge = (status: KitStatus) => {
@@ -123,7 +137,7 @@ export default function KitDetailPage() {
               <Pencil className="mr-2 h-4 w-4" /> Edit Kit
             </Link>
           </Button>
-          <Button variant="destructive" onClick={handleDelete}>
+          <Button variant="destructive" onClick={requestDelete}>
             <Trash2 className="mr-2 h-4 w-4" /> Delete
           </Button>
         </div>
@@ -243,6 +257,25 @@ export default function KitDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={closeError}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+        statusCode={errorDialog.statusCode}
+      />
+
+      <ConfirmDeleteDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onConfirm={handleDelete}
+        title="Delete Kit?"
+        description="Are you sure you want to delete this kit? Items inside will be preserved but marked as having no kit."
+        loading={deleteKit.isPending}
+      />
+    </div >
   )
 }

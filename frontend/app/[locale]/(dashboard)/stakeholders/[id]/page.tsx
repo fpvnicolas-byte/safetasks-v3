@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useLocale, useTranslations } from 'next-intl'
 import { useStakeholder, useUpdateStakeholder } from '@/lib/api/hooks/useStakeholders'
 import { useProjects } from '@/lib/api/hooks'
 import { useSupplier, useSupplierStatement } from '@/lib/api/hooks/useSuppliers'
@@ -30,6 +31,9 @@ export default function EditStakeholderPage() {
   const params = useParams()
   const router = useRouter()
   const stakeholderId = params.id as string
+  const locale = useLocale()
+  const tCommon = useTranslations('common')
+  const tFeedback = useTranslations('common.feedback')
 
   const { organizationId } = useAuth()
   const { data: stakeholder, isLoading } = useStakeholder(stakeholderId)
@@ -78,7 +82,7 @@ export default function EditStakeholderPage() {
     e.preventDefault()
 
     if (!formData.name || !formData.role) {
-      toast.error('Please fill in all required fields')
+      toast.error(tFeedback('fillRequired'))
       return
     }
 
@@ -87,16 +91,16 @@ export default function EditStakeholderPage() {
         stakeholderId,
         data: formData,
       })
-      toast.success('Stakeholder updated successfully')
-      router.push('/stakeholders')
+      toast.success(tFeedback('actionSuccess'))
+      router.push(`/${locale}/stakeholders`)
     } catch (error: any) {
       console.error('Update error:', error)
-      showError(error, 'Error Updating Stakeholder')
+      showError(error, tFeedback('actionError', { message: 'Error Updating Stakeholder' }))
     }
   }
 
   if (isLoading || isLoadingProjects) {
-    return <div className="p-8">Loading...</div>
+    return <div className="p-8">{tCommon('loading')}</div>
   }
 
   if (!stakeholder) {

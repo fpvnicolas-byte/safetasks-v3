@@ -11,12 +11,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ArrowLeft, Trash2, Receipt, Calendar, Wallet, FolderOpen, ArrowUpCircle, ArrowDownCircle } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency, getCategoryDisplayName, TransactionCategory } from '@/types'
+import { useLocale } from 'next-intl'
 
 export default function TransactionViewPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const { organizationId } = useAuth()
+  const locale = useLocale()
   const [transactionId, setTransactionId] = useState<string | null>(null)
-  
+
   // Resolve the promise in useEffect
   React.useEffect(() => {
     params.then(({ id }) => {
@@ -180,7 +182,7 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
               })}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Created: {new Date(transaction.created_at).toLocaleDateString()}
+              Created: {new Date(transaction.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
             </p>
           </CardContent>
         </Card>

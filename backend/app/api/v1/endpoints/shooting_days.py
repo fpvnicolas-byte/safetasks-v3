@@ -2,6 +2,7 @@ from typing import List
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.api.deps import get_organization_from_profile, require_admin_or_manager
 from app.db.session import get_db
@@ -31,7 +32,10 @@ async def get_shooting_days(
         organization_id=organization_id,
         skip=skip,
         limit=limit,
-        filters=filters
+        filters=filters,
+        options=[
+            selectinload(shooting_day_service.model.project).selectinload(shooting_day_service.model.project.property.mapper.class_.client)
+        ]
     )
     return shooting_days
 

@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Plus, Search, Edit, Trash2, Film, Clock, MapPin, Eye } from 'lucide-react'
 import Link from 'next/link'
 import { Scene } from '@/types'
+import { useTranslations } from 'next-intl'
 
 const locationColors: Record<string, string> = {
   internal: 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200',
@@ -27,6 +28,7 @@ const timeOfDayColors: Record<string, string> = {
 function ScenesContent() {
   const searchParams = useSearchParams()
   const projectId = searchParams.get('project') || ''
+  const t = useTranslations('scenes')
 
   const [locationFilter, setLocationFilter] = useState<string | 'all'>('all')
   const [timeOfDayFilter, setTimeOfDayFilter] = useState<string | 'all'>('all')
@@ -48,7 +50,7 @@ function ScenesContent() {
   }) || []
 
   const handleDeleteScene = async (sceneId: string, sceneNumber: string) => {
-    if (!confirm(`Are you sure you want to delete Scene ${sceneNumber}? This action cannot be undone.`)) {
+    if (!confirm(t('list.deleteConfirm', { number: sceneNumber }))) {
       return
     }
 
@@ -56,7 +58,7 @@ function ScenesContent() {
       await deleteScene.mutateAsync(sceneId)
     } catch (err: unknown) {
       const error = err as Error
-      alert(`Failed to delete scene: ${error.message}`)
+      alert(t('list.deleteError', { message: error.message }))
     }
   }
 
@@ -64,9 +66,9 @@ function ScenesContent() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Scenes</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('noProjectContext.title')}</h1>
           <p className="text-muted-foreground">
-            Scene management requires a project context
+            {t('noProjectContext.description')}
           </p>
         </div>
         <Card>
@@ -74,10 +76,10 @@ function ScenesContent() {
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Film className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-sm text-muted-foreground mb-4">
-                Please select a project to manage scenes
+                {t('noProjectContext.message')}
               </p>
               <Button asChild>
-                <Link href="/projects">Go to Projects</Link>
+                <Link href="/projects">{t('noProjectContext.goToProjects')}</Link>
               </Button>
             </div>
           </CardContent>
@@ -90,15 +92,15 @@ function ScenesContent() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Scenes</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground">
-            Manage your production scenes and script breakdown
+            {t('description')}
           </p>
         </div>
         <Button asChild>
           <Link href={`/scenes/new?project=${projectId}`}>
             <Plus className="mr-2 h-4 w-4" />
-            New Scene
+            {t('newScene')}
           </Link>
         </Button>
       </div>
@@ -106,19 +108,19 @@ function ScenesContent() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Filter Scenes</CardTitle>
+          <CardTitle>{t('filter.title')}</CardTitle>
           <CardDescription>
-            Find specific scenes by location, time of day, or search terms
+            {t('filter.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Search</label>
+              <label className="text-sm font-medium">{t('filter.search')}</label>
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Scene number or description..."
+                  placeholder={t('filter.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-9"
@@ -127,40 +129,40 @@ function ScenesContent() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Location</label>
+              <label className="text-sm font-medium">{t('filter.location')}</label>
               <Select value={locationFilter} onValueChange={(value) => setLocationFilter(value as string | 'all')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Locations</SelectItem>
-                  <SelectItem value="internal">Interior</SelectItem>
-                  <SelectItem value="external">Exterior</SelectItem>
+                  <SelectItem value="all">{t('filter.allLocations')}</SelectItem>
+                  <SelectItem value="internal">{t('interior')}</SelectItem>
+                  <SelectItem value="external">{t('exterior')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Time of Day</label>
+              <label className="text-sm font-medium">{t('filter.timeOfDay')}</label>
               <Select value={timeOfDayFilter} onValueChange={(value) => setTimeOfDayFilter(value as string | 'all')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Times</SelectItem>
-                  <SelectItem value="day">Day</SelectItem>
-                  <SelectItem value="night">Night</SelectItem>
-                  <SelectItem value="dawn">Dawn</SelectItem>
-                  <SelectItem value="dusk">Dusk</SelectItem>
+                  <SelectItem value="all">{t('filter.allTimes')}</SelectItem>
+                  <SelectItem value="day">{t('day')}</SelectItem>
+                  <SelectItem value="night">{t('night')}</SelectItem>
+                  <SelectItem value="dawn">{t('dawn')}</SelectItem>
+                  <SelectItem value="dusk">{t('dusk')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Results</label>
+              <label className="text-sm font-medium">{t('filter.results')}</label>
               <div className="flex items-center justify-center h-10 px-3 py-2 bg-muted rounded-md">
                 <span className="text-sm font-medium">
-                  {filteredScenes.length} scene{filteredScenes.length !== 1 ? 's' : ''}
+                  {filteredScenes.length !== 1 ? t('filter.sceneCount_other', { count: filteredScenes.length }) : t('filter.sceneCount', { count: 1 })}
                 </span>
               </div>
             </div>
@@ -170,9 +172,9 @@ function ScenesContent() {
 
       {/* Scenes Grid */}
       {isLoading ? (
-        <div>Loading scenes...</div>
+        <div>{t('list.loading')}</div>
       ) : error ? (
-        <div>Error loading scenes: {error.message}</div>
+        <div>{t('list.error', { message: error.message })}</div>
       ) : filteredScenes.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredScenes.map((scene) => (
@@ -180,17 +182,18 @@ function ScenesContent() {
               key={scene.id}
               scene={scene}
               onDelete={() => handleDeleteScene(scene.id, scene.scene_number.toString())}
+              t={t}
             />
           ))}
         </div>
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>No Scenes Found</CardTitle>
+            <CardTitle>{t('empty.title')}</CardTitle>
             <CardDescription>
               {searchQuery || locationFilter !== 'all' || timeOfDayFilter !== 'all'
-                ? 'No scenes match your current filters'
-                : 'Get started by creating your first scene'
+                ? t('empty.noMatches')
+                : t('empty.getStarted')
               }
             </CardDescription>
           </CardHeader>
@@ -198,12 +201,12 @@ function ScenesContent() {
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Film className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-sm text-muted-foreground mb-4">
-                Scenes help break down your script into manageable production units
+                {t('empty.helpText')}
               </p>
               <Button asChild>
                 <Link href={`/scenes/new?project=${projectId}`}>
                   <Plus className="mr-2 h-4 w-4" />
-                  Create First Scene
+                  {t('empty.createFirst')}
                 </Link>
               </Button>
             </div>
@@ -217,27 +220,28 @@ function ScenesContent() {
 interface SceneCardProps {
   scene: Scene
   onDelete: () => void
+  t: (key: string, values?: Record<string, string | number>) => string
 }
 
-function SceneCard({ scene, onDelete }: SceneCardProps) {
+function SceneCard({ scene, onDelete, t }: SceneCardProps) {
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div>
             <CardTitle className="text-lg">
-              Scene {scene.scene_number}
+              {t('title')} {scene.scene_number}
             </CardTitle>
             <CardDescription className="font-medium">
-              {scene.description.split('.')[0] || 'No description'}
+              {scene.description.split('.')[0] || t('list.noDescription')}
             </CardDescription>
           </div>
           <div className="flex gap-1">
             <Badge className={locationColors[scene.internal_external]}>
-              {scene.internal_external}
+              {t(scene.internal_external)}
             </Badge>
             <Badge className={timeOfDayColors[scene.day_night]}>
-              {scene.day_night}
+              {t(scene.day_night)}
             </Badge>
           </div>
         </div>
@@ -252,13 +256,13 @@ function SceneCard({ scene, onDelete }: SceneCardProps) {
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-muted-foreground" />
             <span>
-              {scene.estimated_time_minutes ? `${scene.estimated_time_minutes} min` : 'No estimate'}
+              {scene.estimated_time_minutes ? `${scene.estimated_time_minutes} min` : t('list.noEstimate')}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4 text-muted-foreground" />
             <span>
-              {scene.estimated_time_minutes ? `${scene.estimated_time_minutes} min` : 'No duration'}
+              {scene.estimated_time_minutes ? `${scene.estimated_time_minutes} min` : t('list.noDuration')}
             </span>
           </div>
         </div>
@@ -267,13 +271,13 @@ function SceneCard({ scene, onDelete }: SceneCardProps) {
           <Button asChild variant="outline" size="sm" className="flex-1">
             <Link href={`/scenes/${scene.id}`}>
               <Eye className="mr-2 h-3 w-3" />
-              View
+              {t('list.view')}
             </Link>
           </Button>
           <Button asChild variant="outline" size="sm" className="flex-1">
             <Link href={`/scenes/${scene.id}/edit`}>
               <Edit className="mr-2 h-3 w-3" />
-              Edit
+              {t('list.edit')}
             </Link>
           </Button>
           <Button
@@ -291,8 +295,10 @@ function SceneCard({ scene, onDelete }: SceneCardProps) {
 }
 
 export default function ScenesPage() {
+  const t = useTranslations('common.feedback')
+
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div>{t('loading')}</div>}>
       <ScenesContent />
     </Suspense>
   )

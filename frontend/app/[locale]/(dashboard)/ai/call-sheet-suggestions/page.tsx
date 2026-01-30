@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProjects } from '@/lib/api/hooks/useProjects'
 import { useAiCallSheetSuggestions } from '@/lib/api/hooks/useAiFeatures'
@@ -26,6 +27,8 @@ import type { AiCallSheetSuggestion } from '@/types'
 export default function AiCallSheetSuggestionsPage() {
   const router = useRouter()
   const { user, organizationId } = useAuth()
+  const tCommon = useTranslations('common.feedback')
+  const t = useTranslations('ai')
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [scriptText, setScriptText] = useState<string>('')
@@ -37,12 +40,12 @@ export default function AiCallSheetSuggestionsPage() {
 
   const handleGenerateSuggestions = async () => {
     if (!selectedProjectId) {
-      toast.error('Please select a project first')
+      toast.error(tCommon('selectProject'))
       return
     }
 
     if (!scriptText.trim()) {
-      toast.error('Please enter script text to analyze')
+      toast.error(tCommon('enterText'))
       return
     }
 
@@ -53,21 +56,21 @@ export default function AiCallSheetSuggestionsPage() {
         script_content: scriptText
       })
 
-      toast.success('Call sheet suggestions generated!')
+      toast.success(tCommon('actionSuccess'))
       console.log('Call sheet suggestions result:', result)
-    } catch (error) {
-      toast.error('Failed to generate call sheet suggestions')
+    } catch (error: any) {
+      toast.error(tCommon('actionError', { message: 'Failed to generate call sheet suggestions' }))
       console.error('Call sheet suggestions error:', error)
     }
   }
 
   const getSuggestionDescription = (type: string) => {
     switch (type) {
-      case 'optimized': return 'Optimized shooting schedule based on scene analysis and location efficiency'
-      case 'weather': return 'Weather-aware scheduling with contingency plans for outdoor shoots'
-      case 'cast': return 'Cast availability and fatigue management for optimal performance'
-      case 'location': return 'Location-based scheduling to minimize travel and setup time'
-      default: return 'Optimized call sheet suggestions'
+      case 'optimized': return t('callSheetSuggestions.settings.descriptions.optimized')
+      case 'weather': return t('callSheetSuggestions.settings.descriptions.weather')
+      case 'cast': return t('callSheetSuggestions.settings.descriptions.cast')
+      case 'location': return t('callSheetSuggestions.settings.descriptions.location')
+      default: return t('callSheetSuggestions.settings.descriptions.optimized')
     }
   }
 
@@ -75,9 +78,9 @@ export default function AiCallSheetSuggestionsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">AI Call Sheet Suggestions</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('callSheetSuggestions.pageTitle')}</h1>
           <p className="text-muted-foreground">
-            Generate optimized shooting schedules and call sheets
+            {t('callSheetSuggestions.pageSubtitle')}
           </p>
         </div>
         <div className="flex gap-2">
@@ -85,14 +88,14 @@ export default function AiCallSheetSuggestionsPage() {
             variant="outline"
             onClick={() => router.push('/ai')}
           >
-            Back to AI Dashboard
+            {t('actions.viewAiDashboard')}
           </Button>
           <Button
             onClick={() => router.push('/ai/script-analysis')}
             className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
           >
             <Sparkles className="mr-2 h-4 w-4" />
-            Analyze Script
+            {t('actions.analyzeScript')}
           </Button>
         </div>
       </div>
@@ -101,22 +104,22 @@ export default function AiCallSheetSuggestionsPage() {
         {/* Controls */}
         <Card className="lg:col-span-1">
           <CardHeader>
-            <CardTitle>Suggestion Settings</CardTitle>
+            <CardTitle>{t('callSheetSuggestions.settings.title')}</CardTitle>
             <CardDescription>
-              Configure your call sheet suggestion parameters
+              {t('callSheetSuggestions.settings.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Project Selection */}
             <div className="space-y-2">
-              <Label htmlFor="project">Project</Label>
+              <Label htmlFor="project">{t('callSheetSuggestions.settings.projectLabel')}</Label>
               <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
                 <SelectTrigger id="project">
-                  <SelectValue placeholder="Select a project" />
+                  <SelectValue placeholder={t('callSheetSuggestions.settings.selectProjectPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {isLoadingProjects ? (
-                    <div className="p-2 text-sm text-muted-foreground">Loading projects...</div>
+                    <div className="p-2 text-sm text-muted-foreground">{t('common.loading')}</div>
                   ) : projects && projects.length > 0 ? (
                     projects.map((project) => (
                       <SelectItem key={project.id} value={project.id}>
@@ -124,7 +127,7 @@ export default function AiCallSheetSuggestionsPage() {
                       </SelectItem>
                     ))
                   ) : (
-                    <div className="p-2 text-sm text-muted-foreground">No projects available</div>
+                    <div className="p-2 text-sm text-muted-foreground">{t('empty.projects')}</div>
                   )}
                 </SelectContent>
               </Select>
@@ -132,16 +135,16 @@ export default function AiCallSheetSuggestionsPage() {
 
             {/* Suggestion Type */}
             <div className="space-y-2">
-              <Label htmlFor="suggestion-type">Suggestion Type</Label>
+              <Label htmlFor="suggestion-type">{t('callSheetSuggestions.settings.suggestionTypeLabel')}</Label>
               <Select value={suggestionType} onValueChange={(value) => setSuggestionType(value as 'optimized' | 'weather' | 'cast' | 'location')}>
                 <SelectTrigger id="suggestion-type">
-                  <SelectValue placeholder="Select suggestion type" />
+                  <SelectValue placeholder={t('callSheetSuggestions.settings.selectTypePlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="optimized">Optimized Schedule</SelectItem>
-                  <SelectItem value="weather">Weather-Aware</SelectItem>
-                  <SelectItem value="cast">Cast Management</SelectItem>
-                  <SelectItem value="location">Location Efficiency</SelectItem>
+                  <SelectItem value="optimized">{t('callSheetSuggestions.settings.types.optimized')}</SelectItem>
+                  <SelectItem value="weather">{t('callSheetSuggestions.settings.types.weather')}</SelectItem>
+                  <SelectItem value="cast">{t('callSheetSuggestions.settings.types.cast')}</SelectItem>
+                  <SelectItem value="location">{t('callSheetSuggestions.settings.types.location')}</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-sm text-muted-foreground">
@@ -151,30 +154,30 @@ export default function AiCallSheetSuggestionsPage() {
 
             {/* Suggestion Features */}
             <div className="space-y-3">
-              <h4 className="font-semibold">Suggestion Features</h4>
+              <h4 className="font-semibold">{t('callSheetSuggestions.features.title')}</h4>
               <div className="space-y-2 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  <span>Optimal shooting day sequencing</span>
+                  <span>{t('callSheetSuggestions.features.sequencing')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  <span>Time-efficient call times and wrap times</span>
+                  <span>{t('callSheetSuggestions.features.timeEfficient')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4" />
-                  <span>Cast and crew availability optimization</span>
+                  <span>{t('callSheetSuggestions.features.castCrew')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
-                  <span>Location-based scheduling for efficiency</span>
+                  <span>{t('callSheetSuggestions.features.locationBased')}</span>
                 </div>
               </div>
             </div>
 
             {/* Quick Actions */}
             <div className="space-y-3">
-              <h4 className="font-semibold">Quick Actions</h4>
+              <h4 className="font-semibold">{t('quickActions.title')}</h4>
               <div className="space-y-2">
                 <Button
                   variant="outline"
@@ -182,7 +185,7 @@ export default function AiCallSheetSuggestionsPage() {
                   onClick={() => router.push('/ai')}
                 >
                   <Sparkles className="mr-2 h-4 w-4" />
-                  View AI Dashboard
+                  {t('actions.viewAiDashboard')}
                 </Button>
                 <Button
                   variant="outline"
@@ -190,7 +193,7 @@ export default function AiCallSheetSuggestionsPage() {
                   onClick={() => router.push('/shooting-days')}
                 >
                   <Calendar className="mr-2 h-4 w-4" />
-                  View Shooting Days
+                  {t('actions.viewShootingDays')}
                 </Button>
               </div>
             </div>
@@ -200,17 +203,17 @@ export default function AiCallSheetSuggestionsPage() {
         {/* Script Input */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Script Analysis</CardTitle>
+            <CardTitle>{t('callSheetSuggestions.scriptAnalysis.title')}</CardTitle>
             <CardDescription>
-              Paste your script text below for AI analysis and call sheet optimization
+              {t('callSheetSuggestions.scriptAnalysis.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="script-input">Script Text</Label>
+              <Label htmlFor="script-input">{t('callSheetSuggestions.scriptAnalysis.label')}</Label>
               <Textarea
                 id="script-input"
-                placeholder="Paste your script text here... The AI will analyze scenes, locations, cast requirements, and generate optimized call sheet suggestions."
+                placeholder={t('callSheetSuggestions.scriptAnalysis.placeholder')}
                 value={scriptText}
                 onChange={(e) => setScriptText(e.target.value)}
                 className="min-h-[200px]"
@@ -230,12 +233,12 @@ export default function AiCallSheetSuggestionsPage() {
                 {isGenerating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating Suggestions...
+                    {t('actions.generating')}
                   </>
                 ) : (
                   <>
                     <Target className="mr-2 h-4 w-4" />
-                    Generate Suggestions
+                    {t('actions.generateSuggestions')}
                   </>
                 )}
               </Button>
@@ -244,19 +247,19 @@ export default function AiCallSheetSuggestionsPage() {
                 onClick={() => setScriptText('')}
                 disabled={isGenerating}
               >
-                Clear
+                {t('actions.clear')}
               </Button>
             </div>
 
             {/* Suggestion Tips */}
             <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-              <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Suggestion Tips</h4>
+              <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">{t('callSheetSuggestions.tips.title')}</h4>
               <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                <li>• Include location details for accurate scheduling</li>
-                <li>• Mention cast requirements and special needs</li>
-                <li>• Note any weather-sensitive scenes</li>
-                <li>• Optimized schedules minimize travel time</li>
-                <li>• Weather-aware suggestions include contingencies</li>
+                <li>• {t('callSheetSuggestions.tips.location')}</li>
+                <li>• {t('callSheetSuggestions.tips.cast')}</li>
+                <li>• {t('callSheetSuggestions.tips.weather')}</li>
+                <li>• {t('callSheetSuggestions.tips.optimized')}</li>
+                <li>• {t('callSheetSuggestions.tips.weatherAware')}</li>
               </ul>
             </div>
           </CardContent>
@@ -267,9 +270,9 @@ export default function AiCallSheetSuggestionsPage() {
       {scriptText.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Analysis Preview</CardTitle>
+            <CardTitle>{t('callSheetSuggestions.analysisPreview.title')}</CardTitle>
             <CardDescription>
-              AI will analyze this script for call sheet optimization
+              {t('callSheetSuggestions.analysisPreview.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -280,7 +283,7 @@ export default function AiCallSheetSuggestionsPage() {
                   <span className="text-sm font-medium">Scenes</span>
                 </div>
                 <div className="text-2xl font-bold">{scriptText.match(/INT\.|EXT\./g)?.length || 0}</div>
-                <div className="text-xs text-gray-500">Estimated scenes</div>
+                <div className="text-xs text-gray-500">{t('callSheetSuggestions.analysisPreview.estimatedScenes')}</div>
               </div>
 
               <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
@@ -289,7 +292,7 @@ export default function AiCallSheetSuggestionsPage() {
                   <span className="text-sm font-medium">Characters</span>
                 </div>
                 <div className="text-2xl font-bold">{scriptText.match(/\b[A-Z][A-Z\s]+\b/g)?.length || 0}</div>
-                <div className="text-xs text-gray-500">Estimated characters</div>
+                <div className="text-xs text-gray-500">{t('callSheetSuggestions.analysisPreview.estimatedCharacters')}</div>
               </div>
 
               <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
@@ -298,16 +301,16 @@ export default function AiCallSheetSuggestionsPage() {
                   <span className="text-sm font-medium">Locations</span>
                 </div>
                 <div className="text-2xl font-bold">{scriptText.match(/INT\. [A-Z]|EXT\. [A-Z]/g)?.length || 0}</div>
-                <div className="text-xs text-gray-500">Estimated locations</div>
+                <div className="text-xs text-gray-500">{t('callSheetSuggestions.analysisPreview.estimatedLocations')}</div>
               </div>
 
               <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Target className="h-4 w-4 text-gray-600" />
-                  <span className="text-sm font-medium">Suggestion Type</span>
+                  <span className="text-sm font-medium">{t('callSheetSuggestions.settings.suggestionTypeLabel')}</span>
                 </div>
                 <div className="text-2xl font-bold capitalize">{suggestionType}</div>
-                <div className="text-xs text-gray-500">Selected suggestion type</div>
+                <div className="text-xs text-gray-500">{t('callSheetSuggestions.analysisPreview.selectedType')}</div>
               </div>
             </div>
           </CardContent>

@@ -21,6 +21,7 @@ export function useErrorDialog() {
         message: '',
     })
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const showError = (error: any, defaultTitle = 'Error') => {
         setErrorDialog({
             open: true,

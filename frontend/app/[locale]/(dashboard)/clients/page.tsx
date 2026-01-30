@@ -9,10 +9,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Plus, Search, Edit, Trash2, Eye, Users, Mail, Phone, FileText } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 
 export default function ClientsPage() {
   const { organizationId } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
+  const t = useTranslations('clients')
 
   // Get clients data
   const { data: allClients, isLoading, error } = useClients(organizationId || '')
@@ -32,7 +34,7 @@ export default function ClientsPage() {
   }) || []
 
   const handleDeleteClient = async (clientId: string, clientName: string) => {
-    if (!confirm(`Are you sure you want to delete client "${clientName}"? This action cannot be undone.`)) {
+    if (!confirm(t('delete.confirm', { name: clientName }))) {
       return
     }
 
@@ -40,7 +42,7 @@ export default function ClientsPage() {
       await deleteClient.mutateAsync(clientId)
     } catch (err: unknown) {
       const error = err as Error
-      alert(`Failed to delete client: ${error.message}`)
+      alert(t('delete.error', { message: error.message }))
     }
   }
 
@@ -48,8 +50,8 @@ export default function ClientsPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Clients</h1>
-          <p className="text-muted-foreground">Loading clients...</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('loading')}</p>
         </div>
       </div>
     )
@@ -59,8 +61,8 @@ export default function ClientsPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Clients</h1>
-          <p className="text-destructive">Failed to load clients. Please try again.</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-destructive">{t('loadingError')}</p>
         </div>
       </div>
     )
@@ -70,15 +72,15 @@ export default function ClientsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Clients</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground">
-            Manage your client relationships and contact information
+            {t('description')}
           </p>
         </div>
         <Button asChild>
           <Link href="/clients/new">
             <Plus className="mr-2 h-4 w-4" />
-            New Client
+            {t('newClient')}
           </Link>
         </Button>
       </div>
@@ -86,16 +88,16 @@ export default function ClientsPage() {
       {/* Search */}
       <Card>
         <CardHeader>
-          <CardTitle>Search Clients</CardTitle>
+          <CardTitle>{t('search.title')}</CardTitle>
           <CardDescription>
-            Find clients by name, email, document, or phone number
+            {t('search.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name, email, document, or phone..."
+              placeholder={t('search.placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -111,18 +113,18 @@ export default function ClientsPage() {
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Users className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-lg font-semibold mb-2">
-                {allClients && allClients.length > 0 ? 'No clients found' : 'No clients yet'}
+                {allClients && allClients.length > 0 ? t('empty.noResults') : t('empty.noClients')}
               </p>
               <p className="text-sm text-muted-foreground mb-4">
                 {allClients && allClients.length > 0
-                  ? 'Try adjusting your search'
-                  : 'Get started by creating your first client'}
+                  ? t('empty.tryAdjusting')
+                  : t('empty.getStarted')}
               </p>
               {(!allClients || allClients.length === 0) && (
                 <Button asChild>
                   <Link href="/clients/new">
                     <Plus className="mr-2 h-4 w-4" />
-                    Create First Client
+                    {t('empty.createFirst')}
                   </Link>
                 </Button>
               )}
@@ -140,11 +142,11 @@ export default function ClientsPage() {
                     <CardDescription className="mt-1">
                       {client.is_active ? (
                         <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                          Active
+                          {t('card.active')}
                         </Badge>
                       ) : (
                         <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
-                          Inactive
+                          {t('card.inactive')}
                         </Badge>
                       )}
                     </CardDescription>
@@ -172,7 +174,7 @@ export default function ClientsPage() {
                     </div>
                   )}
                   {!client.email && !client.phone && !client.document && (
-                    <p className="text-muted-foreground italic">No contact information</p>
+                    <p className="text-muted-foreground italic">{t('card.noContactInfo')}</p>
                   )}
                 </div>
 
@@ -180,13 +182,13 @@ export default function ClientsPage() {
                   <Button variant="outline" size="sm" asChild className="flex-1">
                     <Link href={`/clients/${client.id}`}>
                       <Eye className="h-4 w-4 mr-1" />
-                      View
+                      {t('card.view')}
                     </Link>
                   </Button>
                   <Button variant="outline" size="sm" asChild className="flex-1">
                     <Link href={`/clients/${client.id}/edit`}>
                       <Edit className="h-4 w-4 mr-1" />
-                      Edit
+                      {t('card.edit')}
                     </Link>
                   </Button>
                   <Button
@@ -210,10 +212,16 @@ export default function ClientsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span>
-                Showing {filteredClients.length} of {allClients.length} client{allClients.length !== 1 ? 's' : ''}
+                {allClients.length !== 1
+                  ? t('summary.showing_other', { filtered: filteredClients.length, total: allClients.length })
+                  : t('summary.showing', { filtered: filteredClients.length, total: allClients.length })
+                }
               </span>
               <span>
-                {allClients.filter(c => c.is_active).length} active • {allClients.filter(c => !c.is_active).length} inactive
+                {t('summary.activeInactive', {
+                  active: allClients.filter(c => c.is_active).length,
+                  inactive: allClients.filter(c => !c.is_active).length
+                })}
               </span>
             </div>
           </CardContent>

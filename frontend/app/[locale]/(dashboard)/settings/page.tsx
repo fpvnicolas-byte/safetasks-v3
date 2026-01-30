@@ -4,14 +4,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Building2, User, Bell, Key, Briefcase } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 
 export default function SettingsPage() {
+  const t = useTranslations('settings')
+
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
         <p className="text-muted-foreground">
-          Manage your account and organization settings
+          {t('description')}
         </p>
       </div>
 
@@ -24,14 +27,14 @@ export default function SettingsPage() {
                   <Building2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <CardTitle>Organization</CardTitle>
-                  <CardDescription>Manage organization details</CardDescription>
+                  <CardTitle>{t('main.organization.title')}</CardTitle>
+                  <CardDescription>{t('main.organization.description')}</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Update organization name, settings, and preferences
+                {t('main.organization.content')}
               </p>
             </CardContent>
           </Card>
@@ -45,14 +48,14 @@ export default function SettingsPage() {
                   <User className="h-6 w-6 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <CardTitle>Profile</CardTitle>
-                  <CardDescription>Manage your profile</CardDescription>
+                  <CardTitle>{t('main.profile.title')}</CardTitle>
+                  <CardDescription>{t('main.profile.description')}</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Update your personal information and preferences
+                {t('main.profile.content')}
               </p>
             </CardContent>
           </Card>
@@ -66,14 +69,14 @@ export default function SettingsPage() {
                   <Key className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <CardTitle>Google Drive</CardTitle>
-                  <CardDescription>Cloud storage integration</CardDescription>
+                  <CardTitle>{t('main.googleDrive.title')}</CardTitle>
+                  <CardDescription>{t('main.googleDrive.description')}</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Connect and manage Google Drive sync
+                {t('main.googleDrive.content')}
               </p>
             </CardContent>
           </Card>
@@ -87,14 +90,14 @@ export default function SettingsPage() {
                   <Briefcase className="h-6 w-6 text-pink-600 dark:text-pink-400" />
                 </div>
                 <div>
-                  <CardTitle>Services</CardTitle>
-                  <CardDescription>Manage available services</CardDescription>
+                  <CardTitle>{t('main.services.title')}</CardTitle>
+                  <CardDescription>{t('main.services.description')}</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Define services available for proposals
+                {t('main.services.content')}
               </p>
             </CardContent>
           </Card>
@@ -108,14 +111,14 @@ export default function SettingsPage() {
                   <Bell className="h-6 w-6 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
-                  <CardTitle>Notifications</CardTitle>
-                  <CardDescription>Real-time alerts and updates</CardDescription>
+                  <CardTitle>{t('main.notifications.title')}</CardTitle>
+                  <CardDescription>{t('main.notifications.description')}</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Manage your notification preferences and view recent alerts
+                {t('main.notifications.content')}
               </p>
             </CardContent>
           </Card>

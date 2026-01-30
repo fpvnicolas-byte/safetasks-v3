@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProjects } from '@/lib/api/hooks/useProjects'
 import { useAiScriptAnalysis } from '@/lib/api/hooks/useAiFeatures'
@@ -26,6 +27,8 @@ import {
 export default function AiScriptAnalysisPage() {
   const router = useRouter()
   const { organizationId } = useAuth()
+  const t = useTranslations('ai.scriptAnalysis')
+  const tCommon = useTranslations('common.feedback')
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [scriptText, setScriptText] = useState<string>('')
@@ -45,12 +48,12 @@ export default function AiScriptAnalysisPage() {
 
   const handleScriptAnalysis = async () => {
     if (!selectedProjectId) {
-      toast.error('Please select a project first')
+      toast.error(tCommon('selectProject'))
       return
     }
 
     if (!scriptText.trim()) {
-      toast.error('Please enter script text to analyze')
+      toast.error(tCommon('enterText'))
       return
     }
 
@@ -63,36 +66,26 @@ export default function AiScriptAnalysisPage() {
 
       // Handle backend error response
       if (result.error) {
-        toast.error(`AI Analysis Error: ${result.error}`)
+        toast.error(`${tCommon('error')}: ${result.error}`)
         return
       }
 
       // Store AI analysis result for preview
       setAiAnalysisResult(result)
 
-      toast.success('Script analysis completed!')
+      toast.success(tCommon('actionSuccess'))
       console.log('Script analysis result:', result)
     } catch (error) {
       // Enhanced error logging
       console.error('Script analysis error (full):', error)
-      console.error('Error type:', typeof error)
-      console.error('Error keys:', error ? Object.keys(error) : 'null')
-      console.error('Error stringified:', JSON.stringify(error, null, 2))
 
       // Check if it's an ApiError with details
       if (error && typeof error === 'object') {
         const apiError = error as { message?: string; detail?: string; statusCode?: number; status?: number }
         const errorMsg = apiError.message || apiError.detail || 'Unknown error'
-        const statusCode = apiError.statusCode || apiError.status || 'unknown'
-        toast.error(`Failed to analyze script (${statusCode}): ${errorMsg}`)
-        console.error('API Error Details:', {
-          message: apiError.message,
-          statusCode: apiError.statusCode,
-          detail: apiError.detail,
-          status: apiError.status
-        })
+        toast.error(tCommon('actionError', { message: errorMsg }))
       } else {
-        toast.error('Failed to analyze script')
+        toast.error(tCommon('actionError', { message: 'Unknown error' }))
       }
     }
   }

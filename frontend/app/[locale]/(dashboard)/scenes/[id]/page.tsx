@@ -1,6 +1,7 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
+import { useTranslations, useLocale } from 'next-intl'
 import { useScene, useDeleteScene } from '@/lib/api/hooks'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,6 +14,9 @@ import { DetailPageSkeleton } from '@/components/LoadingSkeletons'
 export default function SceneDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const locale = useLocale()
+  const t = useTranslations('scenes.detail')
+  const tCommon = useTranslations('common')
   const sceneId = params.id as string
 
   const { data: scene, isLoading, error } = useScene(sceneId)
@@ -25,17 +29,17 @@ export default function SceneDetailPage() {
   if (error || !scene) {
     return (
       <Alert variant="destructive">
-        <AlertDescription>Scene not found</AlertDescription>
+        <AlertDescription>{t('notFound')}</AlertDescription>
       </Alert>
     )
   }
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this scene?')) return
+    if (!confirm(t('deleteConfirm'))) return
 
     try {
       await deleteScene.mutateAsync(sceneId)
-      router.push('/scenes')
+      router.push(`/${locale}/scenes`)
     } catch (err) {
       console.error('Failed to delete scene:', err)
     }
@@ -56,46 +60,46 @@ export default function SceneDetailPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">Scene {scene.scene_number}</h1>
+            <h1 className="text-3xl font-bold">{t('title', { number: scene.scene_number })}</h1>
             <p className="text-muted-foreground">{scene.heading}</p>
           </div>
         </div>
         <div className="flex gap-2">
           <Button asChild variant="outline">
-            <Link href={`/scenes/${sceneId}/edit`}>
+            <Link href={`/${locale}/scenes/${sceneId}/edit`}>
               <Pencil className="mr-2 h-4 w-4" />
-              Edit
+              {tCommon('edit')}
             </Link>
           </Button>
           <Button variant="destructive" onClick={handleDelete}>
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete
+            {tCommon('delete')}
           </Button>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Scene Details</CardTitle>
+          <CardTitle>{t('cardTitle')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-3">
             <div>
-              <div className="text-sm font-medium text-muted-foreground">Location</div>
+              <div className="text-sm font-medium text-muted-foreground">{t('location')}</div>
               <div className="text-lg">{scene.internal_external}</div>
             </div>
             <div>
-              <div className="text-sm font-medium text-muted-foreground">Time</div>
+              <div className="text-sm font-medium text-muted-foreground">{t('time')}</div>
               <div className="text-lg">{scene.day_night}</div>
             </div>
             <div>
-              <div className="text-sm font-medium text-muted-foreground">Duration</div>
-              <div className="text-lg">{scene.estimated_time_minutes} minutes</div>
+              <div className="text-sm font-medium text-muted-foreground">{t('duration')}</div>
+              <div className="text-lg">{scene.estimated_time_minutes} {t('minutes')}</div>
             </div>
           </div>
 
           <div>
-            <div className="text-sm font-medium text-muted-foreground mb-2">Description</div>
+            <div className="text-sm font-medium text-muted-foreground mb-2">{t('description')}</div>
             <div className="text-base whitespace-pre-wrap">{scene.description}</div>
           </div>
         </CardContent>

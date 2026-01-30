@@ -18,11 +18,16 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { DetailPageSkeleton } from '@/components/LoadingSkeletons'
 import { FileUploadZone, FileList } from '@/components/storage'
 import { FileUploadResponse } from '@/types'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
+import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
+import { ErrorDialog } from '@/components/ui/error-dialog'
+import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 
 export default function ProjectDetailPage() {
   const t = useTranslations('projects')
   const tCommon = useTranslations('common')
+  const locale = useLocale()
   const params = useParams()
   const router = useRouter()
   const { organizationId } = useAuth()
@@ -30,7 +35,9 @@ export default function ProjectDetailPage() {
 
   const { data: project, isLoading, error } = useProject(projectId, organizationId || undefined)
   const deleteProject = useDeleteProject(projectId, organizationId || '')
-  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  const { open: deleteOpen, onOpenChange: setDeleteOpen, askConfirmation: confirmDelete, closeConfirmation: cancelDelete } = useConfirmDelete()
+  const { errorDialog, showError, closeError } = useErrorDialog()
 
   // Separate state for each file type
   const [scripts, setScripts] = useState<FileUploadResponse[]>([])
@@ -122,17 +129,17 @@ export default function ProjectDetailPage() {
   }
 
   async function handleDelete() {
-    if (!confirm(t('details.deleteConfirm'))) {
-      return
-    }
-
     try {
       await deleteProject.mutateAsync()
       router.push('/projects')
     } catch (err: unknown) {
-      const error = err as Error
-      setDeleteError(error.message || 'Failed to delete project')
+      cancelDelete()
+      showError(err, 'Failed to delete project')
     }
+  }
+
+  const requestDelete = () => {
+    confirmDelete(projectId)
   }
 
   if (isLoading) {
@@ -154,7 +161,7 @@ export default function ProjectDetailPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{project.title}</h1>
           <p className="text-muted-foreground">
-            {t('details.created')} {new Date(project.created_at).toLocaleDateString()}
+            {t('details.created')} {new Date(project.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
           </p>
         </div>
         <div className="flex gap-2">
@@ -166,7 +173,7 @@ export default function ProjectDetailPage() {
           </Button>
           <Button
             variant="destructive"
-            onClick={handleDelete}
+            onClick={requestDelete}
             disabled={deleteProject.isPending}
           >
             <Trash2 className="mr-2 h-4 w-4" />
@@ -175,11 +182,7 @@ export default function ProjectDetailPage() {
         </div>
       </div>
 
-      {deleteError && (
-        <Alert variant="destructive">
-          <AlertDescription>{deleteError}</AlertDescription>
-        </Alert>
-      )}
+
 
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-4">
@@ -252,13 +255,13 @@ export default function ProjectDetailPage() {
                 {project.start_date && (
                   <div>
                     <div className="text-sm font-medium text-muted-foreground">{t('startDate')}</div>
-                    <div className="text-lg">{new Date(project.start_date).toLocaleDateString()}</div>
+                    <div className="text-lg">{new Date(project.start_date).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</div>
                   </div>
                 )}
                 {project.end_date && (
                   <div>
                     <div className="text-sm font-medium text-muted-foreground">{t('endDate')}</div>
-                    <div className="text-lg">{new Date(project.end_date).toLocaleDateString()}</div>
+                    <div className="text-lg">{new Date(project.end_date).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</div>
                   </div>
                 )}
               </div>
@@ -541,6 +544,25 @@ export default function ProjectDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <ConfirmDeleteDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onConfirm={handleDelete}
+        title={tCommon('delete')}
+        description={t('details.deleteConfirm')}
+        confirmText={tCommon('delete')}
+        cancelText={tCommon('cancel')}
+        loading={deleteProject.isPending}
+      />
+
+      <ErrorDialog
+        open={errorDialog.open}
+        onOpenChange={(open) => !open && closeError()}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        validationErrors={errorDialog.validationErrors}
+      />
     </div>
   )
 }

@@ -70,6 +70,7 @@ class Stakeholder(Base):
 
     # Relationships
     supplier = relationship("Supplier", back_populates="stakeholders")
+    transactions = relationship("Transaction", back_populates="stakeholder")
 
     # Audit
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)

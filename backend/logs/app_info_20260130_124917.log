@@ -1,0 +1,6 @@
+2026-01-30 12:49:17 [INFO] app: Logging configuration initialized
+2026-01-30 12:49:30 [ERROR] app.api.deps: Missing credentials. URL: http://127.0.0.1:8000/api/v1/shooting-days/
+2026-01-30 12:49:30 [WARNING] app.api.deps: No Authorization header found.
+2026-01-30 12:52:35 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-01-30 12:52:35 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-01-30 12:52:35 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"

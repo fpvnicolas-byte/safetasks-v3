@@ -41,7 +41,19 @@
     "success": "Success",
     "error": "Error",
     "warning": "Warning",
-    "info": "Information"
+    "info": "Information",
+    "saving": "Saving...",
+    "feedback": {
+      "success": "Success",
+      "error": "Error",
+      "confirmDelete": "Are you sure you want to delete this item?",
+      "confirmAction": "Are you sure you want to perform this action?",
+      "actionSuccess": "Action completed successfully",
+      "actionError": "Action failed: {message}",
+      "selectProject": "Please select a project first",
+      "enterText": "Please enter text",
+      "fillRequired": "Please fill in all required fields"
+    }
   },
   "auth": {
     "login": {
@@ -162,6 +174,15 @@
         "broken": "Broken",
         "retired": "Retired"
       }
+    },
+    "revenueChart": {
+      "title": "Revenue Trends",
+      "noData": "No data available",
+      "lastMonths": "Last {count} months",
+      "revenue": "Revenue",
+      "expenses": "Expenses",
+      "netProfit": "Net Profit",
+      "keyInsights": "Key Insights"
     },
     "recentTransactions": {
       "title": "Recent Transactions",
@@ -366,10 +387,90 @@
     "crew": "Crew",
     "equipment": "Equipment",
     "notes": "Notes",
-    "noCallSheets": "No call sheets found"
+    "noCallSheets": "No call sheets found",
+    "tab": {
+      "description": "Manage shooting day schedules and logistics",
+      "loading": "Loading call sheets...",
+      "error": "Error loading call sheets: {message}",
+      "deleteConfirm": "Are you sure you want to delete this call sheet?",
+      "empty": {
+        "title": "No Call Sheets Yet",
+        "description": "Create your first call sheet to organize shooting schedules",
+        "help": "Call sheets help coordinate crew, talent, and logistics for each shooting day",
+        "action": "Create First Call Sheet"
+      },
+      "card": {
+        "title": "Call Sheet",
+        "crewCall": "Crew Call",
+        "onSet": "On Set",
+        "weather": "Weather:"
+      }
+    },
+    "detail": {
+      "title": "Call Sheet",
+      "loading": "Loading call sheet...",
+      "error": "Error loading call sheet: {message}",
+      "notFound": "Call sheet not found",
+      "deleteConfirm": "Are you sure you want to delete this call sheet? This action cannot be undone.",
+      "created": "Created",
+      "callTimes": "Call Times",
+      "crewCall": "Crew Call",
+      "onSet": "On Set",
+      "lunch": "Lunch",
+      "wrap": "Wrap",
+      "location": "Location",
+      "weather": "Weather",
+      "emergencyInfo": "Emergency Information",
+      "productionNotes": "Production Notes",
+      "status": {
+        "draft": "Draft",
+        "confirmed": "Confirmed",
+        "completed": "Completed"
+      },
+      "deleteError": "Failed to delete call sheet"
+    },
+    "edit": {
+      "title": "Edit Call Sheet",
+      "description": "Update call sheet details for {date}",
+      "loading": "Loading call sheet...",
+      "error": "Error loading call sheet: {message}",
+      "notFound": "Call sheet not found",
+      "basicInfo": "Basic Information",
+      "shootingDay": "Shooting Day *",
+      "status": "Status *",
+      "selectStatus": "Select status",
+      "statusConfirmed": "Confirmed",
+      "callTimes": "Call Times",
+      "crewCall": "Crew Call Time *",
+      "crewCallHelp": "HTML time inputs use HH:MM, will be converted to HH:MM:SS for backend",
+      "onSet": "On Set Time *",
+      "lunch": "Lunch Time *",
+      "wrap": "Wrap Time",
+      "location": "Location",
+      "locationName": "Location Name *",
+      "locationPlaceholder": "Studio A",
+      "locationAddress": "Location Address",
+      "locationAddressPlaceholder": "123 Film Street, Los Angeles, CA 90001",
+      "parking": "Parking Information",
+      "parkingPlaceholder": "Parking details and instructions...",
+      "weather": "Weather Forecast",
+      "weatherPlaceholder": "Sunny, 75°F",
+      "safety": "🚨 Safety & Emergency",
+      "hospital": "Nearest Hospital/Emergency Contact *",
+      "hospitalPlaceholder": "Hospital name, address, phone number, and directions...",
+      "hospitalHelp": "Required for professional call sheets - critical emergency information",
+      "notes": "Production Notes",
+      "notesPlaceholder": "Additional production notes...",
+      "updating": "Updating...",
+      "update": "Update Call Sheet",
+      "errors": {
+        "updateTitle": "Error Updating Call Sheet"
+      }
+    }
   },
   "shootingDays": {
     "title": "Shooting Days",
+    "description": "Schedule and manage production shooting days",
     "newShootingDay": "New Shooting Day",
     "createShootingDay": "Create Shooting Day",
     "editShootingDay": "Edit Shooting Day",
@@ -380,39 +481,221 @@
     "crewMembers": "Crew Members",
     "equipmentUsed": "Equipment Used",
     "status": "Status",
-    "noShootingDays": "No shooting days found"
+    "noShootingDays": "No shooting days found",
+    "list": {
+      "searchTitle": "Search Shooting Days",
+      "searchDescription": "Find shooting days by location, date, project, or notes",
+      "searchPlaceholder": "Search by location, date, project, or notes...",
+      "dayCount": "{count} day",
+      "dayCount_other": "{count} days",
+      "loading": "Loading shooting days...",
+      "error": "Error loading shooting days: {message}",
+      "noResults": "No Shooting Days Found",
+      "noMatches": "No shooting days match your current search",
+      "noDays": "No shooting days scheduled yet.",
+      "call": "Call:",
+      "wrap": "Wrap:",
+      "view": "View",
+      "edit": "Edit",
+      "deleteTitle": "Delete Shooting Day?",
+      "deleteDescription": "Are you sure you want to delete shooting day on {date}? This action cannot be undone.",
+      "deleteConfirmGeneric": "Are you sure?",
+      "deleteError": "Failed to delete shooting day"
+    },
+    "tab": {
+      "title": "Shooting Schedule",
+      "description": "Manage shooting days and scene assignments",
+      "loading": "Loading shooting days...",
+      "error": "Error loading shooting days: {message}",
+      "deleteConfirm": "Are you sure you want to delete this shooting day?",
+      "empty": {
+        "title": "No Shooting Days Scheduled",
+        "description": "Create your first shooting day to start planning the production schedule",
+        "help": "Organize scenes into shooting days for efficient production",
+        "action": "Schedule First Day"
+      },
+      "card": {
+        "call": "Call:",
+        "wrap": "Wrap:"
+      }
+    },
+    "detail": {
+      "loading": "Loading shooting day...",
+      "notFound": "Shooting day not found",
+      "deleteConfirm": "Are you sure you want to delete this shooting day?",
+      "scheduleDetails": "Schedule Details",
+      "scheduleDescription": "Call times and shooting schedule",
+      "callTime": "Call Time",
+      "wrapTime": "Wrap Time",
+      "locationInfo": "Location Information",
+      "locationDescription": "Shooting location details",
+      "location": "Location",
+      "weatherForecast": "Weather Forecast",
+      "productionNotes": "Production Notes",
+      "sceneAssignment": "Scene Assignment",
+      "sceneAssignmentDescription": "Assign scenes to this shooting day",
+      "scene": "Scene",
+      "currentlyAssigned": "Currently Assigned",
+      "assign": "Assign",
+      "assigning": "Assigning...",
+      "assignScenes": "Assign {count} Scene(s)",
+      "assignSuccess": "Successfully assigned {count} scene(s)",
+      "assignError": "Error: {message}",
+      "noScenes": "No scenes found for this project.",
+      "createScene": "Create a scene"
+    }
   },
   "scenes": {
     "title": "Scenes",
+    "description": "Manage your production scenes and script breakdown",
     "newScene": "New Scene",
     "createScene": "Create Scene",
     "editScene": "Edit Scene",
     "sceneNumber": "Scene Number",
-    "description": "Description",
     "location": "Location",
     "timeOfDay": "Time of Day",
     "intExt": "Interior/Exterior",
     "interior": "Interior",
     "exterior": "Exterior",
+    "internal": "internal",
+    "external": "external",
+    "day": "day",
+    "night": "night",
+    "dawn": "dawn",
+    "dusk": "dusk",
     "characters": "Characters",
     "props": "Props",
-    "noScenes": "No scenes found"
+    "noProjectContext": {
+      "title": "Scenes",
+      "description": "Scene management requires a project context",
+      "message": "Please select a project to manage scenes",
+      "goToProjects": "Go to Projects"
+    },
+    "filter": {
+      "title": "Filter Scenes",
+      "description": "Find specific scenes by location, time of day, or search terms",
+      "search": "Search",
+      "searchPlaceholder": "Scene number or description...",
+      "location": "Location",
+      "allLocations": "All Locations",
+      "timeOfDay": "Time of Day",
+      "allTimes": "All Times",
+      "results": "Results",
+      "sceneCount": "{count} scene",
+      "sceneCount_other": "{count} scenes"
+    },
+    "list": {
+      "loading": "Loading scenes...",
+      "error": "Error loading scenes: {message}",
+      "noEstimate": "No estimate",
+      "noDuration": "No duration",
+      "view": "View",
+      "edit": "Edit",
+      "deleteConfirm": "Are you sure you want to delete Scene {number}? This action cannot be undone.",
+      "deleteError": "Failed to delete scene: {message}",
+      "noDescription": "No description"
+    },
+    "empty": {
+      "title": "No Scenes Found",
+      "noMatches": "No scenes match your current filters",
+      "getStarted": "Get started by creating your first scene",
+      "helpText": "Scenes help break down your script into manageable production units",
+      "createFirst": "Create First Scene"
+    },
+    "noScenes": "No scenes found",
+    "detail": {
+      "title": "Scene {number}",
+      "cardTitle": "Scene Details",
+      "location": "Location",
+      "time": "Time",
+      "duration": "Duration",
+      "minutes": "minutes",
+      "description": "Description",
+      "notFound": "Scene not found",
+      "deleteConfirm": "Are you sure you want to delete this scene?"
+    },
+    "edit": {
+      "title": "Edit Scene",
+      "description": "Update scene details",
+      "sceneNumber": "Scene Number *",
+      "integerOnly": "(Integer only)",
+      "sceneNumberHelp": "Use whole numbers only (1, 2, 3...). For variations use heading.",
+      "heading": "Scene Heading *",
+      "descriptionLabel": "Description *",
+      "intExt": "Interior/Exterior *",
+      "selectLocation": "Select location type",
+      "internal": "Internal (Interior)",
+      "external": "External (Exterior)",
+      "dayNight": "Day/Night *",
+      "selectTime": "Select time of day",
+      "day": "Day",
+      "night": "Night",
+      "dawn": "Dawn",
+      "dusk": "Dusk",
+      "estimatedTime": "Estimated Time (minutes) *",
+      "estimatedTimeHelp": "Required. Must be greater than 0.",
+      "errors": {
+        "sceneNumberPositive": "Scene number must be a positive integer",
+        "estimatedTimePositive": "Estimated time must be a positive number",
+        "updateTitle": "Error Updating Scene"
+      }
+    }
   },
   "characters": {
     "title": "Characters",
+    "description": "Manage your film production characters and cast",
     "newCharacter": "New Character",
     "createCharacter": "Create Character",
     "editCharacter": "Edit Character",
+    "addCharacter": "Add Character",
     "characterName": "Character Name",
-    "description": "Description",
     "actor": "Actor",
     "role": "Role",
     "costume": "Costume",
     "makeup": "Makeup",
-    "noCharacters": "No characters found"
+    "projectSelection": {
+      "title": "Select Project",
+      "description": "Choose a project to view and manage its characters",
+      "loading": "Loading projects...",
+      "placeholder": "Select a project",
+      "noProjects": "No projects found.",
+      "createFirst": "Create a project"
+    },
+    "list": {
+      "loading": "Loading characters..."
+    },
+    "empty": {
+      "title": "No Characters Found",
+      "description": "This project doesn't have any characters yet.",
+      "noCharactersYet": "No characters yet",
+      "helpText": "Start building your cast by adding the first character"
+    },
+    "noCharacters": "No characters found",
+    "detail": {
+      "cardTitle": "Character Details",
+      "playedBy": "Played by {actor}",
+      "noActor": "No actor assigned",
+      "name": "Character Name",
+      "actorName": "Actor Name",
+      "description": "Character Description",
+      "notFound": "Character not found",
+      "deleteConfirm": "Are you sure you want to delete this character?"
+    },
+    "edit": {
+      "title": "Edit Character",
+      "description": "Update character details",
+      "name": "Character Name *",
+      "descriptionLabel": "Description *",
+      "descriptionPlaceholder": "Character description, role in the story...",
+      "actorName": "Actor Name",
+      "errors": {
+        "updateTitle": "Error Updating Character"
+      }
+    }
   },
   "financials": {
     "title": "Financials",
+    "description": "Track budgets, invoices, and expenses",
     "transactions": "Transactions",
     "bankAccounts": "Bank Accounts",
     "taxTables": "Tax Tables",
@@ -424,18 +707,144 @@
     "type": "Type",
     "income": "Income",
     "expense": "Expense",
+    "expenses": "Expenses",
     "balance": "Balance",
     "taxRate": "Tax Rate",
     "dueDate": "Due Date",
     "paid": "Paid",
     "pending": "Pending",
     "noTransactions": "No transactions found",
-    "noInvoices": "No invoices found"
+    "noInvoices": "No invoices found",
+    "overview": {
+      "tab": "Overview",
+      "totalBudget": "Total Budget",
+      "totalSpent": "Total Spent",
+      "remaining": "Remaining"
+    },
+    "invoicesTab": {
+      "tab": "Invoices",
+      "filterByStatus": "Filter by Status",
+      "allStatuses": "All Statuses",
+      "draft": "Draft",
+      "sent": "Sent",
+      "overdue": "Overdue",
+      "canceled": "Canceled",
+      "loading": "Loading invoices...",
+      "error": "Error loading invoices: {message}",
+      "noInvoicesFound": "No Invoices Found",
+      "createFirst": "Create your first invoice to get started",
+      "noInvoicesWithStatus": "No invoices with status \"{status}\"",
+      "helpText": "Professional invoices help track payments and manage client relationships",
+      "createFirstInvoice": "Create First Invoice",
+      "invoice": {
+        "invoiceNumber": "Invoice #{number}",
+        "issued": "Issued",
+        "due": "Due",
+        "overdue": "(Overdue)",
+        "client": "Client",
+        "noClient": "No client assigned",
+        "project": "Project",
+        "noProject": "No project assigned",
+        "notes": "Notes:",
+        "view": "View",
+        "edit": "Edit",
+        "deleteConfirm": "Are you sure you want to delete invoice #{number}? This action cannot be undone.",
+        "deleteError": "Failed to delete invoice. Please try again."
+      }
+    },
+    "bankAccountsTab": {
+      "tab": "Bank Accounts",
+      "title": "Bank Accounts",
+      "description": "Manage your bank accounts and track balances",
+      "noBankAccounts": "No bank accounts found.",
+      "viewBankAccounts": "View Bank Accounts"
+    },
+    "transactionsTab": {
+      "tab": "Transactions",
+      "title": "Transactions",
+      "description": "Record income and expenses to track cash flow",
+      "noDescription": "No description",
+      "noRecentTransactions": "No recent transactions.",
+      "viewTransactions": "View Transactions"
+    },
+    "expensesTab": {
+      "tab": "Expenses",
+      "title": "Expenses",
+      "description": "Track production costs and expenses",
+      "noRecentExpenses": "No recent expenses.",
+      "viewExpenses": "View Expenses"
+    }
   },
   "inventory": {
     "title": "Inventory",
-    "items": "Items",
-    "kits": "Kits",
+    "items": {
+      "title": "Inventory Items",
+      "description": "Manage individual equipment assets and their health status",
+      "viewKits": "View Kits",
+      "newItem": "New Item",
+      "filters": {
+        "title": "Filters",
+        "searchPlaceholder": "Search by name, serial, or category...",
+        "healthPlaceholder": "Filter by health",
+        "allHealthStatuses": "All Health Statuses",
+        "itemsFound": "{count} items found"
+      },
+      "health": {
+        "excellent": "Excellent",
+        "good": "Good",
+        "needs_service": "Service Needed",
+        "broken": "Broken",
+        "retired": "Retired"
+      },
+      "card": {
+        "serialNumber": "S/N:",
+        "usage": "Usage:",
+        "view": "View",
+        "edit": "Edit"
+      },
+      "loading": "Loading inventory...",
+      "error": "Error",
+      "empty": {
+        "title": "No items found",
+        "description": "Start by adding your first equipment item to the inventory",
+        "addFirst": "Add First Item"
+      },
+      "delete": {
+        "title": "Delete {name}?",
+        "description": "Are you sure you want to delete \"{name}\"?",
+        "error": "Failed to delete item"
+      }
+    },
+    "kits": {
+      "title": "Equipment Kits",
+      "description": "Manage collections of equipment for specific shooting needs",
+      "viewAllItems": "View All Items",
+      "newKit": "New Kit",
+      "status": {
+        "available": "Available",
+        "in_use": "In Use",
+        "maintenance": "Maintenance",
+        "retired": "Retired"
+      },
+      "card": {
+        "noCategory": "No category",
+        "noDescription": "No description provided.",
+        "view": "View",
+        "edit": "Edit"
+      },
+      "loading": "Loading kits...",
+      "error": "Error",
+      "empty": {
+        "title": "No kits found",
+        "description": "Create your first equipment kit (e.g., \"Standard Drone Kit\")",
+        "createFirst": "Create First Kit"
+      },
+      "delete": {
+        "title": "Delete {name}?",
+        "description": "Are you sure you want to delete kit \"{name}\"? Items inside will be preserved.",
+        "error": "Failed to delete kit"
+      }
+    },
     "newItem": "New Item",
     "newKit": "New Kit",
     "itemName": "Item Name",
@@ -452,6 +861,7 @@
   },
   "clients": {
     "title": "Clients",
+    "description": "Manage your client relationships and contact information",
     "newClient": "New Client",
     "createClient": "Create Client",
     "editClient": "Edit Client",
@@ -462,10 +872,46 @@
     "address": "Address",
     "projects": "Projects",
     "activeProjects": "Active Projects",
-    "noClients": "No clients found"
+    "noClients": "No clients found",
+    "loading": "Loading clients...",
+    "loadingError": "Failed to load clients. Please try again.",
+    "search": {
+      "title": "Search Clients",
+      "description": "Find clients by name, email, document, or phone number",
+      "placeholder": "Search by name, email, document, or phone..."
+    },
+    "empty": {
+      "noResults": "No clients found",
+      "noClients": "No clients yet",
+      "tryAdjusting": "Try adjusting your search",
+      "getStarted": "Get started by creating your first client",
+      "helpText": "Clients are organizations or individuals you work with on projects",
+      "createFirst": "Create First Client"
+    },
+    "card": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "activeProjects": "{count} active project",
+      "activeProjects_other": "{count} active projects",
+      "noActiveProjects": "No active projects",
+      "noContactInfo": "No contact information",
+      "document": "Document",
+      "view": "View",
+      "edit": "Edit"
+    },
+    "summary": {
+      "showing": "Showing {filtered} of {total} client",
+      "showing_other": "Showing {filtered} of {total} clients",
+      "activeInactive": "{active} active • {inactive} inactive"
+    },
+    "delete": {
+      "confirm": "Are you sure you want to delete client \"{name}\"? This action cannot be undone.",
+      "error": "Failed to delete client: {message}"
+    }
   },
   "suppliers": {
     "title": "Suppliers",
+    "description": "Manage vendors, rental houses, and service providers",
     "newSupplier": "New Supplier",
     "createSupplier": "Create Supplier",
     "editSupplier": "Edit Supplier",
@@ -475,10 +921,57 @@
     "equipment": "Equipment",
     "rates": "Rates",
     "contract": "Contract",
+    "filters": {
+      "title": "Filter Suppliers",
+      "description": "Find suppliers by name, category, or contact information",
+      "search": "Search",
+      "searchPlaceholder": "Name, email, or phone...",
+      "category": "Category",
+      "allCategories": "All Categories",
+      "rentalHouse": "Rental House",
+      "freelancer": "Freelancer",
+      "catering": "Catering",
+      "transport": "Transport",
+      "postProduction": "Post Production",
+      "other": "Other",
+      "status": "Status",
+      "activeOnly": "Active Only",
+      "allSuppliers": "All Suppliers",
+      "results": "Results",
+      "supplierCount": "{count} supplier",
+      "supplierCount_other": "{count} suppliers"
+    },
+    "list": {
+      "loading": "Loading suppliers...",
+      "error": "Error loading suppliers: {message}",
+      "view": "View",
+      "edit": "Edit"
+    },
+    "card": {
+      "inactive": "Inactive",
+      "transactionSummary": "Transaction Summary",
+      "transaction": "{count} transaction",
+      "transaction_other": "{count} transactions"
+    },
+    "empty": {
+      "title": "No Suppliers Found",
+      "noMatches": "No suppliers match your current filters",
+      "getStarted": "Get started by adding your first supplier",
+      "helpText": "Suppliers help you track vendors, freelancers, and service providers",
+      "addFirst": "Add First Supplier"
+    },
+    "delete": {
+      "confirm": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+      "error": "Failed to delete supplier: {message}"
+    },
     "noSuppliers": "No suppliers found"
   },
   "stakeholders": {
     "title": "Stakeholders",
+    "description": "Manage project team members and collaborators",
+    "loading": "Loading...",
+    "error": "Error: No organization found. Please contact support.",
+    "addStakeholder": "Add Stakeholder",
     "newStakeholder": "New Stakeholder",
     "createStakeholder": "Create Stakeholder",
     "editStakeholder": "Edit Stakeholder",
@@ -491,10 +984,35 @@
     "investor": "Investor",
     "partner": "Partner",
     "advisor": "Advisor",
-    "noStakeholders": "No stakeholders found"
+    "filters": {
+      "title": "Filters",
+      "description": "Filter stakeholders by project or search by name",
+      "allProjects": "All Projects",
+      "searchPlaceholder": "Search by name or role..."
+    },
+    "table": {
+      "title": "Team Members",
+      "count": "{count} stakeholder(s) found",
+      "loading": "Loading stakeholders...",
+      "headers": {
+        "name": "Name",
+        "role": "Role",
+        "project": "Project",
+        "email": "Email",
+        "phone": "Phone",
+        "actions": "Actions"
+      },
+      "addPayment": "Add Payment",
+      "unknownProject": "Unknown Project"
+    },
+    "empty": {
+      "noStakeholders": "No stakeholders found",
+      "addFirst": "Add Your First Stakeholder"
+    }
   },
   "proposals": {
     "title": "Proposals",
+    "description": "Create and manage client proposals",
     "newProposal": "New Proposal",
     "createProposal": "Create Proposal",
     "editProposal": "Edit Proposal",
@@ -506,29 +1024,267 @@
     "draft": "Draft",
     "sent": "Sent",
     "accepted": "Accepted",
+    "approved": "Approved",
     "rejected": "Rejected",
+    "expired": "Expired",
     "scope": "Scope",
-    "noProposals": "No proposals found"
+    "noProposals": "No proposals found",
+    "filter": {
+      "title": "Filter Proposals",
+      "description": "Find proposals by title or status",
+      "search": "Search",
+      "searchPlaceholder": "Title or description...",
+      "status": "Status",
+      "allStatuses": "All Statuses",
+      "results": "Results",
+      "proposalCount": "{count} proposal",
+      "proposalCount_other": "{count} proposals"
+    },
+    "loading": "Loading proposals...",
+    "error": "Error loading proposals: {message}",
+    "empty": {
+      "title": "No Proposals Found",
+      "noMatches": "No proposals match your current filters",
+      "getStarted": "Get started by creating your first proposal",
+      "helpText": "Proposals allow you to send estimates to clients and track approvals",
+      "createProposal": "Create Proposal"
+    },
+    "card": {
+      "created": "Created",
+      "totalAmount": "Total Amount",
+      "validUntil": "Valid until:",
+      "view": "View",
+      "edit": "Edit"
+    },
+    "delete": {
+      "title": "Delete Proposal?",
+      "description": "Are you sure you want to delete this proposal? This action cannot be undone."
+    }
   },
   "production": {
-    "title": "Production",
+    "title": "Production Management",
+    "description": "Manage all production-related activities and workflows",
     "schedule": "Schedule",
     "resources": "Resources",
     "progress": "Progress",
     "timeline": "Timeline",
-    "milestones": "Milestones"
+    "milestones": "Milestones",
+    "newCallSheet": "New Call Sheet",
+    "newShootingDay": "New Shooting Day",
+    "callSheets": {
+      "title": "Call Sheets",
+      "description": "Create and manage daily call sheets for your productions",
+      "viewAll": "View All Call Sheets",
+      "createNew": "Create New Call Sheet"
+    },
+    "shootingDays": {
+      "title": "Shooting Days",
+      "description": "Schedule and organize your shooting days",
+      "viewAll": "View All Shooting Days",
+      "createNew": "Create New Shooting Day"
+    },
+    "projects": {
+      "title": "Projects",
+      "description": "Manage your active production projects",
+      "viewAll": "View All Projects",
+      "createNew": "Create New Project"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "description": "Common production tasks and workflows",
+      "manageScenes": "Manage Scenes",
+      "manageCharacters": "Manage Characters",
+      "equipmentInventory": "Equipment Inventory",
+      "productionVendors": "Production Vendors"
+    }
   },
   "settings": {
     "title": "Settings",
+    "description": "Manage your account and organization settings",
     "profile": "Profile",
     "organization": "Organization",
     "integrations": "Integrations",
     "googleDrive": "Google Drive",
     "saveChanges": "Save Changes",
+    "saving": "Saving...",
+    "cancel": "Cancel",
     "account": "Account",
     "preferences": "Preferences",
     "notifications": "Notifications",
-    "security": "Security"
+    "security": "Security",
+    "main": {
+      "organization": {
+        "title": "Organization",
+        "description": "Manage organization details",
+        "content": "Update organization name, settings, and preferences"
+      },
+      "profile": {
+        "title": "Profile",
+        "description": "Manage your profile",
+        "content": "Update your personal information and preferences"
+      },
+      "googleDrive": {
+        "title": "Google Drive",
+        "description": "Cloud storage integration",
+        "content": "Connect and manage Google Drive sync"
+      },
+      "services": {
+        "title": "Services",
+        "description": "Manage available services",
+        "content": "Define services available for proposals"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "description": "Real-time alerts and updates",
+        "content": "Manage your notification preferences and view recent alerts"
+      }
+    },
+    "organizationPage": {
+      "title": "Organization Settings",
+      "description": "Manage your organization details",
+      "loading": "Loading...",
+      "card": {
+        "title": "Organization Information",
+        "description": "Update your organization's basic information"
+      },
+      "fields": {
+        "organizationId": "Organization ID",
+        "organizationIdHelp": "This is your unique organization identifier",
+        "organizationName": "Organization Name",
+        "organizationNameRequired": "Organization Name *",
+        "organizationNamePlaceholder": "My Production Company",
+        "taxId": "CNPJ / Tax ID",
+        "taxIdPlaceholder": "12-3456789",
+        "taxIdHelp": "Optional: Your organization's tax identification number",
+        "created": "Created",
+        "createdUnknown": "Unknown"
+      }
+    },
+    "profilePage": {
+      "title": "Profile Settings",
+      "description": "Manage your personal information",
+      "card": {
+        "title": "Personal Information",
+        "description": "View your profile details"
+      },
+      "fields": {
+        "email": "Email",
+        "emailHelp": "Your email address is managed through authentication",
+        "userId": "User ID",
+        "accountStatus": "Account Status",
+        "active": "Active"
+      },
+      "futureFeatures": {
+        "intro": "Profile management features will be expanded in future updates, including:",
+        "displayName": "Update display name and avatar",
+        "notifications": "Notification preferences",
+        "languageTimezone": "Language and timezone settings",
+        "passwordManagement": "Password management"
+      },
+      "backButton": "Back to Settings"
+    },
+    "servicesPage": {
+      "title": "Services",
+      "description": "Manage services available for proposals.",
+      "addService": "Add Service",
+      "card": {
+        "title": "Available Services",
+        "description": "Values that can be selected when creating a proposal."
+      },
+      "table": {
+        "name": "Name",
+        "description": "Description",
+        "actions": "Actions",
+        "noDescription": "-"
+      },
+      "empty": "No services found. Create one to get started.",
+      "dialog": {
+        "addTitle": "Add Service",
+        "editTitle": "Edit Service",
+        "addDescription": "Add a new service to your organization.",
+        "editDescription": "Update service details.",
+        "nameLabel": "Name *",
+        "namePlaceholder": "e.g., Feature Film Production",
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Service description...",
+        "cancel": "Cancel",
+        "save": "Save",
+        "saving": "Saving..."
+      },
+      "delete": {
+        "confirm": "Are you sure you want to delete this service?",
+        "error": "Error Deleting Service"
+      },
+      "errors": {
+        "creating": "Error Creating Service",
+        "updating": "Error Updating Service"
+      }
+    },
+    "googleDrivePage": {
+      "title": "Google Drive Integration",
+      "description": "Connect your Google Drive to automatically sync production files",
+      "loading": "Loading...",
+      "status": {
+        "title": "Connection Status",
+        "connected": "Google Drive is connected",
+        "notConnected": "Not connected to Google Drive",
+        "connectedBadge": "Connected",
+        "notConnectedBadge": "Not Connected",
+        "projectId": "Project ID:",
+        "connectedAt": "Connected:",
+        "lastSync": "Last Sync:",
+        "rootFolder": "Root Folder:",
+        "viewInDrive": "View in Drive",
+        "notCreatedYet": "Not created yet",
+        "never": "Never"
+      },
+      "setup": {
+        "title": "Setup Google Drive",
+        "description": "Upload your Google Service Account JSON credentials to connect",
+        "howTo": {
+          "title": "How to get Service Account credentials",
+          "step1": "Go to Google Cloud Console",
+          "step2": "Create or select a project",
+          "step3": "Enable Google Drive API",
+          "step4": "Create a Service Account",
+          "step5": "Create and download JSON key",
+          "step6": "Share your Drive folder with the service account email"
+        },
+        "serviceAccountLabel": "Service Account JSON",
+        "serviceAccountPlaceholder": "Paste your service account JSON here...",
+        "invalidJson": "Invalid JSON format. Please paste valid JSON.",
+        "invalidFields": "Invalid service account JSON. Missing required fields.",
+        "setupFailed": "Setup failed",
+        "settingUp": "Setting up...",
+        "connectButton": "Connect Google Drive",
+        "setupError": "Setup Failed",
+        "setupErrorMessage": "Failed to connect Google Drive"
+      },
+      "syncSettings": {
+        "title": "Sync Settings",
+        "description": "Configure when files should automatically sync to Google Drive",
+        "autoSync": {
+          "label": "Auto-sync enabled",
+          "description": "Automatically sync files when uploaded"
+        },
+        "proposalSync": {
+          "label": "Sync on proposal approval",
+          "description": "Sync proposal files when approved"
+        },
+        "callSheetSync": {
+          "label": "Sync on call sheet finalized",
+          "description": "Sync call sheets when finalized"
+        }
+      },
+      "dangerZone": {
+        "title": "Danger Zone",
+        "description": "Irreversible actions for your Google Drive integration",
+        "removeButton": "Remove Google Drive Integration",
+        "removing": "Removing...",
+        "removeConfirm": "Are you sure you want to remove Google Drive integration? This will not delete your files from Drive.",
+        "removeNote": "This will disconnect Google Drive but will not delete your files from Drive."
+      }
+    }
   },
   "storage": {
     "title": "Storage",
@@ -539,10 +1295,50 @@
     "type": "Type",
     "lastModified": "Last Modified",
     "folder": "Folder",
-    "noFiles": "No files found"
+    "noFiles": "No files found",
+    "fileUpload": {
+      "dragActive": "Drop files here",
+      "dragInactive": "Drag & drop files here",
+      "clickToBrowse": "or click to browse",
+      "maxSize": "Max size: {size}MB",
+      "fileTooLarge": "File too large (max {size}MB)",
+      "invalidFileType": "Invalid file type",
+      "uploading": "Uploading...",
+      "uploadComplete": "Upload complete!",
+      "noFilesYet": "No files uploaded yet",
+      "fileCount": "{count} {count, plural, =1 {file} other {files}}",
+      "viewList": "List",
+      "viewGrid": "Grid"
+    }
   },
   "notifications": {
     "title": "Notifications",
+    "description": "Stay updated with real-time alerts and important updates",
+    "unableToLoad": "Unable to load notifications",
+    "failedToLoad": "Failed to load notifications: {message}",
+    "retry": "Retry",
+    "stats": {
+      "total": "Total",
+      "unread": "Unread",
+      "read": "Read"
+    },
+    "controls": {
+      "showAll": "Show All",
+      "unreadOnly": "Unread Only",
+      "markAllRead": "Mark All Read",
+      "loading": "Loading...",
+      "count": "{count} notifications"
+    },
+    "list": {
+      "title": "Recent Notifications",
+      "showingUnread": "Showing unread notifications only",
+      "showingAll": "All notifications",
+      "newBadge": "New"
+    },
+    "empty": {
+      "title": "No notifications yet",
+      "description": "You'll see updates and alerts here when they become available"
+    },
     "markAsRead": "Mark as Read",
     "clearAll": "Clear All",
     "unread": "Unread",
@@ -664,6 +1460,187 @@
       "suggestions": "No suggestions available. Analyze a script to get AI suggestions.",
       "recommendations": "No recommendations available. Analyze a script to get AI recommendations.",
       "analyses": "No script analyses available. Start a script analysis to see results."
+    },
+    "callSheetSuggestions": {
+      "pageTitle": "AI Call Sheet Suggestions",
+      "pageSubtitle": "Generate optimized shooting schedules and call sheets",
+      "settings": {
+        "title": "Suggestion Settings",
+        "description": "Configure your call sheet suggestion parameters",
+        "projectLabel": "Project",
+        "selectProjectPlaceholder": "Select a project",
+        "suggestionTypeLabel": "Suggestion Type",
+        "selectTypePlaceholder": "Select suggestion type",
+        "types": {
+          "optimized": "Optimized Schedule",
+          "weather": "Weather-Aware",
+          "cast": "Cast Management",
+          "location": "Location Efficiency"
+        },
+        "descriptions": {
+          "optimized": "Optimized shooting schedule based on scene analysis and location efficiency",
+          "weather": "Weather-aware scheduling with contingency plans for outdoor shoots",
+          "cast": "Cast availability and fatigue management for optimal performance",
+          "location": "Location-based scheduling to minimize travel and setup time"
+        }
+      },
+      "features": {
+        "title": "Suggestion Features",
+        "sequencing": "Optimal shooting day sequencing",
+        "timeEfficient": "Time-efficient call times and wrap times",
+        "castCrew": "Cast and crew availability optimization",
+        "locationBased": "Location-based scheduling for efficiency"
+      },
+      "scriptAnalysis": {
+        "title": "Script Analysis",
+        "description": "Paste your script text below for AI analysis and call sheet optimization",
+        "label": "Script Text",
+        "placeholder": "Paste your script text here... The AI will analyze scenes, locations, cast requirements, and generate optimized call sheet suggestions."
+      },
+      "tips": {
+        "title": "Suggestion Tips",
+        "location": "Include location details for accurate scheduling",
+        "cast": "Mention cast requirements and special needs",
+        "weather": "Note any weather-sensitive scenes",
+        "optimized": "Optimized schedules minimize travel time",
+        "weatherAware": "Weather-aware suggestions include contingencies"
+      },
+      "analysisPreview": {
+        "title": "Analysis Preview",
+        "description": "AI will analyze this script for call sheet optimization",
+        "estimatedScenes": "Estimated scenes",
+        "estimatedCharacters": "Estimated characters",
+        "estimatedLocations": "Estimated locations",
+        "selectedType": "Selected suggestion type"
+      }
+    },
+    "recommendations": {
+      "pageTitle": "AI Recommendations",
+      "pageSubtitle": "High-priority AI recommendations to optimize your production workflow",
+      "filter": {
+        "title": "Filter Recommendations",
+        "description": "Filter and manage AI recommendations for your project",
+        "typeLabel": "Recommendation Type",
+        "typePlaceholder": "Filter by type",
+        "types": {
+          "all": "All Types",
+          "callSheet": "Call Sheet",
+          "budget": "Budget",
+          "schedule": "Schedule",
+          "equipment": "Equipment"
+        }
+      },
+      "stats": {
+        "title": "Statistics",
+        "total": "Total",
+        "highPriority": "High Priority",
+        "mediumPriority": "Medium Priority",
+        "avgConfidence": "Avg Confidence"
+      },
+      "list": {
+        "title": "Recommendations",
+        "description": "High-priority AI recommendations with actionable insights",
+        "apply": "Apply",
+        "details": "Details",
+        "actionItems": "Action Items",
+        "estimatedImpact": "Estimated Impact",
+        "created": "Created",
+        "timeSaved": "Time Saved:",
+        "costSaved": "Cost Saved:",
+        "riskReduction": "Risk Reduction:"
+      },
+      "noRecommendations": {
+        "title": "No Recommendations Available",
+        "description": "No recommendations found for this project. Analyze your script to generate recommendations.",
+        "selectProject": "Please select a project to view recommendations."
+      },
+      "priorityMatrix": {
+        "title": "Priority Matrix",
+        "description": "View recommendations by priority and confidence",
+        "high": "High Priority",
+        "highDesc": "Critical recommendations that should be addressed immediately",
+        "medium": "Medium Priority",
+        "mediumDesc": "Important recommendations for medium-term implementation",
+        "low": "Low Priority",
+        "lowDesc": "Nice-to-have recommendations for optimization"
+      },
+      "guide": {
+        "title": "Implementation Guide",
+        "description": "How to implement AI recommendations effectively",
+        "highPriority": "Start with High Priority",
+        "highPriorityDesc": "Focus on high-priority recommendations first for maximum impact",
+        "actionItems": "Follow Action Items",
+        "actionItemsDesc": "Each recommendation includes specific action items to follow",
+        "trackImpact": "Track Impact",
+        "trackImpactDesc": "Monitor the estimated impact metrics to measure success"
+      }
+    },
+    "suggestions": {
+      "pageTitle": "AI Suggestions",
+      "pageSubtitle": "AI-powered suggestions to optimize your production workflow",
+      "generate": {
+        "title": "Generate Suggestions",
+        "description": "Generate AI-powered suggestions for your project"
+      },
+      "filter": {
+        "typeLabel": "Suggestion Type",
+        "typePlaceholder": "Filter by type",
+        "types": {
+          "all": "All Types",
+          "budget": "Budget",
+          "schedule": "Schedule",
+          "casting": "Casting",
+          "logistics": "Logistics",
+          "equipment": "Equipment",
+          "other": "Other"
+        }
+      },
+      "list": {
+        "title": "Suggestions",
+        "description": "AI-generated suggestions to improve your production efficiency",
+        "details": "Details",
+        "impact": "Impact",
+        "costEfficiency": "Cost Efficiency",
+        "timeSavings": "Time Savings",
+        "riskReduction": "Risk Reduction",
+        "relatedScenes": "Related Scenes:",
+        "estimatedSavings": "Estimated Savings:",
+        "timeSaved": "Time Saved:",
+        "scenes": "Scenes",
+        "characters": "Characters",
+        "locations": "Locations",
+        "equipment": "Equipment"
+      },
+      "noSuggestions": {
+        "title": "No Suggestions Available",
+        "description": "No suggestions found for this project. Generate suggestions using the quick actions.",
+        "selectProject": "Please select a project to view suggestions."
+      },
+      "insights": {
+        "title": "AI Insights",
+        "description": "Key insights from your AI suggestions",
+        "topPriority": "Top Priority",
+        "timeSavings": "Time Savings",
+        "timeSavingsDesc": "Total estimated time savings from all suggestions",
+        "costSavings": "Cost Savings",
+        "costSavingsDesc": "Total estimated cost savings from all suggestions"
+      }
+    },
+    "actions": {
+      "generateBudget": "Generate Budget",
+      "generateCallSheet": "Generate Call Sheet",
+      "generatingBudget": "Generating Budget...",
+      "generatingCallSheet": "Generating Call Sheet...",
+      "viewAiDashboard": "View AI Dashboard",
+      "viewShootingDays": "View Shooting Days",
+      "analyzeScriptRecommendations": "Analyze Script for Recommendations",
+      "viewAiSuggestions": "View AI Suggestions",
+      "exportRecommendations": "Export Recommendations",
+      "generateSuggestions": "Generate Suggestions",
+      "generating": "Generating...",
+      "clear": "Clear",
+      "generateBudgetSuggestions": "Generate Budget Suggestions",
+      "generateScheduleSuggestions": "Generate Schedule Suggestions"
     }
   }
 }

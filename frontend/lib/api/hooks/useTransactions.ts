@@ -56,9 +56,10 @@ export function useCreateTransaction() {
       return apiClient.post<TransactionWithRelations>(`/api/v1/transactions/?${params.toString()}`, transaction)
     },
     onSuccess: () => {
-      // Invalidate both transactions and bank accounts (balance will update)
+      // Invalidate transactions, bank accounts, and analytics/dashboard data
       queryClient.invalidateQueries({ queryKey: [TRANSACTIONS_KEY] })
       queryClient.invalidateQueries({ queryKey: ['bank-accounts'] })
+      queryClient.invalidateQueries({ queryKey: ['analytics'] })
     },
   })
 }
@@ -73,9 +74,10 @@ export function useDeleteTransaction() {
       return apiClient.delete<TransactionWithRelations>(`/api/v1/transactions/${transactionId}?${params.toString()}`)
     },
     onSuccess: () => {
-      // Invalidate both transactions and bank accounts (balance will rollback)
+      // Invalidate transactions, bank accounts, and analytics/dashboard data
       queryClient.invalidateQueries({ queryKey: [TRANSACTIONS_KEY] })
       queryClient.invalidateQueries({ queryKey: ['bank-accounts'] })
+      queryClient.invalidateQueries({ queryKey: ['analytics'] })
     },
   })
 }

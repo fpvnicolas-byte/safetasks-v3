@@ -11,9 +11,11 @@ import { Badge } from '@/components/ui/badge'
 import { Plus, Search, Edit, Trash2, Briefcase, Eye, Phone, Mail } from 'lucide-react'
 import Link from 'next/link'
 import { SupplierWithTransactions, SupplierCategory, getSupplierCategoryDisplayName, formatCurrency } from '@/types'
+import { useTranslations } from 'next-intl'
 
 export default function SuppliersPage() {
   const { organizationId } = useAuth()
+  const t = useTranslations('suppliers')
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<SupplierCategory | 'all'>('all')
   const [activeOnly, setActiveOnly] = useState(true)
@@ -36,7 +38,7 @@ export default function SuppliersPage() {
   }) || []
 
   const handleDeleteSupplier = async (supplierId: string, supplierName: string) => {
-    if (!confirm(`Are you sure you want to delete "${supplierName}"? This action cannot be undone.`)) {
+    if (!confirm(t('delete.confirm', { name: supplierName }))) {
       return
     }
 
@@ -44,7 +46,7 @@ export default function SuppliersPage() {
       await deleteSupplier.mutateAsync(supplierId)
     } catch (err: unknown) {
       const error = err as Error
-      alert(`Failed to delete supplier: ${error.message}`)
+      alert(t('delete.error', { message: error.message }))
     }
   }
 
@@ -52,15 +54,15 @@ export default function SuppliersPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Suppliers</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground">
-            Manage vendors, rental houses, and service providers
+            {t('description')}
           </p>
         </div>
         <Button asChild>
           <Link href="/suppliers/new">
             <Plus className="mr-2 h-4 w-4" />
-            New Supplier
+            {t('newSupplier')}
           </Link>
         </Button>
       </div>
@@ -68,19 +70,19 @@ export default function SuppliersPage() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Filter Suppliers</CardTitle>
+          <CardTitle>{t('filters.title')}</CardTitle>
           <CardDescription>
-            Find suppliers by name, category, or contact information
+            {t('filters.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Search</label>
+              <label className="text-sm font-medium">{t('filters.search')}</label>
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Name, email, or phone..."
+                  placeholder={t('filters.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-9"
@@ -89,41 +91,41 @@ export default function SuppliersPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Category</label>
+              <label className="text-sm font-medium">{t('filters.category')}</label>
               <Select value={categoryFilter} onValueChange={(value) => setCategoryFilter(value as SupplierCategory | 'all')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="rental_house">Rental House</SelectItem>
-                  <SelectItem value="freelancer">Freelancer</SelectItem>
-                  <SelectItem value="catering">Catering</SelectItem>
-                  <SelectItem value="transport">Transport</SelectItem>
-                  <SelectItem value="post_production">Post Production</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="all">{t('filters.allCategories')}</SelectItem>
+                  <SelectItem value="rental_house">{t('filters.rentalHouse')}</SelectItem>
+                  <SelectItem value="freelancer">{t('filters.freelancer')}</SelectItem>
+                  <SelectItem value="catering">{t('filters.catering')}</SelectItem>
+                  <SelectItem value="transport">{t('filters.transport')}</SelectItem>
+                  <SelectItem value="post_production">{t('filters.postProduction')}</SelectItem>
+                  <SelectItem value="other">{t('filters.other')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Status</label>
+              <label className="text-sm font-medium">{t('filters.status')}</label>
               <Select value={activeOnly ? 'active' : 'all'} onValueChange={(value) => setActiveOnly(value === 'active')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Active Only</SelectItem>
-                  <SelectItem value="all">All Suppliers</SelectItem>
+                  <SelectItem value="active">{t('filters.activeOnly')}</SelectItem>
+                  <SelectItem value="all">{t('filters.allSuppliers')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Results</label>
+              <label className="text-sm font-medium">{t('filters.results')}</label>
               <div className="flex items-center justify-center h-10 px-3 py-2 bg-muted rounded-md">
                 <span className="text-sm font-medium">
-                  {filteredSuppliers.length} supplier{filteredSuppliers.length !== 1 ? 's' : ''}
+                  {filteredSuppliers.length !== 1 ? t('filters.supplierCount_other', { count: filteredSuppliers.length }) : t('filters.supplierCount', { count: 1 })}
                 </span>
               </div>
             </div>
@@ -133,9 +135,9 @@ export default function SuppliersPage() {
 
       {/* Suppliers Grid */}
       {isLoading ? (
-        <div>Loading suppliers...</div>
+        <div>{t('list.loading')}</div>
       ) : error ? (
-        <div>Error loading suppliers: {error.message}</div>
+        <div>{t('list.error', { message: error.message })}</div>
       ) : filteredSuppliers.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredSuppliers.map((supplier) => (
@@ -143,17 +145,18 @@ export default function SuppliersPage() {
               key={supplier.id}
               supplier={supplier}
               onDelete={() => handleDeleteSupplier(supplier.id, supplier.name)}
+              t={t}
             />
           ))}
         </div>
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>No Suppliers Found</CardTitle>
+            <CardTitle>{t('empty.title')}</CardTitle>
             <CardDescription>
               {searchQuery || categoryFilter !== 'all'
-                ? 'No suppliers match your current filters'
-                : 'Get started by adding your first supplier'
+                ? t('empty.noMatches')
+                : t('empty.getStarted')
               }
             </CardDescription>
           </CardHeader>
@@ -161,12 +164,12 @@ export default function SuppliersPage() {
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Briefcase className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-sm text-muted-foreground mb-4">
-                Suppliers help you track vendors, freelancers, and service providers
+                {t('empty.helpText')}
               </p>
               <Button asChild>
                 <Link href="/suppliers/new">
                   <Plus className="mr-2 h-4 w-4" />
-                  Add First Supplier
+                  {t('empty.addFirst')}
                 </Link>
               </Button>
             </div>
@@ -180,9 +183,10 @@ export default function SuppliersPage() {
 interface SupplierCardProps {
   supplier: SupplierWithTransactions
   onDelete: () => void
+  t: (key: string, values?: Record<string, string | number>) => string
 }
 
-function SupplierCard({ supplier, onDelete }: SupplierCardProps) {
+function SupplierCard({ supplier, onDelete, t }: SupplierCardProps) {
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader>
@@ -191,7 +195,7 @@ function SupplierCard({ supplier, onDelete }: SupplierCardProps) {
             <CardTitle className="text-lg flex items-center gap-2">
               {supplier.name}
               {!supplier.is_active && (
-                <Badge variant="outline" className="text-xs">Inactive</Badge>
+                <Badge variant="outline" className="text-xs">{t('card.inactive')}</Badge>
               )}
             </CardTitle>
             <CardDescription>
@@ -221,9 +225,9 @@ function SupplierCard({ supplier, onDelete }: SupplierCardProps) {
 
         {supplier.total_transactions > 0 && (
           <div className="pt-2 border-t">
-            <div className="text-xs text-muted-foreground">Transaction Summary</div>
+            <div className="text-xs text-muted-foreground">{t('card.transactionSummary')}</div>
             <div className="flex items-baseline justify-between mt-1">
-              <span className="text-sm">{supplier.total_transactions} transaction{supplier.total_transactions !== 1 ? 's' : ''}</span>
+              <span className="text-sm">{supplier.total_transactions !== 1 ? t('card.transaction_other', { count: supplier.total_transactions }) : t('card.transaction', { count: 1 })}</span>
               <span className="text-lg font-semibold">{formatCurrency(supplier.total_amount_cents)}</span>
             </div>
           </div>
@@ -233,13 +237,13 @@ function SupplierCard({ supplier, onDelete }: SupplierCardProps) {
           <Button asChild variant="outline" size="sm" className="flex-1">
             <Link href={`/suppliers/${supplier.id}`}>
               <Eye className="mr-2 h-3 w-3" />
-              View
+              {t('list.view')}
             </Link>
           </Button>
           <Button asChild variant="outline" size="sm" className="flex-1">
             <Link href={`/suppliers/${supplier.id}/edit`}>
               <Edit className="mr-2 h-3 w-3" />
-              Edit
+              {t('list.edit')}
             </Link>
           </Button>
           <Button

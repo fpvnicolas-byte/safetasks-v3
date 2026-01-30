@@ -12,6 +12,7 @@ import { DollarSign, Plus, Eye, Edit, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency } from '@/lib/utils/money'
 import { InvoiceWithItems, InvoiceStatus } from '@/types'
+import { useLocale, useTranslations } from 'next-intl'
 
 const statusColors: Record<InvoiceStatus, string> = {
   draft: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
@@ -23,6 +24,9 @@ const statusColors: Record<InvoiceStatus, string> = {
 
 export default function FinancialsPage() {
   const { organizationId } = useAuth()
+  const locale = useLocale()
+  const t = useTranslations('financials')
+  const tCommon = useTranslations('common')
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | 'all'>('all')
 
   const filters = statusFilter === 'all' ? {} : { status: statusFilter }
@@ -36,33 +40,33 @@ export default function FinancialsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Financials</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground">
-            Track budgets, invoices, and expenses
+            {t('description')}
           </p>
         </div>
         <Button asChild>
           <Link href="/financials/new-invoice">
             <Plus className="mr-2 h-4 w-4" />
-            New Invoice
+            {t('newInvoice')}
           </Link>
         </Button>
       </div>
 
       <Tabs defaultValue="overview">
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="invoices">Invoices</TabsTrigger>
-          <TabsTrigger value="bank-accounts">Bank Accounts</TabsTrigger>
-          <TabsTrigger value="transactions">Transactions</TabsTrigger>
-          <TabsTrigger value="expenses">Expenses</TabsTrigger>
+          <TabsTrigger value="overview">{t('overview.tab')}</TabsTrigger>
+          <TabsTrigger value="invoices">{t('invoicesTab.tab')}</TabsTrigger>
+          <TabsTrigger value="bank-accounts">{t('bankAccountsTab.tab')}</TabsTrigger>
+          <TabsTrigger value="transactions">{t('transactionsTab.tab')}</TabsTrigger>
+          <TabsTrigger value="expenses">{t('expensesTab.tab')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-3">
             <Card>
               <CardHeader>
-                <CardTitle>Total Budget</CardTitle>
+                <CardTitle>{t('overview.totalBudget')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{formatCurrency(stats?.total_budget_cents || 0)}</div>
@@ -71,7 +75,7 @@ export default function FinancialsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Total Spent</CardTitle>
+                <CardTitle>{t('overview.totalSpent')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{formatCurrency(stats?.total_expense_cents || 0)}</div>
@@ -80,7 +84,7 @@ export default function FinancialsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Remaining</CardTitle>
+                <CardTitle>{t('overview.remaining')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{formatCurrency(stats?.remaining_budget_cents || 0)}</div>
@@ -93,18 +97,18 @@ export default function FinancialsPage() {
           {/* Filters */}
           <div className="flex items-center gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Filter by Status</label>
+              <label className="text-sm font-medium">{t('invoicesTab.filterByStatus')}</label>
               <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as InvoiceStatus | 'all')}>
                 <SelectTrigger className="w-48">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="sent">Sent</SelectItem>
-                  <SelectItem value="paid">Paid</SelectItem>
-                  <SelectItem value="overdue">Overdue</SelectItem>
-                  <SelectItem value="canceled">Canceled</SelectItem>
+                  <SelectItem value="all">{t('invoicesTab.allStatuses')}</SelectItem>
+                  <SelectItem value="draft">{t('invoicesTab.draft')}</SelectItem>
+                  <SelectItem value="sent">{t('invoicesTab.sent')}</SelectItem>
+                  <SelectItem value="paid">{t('paid')}</SelectItem>
+                  <SelectItem value="overdue">{t('invoicesTab.overdue')}</SelectItem>
+                  <SelectItem value="canceled">{t('invoicesTab.canceled')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -112,23 +116,23 @@ export default function FinancialsPage() {
 
           {/* Invoice List */}
           {isLoading ? (
-            <div>Loading invoices...</div>
+            <div>{t('invoicesTab.loading')}</div>
           ) : error ? (
-            <div>Error loading invoices: {error.message}</div>
+            <div>{t('invoicesTab.error', { message: error.message })}</div>
           ) : invoices && invoices.length > 0 ? (
             <div className="grid gap-4">
               {invoices.map((invoice) => (
-                <InvoiceCard key={invoice.id} invoice={invoice} />
+                <InvoiceCard key={invoice.id} invoice={invoice} t={t} tCommon={tCommon} locale={locale} />
               ))}
             </div>
           ) : (
             <Card>
               <CardHeader>
-                <CardTitle>No Invoices Found</CardTitle>
+                <CardTitle>{t('invoicesTab.noInvoicesFound')}</CardTitle>
                 <CardDescription>
                   {statusFilter === 'all'
-                    ? 'Create your first invoice to get started'
-                    : `No invoices with status "${statusFilter}"`
+                    ? t('invoicesTab.createFirst')
+                    : t('invoicesTab.noInvoicesWithStatus', { status: statusFilter })
                   }
                 </CardDescription>
               </CardHeader>
@@ -136,12 +140,12 @@ export default function FinancialsPage() {
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <DollarSign className="h-12 w-12 text-muted-foreground mb-4" />
                   <p className="text-sm text-muted-foreground mb-4">
-                    Professional invoices help track payments and manage client relationships
+                    {t('invoicesTab.helpText')}
                   </p>
                   <Button asChild>
                     <Link href="/financials/new-invoice">
                       <Plus className="mr-2 h-4 w-4" />
-                      Create First Invoice
+                      {t('invoicesTab.createFirstInvoice')}
                     </Link>
                   </Button>
                 </div>
@@ -153,8 +157,8 @@ export default function FinancialsPage() {
         <TabsContent value="bank-accounts">
           <Card>
             <CardHeader>
-              <CardTitle>Bank Accounts</CardTitle>
-              <CardDescription>Manage your bank accounts and track balances</CardDescription>
+              <CardTitle>{t('bankAccountsTab.title')}</CardTitle>
+              <CardDescription>{t('bankAccountsTab.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               {bankAccounts && bankAccounts.length > 0 ? (
@@ -171,14 +175,14 @@ export default function FinancialsPage() {
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-6 text-center">
-                  <p className="text-sm text-muted-foreground mb-4">No bank accounts found.</p>
+                  <p className="text-sm text-muted-foreground mb-4">{t('bankAccountsTab.noBankAccounts')}</p>
                 </div>
               )}
               <div className="mt-6 flex justify-center">
                 <Button asChild variant="outline">
                   <Link href="/financials/bank-accounts">
                     <Plus className="mr-2 h-4 w-4" />
-                    View Bank Accounts
+                    {t('bankAccountsTab.viewBankAccounts')}
                   </Link>
                 </Button>
               </div>
@@ -189,8 +193,8 @@ export default function FinancialsPage() {
         <TabsContent value="transactions">
           <Card>
             <CardHeader>
-              <CardTitle>Transactions</CardTitle>
-              <CardDescription>Record income and expenses to track cash flow</CardDescription>
+              <CardTitle>{t('transactionsTab.title')}</CardTitle>
+              <CardDescription>{t('transactionsTab.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               {recentTransactions && recentTransactions.length > 0 ? (
@@ -198,9 +202,9 @@ export default function FinancialsPage() {
                   {recentTransactions.map((transaction) => (
                     <div key={transaction.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
                       <div>
-                        <div className="font-medium">{transaction.description || 'No description'}</div>
+                        <div className="font-medium">{transaction.description || t('transactionsTab.noDescription')}</div>
                         <div className="text-sm text-muted-foreground">
-                          {new Date(transaction.transaction_date).toLocaleDateString()} • {transaction.category}
+                          {new Date(transaction.transaction_date).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} • {transaction.category}
                         </div>
                       </div>
                       <div className={`font-bold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
@@ -211,14 +215,14 @@ export default function FinancialsPage() {
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-6 text-center">
-                  <p className="text-sm text-muted-foreground mb-4">No recent transactions.</p>
+                  <p className="text-sm text-muted-foreground mb-4">{t('transactionsTab.noRecentTransactions')}</p>
                 </div>
               )}
               <div className="mt-6 flex justify-center">
                 <Button asChild variant="outline">
                   <Link href="/financials/transactions">
                     <Plus className="mr-2 h-4 w-4" />
-                    View Transactions
+                    {t('transactionsTab.viewTransactions')}
                   </Link>
                 </Button>
               </div>
@@ -229,8 +233,8 @@ export default function FinancialsPage() {
         <TabsContent value="expenses">
           <Card>
             <CardHeader>
-              <CardTitle>Expenses</CardTitle>
-              <CardDescription>Track production costs and expenses</CardDescription>
+              <CardTitle>{t('expensesTab.title')}</CardTitle>
+              <CardDescription>{t('expensesTab.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               {recentExpenses && recentExpenses.length > 0 ? (
@@ -238,9 +242,9 @@ export default function FinancialsPage() {
                   {recentExpenses.map((expense) => (
                     <div key={expense.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
                       <div>
-                        <div className="font-medium">{expense.description || 'No description'}</div>
+                        <div className="font-medium">{expense.description || t('transactionsTab.noDescription')}</div>
                         <div className="text-sm text-muted-foreground">
-                          {new Date(expense.transaction_date).toLocaleDateString()} • {expense.category}
+                          {new Date(expense.transaction_date).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} • {expense.category}
                         </div>
                       </div>
                       <div className="font-bold text-red-600">
@@ -251,14 +255,14 @@ export default function FinancialsPage() {
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-6 text-center">
-                  <p className="text-sm text-muted-foreground mb-4">No recent expenses.</p>
+                  <p className="text-sm text-muted-foreground mb-4">{t('expensesTab.noRecentExpenses')}</p>
                 </div>
               )}
               <div className="mt-6 flex justify-center">
                 <Button asChild variant="outline">
                   <Link href="/financials/transactions?type=expense">
                     <Plus className="mr-2 h-4 w-4" />
-                    View Expenses
+                    {t('expensesTab.viewExpenses')}
                   </Link>
                 </Button>
               </div>
@@ -272,9 +276,12 @@ export default function FinancialsPage() {
 
 interface InvoiceCardProps {
   invoice: InvoiceWithItems
+  t: (key: string, values?: Record<string, string | number>) => string
+  tCommon: (key: string) => string
+  locale: string
 }
 
-function InvoiceCard({ invoice }: InvoiceCardProps) {
+function InvoiceCard({ invoice, t, tCommon, locale }: InvoiceCardProps) {
   const { organizationId } = useAuth()
   const deleteInvoice = useDeleteInvoice(organizationId || undefined)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -283,7 +290,7 @@ function InvoiceCard({ invoice }: InvoiceCardProps) {
   const isOverdue = invoice.status !== 'paid' && dueDate < new Date()
 
   async function handleDelete() {
-    if (!confirm(`Are you sure you want to delete invoice #${invoice.invoice_number}? This action cannot be undone.`)) {
+    if (!confirm(t('invoicesTab.invoice.deleteConfirm', { number: invoice.invoice_number }))) {
       return
     }
 
@@ -292,7 +299,7 @@ function InvoiceCard({ invoice }: InvoiceCardProps) {
       await deleteInvoice.mutateAsync(invoice.id)
     } catch (error) {
       console.error('Failed to delete invoice:', error)
-      alert('Failed to delete invoice. Please try again.')
+      alert(t('invoicesTab.invoice.deleteError'))
     } finally {
       setIsDeleting(false)
     }
@@ -304,13 +311,13 @@ function InvoiceCard({ invoice }: InvoiceCardProps) {
         <div className="flex items-start justify-between">
           <div>
             <CardTitle className="text-lg">
-              Invoice #{invoice.invoice_number}
+              {t('invoicesTab.invoice.invoiceNumber', { number: invoice.invoice_number })}
             </CardTitle>
             <CardDescription>
-              Issued {issueDate.toLocaleDateString()} • Due {dueDate.toLocaleDateString()}
+              {t('invoicesTab.invoice.issued')} {issueDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} • {t('invoicesTab.invoice.due')} {dueDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
               {isOverdue && (
                 <span className="text-red-600 dark:text-red-400 font-medium ml-2">
-                  (Overdue)
+                  {t('invoicesTab.invoice.overdue')}
                 </span>
               )}
             </CardDescription>
@@ -324,15 +331,15 @@ function InvoiceCard({ invoice }: InvoiceCardProps) {
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
           <div>
-            <div className="font-medium text-muted-foreground">Client</div>
-            <div>{invoice.client?.name || 'No client assigned'}</div>
+            <div className="font-medium text-muted-foreground">{t('invoicesTab.invoice.client')}</div>
+            <div>{invoice.client?.name || t('invoicesTab.invoice.noClient')}</div>
           </div>
           <div>
-            <div className="font-medium text-muted-foreground">Project</div>
-            <div>{invoice.project?.title || 'No project assigned'}</div>
+            <div className="font-medium text-muted-foreground">{t('invoicesTab.invoice.project')}</div>
+            <div>{invoice.project?.title || t('invoicesTab.invoice.noProject')}</div>
           </div>
           <div>
-            <div className="font-medium text-muted-foreground">Amount</div>
+            <div className="font-medium text-muted-foreground">{t('amount')}</div>
             <div className="text-lg font-bold">
               {formatCurrency(invoice.total_amount_cents)}
             </div>
@@ -341,7 +348,7 @@ function InvoiceCard({ invoice }: InvoiceCardProps) {
 
         {invoice.notes && (
           <div className="text-sm">
-            <div className="font-medium text-muted-foreground">Notes:</div>
+            <div className="font-medium text-muted-foreground">{t('invoicesTab.invoice.notes')}</div>
             <div className="mt-1">{invoice.notes}</div>
           </div>
         )}
@@ -350,13 +357,13 @@ function InvoiceCard({ invoice }: InvoiceCardProps) {
           <Button asChild variant="outline" size="sm">
             <Link href={`/financials/invoices/${invoice.id}`}>
               <Eye className="mr-2 h-3 w-3" />
-              View
+              {t('invoicesTab.invoice.view')}
             </Link>
           </Button>
           <Button asChild variant="outline" size="sm">
             <Link href={`/financials/invoices/${invoice.id}/edit`}>
               <Edit className="mr-2 h-3 w-3" />
-              Edit
+              {t('invoicesTab.invoice.edit')}
             </Link>
           </Button>
           <Button

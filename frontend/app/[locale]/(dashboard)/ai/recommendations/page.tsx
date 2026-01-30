@@ -24,10 +24,14 @@ import {
   Clock
 } from 'lucide-react'
 import type { AiRecommendation } from '@/types'
+import { useLocale, useTranslations } from 'next-intl'
 
 export default function AiRecommendationsPage() {
   const router = useRouter()
+  const locale = useLocale()
   const { user, organizationId } = useAuth()
+  const tCommon = useTranslations('common.feedback')
+  const t = useTranslations('ai')
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [recommendationType, setRecommendationType] = useState<'call_sheet' | 'budget' | 'schedule' | 'equipment' | 'all'>('all')
@@ -66,6 +70,8 @@ export default function AiRecommendationsPage() {
   ) || []
 
   const handleApplyRecommendation = (recommendation: { title: string }) => {
+    // This string is dynamic, might need better handling or just keep english for now as it's 'Applying X...'
+    // Or use tFeedback('actionSuccess') type of key but for ongoing action.
     toast.success(`Applying ${recommendation.title}...`)
     // TODO: Implement recommendation application logic
     console.log('Applying recommendation:', recommendation)
@@ -73,7 +79,7 @@ export default function AiRecommendationsPage() {
 
   const handleExportRecommendations = () => {
     if (!recommendations || recommendations.length === 0) {
-      toast.error('No recommendations to export')
+      toast.error(tCommon('actionError', { message: 'No recommendations to export' }))
       return
     }
 
@@ -102,16 +108,16 @@ export default function AiRecommendationsPage() {
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
 
-    toast.success('Recommendations exported successfully')
+    toast.success(tCommon('actionSuccess'))
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">AI Recommendations</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('recommendations.pageTitle')}</h1>
           <p className="text-muted-foreground">
-            High-priority AI recommendations to optimize your production workflow
+            {t('recommendations.pageSubtitle')}
           </p>
         </div>
         <div className="flex gap-2">
@@ -119,13 +125,13 @@ export default function AiRecommendationsPage() {
             variant="outline"
             onClick={() => router.push('/ai')}
           >
-            Back to AI Dashboard
+            {t('actions.viewAiDashboard')}
           </Button>
           <Button
             onClick={handleExportRecommendations}
             disabled={!recommendations || recommendations.length === 0}
           >
-            Export Recommendations
+            {t('actions.exportRecommendations')}
           </Button>
         </div>
       </div>
@@ -134,22 +140,22 @@ export default function AiRecommendationsPage() {
         {/* Controls */}
         <Card className="lg:col-span-1">
           <CardHeader>
-            <CardTitle>Filter Recommendations</CardTitle>
+            <CardTitle>{t('recommendations.filter.title')}</CardTitle>
             <CardDescription>
-              Filter and manage AI recommendations for your project
+              {t('recommendations.filter.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Project Selection */}
             <div className="space-y-2">
-              <Label htmlFor="project">Project</Label>
+              <Label htmlFor="project">{t('callSheetSuggestions.settings.projectLabel')}</Label>
               <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
                 <SelectTrigger id="project">
-                  <SelectValue placeholder="Select a project" />
+                  <SelectValue placeholder={t('callSheetSuggestions.settings.selectProjectPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {isLoadingProjects ? (
-                    <div className="p-2 text-sm text-muted-foreground">Loading projects...</div>
+                    <div className="p-2 text-sm text-muted-foreground">{t('common.loading')}</div>
                   ) : projects && projects.length > 0 ? (
                     projects.map((project) => (
                       <SelectItem key={project.id} value={project.id}>
@@ -157,7 +163,7 @@ export default function AiRecommendationsPage() {
                       </SelectItem>
                     ))
                   ) : (
-                    <div className="p-2 text-sm text-muted-foreground">No projects available</div>
+                    <div className="p-2 text-sm text-muted-foreground">{t('empty.projects')}</div>
                   )}
                 </SelectContent>
               </Select>
@@ -165,24 +171,24 @@ export default function AiRecommendationsPage() {
 
             {/* Recommendation Type Filter */}
             <div className="space-y-2">
-              <Label htmlFor="recommendation-type">Recommendation Type</Label>
+              <Label htmlFor="recommendation-type">{t('recommendations.filter.typeLabel')}</Label>
               <Select value={recommendationType} onValueChange={(value) => setRecommendationType(value as 'call_sheet' | 'budget' | 'schedule' | 'equipment' | 'all')}>
                 <SelectTrigger id="recommendation-type">
-                  <SelectValue placeholder="Filter by type" />
+                  <SelectValue placeholder={t('recommendations.filter.typePlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="call_sheet">Call Sheet</SelectItem>
-                  <SelectItem value="budget">Budget</SelectItem>
-                  <SelectItem value="schedule">Schedule</SelectItem>
-                  <SelectItem value="equipment">Equipment</SelectItem>
+                  <SelectItem value="all">{t('recommendations.filter.types.all')}</SelectItem>
+                  <SelectItem value="call_sheet">{t('recommendations.filter.types.callSheet')}</SelectItem>
+                  <SelectItem value="budget">{t('recommendations.filter.types.budget')}</SelectItem>
+                  <SelectItem value="schedule">{t('recommendations.filter.types.schedule')}</SelectItem>
+                  <SelectItem value="equipment">{t('recommendations.filter.types.equipment')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Quick Actions */}
             <div className="space-y-3">
-              <h4 className="font-semibold">Quick Actions</h4>
+              <h4 className="font-semibold">{t('quickActions.title')}</h4>
               <div className="space-y-2">
                 <Button
                   variant="outline"
@@ -190,7 +196,7 @@ export default function AiRecommendationsPage() {
                   onClick={() => router.push('/ai/script-analysis')}
                 >
                   <Sparkles className="mr-2 h-4 w-4" />
-                  Analyze Script for Recommendations
+                  {t('actions.analyzeScriptRecommendations')}
                 </Button>
                 <Button
                   variant="outline"
@@ -198,7 +204,7 @@ export default function AiRecommendationsPage() {
                   onClick={() => router.push('/ai/suggestions')}
                 >
                   <TrendingUp className="mr-2 h-4 w-4" />
-                  View AI Suggestions
+                  {t('actions.viewAiSuggestions')}
                 </Button>
               </div>
             </div>
@@ -206,26 +212,26 @@ export default function AiRecommendationsPage() {
             {/* Statistics */}
             {recommendations && (
               <div className="space-y-3">
-                <h4 className="font-semibold">Statistics</h4>
+                <h4 className="font-semibold">{t('recommendations.stats.title')}</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div className="bg-gray-100 p-2 rounded">
-                    <span className="text-gray-600">Total</span>
+                    <span className="text-gray-600">{t('recommendations.stats.total')}</span>
                     <div className="font-bold">{recommendations.length}</div>
                   </div>
                   <div className="bg-red-100 p-2 rounded">
-                    <span className="text-red-600">High Priority</span>
+                    <span className="text-red-600">{t('recommendations.stats.highPriority')}</span>
                     <div className="font-bold">
                       {recommendations.filter((r: AiRecommendation) => r.priority === 'high').length}
                     </div>
                   </div>
                   <div className="bg-yellow-100 p-2 rounded">
-                    <span className="text-yellow-600">Medium Priority</span>
+                    <span className="text-yellow-600">{t('recommendations.stats.mediumPriority')}</span>
                     <div className="font-bold">
                       {recommendations.filter((r: AiRecommendation) => r.priority === 'medium').length}
                     </div>
                   </div>
                   <div className="bg-green-100 p-2 rounded">
-                    <span className="text-green-600">Avg Confidence</span>
+                    <span className="text-green-600">{t('recommendations.stats.avgConfidence')}</span>
                     <div className="font-bold">
                       {recommendations.length > 0
                         ? Math.round(recommendations.reduce((acc: number, r: AiRecommendation) => acc + r.confidence, 0) / recommendations.length * 100)
@@ -242,13 +248,13 @@ export default function AiRecommendationsPage() {
         <Card className="lg:col-span-3">
           <CardHeader>
             <div className="flex justify-between items-center">
-              <CardTitle>Recommendations</CardTitle>
+              <CardTitle>{t('recommendations.list.title')}</CardTitle>
               <div className="text-sm text-muted-foreground">
-                {filteredRecommendations.length} recommendations
+                {filteredRecommendations.length} {t('lists.recommendationsTitle')}
               </div>
             </div>
             <CardDescription>
-              High-priority AI recommendations with actionable insights
+              {t('recommendations.list.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -286,13 +292,13 @@ export default function AiRecommendationsPage() {
                             size="sm"
                             onClick={() => handleApplyRecommendation(recommendation)}
                           >
-                            Apply
+                            {t('recommendations.list.apply')}
                           </Button>
                           <Button
                             size="sm"
                             onClick={() => router.push(`/ai/recommendations/${recommendation.id}`)}
                           >
-                            Details
+                            {t('recommendations.list.details')}
                           </Button>
                         </div>
                       </div>
@@ -344,7 +350,7 @@ export default function AiRecommendationsPage() {
                             Created
                           </h4>
                           <div className="text-sm text-muted-foreground">
-                            {new Date(recommendation.created_at).toLocaleDateString()}
+                            {new Date(recommendation.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                           </div>
                         </div>
                       </div>
@@ -357,11 +363,11 @@ export default function AiRecommendationsPage() {
                 <div className="flex justify-center mb-4">
                   <CheckCircle className="h-12 w-12 text-gray-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Recommendations Available</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('recommendations.noRecommendations.title')}</h3>
                 <p className="text-gray-600 mb-4">
                   {selectedProjectId
-                    ? "No recommendations found for this project. Analyze your script to generate recommendations."
-                    : "Please select a project to view recommendations."
+                    ? t('recommendations.noRecommendations.description')
+                    : t('recommendations.noRecommendations.selectProject')
                   }
                 </p>
                 {selectedProjectId && (
@@ -370,7 +376,7 @@ export default function AiRecommendationsPage() {
                     className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                   >
                     <Sparkles className="mr-2 h-4 w-4" />
-                    Generate Recommendations
+                    {t('actions.generateSuggestions')}
                   </Button>
                 )}
               </div>
@@ -446,9 +452,9 @@ export default function AiRecommendationsPage() {
       {/* Implementation Guide */}
       <Card>
         <CardHeader>
-          <CardTitle>Implementation Guide</CardTitle>
+          <CardTitle>{t('recommendations.guide.title')}</CardTitle>
           <CardDescription>
-            How to implement AI recommendations effectively
+            {t('recommendations.guide.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -456,28 +462,28 @@ export default function AiRecommendationsPage() {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-600" />
-                <span className="font-semibold">Start with High Priority</span>
+                <span className="font-semibold">{t('recommendations.guide.highPriority')}</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Focus on high-priority recommendations first for maximum impact
+                {t('recommendations.guide.highPriorityDesc')}
               </p>
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Target className="h-4 w-4 text-blue-600" />
-                <span className="font-semibold">Follow Action Items</span>
+                <span className="font-semibold">{t('recommendations.guide.actionItems')}</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Each recommendation includes specific action items to follow
+                {t('recommendations.guide.actionItemsDesc')}
               </p>
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-purple-600" />
-                <span className="font-semibold">Track Impact</span>
+                <span className="font-semibold">{t('recommendations.guide.trackImpact')}</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Monitor the estimated impact metrics to measure success
+                {t('recommendations.guide.trackImpactDesc')}
               </p>
             </div>
           </div>

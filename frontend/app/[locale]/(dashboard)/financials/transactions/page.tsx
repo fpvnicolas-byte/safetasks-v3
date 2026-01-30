@@ -10,9 +10,11 @@ import { Badge } from '@/components/ui/badge'
 import { Plus, Search, Eye, Trash2, ArrowUpCircle, ArrowDownCircle, Receipt, TrendingUp, TrendingDown } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency, getCategoryDisplayName, TransactionType, TransactionCategory } from '@/types'
+import { useLocale, useTranslations } from 'next-intl'
 
 export default function TransactionsPage() {
   const { organizationId } = useAuth()
+  const locale = useLocale()
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState<TransactionType | 'all'>('all')
   const [filterBankAccount, setFilterBankAccount] = useState<string>('all')
@@ -24,6 +26,8 @@ export default function TransactionsPage() {
   const { data: bankAccounts } = useBankAccounts(organizationId || '')
   const { data: projects } = useProjects(organizationId || '')
   const deleteTransaction = useDeleteTransaction()
+  const t = useTranslations('financials.transactions')
+  const tCommon = useTranslations('common.feedback')
 
   // Apply filters
   const filteredTransactions = allTransactions?.filter(transaction => {
@@ -79,7 +83,7 @@ export default function TransactionsPage() {
   const netBalance = totalIncome - totalExpense
 
   const handleDeleteTransaction = async (transactionId: string, description: string) => {
-    if (!confirm(`Are you sure you want to delete transaction "${description || 'Untitled'}"? This will update the bank account balance.`)) {
+    if (!confirm(tCommon('confirmAction'))) { // Ideally customize this message to include description if needed, or stick to generic
       return
     }
 
@@ -90,7 +94,7 @@ export default function TransactionsPage() {
       })
     } catch (err: unknown) {
       const error = err as Error
-      alert(`Failed to delete transaction: ${error.message}`)
+      alert(tCommon('actionError', { message: error.message }))
     }
   }
 
@@ -342,7 +346,7 @@ export default function TransactionsPage() {
                           {transaction.project && (
                             <span>{transaction.project.title}</span>
                           )}
-                          <span>{new Date(transaction.transaction_date).toLocaleDateString()}</span>
+                          <span>{new Date(transaction.transaction_date).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
                         </div>
                       </div>
 

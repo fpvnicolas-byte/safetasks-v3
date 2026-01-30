@@ -4,20 +4,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { TrendsData } from '@/types'
 import { formatCurrency } from '@/lib/utils/money'
 import { TrendingUp, TrendingDown } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 interface RevenueChartProps {
   data: TrendsData
 }
 
 export function RevenueChart({ data }: RevenueChartProps) {
+  const t = useTranslations('dashboard.revenueChart')
   const trends = data.monthly_financial_trends || []
 
   if (trends.length === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Revenue Trends</CardTitle>
-          <CardDescription>No data available</CardDescription>
+          <CardTitle>{t('title')}</CardTitle>
+          <CardDescription>{t('noData')}</CardDescription>
         </CardHeader>
       </Card>
     )
@@ -40,8 +42,8 @@ export function RevenueChart({ data }: RevenueChartProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Revenue Trends</CardTitle>
-            <CardDescription>Last {trends.length} months</CardDescription>
+            <CardTitle>{t('title')}</CardTitle>
+            <CardDescription>{t('lastMonths', { count: trends.length })}</CardDescription>
           </div>
           <div className="flex items-center gap-2">
             {revenueGrowth >= 0 ? (
@@ -115,22 +117,22 @@ export function RevenueChart({ data }: RevenueChartProps) {
           <div className="flex gap-6 text-sm border-t pt-4">
             <div className="flex items-center gap-2">
               <div className="h-3 w-3 bg-green-500 rounded" />
-              <span>Revenue</span>
+              <span>{t('revenue')}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="h-3 w-3 bg-red-500 rounded" />
-              <span>Expenses</span>
+              <span>{t('expenses')}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="h-3 w-3 bg-blue-500 rounded" />
-              <span>Net Profit</span>
+              <span>{t('netProfit')}</span>
             </div>
           </div>
 
           {/* Key Insights */}
           {data.key_insights && data.key_insights.length > 0 && (
             <div className="border-t pt-4">
-              <h4 className="text-sm font-medium mb-2">Key Insights</h4>
+              <h4 className="text-sm font-medium mb-2">{t('keyInsights')}</h4>
               <ul className="space-y-1">
                 {data.key_insights.map((insight, idx) => (
                   <li key={idx} className="text-sm text-muted-foreground">

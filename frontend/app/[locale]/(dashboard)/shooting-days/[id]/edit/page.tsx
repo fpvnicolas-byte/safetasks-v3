@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { useTranslations, useLocale } from 'next-intl'
 import { useShootingDay, useUpdateShootingDay } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
@@ -16,6 +17,9 @@ import { convertTimeToFormFormat } from '@/types'
 export default function EditShootingDayPage() {
   const router = useRouter()
   const params = useParams()
+  const locale = useLocale()
+  const t = useTranslations('shootingDays.edit')
+  const tCommon = useTranslations('common')
   const { organizationId } = useAuth()
   const shootingDayId = params.id as string
 
@@ -28,11 +32,11 @@ export default function EditShootingDayPage() {
       <div className="max-w-2xl mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle>Edit Shooting Day</CardTitle>
-            <CardDescription>Update shooting day details</CardDescription>
+            <CardTitle>{t('title')}</CardTitle>
+            <CardDescription>{t('description')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div>Loading shooting day...</div>
+            <div>{t('loading')}</div>
           </CardContent>
         </Card>
       </div>
@@ -40,7 +44,7 @@ export default function EditShootingDayPage() {
   }
 
   if (!shootingDay) {
-    return <div className="p-8 text-destructive">Shooting day not found</div>
+    return <div className="p-8 text-destructive">{t('notFound')}</div>
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -60,10 +64,10 @@ export default function EditShootingDayPage() {
       }
 
       await updateShootingDay.mutateAsync(data)
-      router.push(`/shooting-days/${shootingDayId}`)
+      router.push(`/${locale}/shooting-days/${shootingDayId}`)
     } catch (err: any) {
       console.error('Update shooting day error:', err)
-      showError(err, 'Error Updating Shooting Day')
+      showError(err, t('errors.updateTitle'))
     }
   }
 
@@ -72,15 +76,15 @@ export default function EditShootingDayPage() {
       <Card>
         <form onSubmit={handleSubmit}>
           <CardHeader>
-            <CardTitle>Edit Shooting Day</CardTitle>
-            <CardDescription>Update shooting day details</CardDescription>
+            <CardTitle>{t('title')}</CardTitle>
+            <CardDescription>{t('description')}</CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-4">
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="date">Shooting Date *</Label>
+                <Label htmlFor="date">{t('date')}</Label>
                 <Input
                   id="date"
                   name="date"
@@ -91,7 +95,7 @@ export default function EditShootingDayPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="call_time">Call Time *</Label>
+                <Label htmlFor="call_time">{t('callTime')}</Label>
                 <Input
                   id="call_time"
                   name="call_time"
@@ -102,7 +106,7 @@ export default function EditShootingDayPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="wrap_time">Estimated Wrap Time</Label>
+                <Label htmlFor="wrap_time">{t('wrapTime')}</Label>
                 <Input
                   id="wrap_time"
                   name="wrap_time"
@@ -113,43 +117,43 @@ export default function EditShootingDayPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="location_name">Location Name *</Label>
+              <Label htmlFor="location_name">{t('locationName')}</Label>
               <Input
                 id="location_name"
                 name="location_name"
                 defaultValue={shootingDay.location_name}
-                placeholder="e.g., Studio A, Central Park, Downtown Office"
+                placeholder={t('locationNamePlaceholder')}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="location_address">Location Address</Label>
+              <Label htmlFor="location_address">{t('locationAddress')}</Label>
               <Input
                 id="location_address"
                 name="location_address"
                 defaultValue={shootingDay.location_address || ''}
-                placeholder="123 Film Street, Los Angeles, CA 90001"
+                placeholder={t('locationAddressPlaceholder')}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="weather_forecast">Weather Forecast</Label>
+              <Label htmlFor="weather_forecast">{t('weather')}</Label>
               <Input
                 id="weather_forecast"
                 name="weather_forecast"
                 defaultValue={shootingDay.weather_forecast || ''}
-                placeholder="e.g., Sunny, 75°F, 10% chance of rain"
+                placeholder={t('weatherPlaceholder')}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes">Production Notes</Label>
+              <Label htmlFor="notes">{t('notes')}</Label>
               <Textarea
                 id="notes"
                 name="notes"
                 defaultValue={shootingDay.notes || ''}
-                placeholder="Special instructions, equipment needed, safety considerations..."
+                placeholder={t('notesPlaceholder')}
                 rows={4}
               />
             </div>
@@ -161,13 +165,13 @@ export default function EditShootingDayPage() {
               variant="outline"
               onClick={() => router.back()}
             >
-              Cancel
+              {tCommon('cancel')}
             </Button>
             <Button
               type="submit"
               disabled={updateShootingDay.isPending}
             >
-              {updateShootingDay.isPending ? 'Saving...' : 'Save Changes'}
+              {updateShootingDay.isPending ? tCommon('saving') : tCommon('save')}
             </Button>
           </CardFooter>
         </form>

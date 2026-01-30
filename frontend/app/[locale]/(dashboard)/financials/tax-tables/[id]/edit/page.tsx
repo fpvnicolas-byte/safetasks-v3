@@ -13,11 +13,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Switch } from '@/components/ui/switch'
+import { useLocale } from 'next-intl'
 
 export default function EditTaxTablePage() {
   const router = useRouter()
   const params = useParams()
   const taxTableId = params.id as string
+  const locale = useLocale()
 
   const { organizationId } = useAuth()
   const [error, setError] = useState<string | null>(null)
@@ -174,10 +176,10 @@ export default function EditTaxTablePage() {
 
             <div className="pt-4 border-t">
               <p className="text-sm text-muted-foreground">
-                Created: {new Date(taxTable.created_at).toLocaleDateString()}
+                Created: {new Date(taxTable.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
               </p>
               <p className="text-sm text-muted-foreground">
-                Last updated: {new Date(taxTable.updated_at).toLocaleDateString()}
+                Last updated: {new Date(taxTable.updated_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
               </p>
             </div>
           </CardContent>

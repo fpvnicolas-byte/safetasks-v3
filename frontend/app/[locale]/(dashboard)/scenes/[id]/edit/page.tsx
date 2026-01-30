@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { useTranslations, useLocale } from 'next-intl'
 import { useScene, useUpdateScene } from '@/lib/api/hooks'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { Button } from '@/components/ui/button'
@@ -17,6 +18,9 @@ import { DayNight, InternalExternal } from '@/types'
 export default function EditScenePage() {
   const router = useRouter()
   const params = useParams()
+  const locale = useLocale()
+  const t = useTranslations('scenes.edit')
+  const tCommon = useTranslations('common')
   const sceneId = params.id as string
 
   const { errorDialog, showError, closeError } = useErrorDialog()
@@ -28,8 +32,8 @@ export default function EditScenePage() {
       <div className="max-w-2xl mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle>Edit Scene</CardTitle>
-            <CardDescription>Update scene details</CardDescription>
+            <CardTitle>{t('title')}</CardTitle>
+            <CardDescription>{t('description')}</CardDescription>
           </CardHeader>
           <CardContent>
             <FormSkeleton />
@@ -40,7 +44,7 @@ export default function EditScenePage() {
   }
 
   if (!scene) {
-    return <div className="p-8 text-destructive">Scene not found</div>
+    return <div className="p-8 text-destructive">{t('errors.notFound', { defaultMessage: 'Scene not found' })}</div>
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -53,12 +57,12 @@ export default function EditScenePage() {
       const estimatedTime = parseInt(formData.get('estimated_time_minutes') as string)
 
       if (!sceneNumber || sceneNumber <= 0) {
-        showError({ message: 'Scene number must be a positive integer' }, 'Validation Error')
+        showError({ message: t('errors.sceneNumberPositive') }, 'Validation Error')
         return
       }
 
       if (!estimatedTime || estimatedTime <= 0) {
-        showError({ message: 'Estimated time must be a positive number' }, 'Validation Error')
+        showError({ message: t('errors.estimatedTimePositive') }, 'Validation Error')
         return
       }
 
@@ -72,10 +76,10 @@ export default function EditScenePage() {
       }
 
       await updateScene.mutateAsync({ sceneId, data })
-      router.push(`/scenes/${sceneId}`)
+      router.push(`/${locale}/scenes/${sceneId}`)
     } catch (err: any) {
       console.error('Update scene error:', err)
-      showError(err, 'Error Updating Scene')
+      showError(err, t('errors.updateTitle'))
     }
   }
 
@@ -84,8 +88,8 @@ export default function EditScenePage() {
       <Card>
         <form onSubmit={handleSubmit}>
           <CardHeader>
-            <CardTitle>Edit Scene</CardTitle>
-            <CardDescription>Update scene details</CardDescription>
+            <CardTitle>{t('title')}</CardTitle>
+            <CardDescription>{t('description')}</CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-4">
@@ -93,8 +97,8 @@ export default function EditScenePage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="scene_number">
-                  Scene Number *
-                  <span className="text-xs text-muted-foreground ml-2">(Integer only)</span>
+                  {t('sceneNumber')}
+                  <span className="text-xs text-muted-foreground ml-2">{t('integerOnly')}</span>
                 </Label>
                 <Input
                   id="scene_number"
@@ -107,12 +111,12 @@ export default function EditScenePage() {
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  Use whole numbers only (1, 2, 3...). For variations use heading.
+                  {t('sceneNumberHelp')}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="heading">Scene Heading *</Label>
+                <Label htmlFor="heading">{t('heading')}</Label>
                 <Input
                   id="heading"
                   name="heading"
@@ -124,7 +128,7 @@ export default function EditScenePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description *</Label>
+              <Label htmlFor="description">{t('descriptionLabel')}</Label>
               <Textarea
                 id="description"
                 name="description"
@@ -137,29 +141,29 @@ export default function EditScenePage() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="internal_external">Interior/Exterior *</Label>
+                <Label htmlFor="internal_external">{t('intExt')}</Label>
                 <Select name="internal_external" defaultValue={scene.internal_external} required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select location type" />
+                    <SelectValue placeholder={t('selectLocation')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="internal">Internal (Interior)</SelectItem>
-                    <SelectItem value="external">External (Exterior)</SelectItem>
+                    <SelectItem value="internal">{t('internal')}</SelectItem>
+                    <SelectItem value="external">{t('external')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="day_night">Day/Night *</Label>
+                <Label htmlFor="day_night">{t('dayNight')}</Label>
                 <Select name="day_night" defaultValue={scene.day_night} required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select time of day" />
+                    <SelectValue placeholder={t('selectTime')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="day">Day</SelectItem>
-                    <SelectItem value="night">Night</SelectItem>
-                    <SelectItem value="dawn">Dawn</SelectItem>
-                    <SelectItem value="dusk">Dusk</SelectItem>
+                    <SelectItem value="day">{t('day')}</SelectItem>
+                    <SelectItem value="night">{t('night')}</SelectItem>
+                    <SelectItem value="dawn">{t('dawn')}</SelectItem>
+                    <SelectItem value="dusk">{t('dusk')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -168,7 +172,7 @@ export default function EditScenePage() {
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="estimated_time_minutes">
-                  Estimated Time (minutes) *
+                  {t('estimatedTime')}
                 </Label>
                 <Input
                   id="estimated_time_minutes"
@@ -181,7 +185,7 @@ export default function EditScenePage() {
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  Required. Must be greater than 0.
+                  {t('estimatedTimeHelp')}
                 </p>
               </div>
             </div>
@@ -193,10 +197,10 @@ export default function EditScenePage() {
               variant="outline"
               onClick={() => router.back()}
             >
-              Cancel
+              {tCommon('cancel')}
             </Button>
             <Button type="submit" disabled={updateScene.isPending}>
-              {updateScene.isPending ? 'Saving...' : 'Save Changes'}
+              {updateScene.isPending ? tCommon('saving') : tCommon('save')}
             </Button>
           </CardFooter>
         </form>

@@ -14,9 +14,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { ErrorDialog } from '@/components/ui/error-dialog'
 import { Plus, Pencil, Trash2, Loader2, Package } from 'lucide-react'
 import { Service, ServiceCreate, ServiceUpdate } from '@/types'
+import { useTranslations } from 'next-intl'
 
 export default function ServicesPage() {
     const { organizationId } = useAuth()
+    const t = useTranslations('settings.servicesPage')
     const { errorDialog, showError, closeError } = useErrorDialog()
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [editingService, setEditingService] = useState<Service | null>(null)
@@ -47,16 +49,16 @@ export default function ServicesPage() {
             setIsDialogOpen(false)
             setEditingService(null)
         } catch (err: any) {
-            showError(err, editingService ? 'Error Updating Service' : 'Error Creating Service')
+            showError(err, editingService ? t('errors.updating') : t('errors.creating'))
         }
     }
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this service?')) return
+        if (!confirm(t('delete.confirm'))) return
         try {
             await deleteService.mutateAsync(id)
         } catch (err: any) {
-            showError(err, 'Error Deleting Service')
+            showError(err, t('delete.error'))
         }
     }
 
@@ -74,19 +76,19 @@ export default function ServicesPage() {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Services</h2>
-                    <p className="text-muted-foreground">Manage services available for proposals.</p>
+                    <h2 className="text-3xl font-bold tracking-tight">{t('title')}</h2>
+                    <p className="text-muted-foreground">{t('description')}</p>
                 </div>
                 <Button onClick={openCreateDialog}>
                     <Plus className="mr-2 h-4 w-4" />
-                    Add Service
+                    {t('addService')}
                 </Button>
             </div>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Available Services</CardTitle>
-                    <CardDescription>Values that can be selected when creating a proposal.</CardDescription>
+                    <CardTitle>{t('card.title')}</CardTitle>
+                    <CardDescription>{t('card.description')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {isLoading ? (
@@ -97,9 +99,9 @@ export default function ServicesPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Description</TableHead>
-                                    <TableHead className="w-[100px]">Actions</TableHead>
+                                    <TableHead>{t('table.name')}</TableHead>
+                                    <TableHead>{t('table.description')}</TableHead>
+                                    <TableHead className="w-[100px]">{t('table.actions')}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -111,7 +113,7 @@ export default function ServicesPage() {
                                                 {service.name}
                                             </div>
                                         </TableCell>
-                                        <TableCell>{service.description || '-'}</TableCell>
+                                        <TableCell>{service.description || t('table.noDescription')}</TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-2">
                                                 <Button variant="ghost" size="icon" onClick={() => openEditDialog(service)}>
@@ -128,7 +130,7 @@ export default function ServicesPage() {
                         </Table>
                     ) : (
                         <div className="text-center py-8 text-muted-foreground">
-                            No services found. Create one to get started.
+                            {t('empty')}
                         </div>
                     )}
                 </CardContent>
@@ -138,44 +140,44 @@ export default function ServicesPage() {
                 <DialogContent>
                     <form onSubmit={handleSubmit}>
                         <DialogHeader>
-                            <DialogTitle>{editingService ? 'Edit Service' : 'Add Service'}</DialogTitle>
+                            <DialogTitle>{editingService ? t('dialog.editTitle') : t('dialog.addTitle')}</DialogTitle>
                             <DialogDescription>
-                                {editingService ? 'Update service details.' : 'Add a new service to your organization.'}
+                                {editingService ? t('dialog.editDescription') : t('dialog.addDescription')}
                             </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="name">Name *</Label>
+                                <Label htmlFor="name">{t('dialog.nameLabel')}</Label>
                                 <Input
                                     id="name"
                                     name="name"
                                     defaultValue={editingService?.name}
-                                    placeholder="e.g., Feature Film Production"
+                                    placeholder={t('dialog.namePlaceholder')}
                                     required
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="description">Description</Label>
+                                <Label htmlFor="description">{t('dialog.descriptionLabel')}</Label>
                                 <Textarea
                                     id="description"
                                     name="description"
                                     defaultValue={editingService?.description || ''}
-                                    placeholder="Service description..."
+                                    placeholder={t('dialog.descriptionPlaceholder')}
                                 />
                             </div>
                         </div>
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                                Cancel
+                                {t('dialog.cancel')}
                             </Button>
                             <Button type="submit" disabled={createService.isPending || updateService.isPending}>
                                 {createService.isPending || updateService.isPending ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Saving...
+                                        {t('dialog.saving')}
                                     </>
                                 ) : (
-                                    'Save'
+                                    t('dialog.save')
                                 )}
                             </Button>
                         </DialogFooter>

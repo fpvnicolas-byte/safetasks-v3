@@ -6,6 +6,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FileItem } from './FileItem'
 import { FileUploadResponse } from '@/types'
 import { cn } from '@/lib/utils'
+import { useTranslations } from 'next-intl'
 
 interface FileListProps {
   files: FileUploadResponse[]
@@ -25,11 +26,12 @@ export function FileList({
   className,
 }: FileListProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('list')
+  const t = useTranslations('storage.fileUpload')
 
   if (files.length === 0) {
     return (
       <div className={cn('text-center py-12', className)}>
-        <p className="text-muted-foreground">No files uploaded yet</p>
+        <p className="text-muted-foreground">{t('noFilesYet')}</p>
       </div>
     )
   }
@@ -39,17 +41,17 @@ export function FileList({
       {/* View Mode Toggle */}
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm text-muted-foreground">
-          {files.length} {files.length === 1 ? 'file' : 'files'}
+          {t('fileCount', { count: files.length })}
         </p>
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
           <TabsList className="grid w-[160px] grid-cols-2">
             <TabsTrigger value="list" className="gap-2">
               <List className="h-4 w-4" />
-              List
+              {t('viewList')}
             </TabsTrigger>
             <TabsTrigger value="grid" className="gap-2">
               <Grid className="h-4 w-4" />
-              Grid
+              {t('viewGrid')}
             </TabsTrigger>
           </TabsList>
         </Tabs>

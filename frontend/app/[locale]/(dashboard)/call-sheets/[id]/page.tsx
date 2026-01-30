@@ -13,6 +13,9 @@ import { formatTime } from '@/lib/utils/time'
 import { useState } from 'react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useQueryClient } from '@tanstack/react-query'
+import { useLocale, useTranslations } from 'next-intl'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
+import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
 
 const statusColors = {
   draft: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
@@ -23,41 +26,52 @@ const statusColors = {
 export default function CallSheetDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const locale = useLocale()
   const callSheetId = params.id as string
+  const t = useTranslations('callSheets.detail')
+  const tCommon = useTranslations('common')
 
   const { data: callSheet, isLoading, error } = useCallSheet(callSheetId)
   const queryClient = useQueryClient()
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
-  async function handleDelete() {
-    if (!confirm('Are you sure you want to delete this call sheet? This action cannot be undone.')) {
-      return
-    }
+  const {
+    open: deleteOpen,
+    onOpenChange: setDeleteOpen,
+    askConfirmation: confirmDelete,
+    closeConfirmation: cancelDelete
+  } = useConfirmDelete()
 
+  async function handleDelete() {
     try {
       await apiClient.delete(`/call-sheets/${callSheetId}`)
       // Invalidate and refetch call sheets for the project
       queryClient.invalidateQueries({ queryKey: ['callSheets', callSheet?.project_id] })
-      router.push(`/projects/${callSheet?.project_id}?tab=call-sheets`)
+      router.push(`/${locale}/projects/${callSheet?.project_id}?tab=call-sheets`)
     } catch (err: unknown) {
       const error = err as Error
-      setDeleteError(error.message || 'Failed to delete call sheet')
+      setDeleteError(error.message || t('deleteError'))
+      cancelDelete()
     }
   }
 
+  const requestDelete = () => {
+    confirmDelete(callSheetId)
+  }
+
   if (isLoading) {
-    return <div>Loading call sheet...</div>
+    return <div>{t('loading')}</div>
   }
 
   if (error) {
-    return <div>Error loading call sheet: {error.message}</div>
+    return <div>{t('error', { message: error.message })}</div>
   }
 
   if (!callSheet) {
-    return <div>Call sheet not found</div>
+    return <div>{t('notFound')}</div>
   }
 
-  const shootDate = new Date(callSheet.shooting_day).toLocaleDateString('en-US', {
+  const shootDate = new Date(callSheet.shooting_day).toLocaleDateString(locale, {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -70,7 +84,7 @@ export default function CallSheetDetailPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Call Sheet - {callSheet.project_id}
+            {t('title')} - {callSheet.project_id}
           </h1>
           <p className="text-muted-foreground">
             {shootDate} • {callSheet.location}
@@ -78,20 +92,28 @@ export default function CallSheetDetailPage() {
         </div>
         <div className="flex gap-2">
           <Button asChild variant="outline">
-            <Link href={`/call-sheets/${callSheetId}/edit`}>
+            <Link href={`/${locale}/call-sheets/${callSheetId}/edit`}>
               <Edit className="mr-2 h-4 w-4" />
-              Edit
+              {tCommon('edit')}
             </Link>
           </Button>
           <Button
             variant="destructive"
-            onClick={handleDelete}
+            onClick={requestDelete}
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete
+            {tCommon('delete')}
           </Button>
         </div>
       </div>
+
+      <ConfirmDeleteDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onConfirm={handleDelete}
+        title={t('deleteConfirm')}
+        loading={false}
+      />
 
       {deleteError && (
         <Alert variant="destructive">
@@ -102,10 +124,10 @@ export default function CallSheetDetailPage() {
       {/* Status Badge */}
       <div className="flex items-center gap-4">
         <Badge className={statusColors[callSheet.status]}>
-          {callSheet.status.charAt(0).toUpperCase() + callSheet.status.slice(1)}
+          {t(`status.${callSheet.status}`)}
         </Badge>
         <span className="text-sm text-muted-foreground">
-          Created {new Date(callSheet.created_at).toLocaleDateString()}
+          {t('created')} {new Date(callSheet.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
         </span>
       </div>
 
@@ -115,27 +137,27 @@ export default function CallSheetDetailPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              Call Times
+              {t('callTimes')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="font-medium">Crew Call:</span>
+              <span className="font-medium">{t('crewCall')}:</span>
               <span className="text-lg">{formatTime(callSheet.crew_call)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="font-medium">On Set:</span>
+              <span className="font-medium">{t('onSet')}:</span>
               <span className="text-lg">{formatTime(callSheet.on_set)}</span>
             </div>
             {callSheet.lunch_time && (
               <div className="flex justify-between items-center">
-                <span className="font-medium">Lunch:</span>
+                <span className="font-medium">{t('lunch')}:</span>
                 <span>{formatTime(callSheet.lunch_time)}</span>
               </div>
             )}
             {callSheet.wrap_time && (
               <div className="flex justify-between items-center">
-                <span className="font-medium">Wrap:</span>
+                <span className="font-medium">{t('wrap')}:</span>
                 <span>{formatTime(callSheet.wrap_time)}</span>
               </div>
             )}
@@ -147,7 +169,7 @@ export default function CallSheetDetailPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MapPin className="h-5 w-5" />
-              Location
+              {t('location')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -178,7 +200,7 @@ export default function CallSheetDetailPage() {
         <Card className="border-red-200 dark:border-red-800">
           <CardHeader>
             <CardTitle className="text-red-700 dark:text-red-400">
-              🚨 Emergency Information
+              🚨 {t('emergencyInfo')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -193,7 +215,7 @@ export default function CallSheetDetailPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Production Notes
+              {t('productionNotes')}
             </CardTitle>
           </CardHeader>
           <CardContent>

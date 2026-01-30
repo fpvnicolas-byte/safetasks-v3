@@ -12,12 +12,18 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Pencil, Trash2, ArrowLeft, Calendar, Clock, MapPin, CloudSun, FileText, Film } from 'lucide-react'
 import Link from 'next/link'
 import { convertTimeToFormFormat } from '@/types'
+import { useLocale, useTranslations } from 'next-intl'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
+import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
 
 export default function ShootingDayDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const locale = useLocale()
   const { organizationId } = useAuth()
   const shootingDayId = params.id as string
+  const t = useTranslations('shootingDays.detail')
+  const tCommon = useTranslations('common')
 
   const [selectedScenes, setSelectedScenes] = useState<string[]>([])
   const [assignmentMessage, setAssignmentMessage] = useState<string>('')
@@ -30,29 +36,39 @@ export default function ShootingDayDetailPage() {
   const assignScenes = useAssignScenesToShootingDay(shootingDayId, organizationId || '')
 
   if (isLoading) {
-    return <div>Loading shooting day...</div>
+    return <div>{t('loading')}</div>
   }
 
   if (error || !shootingDay) {
     return (
       <Alert variant="destructive">
-        <AlertDescription>Shooting day not found</AlertDescription>
+        <AlertDescription>{t('notFound')}</AlertDescription>
       </Alert>
     )
   }
 
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this shooting day?')) return
+  const {
+    open: deleteOpen,
+    onOpenChange: setDeleteOpen,
+    askConfirmation: confirmDelete,
+    closeConfirmation: cancelDelete,
+  } = useConfirmDelete()
 
+  const handleDelete = async () => {
     try {
       await deleteShootingDay.mutateAsync(shootingDayId)
-      router.push('/shooting-days')
+      router.push(`/${locale}/shooting-days`)
     } catch (err) {
       console.error('Failed to delete shooting day:', err)
+      cancelDelete()
     }
   }
 
-  const formattedDate = new Date(shootingDay.date).toLocaleDateString('en-US', {
+  const requestDelete = () => {
+    confirmDelete(shootingDayId)
+  }
+
+  const formattedDate = new Date(shootingDay.date).toLocaleDateString(locale, {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -73,34 +89,34 @@ export default function ShootingDayDetailPage() {
         </div>
         <div className="flex gap-2">
           <Button asChild variant="outline">
-            <Link href={`/shooting-days/${shootingDayId}/edit`}>
+            <Link href={`/${locale}/shooting-days/${shootingDayId}/edit`}>
               <Pencil className="mr-2 h-4 w-4" />
-              Edit
+              {tCommon('edit')}
             </Link>
           </Button>
-          <Button variant="destructive" onClick={handleDelete}>
+          <Button variant="destructive" onClick={requestDelete}>
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete
+            {tCommon('delete')}
           </Button>
         </div>
       </div>
 
       <Badge variant="outline" className="text-base px-4 py-2">
         <Calendar className="mr-2 h-4 w-4" />
-        {new Date(shootingDay.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+        {new Date(shootingDay.date).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })}
       </Badge>
 
       <Card>
         <CardHeader>
-          <CardTitle>Schedule Details</CardTitle>
-          <CardDescription>Call times and shooting schedule</CardDescription>
+          <CardTitle>{t('scheduleDetails')}</CardTitle>
+          <CardDescription>{t('scheduleDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-6 md:grid-cols-2">
             <div className="flex items-start gap-3">
               <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
               <div>
-                <div className="text-sm font-medium text-muted-foreground">Call Time</div>
+                <div className="text-sm font-medium text-muted-foreground">{t('callTime')}</div>
                 <div className="text-xl font-semibold">{convertTimeToFormFormat(shootingDay.call_time)}</div>
               </div>
             </div>
@@ -109,7 +125,7 @@ export default function ShootingDayDetailPage() {
               <div className="flex items-start gap-3">
                 <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground">Wrap Time</div>
+                  <div className="text-sm font-medium text-muted-foreground">{t('wrapTime')}</div>
                   <div className="text-xl font-semibold">{convertTimeToFormFormat(shootingDay.wrap_time)}</div>
                 </div>
               </div>
@@ -120,14 +136,14 @@ export default function ShootingDayDetailPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Location Information</CardTitle>
-          <CardDescription>Shooting location details</CardDescription>
+          <CardTitle>{t('locationInfo')}</CardTitle>
+          <CardDescription>{t('locationDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-start gap-3">
             <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
             <div className="flex-1">
-              <div className="text-sm font-medium text-muted-foreground">Location</div>
+              <div className="text-sm font-medium text-muted-foreground">{t('location')}</div>
               <div className="text-lg font-semibold">{shootingDay.location_name}</div>
               {shootingDay.location_address && (
                 <div className="text-sm text-muted-foreground mt-1">{shootingDay.location_address}</div>
@@ -139,7 +155,7 @@ export default function ShootingDayDetailPage() {
             <div className="flex items-start gap-3">
               <CloudSun className="h-5 w-5 text-muted-foreground mt-0.5" />
               <div>
-                <div className="text-sm font-medium text-muted-foreground">Weather Forecast</div>
+                <div className="text-sm font-medium text-muted-foreground">{t('weatherForecast')}</div>
                 <div className="text-base">{shootingDay.weather_forecast}</div>
               </div>
             </div>
@@ -150,7 +166,7 @@ export default function ShootingDayDetailPage() {
       {shootingDay.notes && (
         <Card>
           <CardHeader>
-            <CardTitle>Production Notes</CardTitle>
+            <CardTitle>{t('productionNotes')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-start gap-3">
@@ -163,8 +179,8 @@ export default function ShootingDayDetailPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Scene Assignment</CardTitle>
-          <CardDescription>Assign scenes to this shooting day</CardDescription>
+          <CardTitle>{t('sceneAssignment')}</CardTitle>
+          <CardDescription>{t('sceneAssignmentDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {assignmentMessage && (
@@ -195,9 +211,9 @@ export default function ShootingDayDetailPage() {
                       />
                       <label htmlFor={`scene-${scene.id}`} className="flex-1 cursor-pointer">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium">Scene {scene.scene_number}</span>
+                          <span className="font-medium">{t('scene')} {scene.scene_number}</span>
                           {isAssigned && (
-                            <Badge variant="secondary" className="text-xs">Currently Assigned</Badge>
+                            <Badge variant="secondary" className="text-xs">{t('currentlyAssigned')}</Badge>
                           )}
                         </div>
                         <div className="text-sm text-muted-foreground line-clamp-1">
@@ -214,26 +230,34 @@ export default function ShootingDayDetailPage() {
                   try {
                     setAssignmentMessage('')
                     await assignScenes.mutateAsync(selectedScenes)
-                    setAssignmentMessage(`Successfully assigned ${selectedScenes.length} scene(s)`)
+                    setAssignmentMessage(t('assignSuccess', { count: selectedScenes.length }))
                     setSelectedScenes([])
                   } catch (err: unknown) {
                     const error = err as Error
-                    setAssignmentMessage(`Error: ${error.message}`)
+                    setAssignmentMessage(t('assignError', { message: error.message }))
                   }
                 }}
                 disabled={selectedScenes.length === 0 || assignScenes.isPending}
               >
                 <Film className="mr-2 h-4 w-4" />
-                {assignScenes.isPending ? 'Assigning...' : `Assign ${selectedScenes.length} Scene(s)`}
+                {assignScenes.isPending ? t('assigning') : t('assignScenes', { count: selectedScenes.length })}
               </Button>
             </>
           ) : (
             <div className="text-sm text-muted-foreground">
-              No scenes found for this project. <Link href={`/scenes/new?project=${shootingDay.project_id}`} className="text-primary hover:underline">Create a scene</Link>
+              {t('noScenes')} <Link href={`/${locale}/scenes/new?project=${shootingDay.project_id}`} className="text-primary hover:underline">{t('createScene')}</Link>
             </div>
           )}
         </CardContent>
       </Card>
-    </div>
+
+      <ConfirmDeleteDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onConfirm={handleDelete}
+        title={t('deleteConfirm')}
+        loading={deleteShootingDay.isPending}
+      />
+    </div >
   )
 }

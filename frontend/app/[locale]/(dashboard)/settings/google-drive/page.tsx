@@ -23,8 +23,11 @@ import {
   AlertCircle,
   Info,
 } from 'lucide-react'
+import { useLocale, useTranslations } from 'next-intl'
 
 export default function GoogleDriveSettingsPage() {
+  const locale = useLocale()
+  const t = useTranslations('settings.googleDrivePage')
   const { data: credentials, isLoading, error } = useGoogleDriveAuth()
   const setupDrive = useSetupGoogleDrive()
   const updateDrive = useUpdateGoogleDrive()
@@ -43,7 +46,7 @@ export default function GoogleDriveSettingsPage() {
 
       // Validate it has required fields
       if (!parsedJson.type || !parsedJson.project_id || !parsedJson.private_key) {
-        setJsonError('Invalid service account JSON. Missing required fields.')
+        setJsonError(t('setup.invalidFields'))
         return
       }
 
@@ -57,9 +60,9 @@ export default function GoogleDriveSettingsPage() {
       setServiceAccountJson('')
     } catch (err) {
       if (err instanceof SyntaxError) {
-        setJsonError('Invalid JSON format. Please paste valid JSON.')
+        setJsonError(t('setup.invalidJson'))
       } else {
-        setJsonError(err instanceof Error ? err.message : 'Setup failed')
+        setJsonError(err instanceof Error ? err.message : t('setup.setupFailed'))
       }
     }
   }
@@ -71,7 +74,7 @@ export default function GoogleDriveSettingsPage() {
   }
 
   const handleRemove = async () => {
-    if (!confirm('Are you sure you want to remove Google Drive integration? This will not delete your files from Drive.')) {
+    if (!confirm(t('dangerZone.removeConfirm'))) {
       return
     }
 
@@ -81,7 +84,7 @@ export default function GoogleDriveSettingsPage() {
   if (isLoading) {
     return (
       <div className="container max-w-4xl py-8">
-        <div className="text-center text-muted-foreground">Loading...</div>
+        <div className="text-center text-muted-foreground">{t('loading')}</div>
       </div>
     )
   }
@@ -89,9 +92,9 @@ export default function GoogleDriveSettingsPage() {
   return (
     <div className="container max-w-4xl py-8 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2">Google Drive Integration</h1>
+        <h1 className="text-3xl font-bold mb-2">{t('title')}</h1>
         <p className="text-muted-foreground">
-          Connect your Google Drive to automatically sync production files
+          {t('description')}
         </p>
       </div>
 
@@ -102,23 +105,23 @@ export default function GoogleDriveSettingsPage() {
             <div className="flex items-center gap-3">
               <Cloud className="h-6 w-6 text-muted-foreground" />
               <div>
-                <CardTitle>Connection Status</CardTitle>
+                <CardTitle>{t('status.title')}</CardTitle>
                 <CardDescription>
                   {isConnected
-                    ? 'Google Drive is connected'
-                    : 'Not connected to Google Drive'}
+                    ? t('status.connected')
+                    : t('status.notConnected')}
                 </CardDescription>
               </div>
             </div>
             {isConnected ? (
               <Badge className="gap-2 bg-green-500 hover:bg-green-600">
                 <CheckCircle2 className="h-4 w-4" />
-                Connected
+                {t('status.connectedBadge')}
               </Badge>
             ) : (
               <Badge variant="outline" className="gap-2 text-muted-foreground">
                 <XCircle className="h-4 w-4" />
-                Not Connected
+                {t('status.notConnectedBadge')}
               </Badge>
             )}
           </div>
@@ -127,7 +130,7 @@ export default function GoogleDriveSettingsPage() {
           <CardContent className="space-y-3">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-muted-foreground">Project ID:</span>
+                <span className="text-muted-foreground">{t('status.projectId')}</span>
                 <p className="font-mono text-xs mt-1">
                   {credentials.service_account_key && typeof credentials.service_account_key === 'object' && 'project_id' in credentials.service_account_key
                     ? (credentials.service_account_key as { project_id?: string }).project_id || 'N/A'
@@ -135,23 +138,23 @@ export default function GoogleDriveSettingsPage() {
                 </p>
               </div>
               <div>
-                <span className="text-muted-foreground">Connected:</span>
+                <span className="text-muted-foreground">{t('status.connectedAt')}</span>
                 <p className="mt-1">
                   {credentials.connected_at
-                    ? new Date(credentials.connected_at).toLocaleDateString()
+                    ? new Date(credentials.connected_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
                     : 'N/A'}
                 </p>
               </div>
               <div>
-                <span className="text-muted-foreground">Last Sync:</span>
+                <span className="text-muted-foreground">{t('status.lastSync')}</span>
                 <p className="mt-1">
                   {credentials.last_sync_at
-                    ? new Date(credentials.last_sync_at).toLocaleDateString()
-                    : 'Never'}
+                    ? new Date(credentials.last_sync_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+                    : t('status.never')}
                 </p>
               </div>
               <div>
-                <span className="text-muted-foreground">Root Folder:</span>
+                <span className="text-muted-foreground">{t('status.rootFolder')}</span>
                 <p className="mt-1">
                   {credentials.root_folder_id ? (
                     <a
@@ -160,10 +163,10 @@ export default function GoogleDriveSettingsPage() {
                       rel="noopener noreferrer"
                       className="text-primary hover:underline"
                     >
-                      View in Drive
+                      {t('status.viewInDrive')}
                     </a>
                   ) : (
-                    'Not created yet'
+                    t('status.notCreatedYet')
                   )}
                 </p>
               </div>
@@ -176,32 +179,32 @@ export default function GoogleDriveSettingsPage() {
       {!isConnected && (
         <Card>
           <CardHeader>
-            <CardTitle>Setup Google Drive</CardTitle>
+            <CardTitle>{t('setup.title')}</CardTitle>
             <CardDescription>
-              Upload your Google Service Account JSON credentials to connect
+              {t('setup.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Alert>
               <Info className="h-4 w-4" />
-              <AlertTitle>How to get Service Account credentials</AlertTitle>
+              <AlertTitle>{t('setup.howTo.title')}</AlertTitle>
               <AlertDescription className="mt-2 space-y-2">
                 <ol className="list-decimal list-inside space-y-1 text-sm">
-                  <li>Go to Google Cloud Console</li>
-                  <li>Create or select a project</li>
-                  <li>Enable Google Drive API</li>
-                  <li>Create a Service Account</li>
-                  <li>Create and download JSON key</li>
-                  <li>Share your Drive folder with the service account email</li>
+                  <li>{t('setup.howTo.step1')}</li>
+                  <li>{t('setup.howTo.step2')}</li>
+                  <li>{t('setup.howTo.step3')}</li>
+                  <li>{t('setup.howTo.step4')}</li>
+                  <li>{t('setup.howTo.step5')}</li>
+                  <li>{t('setup.howTo.step6')}</li>
                 </ol>
               </AlertDescription>
             </Alert>
 
             <div className="space-y-2">
-              <Label htmlFor="service-account">Service Account JSON</Label>
+              <Label htmlFor="service-account">{t('setup.serviceAccountLabel')}</Label>
               <Textarea
                 id="service-account"
-                placeholder="Paste your service account JSON here..."
+                placeholder={t('setup.serviceAccountPlaceholder')}
                 value={serviceAccountJson}
                 onChange={(e) => {
                   setServiceAccountJson(e.target.value)
@@ -221,11 +224,11 @@ export default function GoogleDriveSettingsPage() {
               className="w-full"
             >
               {setupDrive.isPending ? (
-                <>Setting up...</>
+                <>{t('setup.settingUp')}</>
               ) : (
                 <>
                   <Upload className="mr-2 h-4 w-4" />
-                  Connect Google Drive
+                  {t('setup.connectButton')}
                 </>
               )}
             </Button>
@@ -233,11 +236,11 @@ export default function GoogleDriveSettingsPage() {
             {setupDrive.isError && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Setup Failed</AlertTitle>
+                <AlertTitle>{t('setup.setupError')}</AlertTitle>
                 <AlertDescription>
                   {setupDrive.error instanceof Error
                     ? setupDrive.error.message
-                    : 'Failed to connect Google Drive'}
+                    : t('setup.setupErrorMessage')}
                 </AlertDescription>
               </Alert>
             )}
@@ -249,17 +252,17 @@ export default function GoogleDriveSettingsPage() {
       {isConnected && credentials && (
         <Card>
           <CardHeader>
-            <CardTitle>Sync Settings</CardTitle>
+            <CardTitle>{t('syncSettings.title')}</CardTitle>
             <CardDescription>
-              Configure when files should automatically sync to Google Drive
+              {t('syncSettings.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="auto-sync">Auto-sync enabled</Label>
+                <Label htmlFor="auto-sync">{t('syncSettings.autoSync.label')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  Automatically sync files when uploaded
+                  {t('syncSettings.autoSync.description')}
                 </p>
               </div>
               <Switch
@@ -274,9 +277,9 @@ export default function GoogleDriveSettingsPage() {
 
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="sync-proposals">Sync on proposal approval</Label>
+                <Label htmlFor="sync-proposals">{t('syncSettings.proposalSync.label')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  Sync proposal files when approved
+                  {t('syncSettings.proposalSync.description')}
                 </p>
               </div>
               <Switch
@@ -292,10 +295,10 @@ export default function GoogleDriveSettingsPage() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="sync-callsheets">
-                  Sync on call sheet finalized
+                  {t('syncSettings.callSheetSync.label')}
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Sync call sheets when finalized
+                  {t('syncSettings.callSheetSync.description')}
                 </p>
               </div>
               <Switch
@@ -315,9 +318,9 @@ export default function GoogleDriveSettingsPage() {
       {isConnected && (
         <Card className="border-destructive">
           <CardHeader>
-            <CardTitle className="text-destructive">Danger Zone</CardTitle>
+            <CardTitle className="text-destructive">{t('dangerZone.title')}</CardTitle>
             <CardDescription>
-              Irreversible actions for your Google Drive integration
+              {t('dangerZone.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -328,12 +331,11 @@ export default function GoogleDriveSettingsPage() {
             >
               <Trash2 className="mr-2 h-4 w-4" />
               {removeDrive.isPending
-                ? 'Removing...'
-                : 'Remove Google Drive Integration'}
+                ? t('dangerZone.removing')
+                : t('dangerZone.removeButton')}
             </Button>
             <p className="text-sm text-muted-foreground mt-2">
-              This will disconnect Google Drive but will not delete your files from
-              Drive.
+              {t('dangerZone.removeNote')}
             </p>
           </CardContent>
         </Card>

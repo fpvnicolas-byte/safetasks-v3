@@ -17,8 +17,10 @@ import {
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { useNotifications, useNotificationStats, useMarkAsRead, useMarkAllAsRead } from '@/lib/api/hooks/useNotifications'
+import { useTranslations } from 'next-intl'
 
 export default function NotificationsPage() {
+  const t = useTranslations('notifications')
   const [unreadOnly, setUnreadOnly] = useState(false)
   const { data: notifications, isLoading, error } = useNotifications(unreadOnly)
   const { data: stats } = useNotificationStats()
@@ -57,14 +59,14 @@ export default function NotificationsPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Notifications</h1>
-          <p className="text-muted-foreground">Unable to load notifications</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('unableToLoad')}</p>
         </div>
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-3 text-red-600">
               <AlertCircle className="h-5 w-5" />
-              <span>Failed to load notifications: {error.message}</span>
+              <span>{t('failedToLoad', { message: error.message })}</span>
               <Button
                 variant="outline"
                 size="sm"
@@ -72,7 +74,7 @@ export default function NotificationsPage() {
                 className="ml-auto"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Retry
+                {t('retry')}
               </Button>
             </div>
           </CardContent>
@@ -84,9 +86,9 @@ export default function NotificationsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Notifications</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
         <p className="text-muted-foreground">
-          Stay updated with real-time alerts and important updates
+          {t('description')}
         </p>
       </div>
 
@@ -95,7 +97,7 @@ export default function NotificationsPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('stats.total')}</CardTitle>
               <Bell className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -105,7 +107,7 @@ export default function NotificationsPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Unread</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('stats.unread')}</CardTitle>
               <BellRing className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -115,7 +117,7 @@ export default function NotificationsPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Read</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('stats.read')}</CardTitle>
               <CheckCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -136,7 +138,7 @@ export default function NotificationsPage() {
                 onClick={() => setUnreadOnly(!unreadOnly)}
               >
                 <BellRing className="h-4 w-4 mr-2" />
-                {unreadOnly ? "Show All" : "Unread Only"}
+                {unreadOnly ? t('controls.showAll') : t('controls.unreadOnly')}
               </Button>
 
               {stats && stats.unread_count > 0 && (
@@ -147,13 +149,13 @@ export default function NotificationsPage() {
                   disabled={markAllAsRead.isPending}
                 >
                   <CheckCheck className="h-4 w-4 mr-2" />
-                  Mark All Read
+                  {t('controls.markAllRead')}
                 </Button>
               )}
             </div>
 
             <div className="text-sm text-muted-foreground">
-              {isLoading ? "Loading..." : `${notifications?.length || 0} notifications`}
+              {isLoading ? t('controls.loading') : t('controls.count', { count: notifications?.length || 0 })}
             </div>
           </div>
         </CardHeader>
@@ -162,9 +164,9 @@ export default function NotificationsPage() {
       {/* Notifications List */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Notifications</CardTitle>
+          <CardTitle>{t('list.title')}</CardTitle>
           <CardDescription>
-            {unreadOnly ? "Showing unread notifications only" : "All notifications"}
+            {unreadOnly ? t('list.showingUnread') : t('list.showingAll')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -198,7 +200,7 @@ export default function NotificationsPage() {
                           <h3 className="font-semibold">{notification.title}</h3>
                           {!notification.is_read && (
                             <Badge variant="secondary" className="text-xs">
-                              New
+                              {t('list.newBadge')}
                             </Badge>
                           )}
                         </div>
@@ -233,8 +235,8 @@ export default function NotificationsPage() {
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               <Bell className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-              <p>No notifications yet</p>
-              <p className="text-sm">You&apos;ll see updates and alerts here when they become available</p>
+              <p>{t('empty.title')}</p>
+              <p className="text-sm">{t('empty.description')}</p>
             </div>
           )}
         </CardContent>

@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Plus, Calendar, Edit, Trash2, Clock, MapPin, Eye } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
+import { useLocale } from 'next-intl'
 import { convertTimeToFormFormat, ShootingDay } from '@/types'
 
 interface ShootingDaysTabProps {
@@ -19,9 +21,12 @@ export function ShootingDaysTab({ projectId }: ShootingDaysTabProps) {
   const { data: shootingDays, isLoading, error } = useShootingDays(organizationId || '', projectId)
   const deleteShootingDay = useDeleteShootingDay(organizationId || '')
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const t = useTranslations('shootingDays')
+  const tCommon = useTranslations('common')
+  const locale = useLocale()
 
   async function handleDelete(shootingDayId: string) {
-    if (!confirm('Are you sure you want to delete this shooting day?')) {
+    if (!confirm(t('tab.deleteConfirm'))) {
       return
     }
 
@@ -36,11 +41,11 @@ export function ShootingDaysTab({ projectId }: ShootingDaysTabProps) {
   }
 
   if (isLoading) {
-    return <div>Loading shooting days...</div>
+    return <div>{t('tab.loading')}</div>
   }
 
   if (error) {
-    return <div>Error loading shooting days: {error.message}</div>
+    return <div>{t('tab.error', { message: error.message })}</div>
   }
 
   // Sort by date
@@ -52,15 +57,15 @@ export function ShootingDaysTab({ projectId }: ShootingDaysTabProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold">Shooting Schedule</h3>
+          <h3 className="text-lg font-semibold">{t('tab.title')}</h3>
           <p className="text-sm text-muted-foreground">
-            Manage shooting days and scene assignments
+            {t('tab.description')}
           </p>
         </div>
         <Button asChild size="sm">
           <Link href={`/shooting-days/new?project=${projectId}`}>
             <Plus className="mr-2 h-4 w-4" />
-            New Shooting Day
+            {t('newShootingDay')}
           </Link>
         </Button>
       </div>
@@ -73,27 +78,30 @@ export function ShootingDaysTab({ projectId }: ShootingDaysTabProps) {
               shootingDay={day}
               onDelete={handleDelete}
               isDeleting={deletingId === day.id}
+              t={t}
+              tCommon={tCommon}
+              locale={locale}
             />
           ))}
         </div>
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>No Shooting Days Scheduled</CardTitle>
+            <CardTitle>{t('tab.empty.title')}</CardTitle>
             <CardDescription>
-              Create your first shooting day to start planning the production schedule
+              {t('tab.empty.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-sm text-muted-foreground mb-4">
-                Organize scenes into shooting days for efficient production
+                {t('tab.empty.help')}
               </p>
               <Button asChild>
                 <Link href={`/shooting-days/new?project=${projectId}`}>
                   <Plus className="mr-2 h-4 w-4" />
-                  Schedule First Day
+                  {t('tab.empty.action')}
                 </Link>
               </Button>
             </div>
@@ -108,10 +116,13 @@ interface ShootingDayCardProps {
   shootingDay: ShootingDay
   onDelete: (id: string) => void
   isDeleting: boolean
+  t: (key: string) => string
+  tCommon: (key: string) => string
+  locale: string
 }
 
-function ShootingDayCard({ shootingDay, onDelete, isDeleting }: ShootingDayCardProps) {
-  const formattedDate = new Date(shootingDay.date).toLocaleDateString('en-US', {
+function ShootingDayCard({ shootingDay, onDelete, isDeleting, t, tCommon, locale }: ShootingDayCardProps) {
+  const formattedDate = new Date(shootingDay.date).toLocaleDateString(locale, {
     weekday: 'short',
     month: 'short',
     day: 'numeric'
@@ -136,13 +147,13 @@ function ShootingDayCard({ shootingDay, onDelete, isDeleting }: ShootingDayCardP
         <div className="grid grid-cols-2 gap-2 text-sm">
           <div className="flex items-center gap-1">
             <Clock className="h-3 w-3 text-muted-foreground" />
-            <span className="text-muted-foreground">Call:</span>
+            <span className="text-muted-foreground">{t('tab.card.call')}</span>
             <span>{convertTimeToFormFormat(shootingDay.call_time)}</span>
           </div>
           {shootingDay.wrap_time && (
             <div className="flex items-center gap-1">
               <Clock className="h-3 w-3 text-muted-foreground" />
-              <span className="text-muted-foreground">Wrap:</span>
+              <span className="text-muted-foreground">{t('tab.card.wrap')}</span>
               <span>{convertTimeToFormFormat(shootingDay.wrap_time)}</span>
             </div>
           )}
@@ -168,13 +179,13 @@ function ShootingDayCard({ shootingDay, onDelete, isDeleting }: ShootingDayCardP
           <Button asChild variant="outline" size="sm" className="flex-1">
             <Link href={`/shooting-days/${shootingDay.id}`}>
               <Eye className="mr-2 h-3 w-3" />
-              View
+              {tCommon('view')}
             </Link>
           </Button>
           <Button asChild variant="outline" size="sm" className="flex-1">
             <Link href={`/shooting-days/${shootingDay.id}/edit`}>
               <Edit className="mr-2 h-3 w-3" />
-              Edit
+              {tCommon('edit')}
             </Link>
           </Button>
           <Button

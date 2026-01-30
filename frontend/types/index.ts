@@ -135,6 +135,14 @@ export interface CallSheet {
 
   created_at: ISODateTime
   updated_at: ISODateTime
+  project?: {
+    id: UUID
+    title: string
+    client?: {
+      id: UUID
+      name: string
+    }
+  }
 }
 
 export interface CallSheetWithProject extends CallSheet {
@@ -438,6 +446,14 @@ export interface ShootingDay {
   notes: string | null
   created_at: ISODateTime
   updated_at: ISODateTime
+  project?: {
+    id: UUID
+    title: string
+    client?: {
+      id: UUID
+      name: string
+    }
+  }
 }
 
 export interface ShootingDayWithScenes extends ShootingDay {

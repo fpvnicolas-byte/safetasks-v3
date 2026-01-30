@@ -24,10 +24,12 @@ import {
 } from 'lucide-react'
 import type { AiSuggestion, AiRecommendation, ScriptAnalysis } from '@/types'
 import { toast } from 'sonner'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 
 export default function AiFeaturesPage() {
   const t = useTranslations('ai')
+  const tFeedback = useTranslations('common.feedback')
+  const locale = useLocale()
   const router = useRouter()
   const { user, organizationId } = useAuth()
 
@@ -44,12 +46,12 @@ export default function AiFeaturesPage() {
 
   const handleScriptAnalysis = async () => {
     if (!selectedProjectId) {
-      toast.error('Please select a project first')
+      toast.error(tFeedback('selectProject'))
       return
     }
 
     if (!scriptText.trim()) {
-      toast.error('Please enter script text to analyze')
+      toast.error(tFeedback('enterText'))
       return
     }
 
@@ -59,10 +61,10 @@ export default function AiFeaturesPage() {
         analysis_type: analysisType as 'full' | 'characters' | 'scenes' | 'locations',
         script_content: scriptText
       })
-      toast.success('Script analysis started. Check notifications for results.')
+      toast.success(tFeedback('actionSuccess'))
       setScriptText('')
-    } catch (error) {
-      toast.error('Failed to start script analysis')
+    } catch (error: any) {
+      toast.error(tFeedback('actionError', { message: 'Failed to start script analysis' }))
       console.error('Script analysis error:', error)
     }
   }
@@ -331,7 +333,7 @@ export default function AiFeaturesPage() {
                         </Badge>
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {new Date(suggestion.created_at).toLocaleDateString()}
+                        {new Date(suggestion.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                       </div>
                     </div>
                     <CardTitle>{suggestion.suggestion_text}</CardTitle>
@@ -393,7 +395,7 @@ export default function AiFeaturesPage() {
                         </Badge>
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {new Date(recommendation.created_at).toLocaleDateString()}
+                        {new Date(recommendation.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                       </div>
                     </div>
                     <CardTitle>{recommendation.title}</CardTitle>
@@ -462,7 +464,7 @@ export default function AiFeaturesPage() {
                         </Badge>
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {new Date(analysis.created_at).toLocaleDateString()}
+                        {new Date(analysis.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                       </div>
                     </div>
                     <CardTitle>{t('lists.analysisTitle')}</CardTitle>
@@ -473,16 +475,16 @@ export default function AiFeaturesPage() {
                         <h4 className="font-semibold mb-2">{t('lists.summary')}</h4>
                         <div className="text-sm text-muted-foreground space-y-1">
                           {analysis.analysis_result?.scenes && (
-                            <p>Scenes: {analysis.analysis_result.scenes.length}</p>
+                            <p>{t('suggestions.list.scenes')}: {analysis.analysis_result.scenes.length}</p>
                           )}
                           {analysis.analysis_result?.characters && (
-                            <p>Characters: {analysis.analysis_result.characters.length}</p>
+                            <p>{t('suggestions.list.characters')}: {analysis.analysis_result.characters.length}</p>
                           )}
                           {analysis.analysis_result?.locations && (
-                            <p>Locations: {analysis.analysis_result.locations.length}</p>
+                            <p>{t('suggestions.list.locations')}: {analysis.analysis_result.locations.length}</p>
                           )}
                           {analysis.analysis_result?.suggested_equipment && (
-                            <p>Equipment: {analysis.analysis_result.suggested_equipment.length}</p>
+                            <p>{t('suggestions.list.equipment')}: {analysis.analysis_result.suggested_equipment.length}</p>
                           )}
                         </div>
                       </div>

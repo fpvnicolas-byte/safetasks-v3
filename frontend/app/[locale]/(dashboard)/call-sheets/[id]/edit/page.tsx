@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useTranslations, useLocale } from 'next-intl'
 import { useCallSheet, useUpdateCallSheet } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
@@ -17,6 +18,9 @@ import { ErrorDialog } from '@/components/ui/error-dialog'
 export default function EditCallSheetPage() {
   const params = useParams()
   const router = useRouter()
+  const locale = useLocale()
+  const t = useTranslations('callSheets.edit')
+  const tCommon = useTranslations('common')
   const { organizationId } = useAuth()
   const callSheetId = params.id as string
 
@@ -35,15 +39,15 @@ export default function EditCallSheetPage() {
   }, [callSheet, isInitialized])
 
   if (isLoadingCallSheet) {
-    return <div>Loading call sheet...</div>
+    return <div>{t('loading')}</div>
   }
 
   if (callSheetError) {
-    return <div>Error loading call sheet: {callSheetError.message}</div>
+    return <div>{t('error', { message: callSheetError.message })}</div>
   }
 
   if (!callSheet) {
-    return <div>Call sheet not found</div>
+    return <div>{t('notFound')}</div>
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -68,10 +72,10 @@ export default function EditCallSheetPage() {
       }
 
       await updateCallSheet.mutateAsync(data)
-      router.push(`/call-sheets/${callSheetId}`)
+      router.push(`/${locale}/call-sheets/${callSheetId}`)
     } catch (err: any) {
       console.error('Update call sheet error:', err)
-      showError(err, 'Error Updating Call Sheet')
+      showError(err, t('errors.updateTitle'))
     }
   }
 
@@ -80,9 +84,9 @@ export default function EditCallSheetPage() {
       <Card>
         <form onSubmit={handleSubmit}>
           <CardHeader>
-            <CardTitle>Edit Call Sheet</CardTitle>
+            <CardTitle>{t('title')}</CardTitle>
             <CardDescription>
-              Update call sheet details for {callSheet.shooting_day}
+              {t('description', { date: callSheet.shooting_day })}
             </CardDescription>
           </CardHeader>
 
@@ -90,11 +94,11 @@ export default function EditCallSheetPage() {
 
             {/* Basic Information */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Basic Information</h3>
+              <h3 className="text-lg font-semibold">{t('basicInfo')}</h3>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="shooting_day">Shooting Day *</Label>
+                  <Label htmlFor="shooting_day">{t('shootingDay')}</Label>
                   <Input
                     id="shooting_day"
                     name="shooting_day"
@@ -105,15 +109,15 @@ export default function EditCallSheetPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="status">Status *</Label>
+                  <Label htmlFor="status">{t('status')}</Label>
                   <Select name="status" defaultValue={callSheet.status} required>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
+                      <SelectValue placeholder={t('selectStatus')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="confirmed">Confirmed</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="draft">{tCommon('draft')}</SelectItem>
+                      <SelectItem value="confirmed">{t('statusConfirmed')}</SelectItem>
+                      <SelectItem value="completed">{tCommon('completed')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -122,11 +126,11 @@ export default function EditCallSheetPage() {
 
             {/* Call Times */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Call Times</h3>
+              <h3 className="text-lg font-semibold">{t('callTimes')}</h3>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="crew_call">Crew Call Time *</Label>
+                  <Label htmlFor="crew_call">{t('crewCall')}</Label>
                   <Input
                     id="crew_call"
                     name="crew_call"
@@ -135,12 +139,12 @@ export default function EditCallSheetPage() {
                     required
                   />
                   <p className="text-xs text-muted-foreground">
-                    HTML time inputs use HH:MM, will be converted to HH:MM:SS for backend
+                    {t('crewCallHelp')}
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="on_set">On Set Time *</Label>
+                  <Label htmlFor="on_set">{t('onSet')}</Label>
                   <Input
                     id="on_set"
                     name="on_set"
@@ -151,7 +155,7 @@ export default function EditCallSheetPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="lunch_time">Lunch Time *</Label>
+                  <Label htmlFor="lunch_time">{t('lunch')}</Label>
                   <Input
                     id="lunch_time"
                     name="lunch_time"
@@ -162,7 +166,7 @@ export default function EditCallSheetPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="wrap_time">Wrap Time</Label>
+                  <Label htmlFor="wrap_time">{t('wrap')}</Label>
                   <Input
                     id="wrap_time"
                     name="wrap_time"
@@ -175,46 +179,46 @@ export default function EditCallSheetPage() {
 
             {/* Location */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Location</h3>
+              <h3 className="text-lg font-semibold">{t('location')}</h3>
 
               <div className="space-y-2">
-                <Label htmlFor="location">Location Name *</Label>
+                <Label htmlFor="location">{t('locationName')}</Label>
                 <Input
                   id="location"
                   name="location"
-                  placeholder="Studio A"
+                  placeholder={t('locationPlaceholder')}
                   defaultValue={callSheet.location || ''}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="location_address">Location Address</Label>
+                <Label htmlFor="location_address">{t('locationAddress')}</Label>
                 <Input
                   id="location_address"
                   name="location_address"
-                  placeholder="123 Film Street, Los Angeles, CA 90001"
+                  placeholder={t('locationAddressPlaceholder')}
                   defaultValue={callSheet.location_address || ''}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="parking_info">Parking Information</Label>
+                <Label htmlFor="parking_info">{t('parking')}</Label>
                 <Textarea
                   id="parking_info"
                   name="parking_info"
-                  placeholder="Parking details and instructions..."
+                  placeholder={t('parkingPlaceholder')}
                   rows={2}
                   defaultValue={callSheet.parking_info || ''}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="weather">Weather Forecast</Label>
+                <Label htmlFor="weather">{t('weather')}</Label>
                 <Input
                   id="weather"
                   name="weather"
-                  placeholder="Sunny, 75°F"
+                  placeholder={t('weatherPlaceholder')}
                   defaultValue={callSheet.weather || ''}
                 />
               </div>
@@ -222,31 +226,31 @@ export default function EditCallSheetPage() {
 
             {/* Emergency Information */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-red-700 dark:text-red-400">🚨 Safety & Emergency</h3>
+              <h3 className="text-lg font-semibold text-red-700 dark:text-red-400">{t('safety')}</h3>
 
               <div className="space-y-2">
-                <Label htmlFor="hospital_info">Nearest Hospital/Emergency Contact *</Label>
+                <Label htmlFor="hospital_info">{t('hospital')}</Label>
                 <Textarea
                   id="hospital_info"
                   name="hospital_info"
-                  placeholder="Hospital name, address, phone number, and directions..."
+                  placeholder={t('hospitalPlaceholder')}
                   rows={3}
                   defaultValue={callSheet.hospital_info || ''}
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  Required for professional call sheets - critical emergency information
+                  {t('hospitalHelp')}
                 </p>
               </div>
             </div>
 
             {/* Notes */}
             <div className="space-y-2">
-              <Label htmlFor="notes">Production Notes</Label>
+              <Label htmlFor="notes">{t('notes')}</Label>
               <Textarea
                 id="notes"
                 name="notes"
-                placeholder="Additional production notes..."
+                placeholder={t('notesPlaceholder')}
                 rows={4}
                 defaultValue={callSheet.notes || ''}
               />
@@ -259,10 +263,10 @@ export default function EditCallSheetPage() {
               variant="outline"
               onClick={() => router.back()}
             >
-              Cancel
+              {tCommon('cancel')}
             </Button>
             <Button type="submit" disabled={updateCallSheet.isPending}>
-              {updateCallSheet.isPending ? 'Updating...' : 'Update Call Sheet'}
+              {updateCallSheet.isPending ? tCommon('saving') : tCommon('save')}
             </Button>
           </CardFooter>
         </form>
