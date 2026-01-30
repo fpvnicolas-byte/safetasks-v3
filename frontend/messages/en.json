@@ -1,0 +1,545 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "close": "Close",
+    "create": "Create",
+    "update": "Update",
+    "view": "View",
+    "actions": "Actions",
+    "status": "Status",
+    "name": "Name",
+    "description": "Description",
+    "date": "Date",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "notes": "Notes",
+    "active": "Active",
+    "inactive": "Inactive",
+    "completed": "Completed",
+    "pending": "Pending",
+    "inProgress": "In Progress",
+    "draft": "Draft",
+    "noResults": "No results found",
+    "searchPlaceholder": "Search...",
+    "filter": "Filter",
+    "sort": "Sort",
+    "export": "Export",
+    "import": "Import",
+    "refresh": "Refresh",
+    "confirm": "Confirm",
+    "areYouSure": "Are you sure?",
+    "deleteConfirm": "Are you sure you want to delete this item?",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Information"
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome to SafeTasks V3",
+      "subtitle": "Sign in to your account",
+      "email": "Email",
+      "password": "Password",
+      "signIn": "Sign In",
+      "signingIn": "Signing in...",
+      "createAccount": "Create account",
+      "forgotPassword": "Forgot password?",
+      "emailPlaceholder": "you@example.com"
+    },
+    "register": {
+      "title": "Create Account",
+      "subtitle": "Sign up for SafeTasks V3",
+      "fullName": "Full Name",
+      "fullNamePlaceholder": "John Doe",
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "createAccount": "Create Account",
+      "creatingAccount": "Creating account...",
+      "alreadyHaveAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "passwordsDoNotMatch": "Passwords do not match"
+    },
+    "forgotPassword": {
+      "title": "Reset Password",
+      "subtitle": "Enter your email to receive a reset link",
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "sendResetLink": "Send Reset Link",
+      "sending": "Sending...",
+      "rememberPassword": "Remember your password?",
+      "signIn": "Sign in"
+    },
+    "errors": {
+      "invalidCredentials": "Invalid email or password",
+      "userNotFound": "User not found"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back, {email}",
+    "activeProjects": "Active Projects",
+    "inProgress": "In progress",
+    "revenueMonth": "Revenue (MTD)",
+    "revenueYear": "Revenue (YTD)",
+    "netProfit": "Net Profit (MTD)",
+    "equipmentHealth": "Equipment Health",
+    "margin": "{value}% margin",
+    "items": "{count} items",
+    "expenses": "Expenses: {amount}",
+    "analyticsUnavailable": "Analytics Unavailable",
+    "analyticsUnavailableDesc": "Unable to load analytics data. Some features may be limited.",
+    "projectStatus": "Project Status",
+    "cloudSyncStatus": "Cloud Sync Status",
+    "cloudSyncDesc": "Google Drive integration health",
+    "successRate": "Success Rate",
+    "totalSyncs": "Total Syncs",
+    "recentSyncs": "Recent (30d)",
+    "storageUsed": "Storage Used",
+    "healthy": "healthy",
+    "warning": "warning",
+    "critical": "critical",
+    "totalProjects": "Total Projects",
+    "onTimeRate": "On-Time Rate",
+    "deliveryPerformance": "Delivery performance",
+    "avgDuration": "Avg Duration",
+    "perProject": "Per project",
+    "projectsByStatus": "Projects by Status",
+    "projectsByStatusDesc": "Breakdown of all projects",
+    "quickActions": "Quick Actions",
+    "commonTasks": "Common tasks and shortcuts",
+    "actions": {
+      "newProject": {
+        "title": "New Project",
+        "desc": "Start a new film project"
+      },
+      "createInvoice": {
+        "title": "Create Invoice",
+        "desc": "Bill a client"
+      },
+      "recordTransaction": {
+        "title": "Record Transaction",
+        "desc": "Log income or expense"
+      },
+      "callSheet": {
+        "title": "Call Sheet",
+        "desc": "Create production schedule"
+      },
+      "addEquipment": {
+        "title": "Add Equipment",
+        "desc": "Register new kit item"
+      },
+      "addStakeholder": {
+        "title": "Add Stakeholder",
+        "desc": "Add team member"
+      }
+    },
+    "equipment": {
+      "title": "Equipment Health",
+      "desc": "Inventory status and utilization",
+      "totalItems": "Total Items",
+      "needsService": "Needs Service",
+      "utilization": "Utilization",
+      "healthDist": "Health Status Distribution",
+      "overallScore": "Overall Health Score",
+      "maintenanceRequired": "Maintenance Required",
+      "overdue": "{count} item(s) overdue for maintenance",
+      "viewAll": "View All",
+      "status": {
+        "excellent": "Excellent",
+        "good": "Good",
+        "needs_service": "Needs Service",
+        "broken": "Broken",
+        "retired": "Retired"
+      }
+    },
+    "recentTransactions": {
+      "title": "Recent Transactions",
+      "desc": "Latest financial activity",
+      "noTransactions": "No transactions yet",
+      "recordTransaction": "Record Transaction",
+      "loading": "Loading transactions...",
+      "noDescription": "No description",
+      "viewAll": "View All"
+    },
+    "planning": "Planning",
+    "preProduction": "Pre-Production",
+    "inProduction": "In Production",
+    "postProduction": "Post-Production",
+    "archived": "Archived",
+    "activeCount": "{count} active",
+    "ofTotal": "of total",
+    "days": "days"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "production": "Production",
+    "callSheets": "Call Sheets",
+    "shootingDays": "Shooting Days",
+    "scenes": "Scenes",
+    "characters": "Characters",
+    "financials": "Financial",
+    "clients": "Clients",
+    "transactions": "Transactions",
+    "invoices": "Invoices",
+    "bankAccounts": "Bank Accounts",
+    "taxTables": "Tax Tables",
+    "inventory": "Inventory",
+    "kits": "Kits",
+    "items": "Items",
+    "stakeholders": "Stakeholders",
+    "suppliers": "Suppliers",
+    "proposals": "Proposals",
+    "storage": "Storage",
+    "ai": "AI Features",
+    "notifications": "Notifications",
+    "settings": "Settings"
+  },
+  "header": {
+    "signOut": "Sign Out"
+  },
+  "projects": {
+    "title": "Projects",
+    "newProject": "New Project",
+    "createProject": "Create New Project",
+    "editProject": "Edit Project",
+    "projectName": "Project Name",
+    "projectDescription": "Description",
+    "client": "Client",
+    "budget": "Budget",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "status": "Status",
+    "active": "Active",
+    "completed": "Completed",
+    "onHold": "On Hold",
+    "cancelled": "Cancelled",
+    "viewDetails": "View Details",
+    "noProjects": "No projects found",
+    "searchProjects": "Search projects..."
+  },
+  "callSheets": {
+    "title": "Call Sheets",
+    "newCallSheet": "New Call Sheet",
+    "createCallSheet": "Create Call Sheet",
+    "editCallSheet": "Edit Call Sheet",
+    "shootDate": "Shoot Date",
+    "callTime": "Call Time",
+    "location": "Location",
+    "sceneNumber": "Scene Number",
+    "cast": "Cast",
+    "crew": "Crew",
+    "equipment": "Equipment",
+    "notes": "Notes",
+    "noCallSheets": "No call sheets found"
+  },
+  "shootingDays": {
+    "title": "Shooting Days",
+    "newShootingDay": "New Shooting Day",
+    "createShootingDay": "Create Shooting Day",
+    "editShootingDay": "Edit Shooting Day",
+    "date": "Date",
+    "location": "Location",
+    "scenes": "Scenes",
+    "castMembers": "Cast Members",
+    "crewMembers": "Crew Members",
+    "equipmentUsed": "Equipment Used",
+    "status": "Status",
+    "noShootingDays": "No shooting days found"
+  },
+  "scenes": {
+    "title": "Scenes",
+    "newScene": "New Scene",
+    "createScene": "Create Scene",
+    "editScene": "Edit Scene",
+    "sceneNumber": "Scene Number",
+    "description": "Description",
+    "location": "Location",
+    "timeOfDay": "Time of Day",
+    "intExt": "Interior/Exterior",
+    "interior": "Interior",
+    "exterior": "Exterior",
+    "characters": "Characters",
+    "props": "Props",
+    "noScenes": "No scenes found"
+  },
+  "characters": {
+    "title": "Characters",
+    "newCharacter": "New Character",
+    "createCharacter": "Create Character",
+    "editCharacter": "Edit Character",
+    "characterName": "Character Name",
+    "description": "Description",
+    "actor": "Actor",
+    "role": "Role",
+    "costume": "Costume",
+    "makeup": "Makeup",
+    "noCharacters": "No characters found"
+  },
+  "financials": {
+    "title": "Financials",
+    "transactions": "Transactions",
+    "bankAccounts": "Bank Accounts",
+    "taxTables": "Tax Tables",
+    "invoices": "Invoices",
+    "newTransaction": "New Transaction",
+    "newInvoice": "New Invoice",
+    "amount": "Amount",
+    "category": "Category",
+    "type": "Type",
+    "income": "Income",
+    "expense": "Expense",
+    "balance": "Balance",
+    "taxRate": "Tax Rate",
+    "dueDate": "Due Date",
+    "paid": "Paid",
+    "pending": "Pending",
+    "noTransactions": "No transactions found",
+    "noInvoices": "No invoices found"
+  },
+  "inventory": {
+    "title": "Inventory",
+    "items": "Items",
+    "kits": "Kits",
+    "newItem": "New Item",
+    "newKit": "New Kit",
+    "itemName": "Item Name",
+    "kitName": "Kit Name",
+    "quantity": "Quantity",
+    "condition": "Condition",
+    "location": "Location",
+    "available": "Available",
+    "inUse": "In Use",
+    "maintenance": "Maintenance",
+    "serialNumber": "Serial Number",
+    "noItems": "No items found",
+    "noKits": "No kits found"
+  },
+  "clients": {
+    "title": "Clients",
+    "newClient": "New Client",
+    "createClient": "Create Client",
+    "editClient": "Edit Client",
+    "companyName": "Company Name",
+    "contactPerson": "Contact Person",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "projects": "Projects",
+    "activeProjects": "Active Projects",
+    "noClients": "No clients found"
+  },
+  "suppliers": {
+    "title": "Suppliers",
+    "newSupplier": "New Supplier",
+    "createSupplier": "Create Supplier",
+    "editSupplier": "Edit Supplier",
+    "companyName": "Company Name",
+    "contact": "Contact",
+    "services": "Services",
+    "equipment": "Equipment",
+    "rates": "Rates",
+    "contract": "Contract",
+    "noSuppliers": "No suppliers found"
+  },
+  "stakeholders": {
+    "title": "Stakeholders",
+    "newStakeholder": "New Stakeholder",
+    "createStakeholder": "Create Stakeholder",
+    "editStakeholder": "Edit Stakeholder",
+    "name": "Name",
+    "role": "Role",
+    "company": "Company",
+    "email": "Email",
+    "phone": "Phone",
+    "type": "Type",
+    "investor": "Investor",
+    "partner": "Partner",
+    "advisor": "Advisor",
+    "noStakeholders": "No stakeholders found"
+  },
+  "proposals": {
+    "title": "Proposals",
+    "newProposal": "New Proposal",
+    "createProposal": "Create Proposal",
+    "editProposal": "Edit Proposal",
+    "proposalTitle": "Title",
+    "client": "Client",
+    "budget": "Budget",
+    "timeline": "Timeline",
+    "status": "Status",
+    "draft": "Draft",
+    "sent": "Sent",
+    "accepted": "Accepted",
+    "rejected": "Rejected",
+    "scope": "Scope",
+    "noProposals": "No proposals found"
+  },
+  "production": {
+    "title": "Production",
+    "schedule": "Schedule",
+    "resources": "Resources",
+    "progress": "Progress",
+    "timeline": "Timeline",
+    "milestones": "Milestones"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "organization": "Organization",
+    "integrations": "Integrations",
+    "googleDrive": "Google Drive",
+    "saveChanges": "Save Changes",
+    "account": "Account",
+    "preferences": "Preferences",
+    "notifications": "Notifications",
+    "security": "Security"
+  },
+  "storage": {
+    "title": "Storage",
+    "files": "Files",
+    "upload": "Upload",
+    "download": "Download",
+    "size": "Size",
+    "type": "Type",
+    "lastModified": "Last Modified",
+    "folder": "Folder",
+    "noFiles": "No files found"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAsRead": "Mark as Read",
+    "clearAll": "Clear All",
+    "unread": "Unread",
+    "today": "Today",
+    "earlier": "Earlier",
+    "noNotifications": "No notifications"
+  },
+  "landing": {
+    "title": "SafeTasks V3",
+    "subtitle": "Professional Film Production Management",
+    "getStarted": "Get Started",
+    "signIn": "Sign In",
+    "createAccount": "Create Free Account",
+    "features": {
+      "projectManagement": {
+        "title": "Project Management",
+        "description": "Organize multiple film projects with detailed tracking and status updates"
+      },
+      "callSheets": {
+        "title": "Call Sheets",
+        "description": "Create professional call sheets with crew times, locations, and contact info"
+      },
+      "financials": {
+        "title": "Financial Tracking",
+        "description": "Track budgets, invoices, and expenses with precision down to the cent"
+      },
+      "team": {
+        "title": "Team Collaboration",
+        "description": "Manage clients, crew, and talent with centralized contact information"
+      }
+    },
+    "cta": {
+      "title": "Ready to get started?",
+      "description": "Join professional filmmakers using SafeTasks V3"
+    },
+    "footer": "© 2026 SafeTasks V3. Built for film production professionals."
+  },
+  "ai": {
+    "title": "AI Features",
+    "subtitle": "Leverage AI to enhance your production workflow",
+    "viewProjects": "View Projects",
+    "analyzeScript": "Analyze Script",
+    "tabs": {
+      "overview": "Overview",
+      "suggestions": "Suggestions",
+      "recommendations": "Recommendations",
+      "analysis": "Analysis"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "desc": "Get started with AI-powered production tools",
+      "scriptAnalysis": {
+        "title": "Script Analysis",
+        "desc": "Analyze scripts to extract characters, scenes, and production requirements"
+      },
+      "budgetEstimation": {
+        "title": "Budget Estimation",
+        "desc": "Get AI-powered budget estimates based on script analysis"
+      },
+      "callSheet": {
+        "title": "Call Sheet Suggestions",
+        "desc": "Generate optimized shooting schedules and call sheets"
+      }
+    },
+    "analysisForm": {
+      "title": "Quick Script Analysis",
+      "desc": "Start a script analysis directly from the dashboard",
+      "selectProject": "Select Project",
+      "selectProjectPlaceholder": "Select a project",
+      "analysisType": "Analysis Type",
+      "selectTypePlaceholder": "Select analysis type",
+      "types": {
+        "full": "Full Script Analysis",
+        "scenes": "Scene Analysis",
+        "characters": "Character Analysis",
+        "locations": "Location Analysis"
+      },
+      "scriptText": "Script Text",
+      "scriptPlaceholder": "Paste your script text here...",
+      "startAnalysis": "Start Analysis",
+      "analyzing": "Analyzing...",
+      "fullAnalysis": "Full Analysis"
+    },
+    "insights": {
+      "activeAnalyses": {
+        "title": "Active Analyses",
+        "desc": "Scripts currently being analyzed"
+      },
+      "suggestions": {
+        "title": "Suggestions",
+        "desc": "AI-generated suggestions"
+      },
+      "recommendations": {
+        "title": "Recommendations",
+        "desc": "High-priority recommendations"
+      },
+      "successRate": {
+        "title": "Success Rate",
+        "desc": "AI analysis success rate"
+      }
+    },
+    "lists": {
+      "suggestionsTitle": "AI Suggestions",
+      "recommendationsTitle": "AI Recommendations",
+      "analysisTitle": "Script Analysis",
+      "available": "available",
+      "completed": "completed",
+      "estimatedSavings": "Estimated savings",
+      "timeSaved": "Time saved",
+      "costSaved": "Cost saved",
+      "riskReduction": "Risk reduction",
+      "actionItems": "Action Items:",
+      "relatedScenes": "Related scenes",
+      "summary": "Analysis Summary",
+      "preview": "Script Preview"
+    },
+    "empty": {
+      "projects": "No projects available",
+      "suggestions": "No suggestions available. Analyze a script to get AI suggestions.",
+      "recommendations": "No recommendations available. Analyze a script to get AI recommendations.",
+      "analyses": "No script analyses available. Start a script analysis to see results."
+    }
+  }
+}

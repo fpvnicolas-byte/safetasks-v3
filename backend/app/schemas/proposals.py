@@ -1,8 +1,10 @@
 from pydantic import BaseModel, ConfigDict, Field
 from uuid import UUID
 from datetime import datetime, date
-from typing import Optional, Literal
+from typing import Optional, Literal, List
 from decimal import Decimal
+
+from app.schemas.services import Service
 
 
 class ProposalBase(BaseModel):
@@ -22,7 +24,8 @@ class ProposalBase(BaseModel):
 
 class ProposalCreate(ProposalBase):
     """Schema for creating a Proposal."""
-    pass
+    """Schema for creating a Proposal."""
+    service_ids: Optional[List[UUID]] = None
 
 
 class ProposalUpdate(BaseModel):
@@ -35,7 +38,10 @@ class ProposalUpdate(BaseModel):
     valid_until: Optional[date] = None
     total_amount_cents: Optional[int] = None
     currency: Optional[str] = None
+    total_amount_cents: Optional[int] = None
+    currency: Optional[str] = None
     terms_conditions: Optional[str] = None
+    service_ids: Optional[List[UUID]] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -45,7 +51,10 @@ class Proposal(ProposalBase):
     id: UUID
     organization_id: UUID
     created_at: datetime
+    organization_id: UUID
+    created_at: datetime
     updated_at: datetime
+    services: List[Service] = []
 
 
 class ProposalWithClient(Proposal):

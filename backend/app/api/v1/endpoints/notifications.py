@@ -23,6 +23,7 @@ async def get_notifications(
     """
     Get notifications for the current user.
     """
+    # logger.info(f"Fetching notifications for user {profile.id} in org {profile.organization_id}")
     notifications = await notification_service.get_user_notifications(
         db=db,
         organization_id=profile.organization_id,

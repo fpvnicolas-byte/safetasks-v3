@@ -93,6 +93,7 @@ async def get_transaction(
     """
     from sqlalchemy.orm import selectinload
     from app.models.transactions import Transaction as TransactionModel
+    from app.models.projects import Project
 
     transaction = await transaction_service.get(
         db=db,
@@ -100,7 +101,7 @@ async def get_transaction(
         id=transaction_id,
         options=[
             selectinload(TransactionModel.bank_account),
-            selectinload(TransactionModel.project)
+            selectinload(TransactionModel.project).selectinload(Project.services)
         ]
     )
 
@@ -142,6 +143,7 @@ async def delete_transaction(
     """
     from sqlalchemy.orm import selectinload
     from app.models.transactions import Transaction as TransactionModel
+    from app.models.projects import Project
 
     # Get transaction with relations before deletion
     transaction = await transaction_service.get(
@@ -150,7 +152,7 @@ async def delete_transaction(
         id=transaction_id,
         options=[
             selectinload(TransactionModel.bank_account),
-            selectinload(TransactionModel.project)
+            selectinload(TransactionModel.project).selectinload(Project.services)
         ]
     )
 

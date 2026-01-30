@@ -15,21 +15,22 @@ import {
   Box,
   Sparkles,
 } from 'lucide-react'
-import Link from 'next/link'
+import { LocaleLink } from '@/components/LocaleLink'
+import { useTranslations } from 'next-intl'
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'AI Features', href: '/ai', icon: Sparkles },
-  { name: 'Projects', href: '/projects', icon: FolderOpen },
-  { name: 'Proposals', href: '/proposals', icon: FileText },
-  { name: 'Call Sheets', href: '/call-sheets', icon: FileText },
-  { name: 'Financials', href: '/financials', icon: DollarSign },
-  { name: 'Shooting Days', href: '/shooting-days', icon: Calendar },
-  { name: 'Production', href: '/production', icon: Film },
-  { name: 'Inventory', href: '/inventory/items', icon: Box },
-  { name: 'Clients', href: '/clients', icon: Users },
-  { name: 'Suppliers', href: '/suppliers', icon: Briefcase },
-  { name: 'Settings', href: '/settings', icon: Settings },
+  { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { key: 'ai', href: '/ai', icon: Sparkles },
+  { key: 'projects', href: '/projects', icon: FolderOpen },
+  { key: 'proposals', href: '/proposals', icon: FileText },
+  { key: 'callSheets', href: '/call-sheets', icon: FileText },
+  { key: 'financials', href: '/financials', icon: DollarSign },
+  { key: 'shootingDays', href: '/shooting-days', icon: Calendar },
+  { key: 'production', href: '/production', icon: Film },
+  { key: 'inventory', href: '/inventory/items', icon: Box },
+  { key: 'clients', href: '/clients', icon: Users },
+  { key: 'suppliers', href: '/suppliers', icon: Briefcase },
+  { key: 'settings', href: '/settings', icon: Settings },
 ]
 
 interface MobileNavProps {
@@ -38,12 +39,13 @@ interface MobileNavProps {
 }
 
 export function MobileNav({ isOpen, onClose }: MobileNavProps) {
+  const t = useTranslations('navigation')
   const pathname = usePathname()
 
   return (
     <>
       {/* Mobile Sidebar */}
-      <aside 
+      <aside
         className={`fixed left-0 top-0 w-64 h-full bg-white dark:bg-slate-900 border-r z-50 shadow-lg
           transform transition-transform duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
@@ -60,13 +62,13 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
               </svg>
             </button>
           </div>
-          
+
           <nav className="space-y-1">
             {navigation.map((item) => {
               const isActive = pathname.startsWith(item.href)
               return (
-                <Link
-                  key={item.name}
+                <LocaleLink
+                  key={item.key}
                   href={item.href}
                   onClick={onClose}
                   className={cn(
@@ -78,8 +80,8 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
                   )}
                 >
                   <item.icon className="h-5 w-5" />
-                  {item.name}
-                </Link>
+                  {t(item.key)}
+                </LocaleLink>
               )
             })}
           </nav>

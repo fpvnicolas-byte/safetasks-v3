@@ -4,36 +4,38 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { InventoryMetrics } from '@/types'
 import { Package, Wrench, AlertTriangle, ExternalLink } from 'lucide-react'
-import Link from 'next/link'
+import { LocaleLink } from '@/components/LocaleLink'
+import { useTranslations } from 'next-intl'
 
 interface EquipmentUtilizationProps {
   data: InventoryMetrics
 }
 
 export function EquipmentUtilization({ data }: EquipmentUtilizationProps) {
+  const t = useTranslations('dashboard')
   const healthStatusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
     excellent: {
-      label: 'Excellent',
+      label: t('equipment.status.excellent'),
       color: 'bg-green-500',
       icon: <Package className="h-4 w-4" />
     },
     good: {
-      label: 'Good',
+      label: t('equipment.status.good'),
       color: 'bg-blue-500',
       icon: <Package className="h-4 w-4" />
     },
     needs_service: {
-      label: 'Needs Service',
+      label: t('equipment.status.needs_service'),
       color: 'bg-yellow-500',
       icon: <Wrench className="h-4 w-4" />
     },
     broken: {
-      label: 'Broken',
+      label: t('equipment.status.broken'),
       color: 'bg-red-500',
       icon: <AlertTriangle className="h-4 w-4" />
     },
     retired: {
-      label: 'Retired',
+      label: t('equipment.status.retired'),
       color: 'bg-gray-500',
       icon: <Package className="h-4 w-4" />
     },
@@ -51,14 +53,14 @@ export function EquipmentUtilization({ data }: EquipmentUtilizationProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Equipment Health</CardTitle>
-            <CardDescription>Inventory status and utilization</CardDescription>
+            <CardTitle>{t('equipment.title')}</CardTitle>
+            <CardDescription>{t('equipment.desc')}</CardDescription>
           </div>
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/inventory/items">
-              View All
+            <LocaleLink href="/inventory/items">
+              {t('equipment.viewAll', { defaultMessage: 'View All' })}
               <ExternalLink className="ml-2 h-4 w-4" />
-            </Link>
+            </LocaleLink>
           </Button>
         </div>
       </CardHeader>
@@ -68,7 +70,7 @@ export function EquipmentUtilization({ data }: EquipmentUtilizationProps) {
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Package className="h-4 w-4" />
-              <span>Total Items</span>
+              <span>{t('equipment.totalItems')}</span>
             </div>
             <div className="text-2xl font-bold">{data.total_items}</div>
           </div>
@@ -76,7 +78,7 @@ export function EquipmentUtilization({ data }: EquipmentUtilizationProps) {
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <AlertTriangle className="h-4 w-4" />
-              <span>Needs Service</span>
+              <span>{t('equipment.needsService')}</span>
             </div>
             <div className="text-2xl font-bold text-yellow-600">{data.items_needing_service}</div>
           </div>
@@ -84,7 +86,7 @@ export function EquipmentUtilization({ data }: EquipmentUtilizationProps) {
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Wrench className="h-4 w-4" />
-              <span>Utilization</span>
+              <span>{t('equipment.utilization')}</span>
             </div>
             <div className="text-2xl font-bold">{data.equipment_utilization_rate.toFixed(0)}%</div>
           </div>
@@ -92,7 +94,7 @@ export function EquipmentUtilization({ data }: EquipmentUtilizationProps) {
 
         {/* Health Status Breakdown */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium">Health Status Distribution</h4>
+          <h4 className="text-sm font-medium">{t('equipment.healthDist')}</h4>
 
           {/* Stacked bar chart */}
           <div className="h-8 flex rounded-lg overflow-hidden">
@@ -132,18 +134,17 @@ export function EquipmentUtilization({ data }: EquipmentUtilizationProps) {
         {/* Health Score */}
         <div className="border-t pt-4 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Overall Health Score</span>
+            <span className="text-sm font-medium">{t('equipment.overallScore')}</span>
             <span className="text-2xl font-bold">{data.inventory_health_score.toFixed(0)}/100</span>
           </div>
           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
             <div
-              className={`h-full transition-all ${
-                data.inventory_health_score >= 75
-                  ? 'bg-green-500'
-                  : data.inventory_health_score >= 50
+              className={`h-full transition-all ${data.inventory_health_score >= 75
+                ? 'bg-green-500'
+                : data.inventory_health_score >= 50
                   ? 'bg-yellow-500'
                   : 'bg-red-500'
-              }`}
+                }`}
               style={{ width: `${data.inventory_health_score}%` }}
             />
           </div>
@@ -155,9 +156,9 @@ export function EquipmentUtilization({ data }: EquipmentUtilizationProps) {
             <div className="flex items-start gap-3">
               <AlertTriangle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
               <div className="flex-1">
-                <h4 className="text-sm font-medium text-yellow-900">Maintenance Required</h4>
+                <h4 className="text-sm font-medium text-yellow-900">{t('equipment.maintenanceRequired')}</h4>
                 <p className="text-sm text-yellow-700 mt-1">
-                  {data.maintenance_overdue} item{data.maintenance_overdue > 1 ? 's' : ''} overdue for maintenance
+                  {t('equipment.overdue', { count: data.maintenance_overdue })}
                 </p>
               </div>
             </div>

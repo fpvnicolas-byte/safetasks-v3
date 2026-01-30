@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
-import { signOut } from '@/app/auth/actions'
+import { signOut } from '../../app/[locale]/auth/actions'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { NotificationsBell } from '@/components/NotificationsBell'
 import { Button } from '@/components/ui/button'
@@ -14,7 +14,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { User, Settings, LogOut, Menu } from 'lucide-react'
-import Link from 'next/link'
+import { LocaleLink } from '@/components/LocaleLink'
+import { useTranslations } from 'next-intl'
 
 
 interface HeaderProps {
@@ -23,39 +24,41 @@ interface HeaderProps {
 
 export function Header({ onSidebarToggle }: HeaderProps) {
   const { user } = useAuth()
+  const t = useTranslations('navigation')
+  const tHeader = useTranslations('header')
 
   return (
     <header className="border-b">
       <div className="flex h-16 items-center px-4 gap-4">
-        <Link href="/dashboard" className="font-bold text-xl">
+        <LocaleLink href="/dashboard" className="font-bold text-xl">
           SafeTasks V3
-        </Link>
+        </LocaleLink>
 
         <nav className="flex gap-6 ml-6">
-          <Link
+          <LocaleLink
             href="/dashboard"
             className="text-sm font-medium transition-colors hover:text-primary"
           >
-            Dashboard
-          </Link>
-          <Link
+            {t('dashboard')}
+          </LocaleLink>
+          <LocaleLink
             href="/projects"
             className="text-sm font-medium transition-colors hover:text-primary"
           >
-            Projects
-          </Link>
-          <Link
+            {t('projects')}
+          </LocaleLink>
+          <LocaleLink
             href="/call-sheets"
             className="text-sm font-medium transition-colors hover:text-primary"
           >
-            Call Sheets
-          </Link>
-          <Link
+            {t('callSheets')}
+          </LocaleLink>
+          <LocaleLink
             href="/financials"
             className="text-sm font-medium transition-colors hover:text-primary"
           >
-            Financials
-          </Link>
+            {t('financials')}
+          </LocaleLink>
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
@@ -80,17 +83,17 @@ export function Header({ onSidebarToggle }: HeaderProps) {
                 <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/settings">
+                  <LocaleLink href="/settings">
                     <Settings className="mr-2 h-4 w-4" />
-                    Settings
-                  </Link>
+                    {t('settings')}
+                  </LocaleLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => signOut()}
                   className="text-red-600"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
+                  {tHeader('signOut')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

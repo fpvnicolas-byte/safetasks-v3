@@ -1,5 +1,6 @@
 from sqlalchemy import Column, String, TEXT, TIMESTAMP, DATE, func, ForeignKey, BIGINT
 from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.orm import relationship
 import uuid
 from app.core.base import Base
 
@@ -23,3 +24,17 @@ class Proposal(Base):
     
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # Many-to-Many relationship with Service
+    services = relationship("Service", secondary="proposal_services", backref="proposals")
+
+
+from sqlalchemy import Table
+
+# Association table for Proposal <-> Service
+proposal_services = Table(
+    "proposal_services",
+    Base.metadata,
+    Column("proposal_id", UUID(as_uuid=True), ForeignKey("proposals.id"), primary_key=True),
+    Column("service_id", UUID(as_uuid=True), ForeignKey("services.id"), primary_key=True),
+)

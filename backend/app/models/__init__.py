@@ -16,6 +16,7 @@ from .proposals import Proposal
 from .scheduling import ShootingDay
 from .storage import StoredFile
 from .transactions import Transaction
+from .services import Service
 from .ai import ScriptAnalysis, AiSuggestion, AiRecommendation, AiUsageLog
 
 
@@ -50,6 +51,7 @@ __all__ = [
     "ShootingDay",
     "StoredFile",
     "Transaction",
+    "Service",
     "ScriptAnalysis",
     "AiSuggestion",
     "AiRecommendation",

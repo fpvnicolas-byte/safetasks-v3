@@ -2,7 +2,12 @@ import { ApiError } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 import { logger } from '@/lib/utils/logger'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
+const getBaseUrl = () => {
+  // Always return the full backend URL to bypass Next.js rewrites which might be stripping headers
+  return process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
+}
+
+const API_BASE_URL = getBaseUrl()
 const API_TIMEOUT = 30000 // 30 seconds
 
 interface RequestConfig extends RequestInit {
@@ -85,6 +90,17 @@ class ApiClient {
       tokenLength: token ? token.length : 0
     })
 
+    // DEBUGGING: Print critical info to console to diagnose 403 issue
+    console.log('[DEBUG] API Client Request:', {
+      url: `${this.baseURL}${endpoint}`,
+      baseURL: this.baseURL,
+      isWindowDefined: typeof window !== 'undefined',
+      endpoint,
+      hasToken: !!token,
+      // DEBUG: Verify headers before sending matches backend expectation
+      // const authHeader = token ? `Bearer ${token}` : undefined;
+    })
+
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), timeout)
 
@@ -106,8 +122,21 @@ class ApiClient {
         return {} as T
       }
 
-      // Parse JSON response
-      const data = await response.json()
+      // Parse JSON response safely
+      let data: any = {}
+      try {
+        const text = await response.text()
+        try {
+          data = JSON.parse(text)
+        } catch {
+          // If not JSON, use text as message
+          console.error('API Client - Received non-JSON response:', text)
+          data = { message: text, detail: text }
+        }
+      } catch (e) {
+        console.error('API Client - Failed to read response body', e)
+        data = { message: 'Failed to read response body' }
+      }
 
       // Handle errors
       if (!response.ok) {
@@ -127,11 +156,17 @@ class ApiClient {
         }
 
         // Handle specific status codes
+        // Handle specific status codes
         if (response.status === 401) {
           // Redirect to login (will be handled by middleware)
-          window.location.href = '/auth/login'
+          console.warn('API Client - 401 Unauthorized. NOT redirecting to avoid loop.');
+          // window.location.href = '/auth/login'
+          error.message = 'Unauthorized - Please refresh or log in again.'
         } else if (response.status === 403) {
-          error.message = 'You do not have permission to perform this action'
+          console.error('API Client - 403 Forbidden - Detail:', errorDetail)
+          error.message = typeof errorDetail === 'string'
+            ? errorDetail
+            : 'You do not have permission to perform this action'
         } else if (response.status === 404) {
           error.message = 'Resource not found'
         } else if (response.status === 422) {
@@ -153,6 +188,16 @@ class ApiClient {
       return data
     } catch (error) {
       clearTimeout(timeoutId)
+
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        logger.error('API Client - Network Error (Failed to fetch)', {
+          url: `${this.baseURL}${endpoint}`,
+          message: error.message,
+          cause: (error as any).cause,
+          error: error.toString(),
+          stack: error.stack,
+        })
+      }
 
       if (error instanceof Error && error.name === 'AbortError') {
         throw {

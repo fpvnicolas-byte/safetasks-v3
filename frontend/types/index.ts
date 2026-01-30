@@ -62,6 +62,8 @@ export interface Project {
   is_active: boolean
   created_at: ISODateTime
   updated_at: ISODateTime
+  // Relationships (if loaded)
+  services?: Service[]
 }
 
 export interface ProjectWithClient extends Project {
@@ -589,6 +591,7 @@ export interface Proposal {
   // Relationships (if loaded)
   client?: Client
   project?: Project
+  services?: Service[]
 }
 
 export interface ProposalCreate {
@@ -599,7 +602,9 @@ export interface ProposalCreate {
   valid_until?: ISODate
   total_amount_cents?: number
   currency?: string
+
   terms_conditions?: string
+  service_ids?: UUID[]
 }
 
 export interface ProposalUpdate {
@@ -765,7 +770,9 @@ export interface ProjectCreate {
   status?: ProjectStatus
   budget_total_cents?: number
   start_date?: ISODate
+
   end_date?: ISODate
+  service_ids?: UUID[]
 }
 
 export interface ProjectUpdate {
@@ -776,6 +783,30 @@ export interface ProjectUpdate {
   budget_total_cents?: number
   start_date?: ISODate | null
   end_date?: ISODate | null
+  service_ids?: UUID[]
+}
+
+// ============================================================================
+// SERVICE TYPES
+// ============================================================================
+
+export interface Service {
+  id: UUID
+  organization_id: UUID
+  name: string
+  description: string | null
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+
+export interface ServiceCreate {
+  name: string
+  description?: string
+}
+
+export interface ServiceUpdate {
+  name?: string
+  description?: string
 }
 
 /**

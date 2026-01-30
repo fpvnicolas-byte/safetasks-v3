@@ -6,10 +6,12 @@ import { useTransactions } from '@/lib/api/hooks/useTransactions'
 import { useAuth } from '@/contexts/AuthContext'
 import { formatCurrency } from '@/lib/utils/money'
 import { ArrowUpRight, ArrowDownRight, ExternalLink } from 'lucide-react'
-import Link from 'next/link'
+import { LocaleLink } from '@/components/LocaleLink'
+import { useTranslations } from 'next-intl'
 
 export function RecentTransactions() {
   const { organizationId } = useAuth()
+  const t = useTranslations('dashboard')
   const { data: transactions, isLoading } = useTransactions(
     organizationId ? { organizationId } : {}
   )
@@ -21,20 +23,20 @@ export function RecentTransactions() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Recent Transactions</CardTitle>
-            <CardDescription>Latest financial activity</CardDescription>
+            <CardTitle>{t('recentTransactions.title')}</CardTitle>
+            <CardDescription>{t('recentTransactions.desc')}</CardDescription>
           </div>
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/financials/transactions">
-              View All
+            <LocaleLink href="/financials/transactions">
+              {t('recentTransactions.viewAll', { defaultMessage: 'View All' })}
               <ExternalLink className="ml-2 h-4 w-4" />
-            </Link>
+            </LocaleLink>
           </Button>
         </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="text-center py-8 text-muted-foreground">Loading transactions...</div>
+          <div className="text-center py-8 text-muted-foreground">{t('recentTransactions.loading')}</div>
         ) : recentTransactions.length > 0 ? (
           <div className="space-y-3">
             {recentTransactions.map((transaction) => {
@@ -52,7 +54,7 @@ export function RecentTransactions() {
                     </div>
                     <div>
                       <div className="font-medium text-sm">
-                        {transaction.description || 'No description'}
+                        {transaction.description || t('recentTransactions.noDescription')}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {transaction.category} • {new Date(transaction.transaction_date).toLocaleDateString()}
@@ -68,9 +70,9 @@ export function RecentTransactions() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <p className="text-muted-foreground mb-4">No transactions yet</p>
+            <p className="text-muted-foreground mb-4">{t('recentTransactions.noTransactions')}</p>
             <Button asChild>
-              <Link href="/financials/transactions/new">Record Transaction</Link>
+              <LocaleLink href="/financials/transactions/new">{t('recentTransactions.recordTransaction')}</LocaleLink>
             </Button>
           </div>
         )}

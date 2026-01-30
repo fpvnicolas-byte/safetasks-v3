@@ -13,6 +13,10 @@ class Project(Base):
     """
     __tablename__ = "projects"
 
+    __table_args__ = (
+        CheckConstraint("status IN ('draft', 'pre-production', 'production', 'post-production', 'delivered', 'archived')"),
+    )
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
     client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id"), nullable=False)
@@ -47,6 +51,18 @@ class Project(Base):
     invoices = relationship("Invoice", back_populates="project", cascade="all, delete-orphan")
     transactions = relationship("Transaction", back_populates="project")
 
-    __table_args__ = (
-        CheckConstraint("status IN ('draft', 'pre-production', 'production', 'post-production', 'delivered', 'archived')"),
-    )
+    # Many-to-Many relationship with Service
+    services = relationship("Service", secondary="project_services", backref="projects")
+
+
+from sqlalchemy import Table
+
+# Association table for Project <-> Service
+project_services = Table(
+    "project_services",
+    Base.metadata,
+    Column("project_id", UUID(as_uuid=True), ForeignKey("projects.id"), primary_key=True),
+    Column("service_id", UUID(as_uuid=True), ForeignKey("services.id"), primary_key=True),
+)
+
+

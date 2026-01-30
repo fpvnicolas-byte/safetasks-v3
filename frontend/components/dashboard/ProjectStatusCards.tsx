@@ -8,35 +8,40 @@ interface ProjectStatusCardsProps {
   data: ProductionMetrics
 }
 
+import { useTranslations } from 'next-intl'
+
 export function ProjectStatusCards({ data }: ProjectStatusCardsProps) {
+  const t = useTranslations('dashboard')
+  const tCommon = useTranslations('common')
+
   const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
     planning: {
-      label: 'Planning',
+      label: t('planning'),
       color: 'text-blue-600 bg-blue-100',
       icon: <FolderOpen className="h-4 w-4" />
     },
     pre_production: {
-      label: 'Pre-Production',
+      label: t('preProduction'),
       color: 'text-purple-600 bg-purple-100',
       icon: <FolderOpen className="h-4 w-4" />
     },
     production: {
-      label: 'In Production',
+      label: t('inProduction'),
       color: 'text-green-600 bg-green-100',
       icon: <Play className="h-4 w-4" />
     },
     post_production: {
-      label: 'Post-Production',
+      label: t('postProduction'),
       color: 'text-yellow-600 bg-yellow-100',
       icon: <Play className="h-4 w-4" />
     },
     completed: {
-      label: 'Completed',
+      label: tCommon('completed'),
       color: 'text-slate-600 bg-slate-100',
       icon: <CheckCircle className="h-4 w-4" />
     },
     archived: {
-      label: 'Archived',
+      label: t('archived'),
       color: 'text-gray-600 bg-gray-100',
       icon: <Archive className="h-4 w-4" />
     },
@@ -51,33 +56,33 @@ export function ProjectStatusCards({ data }: ProjectStatusCardsProps) {
       {/* Overview Cards */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('totalProjects')}</CardTitle>
           <FolderOpen className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{data.total_projects}</div>
           <p className="text-xs text-muted-foreground">
-            {data.active_projects} active
+            {t('activeCount', { count: data.active_projects })}
           </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('activeProjects')}</CardTitle>
           <Play className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{data.active_projects}</div>
           <p className="text-xs text-muted-foreground">
-            {activePercentage.toFixed(0)}% of total
+            {activePercentage.toFixed(0)}% {t('ofTotal')}
           </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">On-Time Rate</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('onTimeRate')}</CardTitle>
           <CheckCircle className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -85,22 +90,22 @@ export function ProjectStatusCards({ data }: ProjectStatusCardsProps) {
             {data.production_efficiency.on_time_delivery_rate.toFixed(0)}%
           </div>
           <p className="text-xs text-muted-foreground">
-            Delivery performance
+            {t('deliveryPerformance')}
           </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Avg Duration</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('avgDuration')}</CardTitle>
           <Archive className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {data.production_efficiency.avg_project_duration_days} days
+            {data.production_efficiency.avg_project_duration_days} {t('days')}
           </div>
           <p className="text-xs text-muted-foreground">
-            Per project
+            {t('perProject')}
           </p>
         </CardContent>
       </Card>
@@ -108,8 +113,8 @@ export function ProjectStatusCards({ data }: ProjectStatusCardsProps) {
       {/* Status Breakdown */}
       <Card className="md:col-span-2 lg:col-span-4">
         <CardHeader>
-          <CardTitle>Projects by Status</CardTitle>
-          <CardDescription>Breakdown of all projects</CardDescription>
+          <CardTitle>{t('projectsByStatus')}</CardTitle>
+          <CardDescription>{t('projectsByStatusDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-6">

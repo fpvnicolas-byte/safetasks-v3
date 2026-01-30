@@ -1,7 +1,8 @@
 from pydantic import BaseModel, ConfigDict, Field
 from uuid import UUID
 from datetime import datetime, date
-from typing import Optional, Literal
+from typing import Optional, Literal, List
+from app.schemas.services import Service
 
 
 class ProjectBase(BaseModel):
@@ -19,7 +20,7 @@ class ProjectBase(BaseModel):
 
 class ProjectCreate(ProjectBase):
     """Schema for creating a Project."""
-    pass
+    service_ids: Optional[List[UUID]] = None
 
 
 class ProjectUpdate(BaseModel):
@@ -30,7 +31,9 @@ class ProjectUpdate(BaseModel):
     status: Optional[Literal["draft", "pre-production", "production", "post-production", "delivered", "archived"]] = None
     budget_total_cents: Optional[int] = Field(None, ge=0)
     start_date: Optional[date] = None
+    start_date: Optional[date] = None
     end_date: Optional[date] = None
+    service_ids: Optional[List[UUID]] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -41,7 +44,10 @@ class Project(ProjectBase):
     organization_id: UUID
     is_active: bool
     created_at: datetime
+    is_active: bool
+    created_at: datetime
     updated_at: datetime
+    services: List[Service] = []
 
 
 class ProjectWithClient(Project):

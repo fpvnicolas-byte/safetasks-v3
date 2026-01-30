@@ -8,6 +8,7 @@ class OrganizationBase(BaseModel):
     """Base schema for Organization."""
     name: str
     slug: str
+    tax_id: Optional[str] = None
     plan: Literal["free", "starter", "professional", "enterprise"] = "free"
     subscription_status: Literal["trialing", "active", "past_due", "cancelled", "paused"] = "trialing"
 
@@ -23,6 +24,7 @@ class OrganizationUpdate(BaseModel):
     """Schema for updating an Organization."""
     name: Optional[str] = None
     slug: Optional[str] = None
+    tax_id: Optional[str] = None
     plan: Optional[Literal["free", "starter", "professional", "enterprise"]] = None
     subscription_status: Optional[Literal["trialing", "active", "past_due", "cancelled", "paused"]] = None
     is_active: Optional[bool] = None

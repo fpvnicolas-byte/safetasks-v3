@@ -129,7 +129,7 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
             .where(Transaction.id == db_transaction.id)
             .options(
                 selectinload(Transaction.bank_account),
-                selectinload(Transaction.project)
+                selectinload(Transaction.project).selectinload(Project.services)
             )
         )
         return result.scalar_one()
@@ -190,7 +190,7 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
 
         query = query.options(
             selectinload(Transaction.bank_account),
-            selectinload(Transaction.project)
+            selectinload(Transaction.project).selectinload(Project.services)
         ).offset(skip).limit(limit)
 
         result = await db.execute(query)

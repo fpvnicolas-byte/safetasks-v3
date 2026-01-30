@@ -1,30 +1,52 @@
 from typing import Optional
 from uuid import UUID
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from jose import jwt, JWTError
 
+import logging
 from app.core.config import settings
 from app.db.session import get_db
 from app.models.profiles import Profile
+
+logger = logging.getLogger(__name__)
 
 security = HTTPBearer()
 
 
 async def get_current_user_id(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))
 ) -> UUID:
     """
     Extract and validate JWT token from Authorization header.
     Returns the user ID from Supabase Auth.
     """
+    if not credentials:
+        logger.error(f"Missing credentials. URL: {request.url}")
+        # Log sanitized headers (avoid logging sensitive cookies/keys if possible, or just log all for dev)
+        headers = dict(request.headers)
+        if "authorization" in headers:
+            logger.warning(f"Authorization header present but not parsed correctly: {headers['authorization'][:10]}...")
+        else:
+            logger.warning("No Authorization header found.")
+            # logger.debug(f"All Headers: {headers}")
+            
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated - Missing Authorization Header"
+        )
+
     try:
         token = credentials.credentials
         # Decode JWT without verification for user info (Supabase handles verification)
         # In production, you might want to verify the token signature
         payload = jwt.get_unverified_claims(token)
+        
+        # logger.info(f"Token payload sub: {payload.get('sub')}")
+
 
         if not payload.get("sub"):
             raise HTTPException(
@@ -53,10 +75,13 @@ async def get_current_profile(
     profile = result.scalar_one_or_none()
 
     if not profile:
+        logger.error(f"Profile not found for user_id: {user_id}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Profile not found"
         )
+    
+    # logger.info(f"Profile found: {profile.id}, Org: {profile.organization_id}")
 
     return profile
 
@@ -80,6 +105,7 @@ async def get_current_organization(
     profile = result.scalar_one_or_none()
 
     if not profile:
+        logger.warning(f"Access denied: User {user_id} does not belong to organization {organization_id}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied: user does not belong to this organization"
@@ -97,6 +123,7 @@ async def get_organization_from_profile(
     need to validate against a specific organization_id parameter.
     """
     if not profile.organization_id:
+        logger.warning(f"User {profile.id} does not belong to any organization")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User does not belong to any organization"

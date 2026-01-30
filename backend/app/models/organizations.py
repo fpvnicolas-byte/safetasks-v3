@@ -16,6 +16,7 @@ class Organization(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String, nullable=False)
     slug = Column(String, unique=True, nullable=False)
+    tax_id = Column(String, nullable=True)
 
     # Subscription & Billing
     plan = Column(String, default="free", nullable=False)  # free, starter, professional, enterprise

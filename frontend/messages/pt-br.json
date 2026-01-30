@@ -1,0 +1,545 @@
+{
+  "common": {
+    "loading": "Carregando...",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "search": "Buscar",
+    "back": "Voltar",
+    "next": "Próximo",
+    "submit": "Enviar",
+    "close": "Fechar",
+    "create": "Criar",
+    "update": "Atualizar",
+    "view": "Visualizar",
+    "actions": "Ações",
+    "status": "Status",
+    "name": "Nome",
+    "description": "Descrição",
+    "date": "Data",
+    "email": "E-mail",
+    "phone": "Telefone",
+    "address": "Endereço",
+    "notes": "Observações",
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "completed": "Concluído",
+    "pending": "Pendente",
+    "inProgress": "Em Andamento",
+    "draft": "Rascunho",
+    "noResults": "Nenhum resultado encontrado",
+    "searchPlaceholder": "Buscar...",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "export": "Exportar",
+    "import": "Importar",
+    "refresh": "Atualizar",
+    "confirm": "Confirmar",
+    "areYouSure": "Tem certeza?",
+    "deleteConfirm": "Tem certeza que deseja excluir este item?",
+    "success": "Sucesso",
+    "error": "Erro",
+    "warning": "Aviso",
+    "info": "Informação"
+  },
+  "auth": {
+    "login": {
+      "title": "Bem-vindo ao SafeTasks V3",
+      "subtitle": "Entre na sua conta",
+      "email": "E-mail",
+      "password": "Senha",
+      "signIn": "Entrar",
+      "signingIn": "Entrando...",
+      "createAccount": "Criar conta",
+      "forgotPassword": "Esqueceu a senha?",
+      "emailPlaceholder": "voce@exemplo.com"
+    },
+    "register": {
+      "title": "Criar Conta",
+      "subtitle": "Cadastre-se no SafeTasks V3",
+      "fullName": "Nome Completo",
+      "fullNamePlaceholder": "João Silva",
+      "email": "E-mail",
+      "emailPlaceholder": "voce@exemplo.com",
+      "password": "Senha",
+      "confirmPassword": "Confirmar Senha",
+      "createAccount": "Criar Conta",
+      "creatingAccount": "Criando conta...",
+      "alreadyHaveAccount": "Já tem uma conta?",
+      "signIn": "Entrar",
+      "passwordsDoNotMatch": "As senhas não coincidem"
+    },
+    "forgotPassword": {
+      "title": "Redefinir Senha",
+      "subtitle": "Digite seu e-mail para receber um link de redefinição",
+      "email": "E-mail",
+      "emailPlaceholder": "voce@exemplo.com",
+      "sendResetLink": "Enviar Link de Redefinição",
+      "sending": "Enviando...",
+      "rememberPassword": "Lembrou sua senha?",
+      "signIn": "Entrar"
+    },
+    "errors": {
+      "invalidCredentials": "E-mail ou senha inválidos",
+      "userNotFound": "Usuário não encontrado"
+    }
+  },
+  "dashboard": {
+    "title": "Painel",
+    "welcome": "Bem-vindo, {email}",
+    "activeProjects": "Projetos Ativos",
+    "inProgress": "Em andamento",
+    "revenueMonth": "Receita (Mês)",
+    "revenueYear": "Receita (Ano)",
+    "netProfit": "Lucro Líquido (Mês)",
+    "equipmentHealth": "Saúde dos Equipamentos",
+    "margin": "{value}% margem",
+    "items": "{count} itens",
+    "expenses": "Despesas: {amount}",
+    "analyticsUnavailable": "Análises Indisponíveis",
+    "analyticsUnavailableDesc": "Não foi possível carregar os dados de análise. Alguns recursos podem estar limitados.",
+    "projectStatus": "Status dos Projetos",
+    "cloudSyncStatus": "Status de Sincronização",
+    "cloudSyncDesc": "Saúde da integração com Google Drive",
+    "successRate": "Taxa de Sucesso",
+    "totalSyncs": "Total de Sincronizações",
+    "recentSyncs": "Recentes (30d)",
+    "storageUsed": "Armazenamento Usado",
+    "healthy": "saudável",
+    "warning": "aviso",
+    "critical": "crítico",
+    "totalProjects": "Total de Projetos",
+    "onTimeRate": "Pontualidade",
+    "deliveryPerformance": "Desempenho de entrega",
+    "avgDuration": "Duração Média",
+    "perProject": "Por projeto",
+    "projectsByStatus": "Projetos por Status",
+    "projectsByStatusDesc": "Detalhamento de todos os projetos",
+    "quickActions": "Ações Rápidas",
+    "commonTasks": "Tarefas comuns e atalhos",
+    "actions": {
+      "newProject": {
+        "title": "Novo Projeto",
+        "desc": "Iniciar um novo projeto de filme"
+      },
+      "createInvoice": {
+        "title": "Criar Fatura",
+        "desc": "Cobrar um cliente"
+      },
+      "recordTransaction": {
+        "title": "Registrar Transação",
+        "desc": "Registrar receita ou despesa"
+      },
+      "callSheet": {
+        "title": "Ordem do Dia",
+        "desc": "Criar cronograma de produção"
+      },
+      "addEquipment": {
+        "title": "Adicionar Equipamento",
+        "desc": "Registrar novo item ao kit"
+      },
+      "addStakeholder": {
+        "title": "Adicionar Membro",
+        "desc": "Adicionar membro da equipe"
+      }
+    },
+    "equipment": {
+      "title": "Saúde do Equipamento",
+      "desc": "Status de inventário e utilização",
+      "totalItems": "Total de Itens",
+      "needsService": "Precisa de Manutenção",
+      "utilization": "Utilização",
+      "healthDist": "Distribuição de Status de Saúde",
+      "overallScore": "Pontuação Geral de Saúde",
+      "maintenanceRequired": "Manutenção Necessária",
+      "overdue": "{count} item(s) com manutenção atrasada",
+      "viewAll": "Ver Todos",
+      "status": {
+        "excellent": "Excelente",
+        "good": "Bom",
+        "needs_service": "Precisa de Manutenção",
+        "broken": "Quebrado",
+        "retired": "Aposentado"
+      }
+    },
+    "recentTransactions": {
+      "title": "Transações Recentes",
+      "desc": "Atividade financeira mais recente",
+      "noTransactions": "Nenhuma transação ainda",
+      "recordTransaction": "Registrar Transação",
+      "loading": "Carregando transações...",
+      "noDescription": "Sem descrição",
+      "viewAll": "Ver Todas"
+    },
+    "planning": "Planejamento",
+    "preProduction": "Pré-produção",
+    "inProduction": "Em Produção",
+    "postProduction": "Pós-produção",
+    "archived": "Arquivado",
+    "activeCount": "{count} ativos",
+    "ofTotal": "do total",
+    "days": "dias"
+  },
+  "navigation": {
+    "dashboard": "Painel",
+    "projects": "Projetos",
+    "production": "Produção",
+    "callSheets": "Ordens do Dia",
+    "shootingDays": "Dias de Filmagem",
+    "scenes": "Cenas",
+    "characters": "Personagens",
+    "financials": "Financeiro",
+    "clients": "Clientes",
+    "transactions": "Transações",
+    "invoices": "Faturas",
+    "bankAccounts": "Contas Bancárias",
+    "taxTables": "Tabelas de Impostos",
+    "inventory": "Inventário",
+    "kits": "Kits",
+    "items": "Itens",
+    "stakeholders": "Partes Interessadas",
+    "suppliers": "Fornecedores",
+    "proposals": "Propostas",
+    "storage": "Armazenamento",
+    "ai": "Recursos de IA",
+    "notifications": "Notificações",
+    "settings": "Configurações"
+  },
+  "header": {
+    "signOut": "Sair"
+  },
+  "projects": {
+    "title": "Projetos",
+    "newProject": "Novo Projeto",
+    "createProject": "Criar Novo Projeto",
+    "editProject": "Editar Projeto",
+    "projectName": "Nome do Projeto",
+    "projectDescription": "Descrição",
+    "client": "Cliente",
+    "budget": "Orçamento",
+    "startDate": "Data de Início",
+    "endDate": "Data de Término",
+    "status": "Status",
+    "active": "Ativo",
+    "completed": "Concluído",
+    "onHold": "Em Espera",
+    "cancelled": "Cancelado",
+    "viewDetails": "Ver Detalhes",
+    "noProjects": "Nenhum projeto encontrado",
+    "searchProjects": "Buscar projetos..."
+  },
+  "callSheets": {
+    "title": "Ordens do Dia",
+    "newCallSheet": "Nova Ordem do Dia",
+    "createCallSheet": "Criar Ordem do Dia",
+    "editCallSheet": "Editar Ordem do Dia",
+    "shootDate": "Data de Filmagem",
+    "callTime": "Horário de Chamada",
+    "location": "Localização",
+    "sceneNumber": "Número da Cena",
+    "cast": "Elenco",
+    "crew": "Equipe",
+    "equipment": "Equipamento",
+    "notes": "Observações",
+    "noCallSheets": "Nenhuma ordem do dia encontrada"
+  },
+  "shootingDays": {
+    "title": "Dias de Filmagem",
+    "newShootingDay": "Novo Dia de Filmagem",
+    "createShootingDay": "Criar Dia de Filmagem",
+    "editShootingDay": "Editar Dia de Filmagem",
+    "date": "Data",
+    "location": "Localização",
+    "scenes": "Cenas",
+    "castMembers": "Membros do Elenco",
+    "crewMembers": "Membros da Equipe",
+    "equipmentUsed": "Equipamento Utilizado",
+    "status": "Status",
+    "noShootingDays": "Nenhum dia de filmagem encontrado"
+  },
+  "scenes": {
+    "title": "Cenas",
+    "newScene": "Nova Cena",
+    "createScene": "Criar Cena",
+    "editScene": "Editar Cena",
+    "sceneNumber": "Número da Cena",
+    "description": "Descrição",
+    "location": "Localização",
+    "timeOfDay": "Período do Dia",
+    "intExt": "Interior/Exterior",
+    "interior": "Interior",
+    "exterior": "Exterior",
+    "characters": "Personagens",
+    "props": "Objetos de Cena",
+    "noScenes": "Nenhuma cena encontrada"
+  },
+  "characters": {
+    "title": "Personagens",
+    "newCharacter": "Novo Personagem",
+    "createCharacter": "Criar Personagem",
+    "editCharacter": "Editar Personagem",
+    "characterName": "Nome do Personagem",
+    "description": "Descrição",
+    "actor": "Ator/Atriz",
+    "role": "Papel",
+    "costume": "Figurino",
+    "makeup": "Maquiagem",
+    "noCharacters": "Nenhum personagem encontrado"
+  },
+  "financials": {
+    "title": "Financeiro",
+    "transactions": "Transações",
+    "bankAccounts": "Contas Bancárias",
+    "taxTables": "Tabelas de Impostos",
+    "invoices": "Faturas",
+    "newTransaction": "Nova Transação",
+    "newInvoice": "Nova Fatura",
+    "amount": "Valor",
+    "category": "Categoria",
+    "type": "Tipo",
+    "income": "Receita",
+    "expense": "Despesa",
+    "balance": "Saldo",
+    "taxRate": "Taxa de Imposto",
+    "dueDate": "Data de Vencimento",
+    "paid": "Pago",
+    "pending": "Pendente",
+    "noTransactions": "Nenhuma transação encontrada",
+    "noInvoices": "Nenhuma fatura encontrada"
+  },
+  "inventory": {
+    "title": "Inventário",
+    "items": "Itens",
+    "kits": "Kits",
+    "newItem": "Novo Item",
+    "newKit": "Novo Kit",
+    "itemName": "Nome do Item",
+    "kitName": "Nome do Kit",
+    "quantity": "Quantidade",
+    "condition": "Condição",
+    "location": "Localização",
+    "available": "Disponível",
+    "inUse": "Em Uso",
+    "maintenance": "Manutenção",
+    "serialNumber": "Número de Série",
+    "noItems": "Nenhum item encontrado",
+    "noKits": "Nenhum kit encontrado"
+  },
+  "clients": {
+    "title": "Clientes",
+    "newClient": "Novo Cliente",
+    "createClient": "Criar Cliente",
+    "editClient": "Editar Cliente",
+    "companyName": "Nome da Empresa",
+    "contactPerson": "Pessoa de Contato",
+    "email": "E-mail",
+    "phone": "Telefone",
+    "address": "Endereço",
+    "projects": "Projetos",
+    "activeProjects": "Projetos Ativos",
+    "noClients": "Nenhum cliente encontrado"
+  },
+  "suppliers": {
+    "title": "Fornecedores",
+    "newSupplier": "Novo Fornecedor",
+    "createSupplier": "Criar Fornecedor",
+    "editSupplier": "Editar Fornecedor",
+    "companyName": "Nome da Empresa",
+    "contact": "Contato",
+    "services": "Serviços",
+    "equipment": "Equipamento",
+    "rates": "Tarifas",
+    "contract": "Contrato",
+    "noSuppliers": "Nenhum fornecedor encontrado"
+  },
+  "stakeholders": {
+    "title": "Partes Interessadas",
+    "newStakeholder": "Nova Parte Interessada",
+    "createStakeholder": "Criar Parte Interessada",
+    "editStakeholder": "Editar Parte Interessada",
+    "name": "Nome",
+    "role": "Função",
+    "company": "Empresa",
+    "email": "E-mail",
+    "phone": "Telefone",
+    "type": "Tipo",
+    "investor": "Investidor",
+    "partner": "Parceiro",
+    "advisor": "Consultor",
+    "noStakeholders": "Nenhuma parte interessada encontrada"
+  },
+  "proposals": {
+    "title": "Propostas",
+    "newProposal": "Nova Proposta",
+    "createProposal": "Criar Proposta",
+    "editProposal": "Editar Proposta",
+    "proposalTitle": "Título",
+    "client": "Cliente",
+    "budget": "Orçamento",
+    "timeline": "Cronograma",
+    "status": "Status",
+    "draft": "Rascunho",
+    "sent": "Enviado",
+    "accepted": "Aceito",
+    "rejected": "Rejeitado",
+    "scope": "Escopo",
+    "noProposals": "Nenhuma proposta encontrada"
+  },
+  "production": {
+    "title": "Produção",
+    "schedule": "Cronograma",
+    "resources": "Recursos",
+    "progress": "Progresso",
+    "timeline": "Linha do Tempo",
+    "milestones": "Marcos"
+  },
+  "settings": {
+    "title": "Configurações",
+    "profile": "Perfil",
+    "organization": "Organização",
+    "integrations": "Integrações",
+    "googleDrive": "Google Drive",
+    "saveChanges": "Salvar Alterações",
+    "account": "Conta",
+    "preferences": "Preferências",
+    "notifications": "Notificações",
+    "security": "Segurança"
+  },
+  "storage": {
+    "title": "Armazenamento",
+    "files": "Arquivos",
+    "upload": "Enviar",
+    "download": "Baixar",
+    "size": "Tamanho",
+    "type": "Tipo",
+    "lastModified": "Última Modificação",
+    "folder": "Pasta",
+    "noFiles": "Nenhum arquivo encontrado"
+  },
+  "notifications": {
+    "title": "Notificações",
+    "markAsRead": "Marcar como Lida",
+    "clearAll": "Limpar Tudo",
+    "unread": "Não Lida",
+    "today": "Hoje",
+    "earlier": "Anterior",
+    "noNotifications": "Nenhuma notificação"
+  },
+  "landing": {
+    "title": "SafeTasks V3",
+    "subtitle": "Gerenciamento Profissional de Produção Cinematográfica",
+    "getStarted": "Começar Agora",
+    "signIn": "Entrar",
+    "createAccount": "Criar Conta Grátis",
+    "features": {
+      "projectManagement": {
+        "title": "Gestão de Projetos",
+        "description": "Organize múltiplos projetos cinematográficos com rastreamento detalhado e atualizações de status"
+      },
+      "callSheets": {
+        "title": "Ordens do Dia",
+        "description": "Crie ordens do dia profissionais com horários da equipe, localizações e informações de contato"
+      },
+      "financials": {
+        "title": "Controle Financeiro",
+        "description": "Monitore orçamentos, faturas e despesas com precisão até os centavos"
+      },
+      "team": {
+        "title": "Colaboração em Equipe",
+        "description": "Gerencie clientes, equipe e elenco com informações de contato centralizadas"
+      }
+    },
+    "cta": {
+      "title": "Pronto para começar?",
+      "description": "Junte-se a cineastas profissionais usando SafeTasks V3"
+    },
+    "footer": "© 2026 SafeTasks V3. Feito para profissionais de produção cinematográfica."
+  },
+  "ai": {
+    "title": "Recursos de IA",
+    "subtitle": "Aproveite a IA para aprimorar seu fluxo de trabalho de produção",
+    "viewProjects": "Ver Projetos",
+    "analyzeScript": "Analisar Roteiro",
+    "tabs": {
+      "overview": "Visão Geral",
+      "suggestions": "Sugestões",
+      "recommendations": "Recomendações",
+      "analysis": "Análise"
+    },
+    "quickActions": {
+      "title": "Ações Rápidas",
+      "desc": "Comece com ferramentas de produção com IA",
+      "scriptAnalysis": {
+        "title": "Análise de Roteiro",
+        "desc": "Analise roteiros para extrair personagens, cenas e requisitos de produção"
+      },
+      "budgetEstimation": {
+        "title": "Estimativa de Orçamento",
+        "desc": "Obtenha estimativas de orçamento baseadas em IA a partir da análise do roteiro"
+      },
+      "callSheet": {
+        "title": "Sugestões de Ordem do Dia",
+        "desc": "Gere cronogramas de filmagem e ordens do dia otimizados"
+      }
+    },
+    "analysisForm": {
+      "title": "Análise Rápida de Roteiro",
+      "desc": "Inicie uma análise de roteiro diretamente do painel",
+      "selectProject": "Selecionar Projeto",
+      "selectProjectPlaceholder": "Selecione um projeto",
+      "analysisType": "Tipo de Análise",
+      "selectTypePlaceholder": "Selecione o tipo de análise",
+      "types": {
+        "full": "Análise Completa",
+        "scenes": "Análise de Cenas",
+        "characters": "Análise de Personagens",
+        "locations": "Análise de Locações"
+      },
+      "scriptText": "Texto do Roteiro",
+      "scriptPlaceholder": "Cole o texto do seu roteiro aqui...",
+      "startAnalysis": "Iniciar Análise",
+      "analyzing": "Analisando...",
+      "fullAnalysis": "Análise Completa"
+    },
+    "insights": {
+      "activeAnalyses": {
+        "title": "Análises Ativas",
+        "desc": "Roteiros sendo analisados atualmente"
+      },
+      "suggestions": {
+        "title": "Sugestões",
+        "desc": "Sugestões geradas por IA"
+      },
+      "recommendations": {
+        "title": "Recomendações",
+        "desc": "Recomendações de alta prioridade"
+      },
+      "successRate": {
+        "title": "Taxa de Sucesso",
+        "desc": "Taxa de sucesso da análise de IA"
+      }
+    },
+    "lists": {
+      "suggestionsTitle": "Sugestões de IA",
+      "recommendationsTitle": "Recomendações de IA",
+      "analysisTitle": "Análise de Roteiro",
+      "available": "disponíveis",
+      "completed": "concluídas",
+      "estimatedSavings": "Economia estimada",
+      "timeSaved": "Tempo economizado",
+      "costSaved": "Custo economizado",
+      "riskReduction": "Redução de risco",
+      "actionItems": "Itens de Ação:",
+      "relatedScenes": "Cenas relacionadas",
+      "summary": "Resumo da Análise",
+      "preview": "Prévia do Roteiro"
+    },
+    "empty": {
+      "projects": "Nenhum projeto disponível",
+      "suggestions": "Nenhuma sugestão disponível. Analise um roteiro para obter sugestões de IA.",
+      "recommendations": "Nenhuma recomendação disponível. Analise um roteiro para obter recomendações de IA.",
+      "analyses": "Nenhuma análise de roteiro disponível. Inicie uma análise de roteiro para ver os resultados."
+    }
+  }
+}
