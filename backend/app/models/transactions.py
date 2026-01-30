@@ -13,6 +13,7 @@ class Transaction(Base):
     bank_account_id = Column(UUID(as_uuid=True), ForeignKey("bank_accounts.id"), nullable=False)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=True)
     supplier_id = Column(UUID(as_uuid=True), ForeignKey("suppliers.id"), nullable=True)  # Link to who we paid/received from
+    stakeholder_id = Column(UUID(as_uuid=True), ForeignKey("stakeholders.id"), nullable=True)  # Link to specific team member
     category = Column(String, nullable=False)  # crew_hire, equipment_rental, logistics, post_production, other, production_revenue, maintenance
     type = Column(String, nullable=False)  # income, expense
     amount_cents = Column(BIGINT, nullable=False)
@@ -24,6 +25,7 @@ class Transaction(Base):
     bank_account = relationship("BankAccount", back_populates="transactions")
     project = relationship("Project", back_populates="transactions")
     supplier = relationship("Supplier", back_populates="transactions")
+    stakeholder = relationship("Stakeholder", back_populates="transactions")
     maintenance_logs = relationship("MaintenanceLog", back_populates="transaction")
 
     __table_args__ = (

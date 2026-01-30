@@ -16,5 +16,6 @@ export * from './useKits'
 export * from './useInventory'
 export * from './useStorage'
 export * from './useGoogleDrive'
+export * from './useStakeholders'
 
 // Additional exports will be added in later phases

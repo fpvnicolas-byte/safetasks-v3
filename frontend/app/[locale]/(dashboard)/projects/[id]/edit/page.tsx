@@ -15,8 +15,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ErrorDialog } from '@/components/ui/error-dialog'
 import { dollarsToCents, centsToDollars } from '@/lib/utils/money'
 import { FormSkeleton } from '@/components/LoadingSkeletons'
+import { useTranslations } from 'next-intl'
 
 export default function EditProjectPage() {
+  const t = useTranslations('projects')
   const router = useRouter()
   const params = useParams()
   const projectId = params.id as string
@@ -31,8 +33,8 @@ export default function EditProjectPage() {
       <div className="max-w-2xl mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle>Edit Project</CardTitle>
-            <CardDescription>Update project details</CardDescription>
+            <CardTitle>{t('form.editTitle')}</CardTitle>
+            <CardDescription>{t('form.editDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
             <FormSkeleton />
@@ -43,7 +45,7 @@ export default function EditProjectPage() {
   }
 
   if (!project) {
-    return <div className="p-8 text-destructive">Project not found</div>
+    return <div className="p-8 text-destructive">{t('errors.projectNotFound')}</div>
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -68,7 +70,7 @@ export default function EditProjectPage() {
       router.push(`/projects/${projectId}`)
     } catch (err: any) {
       console.error('Update project error:', err)
-      showError(err, 'Error Updating Project')
+      showError(err, t('form.errorUpdating'))
     }
   }
 
@@ -77,17 +79,17 @@ export default function EditProjectPage() {
       <Card>
         <form onSubmit={handleSubmit}>
           <CardHeader>
-            <CardTitle>Edit Project</CardTitle>
-            <CardDescription>Update project details</CardDescription>
+            <CardTitle>{t('form.editTitle')}</CardTitle>
+            <CardDescription>{t('form.editDescription')}</CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-4">
 
             <div className="space-y-2">
-              <Label htmlFor="client_id">Client *</Label>
+              <Label htmlFor="client_id">{t('form.clientRequired')}</Label>
               <Select name="client_id" defaultValue={project.client_id} required>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select client" />
+                  <SelectValue placeholder={t('form.selectClient')} />
                 </SelectTrigger>
                 <SelectContent>
                   {clients?.map(client => (
@@ -100,47 +102,47 @@ export default function EditProjectPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="title">Project Title *</Label>
+              <Label htmlFor="title">{t('form.projectTitleRequired')}</Label>
               <Input
                 id="title"
                 name="title"
                 defaultValue={project.title}
-                placeholder="My Feature Film"
+                placeholder={t('form.projectTitlePlaceholder')}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t('form.descriptionLabel')}</Label>
               <Textarea
                 id="description"
                 name="description"
-                placeholder="Project description..."
+                placeholder={t('form.descriptionPlaceholder')}
                 rows={3}
                 defaultValue={project.description || ''}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="status">Status *</Label>
+              <Label htmlFor="status">{t('form.statusRequired')}</Label>
               <Select name="status" defaultValue={project.status} required>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder={t('form.selectStatus')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="pre-production">Pre-Production</SelectItem>
-                  <SelectItem value="production">Production</SelectItem>
-                  <SelectItem value="post-production">Post-Production</SelectItem>
-                  <SelectItem value="delivered">Delivered</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
+                  <SelectItem value="draft">{t('form.statusDraft')}</SelectItem>
+                  <SelectItem value="pre-production">{t('form.statusPreProduction')}</SelectItem>
+                  <SelectItem value="production">{t('form.statusProduction')}</SelectItem>
+                  <SelectItem value="post-production">{t('form.statusPostProduction')}</SelectItem>
+                  <SelectItem value="delivered">{t('form.statusDelivered')}</SelectItem>
+                  <SelectItem value="archived">{t('form.statusArchived')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="start_date">Start Date</Label>
+                <Label htmlFor="start_date">{t('form.startDateLabel')}</Label>
                 <Input
                   id="start_date"
                   name="start_date"
@@ -150,7 +152,7 @@ export default function EditProjectPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="end_date">End Date</Label>
+                <Label htmlFor="end_date">{t('form.endDateLabel')}</Label>
                 <Input
                   id="end_date"
                   name="end_date"
@@ -161,7 +163,7 @@ export default function EditProjectPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="budget">Total Budget ($)</Label>
+              <Label htmlFor="budget">{t('form.budgetLabel')}</Label>
               <Input
                 id="budget"
                 name="budget"
@@ -169,10 +171,10 @@ export default function EditProjectPage() {
                 step="0.01"
                 min="0"
                 defaultValue={centsToDollars(project.budget_total_cents)}
-                placeholder="0.00"
+                placeholder={t('form.budgetPlaceholder')}
               />
               <p className="text-xs text-muted-foreground">
-                Enter budget in dollars (stored as cents internally)
+                {t('form.budgetHelper')}
               </p>
             </div>
           </CardContent>
@@ -183,10 +185,10 @@ export default function EditProjectPage() {
               variant="outline"
               onClick={() => router.back()}
             >
-              Cancel
+              {t('form.cancel')}
             </Button>
             <Button type="submit" disabled={updateProject.isPending}>
-              {updateProject.isPending ? 'Saving...' : 'Save Changes'}
+              {updateProject.isPending ? t('form.saving') : t('form.saveChanges')}
             </Button>
           </CardFooter>
         </form>

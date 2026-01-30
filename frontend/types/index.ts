@@ -244,6 +244,7 @@ export interface Transaction {
   bank_account_id: UUID
   project_id: UUID | null
   supplier_id: UUID | null
+  stakeholder_id: UUID | null
   category: TransactionCategory
   type: TransactionType
   amount_cents: number // Integer (cents), must be positive
@@ -266,6 +267,7 @@ export interface TransactionCreate {
   transaction_date: ISODate
   project_id?: UUID
   supplier_id?: UUID
+  stakeholder_id?: UUID
 }
 
 export interface TransactionUpdate {
@@ -277,6 +279,15 @@ export interface TransactionUpdate {
   transaction_date?: ISODate
   project_id?: UUID
   supplier_id?: UUID
+  stakeholder_id?: UUID
+}
+
+export interface TransactionOverviewStats {
+  total_income_cents: number
+  total_expense_cents: number
+  net_income_cents: number
+  total_budget_cents: number
+  remaining_budget_cents: number
 }
 
 export interface TransactionStats {

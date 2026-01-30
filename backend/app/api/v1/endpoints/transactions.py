@@ -9,7 +9,7 @@ from app.db.session import get_db
 from app.services.financial import transaction_service
 from app.schemas.transactions import (
     Transaction, TransactionCreate, TransactionUpdate,
-    TransactionWithRelations, TransactionStats
+    TransactionWithRelations, TransactionStats, TransactionOverviewStats
 )
 
 router = APIRouter()
@@ -187,5 +187,20 @@ async def get_monthly_stats(
         organization_id=organization_id,
         year=year,
         month=month
+    )
+    return stats
+
+
+@router.get("/stats/overview", response_model=TransactionOverviewStats)
+async def get_overview_stats(
+    organization_id: UUID = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db),
+) -> TransactionOverviewStats:
+    """
+    Get overall financial statistics for the current user's organization.
+    """
+    stats = await transaction_service.get_overview_stats(
+        db=db,
+        organization_id=organization_id
     )
     return stats

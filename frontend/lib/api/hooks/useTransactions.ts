@@ -4,7 +4,8 @@ import {
   Transaction,
   TransactionWithRelations,
   TransactionCreate,
-  TransactionStats
+  TransactionStats,
+  TransactionOverviewStats
 } from '@/types'
 
 const TRANSACTIONS_KEY = 'transactions'
@@ -15,6 +16,7 @@ interface TransactionFilters {
   project_id?: string
   type?: 'income' | 'expense'
   category?: string
+  limit?: number
 }
 
 export function useTransactions(filters: TransactionFilters = {}) {
@@ -27,6 +29,7 @@ export function useTransactions(filters: TransactionFilters = {}) {
       if (filters.project_id) params.append('project_id', filters.project_id)
       if (filters.type) params.append('type', filters.type)
       if (filters.category) params.append('category', filters.category)
+      if (filters.limit) params.append('limit', filters.limit.toString())
 
       const queryString = params.toString()
       const url = queryString ? `/api/v1/transactions/?${queryString}` : '/api/v1/transactions/'
@@ -89,5 +92,18 @@ export function useMonthlyStats(year: number, month: number, organizationId?: st
       return apiClient.get<TransactionStats>(`/api/v1/transactions/stats/monthly?${params.toString()}`)
     },
     enabled: !!organizationId && !!year && !!month,
+  })
+}
+
+export function useOverviewStats(organizationId?: string) {
+  return useQuery({
+    queryKey: [TRANSACTIONS_KEY, 'stats', 'overview', organizationId],
+    queryFn: () => {
+      const params = new URLSearchParams()
+      if (organizationId) params.append('organization_id', organizationId)
+
+      return apiClient.get<TransactionOverviewStats>(`/api/v1/transactions/stats/overview?${params.toString()}`)
+    },
+    enabled: !!organizationId,
   })
 }

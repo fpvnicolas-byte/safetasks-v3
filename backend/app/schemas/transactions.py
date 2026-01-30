@@ -14,6 +14,7 @@ class TransactionBase(BaseModel):
     transaction_date: date
     project_id: Optional[UUID] = None
     supplier_id: Optional[UUID] = None  # ADDED: Link to supplier/vendor
+    stakeholder_id: Optional[UUID] = None  # ADDED: Link to specific team member
 
     @field_validator('category')
     @classmethod
@@ -52,6 +53,7 @@ class TransactionUpdate(BaseModel):
     transaction_date: Optional[date] = None
     project_id: Optional[UUID] = None
     supplier_id: Optional[UUID] = None  # ADDED: Link to supplier/vendor
+    stakeholder_id: Optional[UUID] = None  # ADDED: Link to specific team member
 
     @field_validator('category')
     @classmethod
@@ -88,6 +90,17 @@ class TransactionWithRelations(Transaction):
     """Schema for Transaction response with bank account and project data."""
     bank_account: "BankAccount" = Field(...)
     project: Optional["Project"] = Field(None)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TransactionOverviewStats(BaseModel):
+    """Schema for financial overview statistics."""
+    total_income_cents: int
+    total_expense_cents: int
+    net_income_cents: int
+    total_budget_cents: int
+    remaining_budget_cents: int
 
     model_config = ConfigDict(from_attributes=True)
 

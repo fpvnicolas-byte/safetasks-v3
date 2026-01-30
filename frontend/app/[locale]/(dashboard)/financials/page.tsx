@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useInvoices, useDeleteInvoice } from '@/lib/api/hooks'
+import { useInvoices, useDeleteInvoice, useOverviewStats, useBankAccounts, useTransactions } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -27,6 +27,10 @@ export default function FinancialsPage() {
 
   const filters = statusFilter === 'all' ? {} : { status: statusFilter }
   const { data: invoices, isLoading, error } = useInvoices(organizationId || undefined, filters)
+  const { data: stats } = useOverviewStats(organizationId || undefined)
+  const { data: bankAccounts } = useBankAccounts(organizationId || undefined)
+  const { data: recentTransactions } = useTransactions(organizationId ? { organizationId, limit: 5 } : {})
+  const { data: recentExpenses } = useTransactions(organizationId ? { organizationId, type: 'expense', limit: 5 } : {})
 
   return (
     <div className="space-y-8">
@@ -61,7 +65,7 @@ export default function FinancialsPage() {
                 <CardTitle>Total Budget</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$0.00</div>
+                <div className="text-2xl font-bold">{formatCurrency(stats?.total_budget_cents || 0)}</div>
               </CardContent>
             </Card>
 
@@ -70,7 +74,7 @@ export default function FinancialsPage() {
                 <CardTitle>Total Spent</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$0.00</div>
+                <div className="text-2xl font-bold">{formatCurrency(stats?.total_expense_cents || 0)}</div>
               </CardContent>
             </Card>
 
@@ -79,7 +83,7 @@ export default function FinancialsPage() {
                 <CardTitle>Remaining</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$0.00</div>
+                <div className="text-2xl font-bold">{formatCurrency(stats?.remaining_budget_cents || 0)}</div>
               </CardContent>
             </Card>
           </div>
@@ -153,12 +157,25 @@ export default function FinancialsPage() {
               <CardDescription>Manage your bank accounts and track balances</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <DollarSign className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-sm text-muted-foreground mb-4">
-                  Manage bank accounts to track your organization&apos;s finances
-                </p>
-                <Button asChild>
+              {bankAccounts && bankAccounts.length > 0 ? (
+                <div className="space-y-4">
+                  {bankAccounts.map((account) => (
+                    <div key={account.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
+                      <div>
+                        <div className="font-medium">{account.name}</div>
+                        <div className="text-sm text-muted-foreground">{account.currency}</div>
+                      </div>
+                      <div className="font-bold">{formatCurrency(account.balance_cents, account.currency)}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-6 text-center">
+                  <p className="text-sm text-muted-foreground mb-4">No bank accounts found.</p>
+                </div>
+              )}
+              <div className="mt-6 flex justify-center">
+                <Button asChild variant="outline">
                   <Link href="/financials/bank-accounts">
                     <Plus className="mr-2 h-4 w-4" />
                     View Bank Accounts
@@ -176,12 +193,29 @@ export default function FinancialsPage() {
               <CardDescription>Record income and expenses to track cash flow</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <DollarSign className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-sm text-muted-foreground mb-4">
-                  Track all income and expenses across your bank accounts
-                </p>
-                <Button asChild>
+              {recentTransactions && recentTransactions.length > 0 ? (
+                <div className="space-y-4">
+                  {recentTransactions.map((transaction) => (
+                    <div key={transaction.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
+                      <div>
+                        <div className="font-medium">{transaction.description || 'No description'}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {new Date(transaction.transaction_date).toLocaleDateString()} • {transaction.category}
+                        </div>
+                      </div>
+                      <div className={`font-bold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                        {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount_cents)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-6 text-center">
+                  <p className="text-sm text-muted-foreground mb-4">No recent transactions.</p>
+                </div>
+              )}
+              <div className="mt-6 flex justify-center">
+                <Button asChild variant="outline">
                   <Link href="/financials/transactions">
                     <Plus className="mr-2 h-4 w-4" />
                     View Transactions
@@ -199,11 +233,34 @@ export default function FinancialsPage() {
               <CardDescription>Track production costs and expenses</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <DollarSign className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-sm text-muted-foreground">
-                  Expense tracking coming in future updates
-                </p>
+              {recentExpenses && recentExpenses.length > 0 ? (
+                <div className="space-y-4">
+                  {recentExpenses.map((expense) => (
+                    <div key={expense.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
+                      <div>
+                        <div className="font-medium">{expense.description || 'No description'}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {new Date(expense.transaction_date).toLocaleDateString()} • {expense.category}
+                        </div>
+                      </div>
+                      <div className="font-bold text-red-600">
+                        -{formatCurrency(expense.amount_cents)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-6 text-center">
+                  <p className="text-sm text-muted-foreground mb-4">No recent expenses.</p>
+                </div>
+              )}
+              <div className="mt-6 flex justify-center">
+                <Button asChild variant="outline">
+                  <Link href="/financials/transactions?type=expense">
+                    <Plus className="mr-2 h-4 w-4" />
+                    View Expenses
+                  </Link>
+                </Button>
               </div>
             </CardContent>
           </Card>

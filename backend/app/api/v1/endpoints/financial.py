@@ -178,6 +178,7 @@ async def get_invoices(
     """
     from sqlalchemy.orm import selectinload
     from app.models.financial import Invoice as InvoiceModel
+    from app.models.projects import Project
 
     filters = {}
     if client_id:
@@ -196,7 +197,7 @@ async def get_invoices(
         options=[
             selectinload(InvoiceModel.items),
             selectinload(InvoiceModel.client),
-            selectinload(InvoiceModel.project)
+            selectinload(InvoiceModel.project).selectinload(Project.services)
         ]
     )
     return invoices
@@ -245,6 +246,7 @@ async def get_invoice(
     """
     from sqlalchemy.orm import selectinload
     from app.models.financial import Invoice as InvoiceModel
+    from app.models.projects import Project
 
     invoice_with_items = await invoice_service.get(
         db=db,
@@ -253,7 +255,7 @@ async def get_invoice(
         options=[
             selectinload(InvoiceModel.items),
             selectinload(InvoiceModel.client),
-            selectinload(InvoiceModel.project)
+            selectinload(InvoiceModel.project).selectinload(Project.services)
         ]
     )
 

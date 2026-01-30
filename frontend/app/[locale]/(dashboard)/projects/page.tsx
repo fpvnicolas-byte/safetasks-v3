@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Plus, FolderOpen } from 'lucide-react'
-import Link from 'next/link'
+import { LocaleLink } from '@/components/LocaleLink'
 import { formatCurrency } from '@/lib/utils/money'
 import { ProjectStatus } from '@/types'
 import { ProjectsListSkeleton } from '@/components/LoadingSkeletons'
+import { useTranslations } from 'next-intl'
 
 const statusColors: Record<ProjectStatus, string> = {
   draft: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
@@ -21,6 +22,8 @@ const statusColors: Record<ProjectStatus, string> = {
 }
 
 export default function ProjectsPage() {
+  const t = useTranslations('projects')
+  const tCommon = useTranslations('common')
   const { organizationId, isLoading: isLoadingOrg } = useAuth()
 
   const { data: projects, isLoading, error } = useProjects(organizationId || undefined)
@@ -30,8 +33,8 @@ export default function ProjectsPage() {
       <div className="space-y-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
-            <p className="text-muted-foreground">Manage your film production projects</p>
+            <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+            <p className="text-muted-foreground">{t('description')}</p>
           </div>
         </div>
         <ProjectsListSkeleton />
@@ -40,79 +43,86 @@ export default function ProjectsPage() {
   }
 
   if (!organizationId) {
-    return <div>Error: No organization found. Please contact support.</div>
+    return <div>{t('errors.noOrganization')}</div>
   }
 
   if (error) {
-    return <div>Error loading projects: {error.message}</div>
+    return <div>{t('errors.loadingProjects')}: {error.message}</div>
   }
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground">
-            Manage your film production projects
+            {t('description')}
           </p>
         </div>
         <Button asChild>
-          <Link href="/projects/new">
+          <LocaleLink href="/projects/new">
             <Plus className="mr-2 h-4 w-4" />
-            New Project
-          </Link>
+            {t('newProject')}
+          </LocaleLink>
         </Button>
       </div>
 
       {projects && projects.length > 0 ? (
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project) => (
-            <Link key={project.id} href={`/projects/${project.id}`}>
-              <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg">{project.title}</CardTitle>
-                    <Badge className={statusColors[project.status]}>
-                      {project.status.replace('_', ' ')}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm">
-                    {project.start_date && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Start:</span>
-                        <span>{new Date(project.start_date).toLocaleDateString()}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between font-medium">
-                      <span className="text-muted-foreground">Budget:</span>
-                      <span>{formatCurrency(project.budget_total_cents)}</span>
+          {projects.map((project) => {
+            const statusKey = project.status.replace(/-/g, '')
+              .replace(/^(.)/, (match) => match.toLowerCase())
+              .replace(/-(.)/g, (match, p1) => p1.toUpperCase())
+            const statusLabel = t(`statusLabels.${statusKey}`, { defaultMessage: project.status.replace(/-/g, ' ') })
+
+            return (
+              <LocaleLink key={project.id} href={`/projects/${project.id}`}>
+                <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <CardTitle className="text-lg">{project.title}</CardTitle>
+                      <Badge className={statusColors[project.status]}>
+                        {statusLabel}
+                      </Badge>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 text-sm">
+                      {project.start_date && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">{t('start')}:</span>
+                          <span>{new Date(project.start_date).toLocaleDateString()}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between font-medium">
+                        <span className="text-muted-foreground">{t('budget')}:</span>
+                        <span>{formatCurrency(project.budget_total_cents)}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </LocaleLink>
+            )
+          })}
         </div>
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>Your Projects</CardTitle>
-            <CardDescription>Create your first project to get started</CardDescription>
+            <CardTitle>{t('emptyState.title')}</CardTitle>
+            <CardDescription>{t('emptyState.description')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <FolderOpen className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium mb-2">No projects yet</p>
+              <p className="text-lg font-medium mb-2">{t('emptyState.noProjectsYet')}</p>
               <p className="text-sm text-muted-foreground mb-4">
-                Get started by creating your first project
+                {t('emptyState.getStarted')}
               </p>
               <Button asChild>
-                <Link href="/projects/new">
+                <LocaleLink href="/projects/new">
                   <Plus className="mr-2 h-4 w-4" />
-                  Create Project
-                </Link>
+                  {t('createProject')}
+                </LocaleLink>
               </Button>
             </div>
           </CardContent>

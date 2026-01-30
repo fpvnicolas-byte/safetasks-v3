@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useCreateTransaction, useBankAccounts, useProjects } from '@/lib/api/hooks'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useCreateTransaction, useBankAccounts, useProjects, useStakeholders } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,6 +17,7 @@ import { TransactionType, TransactionCategory, dollarsToCents, getIncomCategorie
 
 export default function NewTransactionPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { organizationId } = useAuth()
   const [formData, setFormData] = useState({
     bank_account_id: '',
@@ -25,13 +26,15 @@ export default function NewTransactionPage() {
     amount: '', // Will be converted to cents
     description: '',
     transaction_date: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD
-    project_id: '',
+    project_id: searchParams.get('project_id') || '',
+    stakeholder_id: searchParams.get('stakeholder_id') || '',
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   // Get data for dropdowns
   const { data: bankAccounts, isLoading: loadingAccounts } = useBankAccounts(organizationId || '')
   const { data: projects, isLoading: loadingProjects } = useProjects(organizationId || '')
+  const { data: stakeholders } = useStakeholders(formData.project_id || undefined)
   const createTransaction = useCreateTransaction()
 
   // Set first bank account as default when loaded
@@ -97,6 +100,7 @@ export default function NewTransactionPage() {
         description: formData.description.trim() || undefined,
         transaction_date: formData.transaction_date,
         project_id: formData.project_id || undefined,
+        stakeholder_id: formData.stakeholder_id || undefined,
       }
 
       await createTransaction.mutateAsync({
@@ -192,11 +196,10 @@ export default function NewTransactionPage() {
                 <button
                   type="button"
                   onClick={() => handleInputChange('type', 'income')}
-                  className={`p-4 border-2 rounded-lg text-left transition-all ${
-                    formData.type === 'income'
-                      ? 'border-green-500 bg-green-50'
-                      : 'border-border hover:border-green-300'
-                  }`}
+                  className={`p-4 border-2 rounded-lg text-left transition-all ${formData.type === 'income'
+                    ? 'border-green-500 bg-green-50'
+                    : 'border-border hover:border-green-300'
+                    }`}
                 >
                   <div className="font-semibold text-green-600">Income</div>
                   <div className="text-sm text-muted-foreground">Money received</div>
@@ -204,11 +207,10 @@ export default function NewTransactionPage() {
                 <button
                   type="button"
                   onClick={() => handleInputChange('type', 'expense')}
-                  className={`p-4 border-2 rounded-lg text-left transition-all ${
-                    formData.type === 'expense'
-                      ? 'border-red-500 bg-red-50'
-                      : 'border-border hover:border-red-300'
-                  }`}
+                  className={`p-4 border-2 rounded-lg text-left transition-all ${formData.type === 'expense'
+                    ? 'border-red-500 bg-red-50'
+                    : 'border-border hover:border-red-300'
+                    }`}
                 >
                   <div className="font-semibold text-red-600">Expense</div>
                   <div className="text-sm text-muted-foreground">Money spent</div>
@@ -357,6 +359,36 @@ export default function NewTransactionPage() {
                 Link this transaction to a specific project (optional)
               </p>
             </div>
+
+
+            {/* Stakeholder - Optional (dependent on project) */}
+            {formData.project_id && (
+              <div className="space-y-2">
+                <Label htmlFor="stakeholder_id">
+                  Stakeholder (Optional)
+                </Label>
+                <Select
+                  value={formData.stakeholder_id || 'none'}
+                  onValueChange={(value) => handleInputChange('stakeholder_id', value === 'none' ? '' : value)}
+                >
+                  <SelectTrigger id="stakeholder_id">
+                    <SelectValue placeholder="Select a team member" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No stakeholder</SelectItem>
+                    {stakeholders?.map((stakeholder) => (
+                      <SelectItem key={stakeholder.id} value={stakeholder.id}>
+                        {stakeholder.name} ({stakeholder.role})
+                        {stakeholder.supplier_id ? ' - Paid via Supplier' : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Link this payment to a specific team member
+                </p>
+              </div>
+            )}
           </CardContent>
 
           <CardFooter className="flex gap-2">
@@ -369,6 +401,6 @@ export default function NewTransactionPage() {
           </CardFooter>
         </form>
       </Card>
-    </div>
+    </div >
   )
 }

@@ -11,15 +11,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Edit, Trash2, FileText, DollarSign, Film, FolderOpen, Users, Calendar } from 'lucide-react'
-import Link from 'next/link'
+import { LocaleLink } from '@/components/LocaleLink'
 import { formatCurrency } from '@/lib/utils/money'
 import { useState, useEffect } from 'react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { DetailPageSkeleton } from '@/components/LoadingSkeletons'
 import { FileUploadZone, FileList } from '@/components/storage'
 import { FileUploadResponse } from '@/types'
+import { useTranslations } from 'next-intl'
 
 export default function ProjectDetailPage() {
+  const t = useTranslations('projects')
+  const tCommon = useTranslations('common')
   const params = useParams()
   const router = useRouter()
   const { organizationId } = useAuth()
@@ -119,7 +122,7 @@ export default function ProjectDetailPage() {
   }
 
   async function handleDelete() {
-    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+    if (!confirm(t('details.deleteConfirm'))) {
       return
     }
 
@@ -137,11 +140,11 @@ export default function ProjectDetailPage() {
   }
 
   if (error) {
-    return <div>Error loading project: {error.message}</div>
+    return <div>{t('errors.loadingProject')}: {error.message}</div>
   }
 
   if (!project) {
-    return <div>Project not found</div>
+    return <div>{t('errors.projectNotFound')}</div>
   }
 
   return (
@@ -151,15 +154,15 @@ export default function ProjectDetailPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{project.title}</h1>
           <p className="text-muted-foreground">
-            Created {new Date(project.created_at).toLocaleDateString()}
+            {t('details.created')} {new Date(project.created_at).toLocaleDateString()}
           </p>
         </div>
         <div className="flex gap-2">
           <Button asChild variant="outline">
-            <Link href={`/projects/${projectId}/edit`}>
+            <LocaleLink href={`/projects/${projectId}/edit`}>
               <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </Link>
+              {t('details.edit')}
+            </LocaleLink>
           </Button>
           <Button
             variant="destructive"
@@ -167,7 +170,7 @@ export default function ProjectDetailPage() {
             disabled={deleteProject.isPending}
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete
+            {t('details.delete')}
           </Button>
         </div>
       </div>
@@ -182,7 +185,7 @@ export default function ProjectDetailPage() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Status</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('status')}</CardTitle>
           </CardHeader>
           <CardContent>
             <Badge>{project.status.replace(/-/g, ' ')}</Badge>
@@ -191,7 +194,7 @@ export default function ProjectDetailPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Budget</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('budget')}</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -203,23 +206,23 @@ export default function ProjectDetailPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Call Sheets</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('details.tabs.callSheets')}</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Total created</p>
+            <p className="text-xs text-muted-foreground">{t('details.totalCreated')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Scenes</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('details.production.scenes')}</CardTitle>
             <Film className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">In script</p>
+            <p className="text-xs text-muted-foreground">{t('details.inScript')}</p>
           </CardContent>
         </Card>
       </div>
@@ -227,34 +230,34 @@ export default function ProjectDetailPage() {
       {/* Tabs */}
       <Tabs defaultValue="details">
         <TabsList>
-          <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="call-sheets">Call Sheets</TabsTrigger>
-          <TabsTrigger value="shooting-days">Shooting Days</TabsTrigger>
-          <TabsTrigger value="financials">Financials</TabsTrigger>
-          <TabsTrigger value="production">Production</TabsTrigger>
-          <TabsTrigger value="files">Files</TabsTrigger>
+          <TabsTrigger value="details">{t('details.tabs.details')}</TabsTrigger>
+          <TabsTrigger value="call-sheets">{t('details.tabs.callSheets')}</TabsTrigger>
+          <TabsTrigger value="shooting-days">{t('details.tabs.shootingDays')}</TabsTrigger>
+          <TabsTrigger value="financials">{t('details.tabs.financials')}</TabsTrigger>
+          <TabsTrigger value="production">{t('details.tabs.production')}</TabsTrigger>
+          <TabsTrigger value="files">{t('details.tabs.files')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="details" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Project Information</CardTitle>
+              <CardTitle>{t('details.projectInformation')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground">Status</div>
+                  <div className="text-sm font-medium text-muted-foreground">{t('status')}</div>
                   <div className="text-lg">{project.status.replace(/-/g, ' ')}</div>
                 </div>
                 {project.start_date && (
                   <div>
-                    <div className="text-sm font-medium text-muted-foreground">Start Date</div>
+                    <div className="text-sm font-medium text-muted-foreground">{t('startDate')}</div>
                     <div className="text-lg">{new Date(project.start_date).toLocaleDateString()}</div>
                   </div>
                 )}
                 {project.end_date && (
                   <div>
-                    <div className="text-sm font-medium text-muted-foreground">End Date</div>
+                    <div className="text-sm font-medium text-muted-foreground">{t('endDate')}</div>
                     <div className="text-lg">{new Date(project.end_date).toLocaleDateString()}</div>
                   </div>
                 )}
@@ -262,7 +265,7 @@ export default function ProjectDetailPage() {
 
               {project.client && (
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground mb-2">Client</div>
+                  <div className="text-sm font-medium text-muted-foreground mb-2">{t('client')}</div>
                   <Card>
                     <CardContent className="pt-6">
                       <div className="text-lg font-medium">{project.client.name}</div>
@@ -291,22 +294,22 @@ export default function ProjectDetailPage() {
         <TabsContent value="financials">
           <Card>
             <CardHeader>
-              <CardTitle>Budget Breakdown</CardTitle>
+              <CardTitle>{t('details.financials.budgetBreakdown')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Total Budget</span>
+                  <span className="text-muted-foreground">{t('details.financials.totalBudget')}</span>
                   <span className="text-lg font-bold">
                     {formatCurrency(project.budget_total_cents)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Spent</span>
+                  <span className="text-muted-foreground">{t('details.financials.spent')}</span>
                   <span className="text-lg font-bold">$0.00</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Remaining</span>
+                  <span className="text-muted-foreground">{t('details.financials.remaining')}</span>
                   <span className="text-lg font-bold text-green-600 dark:text-green-400">
                     {formatCurrency(project.budget_total_cents)}
                   </span>
@@ -324,23 +327,23 @@ export default function ProjectDetailPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Film className="h-5 w-5" />
-                    Scenes
+                    {t('details.production.scenes')}
                   </CardTitle>
                   <CardDescription>
-                    Manage production scenes and script breakdown
+                    {t('details.production.scenesDescription')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <Button asChild variant="outline" className="w-full justify-start">
-                      <Link href={`/scenes?project=${projectId}`}>
-                        View All Scenes
-                      </Link>
+                      <LocaleLink href={`/scenes?project=${projectId}`}>
+                        {t('details.production.viewAllScenes')}
+                      </LocaleLink>
                     </Button>
                     <Button asChild className="w-full justify-start">
-                      <Link href={`/scenes/new?project=${projectId}`}>
-                        Create New Scene
-                      </Link>
+                      <LocaleLink href={`/scenes/new?project=${projectId}`}>
+                        {t('details.production.createNewScene')}
+                      </LocaleLink>
                     </Button>
                   </div>
                 </CardContent>
@@ -351,23 +354,23 @@ export default function ProjectDetailPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="h-5 w-5" />
-                    Characters
+                    {t('details.production.characters')}
                   </CardTitle>
                   <CardDescription>
-                    Manage cast and character requirements
+                    {t('details.production.charactersDescription')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <Button asChild variant="outline" className="w-full justify-start">
-                      <Link href={`/characters?project=${projectId}`}>
-                        View All Characters
-                      </Link>
+                      <LocaleLink href={`/characters?project=${projectId}`}>
+                        {t('details.production.viewAllCharacters')}
+                      </LocaleLink>
                     </Button>
                     <Button asChild className="w-full justify-start">
-                      <Link href={`/characters/new?project=${projectId}`}>
-                        Create New Character
-                      </Link>
+                      <LocaleLink href={`/characters/new?project=${projectId}`}>
+                        {t('details.production.createNewCharacter')}
+                      </LocaleLink>
                     </Button>
                   </div>
                 </CardContent>
@@ -378,23 +381,23 @@ export default function ProjectDetailPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Calendar className="h-5 w-5" />
-                    Shooting Days
+                    {t('details.production.shootingDays')}
                   </CardTitle>
                   <CardDescription>
-                    Schedule and organize production days
+                    {t('details.production.shootingDaysDescription')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <Button asChild variant="outline" className="w-full justify-start">
-                      <Link href={`/shooting-days?project=${projectId}`}>
-                        View All Shooting Days
-                      </Link>
+                      <LocaleLink href={`/shooting-days?project=${projectId}`}>
+                        {t('details.production.viewAllShootingDays')}
+                      </LocaleLink>
                     </Button>
                     <Button asChild className="w-full justify-start">
-                      <Link href={`/shooting-days/new?project=${projectId}`}>
-                        Schedule New Day
-                      </Link>
+                      <LocaleLink href={`/shooting-days/new?project=${projectId}`}>
+                        {t('details.production.scheduleNewDay')}
+                      </LocaleLink>
                     </Button>
                   </div>
                 </CardContent>
@@ -404,32 +407,32 @@ export default function ProjectDetailPage() {
             {/* Production Summary */}
             <Card>
               <CardHeader>
-                <CardTitle>Production Summary</CardTitle>
+                <CardTitle>{t('details.production.summary')}</CardTitle>
                 <CardDescription>
-                  Quick overview of production status and next steps
+                  {t('details.production.summaryDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                   <div className="text-center p-4 border rounded-lg">
                     <div className="text-2xl font-bold">0</div>
-                    <div className="text-sm text-muted-foreground">Scenes Created</div>
+                    <div className="text-sm text-muted-foreground">{t('details.production.scenesCreated')}</div>
                   </div>
                   <div className="text-center p-4 border rounded-lg">
                     <div className="text-2xl font-bold">0</div>
-                    <div className="text-sm text-muted-foreground">Characters Defined</div>
+                    <div className="text-sm text-muted-foreground">{t('details.production.charactersDefined')}</div>
                   </div>
                   <div className="text-center p-4 border rounded-lg">
                     <div className="text-2xl font-bold">0</div>
-                    <div className="text-sm text-muted-foreground">Shooting Days</div>
+                    <div className="text-sm text-muted-foreground">{t('details.production.shootingDaysCount')}</div>
                   </div>
                   <div className="text-center p-4 border rounded-lg">
                     <div className="text-2xl font-bold">0</div>
-                    <div className="text-sm text-muted-foreground">Call Sheets</div>
+                    <div className="text-sm text-muted-foreground">{t('details.production.callSheetsCount')}</div>
                   </div>
                 </div>
                 <div className="mt-4 text-sm text-muted-foreground">
-                  Start by creating scenes and characters, then schedule shooting days to organize your production.
+                  {t('details.production.getStartedMessage')}
                 </div>
               </CardContent>
             </Card>
@@ -441,10 +444,10 @@ export default function ProjectDetailPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <FolderOpen className="h-5 w-5 text-muted-foreground" />
-                <CardTitle>Scripts</CardTitle>
+                <CardTitle>{t('details.files.scripts')}</CardTitle>
               </div>
               <CardDescription>
-                Upload script files, drafts, and revisions
+                {t('details.files.scriptsDescription')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -475,10 +478,10 @@ export default function ProjectDetailPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <FileText className="h-5 w-5 text-muted-foreground" />
-                <CardTitle>Call Sheets & Production Documents</CardTitle>
+                <CardTitle>{t('details.files.callSheetsDocuments')}</CardTitle>
               </div>
               <CardDescription>
-                Upload call sheets, schedules, and production documents
+                {t('details.files.callSheetsDescription')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -508,10 +511,10 @@ export default function ProjectDetailPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Film className="h-5 w-5 text-muted-foreground" />
-                <CardTitle>Media Files</CardTitle>
+                <CardTitle>{t('details.files.mediaFiles')}</CardTitle>
               </div>
               <CardDescription>
-                Upload images, videos, and other media assets
+                {t('details.files.mediaDescription')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

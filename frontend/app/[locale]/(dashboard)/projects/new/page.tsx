@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import { LocaleLink } from '@/components/LocaleLink'
 import { useCreateProject, useClients, useServices } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
@@ -16,8 +16,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { ErrorDialog } from '@/components/ui/error-dialog'
 import { dollarsToCents } from '@/types'
+import { useTranslations } from 'next-intl'
 
 export default function NewProjectPage() {
+  const t = useTranslations('projects')
   const router = useRouter()
   const { organizationId } = useAuth()
   const { errorDialog, showError, closeError } = useErrorDialog()
@@ -33,7 +35,7 @@ export default function NewProjectPage() {
     e.preventDefault()
 
     if (!selectedClientId) {
-      showError({ message: 'Please select a client' }, 'Validation Error')
+      showError({ message: t('form.pleaseSelectClient') }, t('form.validationError'))
       return
     }
 
@@ -57,7 +59,7 @@ export default function NewProjectPage() {
       router.push('/projects')
     } catch (err: any) {
       console.error('Create project error:', err)
-      showError(err, 'Error Creating Project')
+      showError(err, t('form.errorCreating'))
     }
   }
 
@@ -66,21 +68,21 @@ export default function NewProjectPage() {
       <Card>
         <form onSubmit={handleSubmit}>
           <CardHeader>
-            <CardTitle>Create New Project</CardTitle>
-            <CardDescription>Start a new project for a client</CardDescription>
+            <CardTitle>{t('form.newTitle')}</CardTitle>
+            <CardDescription>{t('form.newProjectSubtitle')}</CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-6">
 
             {/* Client Selection */}
             <div className="space-y-2">
-              <Label htmlFor="client">Client *</Label>
+              <Label htmlFor="client">{t('form.clientRequired')}</Label>
               {clientsLoading ? (
-                <div className="text-sm text-muted-foreground">Loading clients...</div>
+                <div className="text-sm text-muted-foreground">{t('form.loadingClients')}</div>
               ) : clients && clients.length > 0 ? (
                 <Select value={selectedClientId} onValueChange={setSelectedClientId} required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a client" />
+                    <SelectValue placeholder={t('form.selectAClient')} />
                   </SelectTrigger>
                   <SelectContent>
                     {clients.map((client) => (
@@ -92,9 +94,9 @@ export default function NewProjectPage() {
                 </Select>
               ) : (
                 <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">No clients found.</p>
+                  <p className="text-sm text-muted-foreground">{t('form.noClientsFound')}</p>
                   <Button asChild size="sm" variant="outline">
-                    <Link href="/clients/new">Create Client</Link>
+                    <LocaleLink href="/clients/new">{t('form.createClient')}</LocaleLink>
                   </Button>
                 </div>
               )}
@@ -103,47 +105,47 @@ export default function NewProjectPage() {
             {/* Basic Info */}
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Title *</Label>
+                <Label htmlFor="title">{t('form.titleRequired')}</Label>
                 <Input
                   id="title"
                   name="title"
-                  placeholder="e.g., Summer Commercial, Documentary Feature"
+                  placeholder={t('form.titlePlaceholder')}
                   required
                 />
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
+                  <Label htmlFor="status">{t('form.statusLabel')}</Label>
                   <Select value={status} onValueChange={(value) => setStatus(value as ProjectStatus)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="pre-production">Pre-Production</SelectItem>
-                      <SelectItem value="production">Production</SelectItem>
-                      <SelectItem value="post-production">Post-Production</SelectItem>
+                      <SelectItem value="draft">{t('form.statusDraft')}</SelectItem>
+                      <SelectItem value="pre-production">{t('form.statusPreProduction')}</SelectItem>
+                      <SelectItem value="production">{t('form.statusProduction')}</SelectItem>
+                      <SelectItem value="post-production">{t('form.statusPostProduction')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="budget_total">Total Budget ($)</Label>
+                  <Label htmlFor="budget_total">{t('form.budgetLabel')}</Label>
                   <Input
                     id="budget_total"
                     name="budget_total"
                     type="number"
                     step="0.01"
                     min="0"
-                    placeholder="0.00"
+                    placeholder={t('form.budgetPlaceholder')}
                   />
                 </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="start_date">Start Date</Label>
+                  <Label htmlFor="start_date">{t('form.startDateLabel')}</Label>
                   <Input
                     id="start_date"
                     name="start_date"
@@ -151,7 +153,7 @@ export default function NewProjectPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="end_date">End Date</Label>
+                  <Label htmlFor="end_date">{t('form.endDateLabel')}</Label>
                   <Input
                     id="end_date"
                     name="end_date"
@@ -161,21 +163,21 @@ export default function NewProjectPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">{t('form.descriptionLabel')}</Label>
                 <Textarea
                   id="description"
                   name="description"
-                  placeholder="Project overview and details..."
+                  placeholder={t('form.descriptionPlaceholderNew')}
                   rows={3}
                 />
               </div>
 
               {/* Services */}
               <div className="space-y-2">
-                <Label>Services</Label>
+                <Label>{t('form.servicesLabel')}</Label>
                 <Card className="p-4">
                   {servicesLoading ? (
-                    <div className="text-sm text-muted-foreground p-2">Loading services...</div>
+                    <div className="text-sm text-muted-foreground p-2">{t('form.loadingServices')}</div>
                   ) : services && services.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {services.map((service) => (
@@ -209,9 +211,9 @@ export default function NewProjectPage() {
                     </div>
                   ) : (
                     <div className="text-sm text-muted-foreground p-2 text-center">
-                      <p>No services defined.</p>
+                      <p>{t('form.noServicesDefined')}</p>
                       <Button variant="link" asChild className="px-0 h-auto">
-                        <Link href="/settings/services">Manage Services</Link>
+                        <LocaleLink href="/settings/services">{t('form.manageServices')}</LocaleLink>
                       </Button>
                     </div>
                   )}
@@ -227,13 +229,13 @@ export default function NewProjectPage() {
               variant="outline"
               onClick={() => router.back()}
             >
-              Cancel
+              {t('form.cancel')}
             </Button>
             <Button
               type="submit"
               disabled={createProject.isPending || !selectedClientId}
             >
-              {createProject.isPending ? 'Creating...' : 'Create Project'}
+              {createProject.isPending ? t('form.creating') : t('form.create')}
             </Button>
           </CardFooter>
         </form>

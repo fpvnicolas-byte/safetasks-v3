@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Plus, Edit, Trash2, Search } from 'lucide-react'
+import { Plus, Edit, Trash2, Search, DollarSign } from 'lucide-react'
 import Link from 'next/link'
 import { useDeleteStakeholder } from '@/lib/api/hooks/useStakeholders'
 import { toast } from 'sonner'
@@ -172,6 +172,11 @@ export default function StakeholdersPage() {
                         <Button variant="ghost" size="icon" asChild>
                           <Link href={`/stakeholders/${stakeholder.id}`}>
                             <Edit className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                        <Button variant="ghost" size="icon" asChild title="Add Payment">
+                          <Link href={`/financials/transactions/new?project_id=${stakeholder.project_id}&stakeholder_id=${stakeholder.id}`}>
+                            <DollarSign className="h-4 w-4 text-green-600" />
                           </Link>
                         </Button>
                         <Button

@@ -247,6 +247,60 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
             "month": month
         }
 
+    async def get_overview_stats(
+        self,
+        db: AsyncSession,
+        *,
+        organization_id: UUID
+    ) -> Dict[str, int]:
+        """Get overall financial statistics for the organization."""
+        # Query for total income
+        income_query = select(func.sum(Transaction.amount_cents)).where(
+            and_(
+                Transaction.organization_id == organization_id,
+                Transaction.type == "income"
+            )
+        )
+
+        # Query for total expense
+        expense_query = select(func.sum(Transaction.amount_cents)).where(
+            and_(
+                Transaction.organization_id == organization_id,
+                Transaction.type == "expense"
+            )
+        )
+
+        # Query for total active project budget
+        budget_query = select(func.sum(Project.budget_total_cents)).where(
+            and_(
+                Project.organization_id == organization_id,
+                Project.is_active == True
+            )
+        )
+
+        income_result = await db.execute(income_query)
+        expense_result = await db.execute(expense_query)
+        budget_result = await db.execute(budget_query)
+
+        total_income = income_result.scalar() or 0
+        total_expense = expense_result.scalar() or 0
+        total_budget = budget_result.scalar() or 0
+
+        # Net income is Income - Expense
+        net_income = total_income - total_expense
+
+        # Remaining budget is Total Budget - Total Expense
+        # This assumes all expenses are budget-consuming
+        remaining_budget = total_budget - total_expense
+
+        return {
+            "total_income_cents": total_income,
+            "total_expense_cents": total_expense,
+            "net_income_cents": net_income,
+            "total_budget_cents": total_budget,
+            "remaining_budget_cents": remaining_budget
+        }
+
     async def _validate_bank_account_ownership(
         self, db: AsyncSession, organization_id: UUID, bank_account_id: UUID
     ) -> BankAccount:
