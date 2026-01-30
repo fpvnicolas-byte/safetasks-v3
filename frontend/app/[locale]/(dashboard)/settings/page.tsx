@@ -11,11 +11,16 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
-        <p className="text-muted-foreground">
-          {t('description')}
-        </p>
+      <div className="rounded-xl border bg-card/60 px-6 py-5">
+        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          Settings / Workspace
+        </div>
+        <div className="mt-2">
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
+          <p className="text-muted-foreground">
+            {t('description')}
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -23,8 +28,8 @@ export default function SettingsPage() {
           <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                  <Building2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <div className="p-3 bg-info/15 rounded-lg">
+                  <Building2 className="h-6 w-6 text-info" />
                 </div>
                 <div>
                   <CardTitle>{t('main.organization.title')}</CardTitle>
@@ -44,8 +49,8 @@ export default function SettingsPage() {
           <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
-                  <User className="h-6 w-6 text-green-600 dark:text-green-400" />
+                <div className="p-3 bg-success/15 rounded-lg">
+                  <User className="h-6 w-6 text-success" />
                 </div>
                 <div>
                   <CardTitle>{t('main.profile.title')}</CardTitle>
@@ -65,8 +70,8 @@ export default function SettingsPage() {
           <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                  <Key className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                <div className="p-3 bg-primary/15 rounded-lg">
+                  <Key className="h-6 w-6 text-primary" />
                 </div>
                 <div>
                   <CardTitle>{t('main.googleDrive.title')}</CardTitle>
@@ -86,8 +91,8 @@ export default function SettingsPage() {
           <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-pink-100 dark:bg-pink-900 rounded-lg">
-                  <Briefcase className="h-6 w-6 text-pink-600 dark:text-pink-400" />
+                <div className="p-3 bg-secondary/60 rounded-lg">
+                  <Briefcase className="h-6 w-6 text-secondary-foreground" />
                 </div>
                 <div>
                   <CardTitle>{t('main.services.title')}</CardTitle>
@@ -107,8 +112,8 @@ export default function SettingsPage() {
           <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-orange-100 dark:bg-orange-900 rounded-lg">
-                  <Bell className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                <div className="p-3 bg-warning/20 rounded-lg">
+                  <Bell className="h-6 w-6 text-warning-foreground" />
                 </div>
                 <div>
                   <CardTitle>{t('main.notifications.title')}</CardTitle>

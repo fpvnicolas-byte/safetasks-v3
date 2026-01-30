@@ -151,8 +151,8 @@ class ApiClient {
 
         // Log full error response for debugging
         if (response.status === 422) {
-          console.error('422 Validation Error - Full response:', data)
-          console.error('422 Validation Error - Detail:', errorDetail)
+          console.error('422 Validation Error - Full response:', JSON.stringify(data, null, 2))
+          console.error('422 Validation Error - Detail:', JSON.stringify(errorDetail, null, 2))
         }
 
         // Handle specific status codes

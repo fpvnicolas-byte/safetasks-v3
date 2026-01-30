@@ -104,7 +104,7 @@ export default function AiScriptAnalysisPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">AI Script Analysis</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">AI Script Analysis</h1>
           <p className="text-muted-foreground">
             Analyze scripts to extract characters, scenes, locations, and production requirements
           </p>
@@ -118,7 +118,6 @@ export default function AiScriptAnalysisPage() {
           </Button>
           <Button
             onClick={() => router.push('/ai/budget-estimation')}
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
           >
             <DollarSign className="mr-2 h-4 w-4" />
             Budget Estimation
@@ -278,9 +277,9 @@ export default function AiScriptAnalysisPage() {
             </div>
 
             {/* Analysis Tips */}
-            <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-              <h4 className="font-semibold text-green-900 dark:text-green-100 mb-2">Analysis Tips</h4>
-              <ul className="text-sm text-green-800 dark:text-green-200 space-y-1">
+            <div className="bg-success/10 p-4 rounded-lg">
+              <h4 className="font-semibold text-success mb-2">Analysis Tips</h4>
+              <ul className="text-sm text-success/80 space-y-1">
                 <li>• Use proper character names (all caps) for accurate identification</li>
                 <li>• Include scene headings (INT./EXT. locations)</li>
                 <li>• Add production notes in parentheses for special requirements</li>
@@ -303,9 +302,9 @@ export default function AiScriptAnalysisPage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+              <div className="bg-muted/60 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  <Users className="h-4 w-4 text-gray-600" />
+                  <Users className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">Characters</span>
                 </div>
                 {/* AI-Assisted Detection (Option 5) */}
@@ -313,58 +312,58 @@ export default function AiScriptAnalysisPage() {
                   {aiAnalysisResult?.result?.characters?.length ||
                     scriptText.match(/\b[A-Z][A-Z\s]+\b/g)?.length || 0}
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-muted-foreground">
                   {aiAnalysisResult?.result?.characters?.length
                     ? 'AI-analyzed characters'
                     : 'Estimated characters (regex-based)'}
                 </div>
               </div>
 
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+              <div className="bg-muted/60 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="h-4 w-4 text-gray-600" />
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">Scenes</span>
                 </div>
                 <div className="text-2xl font-bold">
                   {aiAnalysisResult?.result?.scenes?.length ||
                     scriptText.match(/INT\.|EXT\./g)?.length || 0}
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-muted-foreground">
                   {aiAnalysisResult?.result?.scenes?.length
                     ? 'AI-analyzed scenes'
                     : 'Estimated scenes'}
                 </div>
               </div>
 
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+              <div className="bg-muted/60 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  <Target className="h-4 w-4 text-gray-600" />
+                  <Target className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">Analysis Type</span>
                 </div>
                 <div className="text-2xl font-bold capitalize">{analysisType}</div>
-                <div className="text-xs text-gray-500">Selected analysis type</div>
+                <div className="text-xs text-muted-foreground">Selected analysis type</div>
               </div>
 
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+              <div className="bg-muted/60 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  <Clock className="h-4 w-4 text-gray-600" />
+                  <Clock className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">Complexity</span>
                 </div>
                 <div className="text-2xl font-bold">
                   {scriptText.length > 8000 ? 'High' : scriptText.length > 4000 ? 'Medium' : 'Low'}
                 </div>
-                <div className="text-xs text-gray-500">Analysis complexity</div>
+                <div className="text-xs text-muted-foreground">Analysis complexity</div>
               </div>
             </div>
 
             {/* AI Analysis Status */}
             {aiAnalysisResult && (
-              <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <div className="mt-4 p-4 bg-info/10 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="h-4 w-4 text-blue-600" />
-                  <span className="font-semibold text-blue-900 dark:text-blue-100">AI Analysis Complete</span>
+                  <Sparkles className="h-4 w-4 text-info" />
+                  <span className="font-semibold text-info">AI Analysis Complete</span>
                 </div>
-                <div className="text-sm text-blue-800 dark:text-blue-200">
+                <div className="text-sm text-info-foreground">
                   {aiAnalysisResult.result?.characters?.length || 0} characters,
                   {aiAnalysisResult.result?.scenes?.length || 0} scenes,
                   {aiAnalysisResult.result?.locations?.length || 0} locations identified

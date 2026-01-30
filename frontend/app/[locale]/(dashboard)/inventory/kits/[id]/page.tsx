@@ -107,9 +107,9 @@ export default function KitDetailPage() {
   const getStatusBadge = (status: KitStatus) => {
     switch (status) {
       case 'available':
-        return <Badge className="bg-green-500 hover:bg-green-600 px-3 py-1 text-white border-none"><CheckCircle className="w-3 h-3 mr-1" /> Available</Badge>
+        return <Badge variant="success" className="px-3 py-1"><CheckCircle className="w-3 h-3 mr-1" /> Available</Badge>
       case 'in_use':
-        return <Badge className="bg-blue-500 hover:bg-blue-600 px-3 py-1 text-white border-none"><Info className="w-3 h-3 mr-1" /> In Use</Badge>
+        return <Badge variant="info" className="px-3 py-1"><Info className="w-3 h-3 mr-1" /> In Use</Badge>
       case 'maintenance':
         return <Badge variant="destructive" className="px-3 py-1"><AlertCircle className="w-3 h-3 mr-1" /> Maintenance</Badge>
       case 'retired':
@@ -127,7 +127,7 @@ export default function KitDetailPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">{kit.name}</h1>
+            <h1 className="text-3xl font-bold tracking-tight font-display">{kit.name}</h1>
             <p className="text-muted-foreground">{kit.category || 'Standard Kit'}</p>
           </div>
         </div>

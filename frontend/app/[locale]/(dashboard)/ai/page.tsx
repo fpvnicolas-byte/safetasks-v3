@@ -70,17 +70,17 @@ export default function AiFeaturesPage() {
   }
 
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.8) return 'bg-green-100 text-green-800'
-    if (confidence >= 0.6) return 'bg-yellow-100 text-yellow-800'
-    return 'bg-red-100 text-red-800'
+    if (confidence >= 0.8) return 'bg-success/15 text-success'
+    if (confidence >= 0.6) return 'bg-warning/20 text-warning-foreground'
+    return 'bg-destructive/15 text-destructive'
   }
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800'
-      case 'medium': return 'bg-yellow-100 text-yellow-800'
-      case 'low': return 'bg-green-100 text-green-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'high': return 'bg-destructive/15 text-destructive'
+      case 'medium': return 'bg-warning/20 text-warning-foreground'
+      case 'low': return 'bg-success/15 text-success'
+      default: return 'bg-secondary text-secondary-foreground'
     }
   }
 
@@ -88,7 +88,7 @@ export default function AiFeaturesPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
           <p className="text-muted-foreground">
             {t('subtitle')}
           </p>
@@ -102,7 +102,6 @@ export default function AiFeaturesPage() {
           </Button>
           <Button
             onClick={() => router.push('/ai/script-analysis')}
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
           >
             <Sparkles className="mr-2 h-4 w-4" />
             {t('analyzeScript')}
@@ -131,7 +130,7 @@ export default function AiFeaturesPage() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm">{t('quickActions.scriptAnalysis.title')}</CardTitle>
-                    <FileText className="h-8 w-8 text-blue-600" />
+                    <FileText className="h-8 w-8 text-info" />
                   </div>
                   <CardDescription>
                     {t('quickActions.scriptAnalysis.desc')}
@@ -144,7 +143,7 @@ export default function AiFeaturesPage() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm">{t('quickActions.budgetEstimation.title')}</CardTitle>
-                    <DollarSign className="h-8 w-8 text-green-600" />
+                    <DollarSign className="h-8 w-8 text-success" />
                   </div>
                   <CardDescription>
                     {t('quickActions.budgetEstimation.desc')}
@@ -157,7 +156,7 @@ export default function AiFeaturesPage() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm">{t('quickActions.callSheet.title')}</CardTitle>
-                    <Calendar className="h-8 w-8 text-purple-600" />
+                    <Calendar className="h-8 w-8 text-warning-foreground" />
                   </div>
                   <CardDescription>
                     {t('quickActions.callSheet.desc')}
@@ -263,7 +262,7 @@ export default function AiFeaturesPage() {
               <CardHeader className="flex flex-col space-y-1.5">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-medium">{t('insights.activeAnalyses.title')}</CardTitle>
-                  <Brain className="h-4 w-4 text-blue-600" />
+                  <Brain className="h-4 w-4 text-info" />
                 </div>
                 <div className="text-2xl font-bold">{analyses?.length || 0}</div>
                 <CardDescription>{t('insights.activeAnalyses.desc')}</CardDescription>
@@ -274,7 +273,7 @@ export default function AiFeaturesPage() {
               <CardHeader className="flex flex-col space-y-1.5">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-medium">{t('insights.suggestions.title')}</CardTitle>
-                  <Sparkles className="h-4 w-4 text-yellow-600" />
+                  <Sparkles className="h-4 w-4 text-warning-foreground" />
                 </div>
                 <div className="text-2xl font-bold">{suggestions?.length || 0}</div>
                 <CardDescription>{t('insights.suggestions.desc')}</CardDescription>
@@ -285,7 +284,7 @@ export default function AiFeaturesPage() {
               <CardHeader className="flex flex-col space-y-1.5">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-medium">{t('insights.recommendations.title')}</CardTitle>
-                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <CheckCircle className="h-4 w-4 text-success" />
                 </div>
                 <div className="text-2xl font-bold">{recommendations?.length || 0}</div>
                 <CardDescription>{t('insights.recommendations.desc')}</CardDescription>
@@ -296,7 +295,7 @@ export default function AiFeaturesPage() {
               <CardHeader className="flex flex-col space-y-1.5">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-medium">{t('insights.successRate.title')}</CardTitle>
-                  <AlertCircle className="h-4 w-4 text-orange-600" />
+                  <AlertCircle className="h-4 w-4 text-warning-foreground" />
                 </div>
                 <div className="text-2xl font-bold">94%</div>
                 <CardDescription>{t('insights.successRate.desc')}</CardDescription>
@@ -345,12 +344,12 @@ export default function AiFeaturesPage() {
                       </div>
                     )}
                     {suggestion.estimated_savings_cents && (
-                      <div className="text-sm text-green-600 mt-2">
+                      <div className="text-sm text-success mt-2">
                         {t('lists.estimatedSavings')}: {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(suggestion.estimated_savings_cents / 100)}
                       </div>
                     )}
                     {suggestion.estimated_time_saved_minutes && (
-                      <div className="text-sm text-blue-600 mt-1">
+                      <div className="text-sm text-info mt-1">
                         {t('lists.timeSaved')}: {suggestion.estimated_time_saved_minutes} minutes
                       </div>
                     )}
@@ -411,20 +410,20 @@ export default function AiFeaturesPage() {
                       </ul>
 
                       {recommendation.estimated_impact.time_saved_minutes && (
-                        <div className="text-sm text-blue-600 mt-2">
-                          {t('lists.timeSaved')}: {recommendation.estimated_impact.time_saved_minutes} minutes
-                        </div>
-                      )}
-                      {recommendation.estimated_impact.cost_saved_cents && (
-                        <div className="text-sm text-green-600">
-                          {t('lists.costSaved')}: {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(recommendation.estimated_impact.cost_saved_cents / 100)}
-                        </div>
-                      )}
-                      {recommendation.estimated_impact.risk_reduction && (
-                        <div className="text-sm text-orange-600">
-                          {t('lists.riskReduction')}: {recommendation.estimated_impact.risk_reduction}
-                        </div>
-                      )}
+                      <div className="text-sm text-info mt-2">
+                        {t('lists.timeSaved')}: {recommendation.estimated_impact.time_saved_minutes} minutes
+                      </div>
+                    )}
+                    {recommendation.estimated_impact.cost_saved_cents && (
+                      <div className="text-sm text-success">
+                        {t('lists.costSaved')}: {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(recommendation.estimated_impact.cost_saved_cents / 100)}
+                      </div>
+                    )}
+                    {recommendation.estimated_impact.risk_reduction && (
+                      <div className="text-sm text-warning-foreground">
+                        {t('lists.riskReduction')}: {recommendation.estimated_impact.risk_reduction}
+                      </div>
+                    )}
                     </div>
                   </CardContent>
                 </Card>

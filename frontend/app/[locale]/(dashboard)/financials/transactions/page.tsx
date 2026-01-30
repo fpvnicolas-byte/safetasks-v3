@@ -102,7 +102,7 @@ export default function TransactionsPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">Transactions</h1>
           <p className="text-muted-foreground">Loading transactions...</p>
         </div>
       </div>
@@ -113,7 +113,7 @@ export default function TransactionsPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">Transactions</h1>
           <p className="text-destructive">Failed to load transactions. Please try again.</p>
         </div>
       </div>
@@ -124,7 +124,7 @@ export default function TransactionsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">Transactions</h1>
           <p className="text-muted-foreground">
             Record income and expenses to track cash flow
           </p>
@@ -142,10 +142,10 @@ export default function TransactionsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Income</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600" />
+            <TrendingUp className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-success">
               {formatCurrency(totalIncome, 'BRL')}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -157,10 +157,10 @@ export default function TransactionsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
-            <TrendingDown className="h-4 w-4 text-red-600" />
+            <TrendingDown className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-2xl font-bold text-destructive">
               {formatCurrency(totalExpense, 'BRL')}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -175,7 +175,7 @@ export default function TransactionsPage() {
             <Receipt className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${netBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`text-2xl font-bold ${netBalance >= 0 ? 'text-success' : 'text-destructive'}`}>
               {formatCurrency(netBalance, 'BRL')}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -323,9 +323,9 @@ export default function TransactionsPage() {
                     <div className="flex items-center gap-4 flex-1">
                       {/* Type Icon */}
                       {transaction.type === 'income' ? (
-                        <ArrowUpCircle className="h-8 w-8 text-green-600" />
+                        <ArrowUpCircle className="h-8 w-8 text-success" />
                       ) : (
-                        <ArrowDownCircle className="h-8 w-8 text-red-600" />
+                        <ArrowDownCircle className="h-8 w-8 text-destructive" />
                       )}
 
                       {/* Transaction Details */}
@@ -334,7 +334,7 @@ export default function TransactionsPage() {
                           <p className="font-medium">
                             {transaction.description || 'Untitled Transaction'}
                           </p>
-                          <Badge variant="outline" className={transaction.type === 'income' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}>
+                          <Badge variant={transaction.type === 'income' ? 'success' : 'destructive'}>
                             {transaction.type}
                           </Badge>
                           <Badge variant="secondary">
@@ -351,7 +351,7 @@ export default function TransactionsPage() {
                       </div>
 
                       {/* Amount */}
-                      <div className={`text-xl font-bold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                      <div className={`text-xl font-bold ${transaction.type === 'income' ? 'text-success' : 'text-destructive'}`}>
                         {transaction.type === 'income' ? '+' : '-'}
                         {formatCurrency(transaction.amount_cents, transaction.bank_account?.currency || 'BRL')}
                       </div>
@@ -368,7 +368,7 @@ export default function TransactionsPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleDeleteTransaction(transaction.id, transaction.description || '')}
-                        className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -389,7 +389,7 @@ export default function TransactionsPage() {
                 Showing {filteredTransactions.length} of {allTransactions.length} transaction{allTransactions.length !== 1 ? 's' : ''}
               </span>
               <span>
-                Net: <span className={netBalance >= 0 ? 'text-green-600' : 'text-red-600'}>
+                Net: <span className={netBalance >= 0 ? 'text-success' : 'text-destructive'}>
                   {formatCurrency(netBalance, 'BRL')}
                 </span>
               </span>

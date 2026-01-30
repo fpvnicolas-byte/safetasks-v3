@@ -120,9 +120,9 @@ export default function ProposalDetailPage() {
 
   const getStatusVariant = (status: ProposalStatus) => {
     switch (status) {
-      case 'approved': return 'default' // Greenish
+      case 'approved': return 'success'
       case 'rejected': return 'destructive'
-      case 'sent': return 'secondary' // Blueish
+      case 'sent': return 'info'
       case 'draft': return 'outline'
       case 'expired': return 'destructive'
       default: return 'outline'
@@ -139,7 +139,7 @@ export default function ProposalDetailPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">{proposal.title}</h1>
+            <h1 className="text-3xl font-bold font-display">{proposal.title}</h1>
             <p className="text-muted-foreground">
               Created {new Date(proposal.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
             </p>
@@ -149,7 +149,7 @@ export default function ProposalDetailPage() {
           {showApproveButton && (
             <Dialog open={isApproveDialogOpen} onOpenChange={setIsApproveDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-green-600 hover:bg-green-700 text-white">
+                <Button variant="default">
                   <CheckCircle className="mr-2 h-4 w-4" />
                   Approve Proposal
                 </Button>
@@ -207,12 +207,12 @@ export default function ProposalDetailPage() {
       </div>
 
       {proposal.status === 'approved' && proposal.project_id && (
-        <Alert className="bg-green-50 border-green-200 text-green-800">
-          <CheckCircle className="h-4 w-4 text-green-600" />
+        <Alert className="border-success/30 bg-success/10 text-success">
+          <CheckCircle className="h-4 w-4 text-success" />
           <AlertTitle>Proposal Approved</AlertTitle>
           <AlertDescription className="mt-2">
             This proposal has been approved and converted into a project.
-            <Button asChild variant="link" className="p-0 h-auto ml-2 text-green-700 font-semibold">
+            <Button asChild variant="link" className="p-0 h-auto ml-2 text-success font-semibold">
               <Link href={`/projects/${proposal.project_id}`}>
                 View Project <ExternalLink className="ml-1 h-3 w-3 inline" />
               </Link>

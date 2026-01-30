@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, Json
 from uuid import UUID
 from datetime import datetime
 from typing import Optional, Dict, Any
@@ -32,7 +32,7 @@ class Notification(NotificationBase):
     organization_id: UUID
     profile_id: UUID
     is_read: bool
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Json[Dict[str, Any]]] = Field(default=None, validation_alias="notification_metadata")
     created_at: datetime
     read_at: Optional[datetime] = None
 

@@ -73,16 +73,21 @@ export default function ServicesPage() {
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight">{t('title')}</h2>
-                    <p className="text-muted-foreground">{t('description')}</p>
+        <div className="space-y-8">
+            <div className="rounded-xl border bg-card/60 px-6 py-5">
+                <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                    Settings / Services
                 </div>
-                <Button onClick={openCreateDialog}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    {t('addService')}
-                </Button>
+                <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <h2 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h2>
+                        <p className="text-muted-foreground">{t('description')}</p>
+                    </div>
+                    <Button onClick={openCreateDialog}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        {t('addService')}
+                    </Button>
+                </div>
             </div>
 
             <Card>

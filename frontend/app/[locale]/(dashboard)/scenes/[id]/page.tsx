@@ -45,11 +45,11 @@ export default function SceneDetailPage() {
     }
   }
 
-  const timeColors = {
-    day: 'bg-yellow-100 text-yellow-800',
-    night: 'bg-purple-100 text-purple-800',
-    dawn: 'bg-orange-100 text-orange-800',
-    dusk: 'bg-pink-100 text-pink-800',
+  const timeVariant: Record<string, 'warning' | 'secondary' | 'outline'> = {
+    day: 'warning',
+    night: 'secondary',
+    dawn: 'outline',
+    dusk: 'outline',
   }
 
   return (
@@ -60,7 +60,7 @@ export default function SceneDetailPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">{t('title', { number: scene.scene_number })}</h1>
+            <h1 className="text-3xl font-bold font-display">{t('title', { number: scene.scene_number })}</h1>
             <p className="text-muted-foreground">{scene.heading}</p>
           </div>
         </div>
@@ -90,7 +90,11 @@ export default function SceneDetailPage() {
             </div>
             <div>
               <div className="text-sm font-medium text-muted-foreground">{t('time')}</div>
-              <div className="text-lg">{scene.day_night}</div>
+              <div className="text-lg">
+                <Badge variant={timeVariant[scene.day_night] ?? 'outline'}>
+                  {scene.day_night}
+                </Badge>
+              </div>
             </div>
             <div>
               <div className="text-sm font-medium text-muted-foreground">{t('duration')}</div>

@@ -65,11 +65,11 @@ export default function InventoryItemsPage() {
   const getHealthBadge = (status: HealthStatus) => {
     switch (status) {
       case 'excellent':
-        return <Badge className="bg-green-500 hover:bg-green-600"><CheckCircle className="w-3 h-3 mr-1" /> {t('health.excellent')}</Badge>
+        return <Badge variant="success"><CheckCircle className="w-3 h-3 mr-1" /> {t('health.excellent')}</Badge>
       case 'good':
-        return <Badge className="bg-blue-500 hover:bg-blue-600"><CheckCircle className="w-3 h-3 mr-1" /> {t('health.good')}</Badge>
+        return <Badge variant="info"><CheckCircle className="w-3 h-3 mr-1" /> {t('health.good')}</Badge>
       case 'needs_service':
-        return <Badge className="bg-yellow-500 hover:bg-yellow-600 text-black"><AlertCircle className="w-3 h-3 mr-1" /> {t('health.needs_service')}</Badge>
+        return <Badge variant="warning"><AlertCircle className="w-3 h-3 mr-1" /> {t('health.needs_service')}</Badge>
       case 'broken':
         return <Badge variant="destructive"><AlertCircle className="w-3 h-3 mr-1" /> {t('health.broken')}</Badge>
       case 'retired':
@@ -83,7 +83,7 @@ export default function InventoryItemsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
           <p className="text-muted-foreground">{t('description')}</p>
         </div>
         <div className="flex gap-2">
@@ -185,7 +185,7 @@ export default function InventoryItemsPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => confirmDelete(item.id, item.name)}
-                    className="text-destructive hover:text-destructive"
+                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>

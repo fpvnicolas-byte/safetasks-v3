@@ -22,42 +22,42 @@ export function QuickActions() {
       description: t('actions.newProject.desc'),
       icon: <FolderPlus className="h-5 w-5" />,
       href: '/projects/new',
-      color: 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+      color: 'bg-info/15 text-info'
     },
     {
       title: t('actions.createInvoice.title'),
       description: t('actions.createInvoice.desc'),
       icon: <FileText className="h-5 w-5" />,
       href: '/financials/new-invoice',
-      color: 'bg-green-100 text-green-600 hover:bg-green-200'
+      color: 'bg-success/15 text-success'
     },
     {
       title: t('actions.recordTransaction.title'),
       description: t('actions.recordTransaction.desc'),
       icon: <DollarSign className="h-5 w-5" />,
       href: '/financials/transactions/new',
-      color: 'bg-purple-100 text-purple-600 hover:bg-purple-200'
+      color: 'bg-primary/15 text-primary'
     },
     {
       title: t('actions.callSheet.title'),
       description: t('actions.callSheet.desc'),
       icon: <Calendar className="h-5 w-5" />,
       href: '/call-sheets/new',
-      color: 'bg-orange-100 text-orange-600 hover:bg-orange-200'
+      color: 'bg-warning/20 text-warning-foreground'
     },
     {
       title: t('actions.addEquipment.title'),
       description: t('actions.addEquipment.desc'),
       icon: <Package className="h-5 w-5" />,
       href: '/inventory/items/new',
-      color: 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200'
+      color: 'bg-secondary/60 text-secondary-foreground'
     },
     {
       title: t('actions.addStakeholder.title'),
       description: t('actions.addStakeholder.desc'),
       icon: <Users className="h-5 w-5" />,
       href: '/stakeholders/new',
-      color: 'bg-pink-100 text-pink-600 hover:bg-pink-200'
+      color: 'bg-accent text-accent-foreground'
     },
   ]
 
@@ -71,16 +71,16 @@ export function QuickActions() {
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           {actions.map((action) => (
             <LocaleLink key={action.href} href={action.href}>
-              <div className="group border rounded-lg p-4 hover:border-primary transition-colors cursor-pointer">
+              <div className="group flex h-full min-h-[104px] flex-col border rounded-lg p-4 hover:border-primary transition-colors cursor-pointer">
                 <div className="flex items-start gap-3">
                   <div className={`p-2 rounded-lg ${action.color} transition-colors`}>
                     {action.icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-sm group-hover:text-primary transition-colors">
+                    <h4 className="font-medium text-sm group-hover:text-primary transition-colors line-clamp-1">
                       {action.title}
                     </h4>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                       {action.description}
                     </p>
                   </div>

@@ -93,7 +93,7 @@ export default function NewStakeholderPage() {
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">New Stakeholder</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">New Stakeholder</h1>
           <p className="text-muted-foreground">Add a new team member to your project</p>
         </div>
       </div>
@@ -107,7 +107,7 @@ export default function NewStakeholderPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="project_id">
-                Project <span className="text-red-500">*</span>
+                Project <span className="text-destructive">*</span>
               </Label>
               <Select
                 value={formData.project_id}
@@ -128,7 +128,7 @@ export default function NewStakeholderPage() {
 
             <div className="space-y-2">
               <Label htmlFor="name">
-                {tCommon('name')} <span className="text-red-500">*</span>
+                {tCommon('name')} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="name"
@@ -141,7 +141,7 @@ export default function NewStakeholderPage() {
 
             <div className="space-y-2">
               <Label htmlFor="role">
-                Role <span className="text-red-500">*</span>
+                Role <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="role"

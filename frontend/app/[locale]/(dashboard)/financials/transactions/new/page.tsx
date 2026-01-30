@@ -125,7 +125,7 @@ export default function NewTransactionPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">New Transaction</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">New Transaction</h1>
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
@@ -168,7 +168,7 @@ export default function NewTransactionPage() {
       <Card className="max-w-2xl">
         <form onSubmit={handleSubmit}>
           <CardHeader>
-            <CardTitle>Record New Transaction</CardTitle>
+          <CardTitle className="font-display">Record New Transaction</CardTitle>
             <CardDescription>
               Record income or expenses to track your cash flow and update bank balances
             </CardDescription>
@@ -197,22 +197,22 @@ export default function NewTransactionPage() {
                   type="button"
                   onClick={() => handleInputChange('type', 'income')}
                   className={`p-4 border-2 rounded-lg text-left transition-all ${formData.type === 'income'
-                    ? 'border-green-500 bg-green-50'
-                    : 'border-border hover:border-green-300'
+                    ? 'border-success bg-success/10 text-success'
+                    : 'border-border hover:border-success/50'
                     }`}
                 >
-                  <div className="font-semibold text-green-600">Income</div>
+                  <div className="font-semibold">Income</div>
                   <div className="text-sm text-muted-foreground">Money received</div>
                 </button>
                 <button
                   type="button"
                   onClick={() => handleInputChange('type', 'expense')}
                   className={`p-4 border-2 rounded-lg text-left transition-all ${formData.type === 'expense'
-                    ? 'border-red-500 bg-red-50'
-                    : 'border-border hover:border-red-300'
+                    ? 'border-destructive bg-destructive/10 text-destructive'
+                    : 'border-border hover:border-destructive/50'
                     }`}
                 >
-                  <div className="font-semibold text-red-600">Expense</div>
+                  <div className="font-semibold">Expense</div>
                   <div className="text-sm text-muted-foreground">Money spent</div>
                 </button>
               </div>

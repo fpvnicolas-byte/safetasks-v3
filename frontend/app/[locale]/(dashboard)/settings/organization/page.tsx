@@ -83,14 +83,17 @@ export default function OrganizationSettingsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/settings">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+      <div className="rounded-xl border bg-card/60 px-6 py-5">
+        <div className="flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/settings">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <span>Settings / Organization</span>
+        </div>
+        <div className="mt-3">
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
           <p className="text-muted-foreground">{t('description')}</p>
         </div>
       </div>
@@ -98,8 +101,8 @@ export default function OrganizationSettingsPage() {
       <Card className="max-w-2xl">
         <CardHeader>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-              <Building2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <div className="p-2 bg-info/15 rounded-lg">
+              <Building2 className="h-5 w-5 text-info" />
             </div>
             <div>
               <CardTitle>{t('card.title')}</CardTitle>

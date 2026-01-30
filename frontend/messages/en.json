@@ -1312,6 +1312,24 @@
     }
   },
   "notifications": {
+    "messages": {
+      "welcome_title": "Welcome to SafeTasks! 🎬",
+      "welcome_message": "Your production management system is ready. Start by creating your first project or uploading a script for AI analysis.",
+      "script_analysis_complete_title": "Script Analysis Complete ✅",
+      "script_analysis_complete_message": "Your script has been analyzed. Found {characters} characters and {scenes} scenes.",
+      "budget_alert_title": "Budget Alert ⚠️",
+      "budget_alert_message": "Project '{project}' is approaching {percent}% of the allocated budget.",
+      "equipment_maintenance_title": "Equipment Maintenance Due 🔧",
+      "equipment_maintenance_message": "{item} is due for preventive maintenance. Last service was {days} days ago.",
+      "proposal_approved_title": "Proposal Approved 🎉",
+      "proposal_approved_message": "Congratulations! Your proposal for '{project}' has been approved.",
+      "payment_received_title": "Payment Received 💰",
+      "payment_received_message": "Payment of {amount} received from client '{client}' for invoice #{invoice}.",
+      "upload_failed_title": "Upload Failed ❌",
+      "upload_failed_message": "Failed to upload '{file}'. Error: {error}",
+      "test_notification_title": "Test Notification 🧪",
+      "test_notification_message": "This is a localized test notification. Param: {param}"
+    },
     "title": "Notifications",
     "description": "Stay updated with real-time alerts and important updates",
     "unableToLoad": "Unable to load notifications",
@@ -1344,7 +1362,8 @@
     "unread": "Unread",
     "today": "Today",
     "earlier": "Earlier",
-    "noNotifications": "No notifications"
+    "noNotifications": "No notifications",
+    "viewAll": "View all notifications"
   },
   "landing": {
     "title": "SafeTasks V3",
@@ -1640,7 +1659,8 @@
       "generating": "Generating...",
       "clear": "Clear",
       "generateBudgetSuggestions": "Generate Budget Suggestions",
-      "generateScheduleSuggestions": "Generate Schedule Suggestions"
+      "generateScheduleSuggestions": "Generate Schedule Suggestions",
+      "analyzeScript": "Analyze Script"
     }
   }
 }

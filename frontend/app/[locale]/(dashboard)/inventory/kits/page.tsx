@@ -45,9 +45,9 @@ export default function KitsPage() {
   const getStatusBadge = (status: KitStatus) => {
     switch (status) {
       case 'available':
-        return <Badge className="bg-green-500">{t('status.available')}</Badge>
+        return <Badge variant="success">{t('status.available')}</Badge>
       case 'in_use':
-        return <Badge className="bg-blue-500">{t('status.in_use')}</Badge>
+        return <Badge variant="info">{t('status.in_use')}</Badge>
       case 'maintenance':
         return <Badge variant="destructive">{t('status.maintenance')}</Badge>
       case 'retired':
@@ -61,7 +61,7 @@ export default function KitsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
           <p className="text-muted-foreground">{t('description')}</p>
         </div>
         <div className="flex gap-2">
@@ -119,7 +119,7 @@ export default function KitsPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => confirmDelete(kit.id, kit.name)}
-                    className="text-destructive hover:text-destructive"
+                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>

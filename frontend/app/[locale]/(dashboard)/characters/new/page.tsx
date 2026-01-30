@@ -121,7 +121,7 @@ function NewCharacterForm() {
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Create Character</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">Create Character</h1>
           <p className="text-muted-foreground">
             Add a new character to your production
           </p>
@@ -148,10 +148,10 @@ function NewCharacterForm() {
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
                 placeholder="Enter character name"
-                className={errors.name ? 'border-red-500' : ''}
+                className={errors.name ? 'border-destructive' : ''}
               />
               {errors.name && (
-                <p className="text-sm text-red-600">{errors.name}</p>
+                <p className="text-sm text-destructive">{errors.name}</p>
               )}
             </div>
 
@@ -164,12 +164,12 @@ function NewCharacterForm() {
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 placeholder="Character background, personality, role in story..."
                 rows={4}
-                className={errors.description ? 'border-red-500' : ''}
+                className={errors.description ? 'border-destructive' : ''}
               />
               {errors.description && (
-                <p className="text-sm text-red-600">{errors.description}</p>
+                <p className="text-sm text-destructive">{errors.description}</p>
               )}
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-muted-foreground">
                 Required: Character details, personality, role, or any relevant information
               </p>
             </div>
@@ -183,7 +183,7 @@ function NewCharacterForm() {
                 onChange={(e) => handleInputChange('actor_name', e.target.value)}
                 placeholder="Enter actor name (optional)"
               />
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-muted-foreground">
                 The actor who will play this character
               </p>
             </div>

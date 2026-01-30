@@ -2,7 +2,7 @@ from typing import Dict, Any
 from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 
-from app.api.deps import get_organization_from_profile
+from app.api.deps import get_current_profile
 from app.db.session import get_db
 from app.services.analytics import analytics_service
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +13,7 @@ router = APIRouter()
 @router.get("/executive", response_model=Dict[str, Any])
 async def get_executive_dashboard(
     months_back: int = Query(12, ge=1, le=24, description="Number of months to analyze"),
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
     """
@@ -35,7 +35,7 @@ async def get_executive_dashboard(
     - Trends data and key business insights
     """
     dashboard_data = await analytics_service.get_executive_dashboard(
-        organization_id=organization_id,
+        organization_id=profile.organization_id,
         db=db,
         months_back=months_back
     )
@@ -45,7 +45,7 @@ async def get_executive_dashboard(
 
 @router.get("/executive/financial", response_model=Dict[str, Any])
 async def get_financial_dashboard(
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
     """
@@ -56,7 +56,7 @@ async def get_financial_dashboard(
     # This would call a specific financial analytics method
     # For now, return a subset of the full dashboard
     full_dashboard = await analytics_service.get_executive_dashboard(
-        organization_id=organization_id,
+        organization_id=profile.organization_id,
         db=db,
         months_back=1
     )
@@ -66,7 +66,7 @@ async def get_financial_dashboard(
 
 @router.get("/executive/production", response_model=Dict[str, Any])
 async def get_production_dashboard(
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
     """
@@ -77,7 +77,7 @@ async def get_production_dashboard(
     # This would call a specific production analytics method
     # For now, return a subset of the full dashboard
     full_dashboard = await analytics_service.get_executive_dashboard(
-        organization_id=organization_id,
+        organization_id=profile.organization_id,
         db=db,
         months_back=1
     )
@@ -87,7 +87,7 @@ async def get_production_dashboard(
 
 @router.get("/executive/inventory", response_model=Dict[str, Any])
 async def get_inventory_dashboard(
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
     """
@@ -98,7 +98,7 @@ async def get_inventory_dashboard(
     # This would call a specific inventory analytics method
     # For now, return a subset of the full dashboard
     full_dashboard = await analytics_service.get_executive_dashboard(
-        organization_id=organization_id,
+        organization_id=profile.organization_id,
         db=db,
         months_back=1
     )
@@ -108,7 +108,7 @@ async def get_inventory_dashboard(
 
 @router.get("/executive/cloud", response_model=Dict[str, Any])
 async def get_cloud_dashboard(
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
     """
@@ -119,7 +119,7 @@ async def get_cloud_dashboard(
     # This would call a specific cloud analytics method
     # For now, return a subset of the full dashboard
     full_dashboard = await analytics_service.get_executive_dashboard(
-        organization_id=organization_id,
+        organization_id=profile.organization_id,
         db=db,
         months_back=1
     )

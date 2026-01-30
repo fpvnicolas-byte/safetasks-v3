@@ -247,7 +247,7 @@ function NewCallSheetForm() {
 
             {/* Emergency Information */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-red-700 dark:text-red-400">🚨 Safety & Emergency</h3>
+              <h3 className="text-lg font-semibold text-destructive">🚨 Safety & Emergency</h3>
 
               <div className="space-y-2">
                 <Label htmlFor="hospital_info">Nearest Hospital/Emergency Contact *</Label>

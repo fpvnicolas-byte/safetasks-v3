@@ -50,7 +50,7 @@ export default function ClientsPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
           <p className="text-muted-foreground">{t('loading')}</p>
         </div>
       </div>
@@ -61,7 +61,7 @@ export default function ClientsPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
           <p className="text-destructive">{t('loadingError')}</p>
         </div>
       </div>
@@ -72,7 +72,7 @@ export default function ClientsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
           <p className="text-muted-foreground">
             {t('description')}
           </p>
@@ -141,11 +141,11 @@ export default function ClientsPage() {
                     <CardTitle className="text-lg">{client.name}</CardTitle>
                     <CardDescription className="mt-1">
                       {client.is_active ? (
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                        <Badge variant="success">
                           {t('card.active')}
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+                        <Badge variant="outline">
                           {t('card.inactive')}
                         </Badge>
                       )}
@@ -195,7 +195,7 @@ export default function ClientsPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => handleDeleteClient(client.id, client.name)}
-                    className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

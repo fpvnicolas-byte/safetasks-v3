@@ -12,13 +12,13 @@ import { ProjectStatus } from '@/types'
 import { ProjectsListSkeleton } from '@/components/LoadingSkeletons'
 import { useTranslations, useLocale } from 'next-intl'
 
-const statusColors: Record<ProjectStatus, string> = {
-  draft: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-  'pre-production': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-  production: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  'post-production': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-  delivered: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200',
-  archived: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
+const statusVariant: Record<ProjectStatus, 'info' | 'secondary' | 'success' | 'warning' | 'outline'> = {
+  draft: 'info',
+  'pre-production': 'secondary',
+  production: 'success',
+  'post-production': 'warning',
+  delivered: 'outline',
+  archived: 'outline',
 }
 
 export default function ProjectsPage() {
@@ -34,7 +34,7 @@ export default function ProjectsPage() {
       <div className="space-y-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+            <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
             <p className="text-muted-foreground">{t('description')}</p>
           </div>
         </div>
@@ -53,19 +53,24 @@ export default function ProjectsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
-          <p className="text-muted-foreground">
-            {t('description')}
-          </p>
+      <div className="rounded-xl border bg-card/60 px-6 py-5">
+        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          Portfolio / Productions
         </div>
-        <Button asChild>
-          <LocaleLink href="/projects/new">
-            <Plus className="mr-2 h-4 w-4" />
-            {t('newProject')}
-          </LocaleLink>
-        </Button>
+        <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
+            <p className="text-muted-foreground">
+              {t('description')}
+            </p>
+          </div>
+          <Button asChild>
+            <LocaleLink href="/projects/new">
+              <Plus className="mr-2 h-4 w-4" />
+              {t('newProject')}
+            </LocaleLink>
+          </Button>
+        </div>
       </div>
 
       {projects && projects.length > 0 ? (
@@ -82,16 +87,16 @@ export default function ProjectsPage() {
 
             return (
               <LocaleLink key={project.id} href={`/projects/${project.id}`}>
-                <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
-                  <CardHeader>
+                <Card className="h-full hover:bg-muted/50 transition-colors cursor-pointer">
+                  <CardHeader className="min-h-[92px]">
                     <div className="flex items-start justify-between">
-                      <CardTitle className="text-lg">{project.title}</CardTitle>
-                      <Badge className={statusColors[project.status]}>
+                      <CardTitle className="text-lg line-clamp-1">{project.title}</CardTitle>
+                      <Badge variant={statusVariant[project.status]}>
                         {statusLabel}
                       </Badge>
                     </div>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="mt-auto">
                     <div className="space-y-2 text-sm">
                       {project.start_date && (
                         <div className="flex justify-between">

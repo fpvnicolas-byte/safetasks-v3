@@ -65,7 +65,7 @@ export default function AiBudgetEstimationPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">AI Budget Estimation</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">AI Budget Estimation</h1>
           <p className="text-muted-foreground">
             Get AI-powered budget estimates based on script analysis
           </p>
@@ -79,7 +79,6 @@ export default function AiBudgetEstimationPage() {
           </Button>
           <Button
             onClick={() => router.push('/ai/script-analysis')}
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
           >
             <Sparkles className="mr-2 h-4 w-4" />
             Analyze Script
@@ -211,9 +210,9 @@ export default function AiBudgetEstimationPage() {
             </div>
 
             {/* Estimation Tips */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-              <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Estimation Tips</h4>
-              <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+            <div className="bg-info/10 p-4 rounded-lg">
+              <h4 className="font-semibold text-info mb-2">Estimation Tips</h4>
+              <ul className="text-sm text-info-foreground space-y-1">
                 <li>• Include character descriptions and dialogue</li>
                 <li>• Mention locations and set requirements</li>
                 <li>• Note any special effects or equipment needs</li>
@@ -236,33 +235,33 @@ export default function AiBudgetEstimationPage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+              <div className="bg-muted/60 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  <FileText className="h-4 w-4 text-gray-600" />
+                  <FileText className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">Characters</span>
                 </div>
                 <div className="text-2xl font-bold">{scriptText.match(/\b[A-Z][A-Z\s]+\b/g)?.length || 0}</div>
-                <div className="text-xs text-gray-500">Estimated characters</div>
+                <div className="text-xs text-muted-foreground">Estimated characters</div>
               </div>
 
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+              <div className="bg-muted/60 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="h-4 w-4 text-gray-600" />
+                  <Sparkles className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">Complexity</span>
                 </div>
                 <div className="text-2xl font-bold">
                   {scriptText.length > 5000 ? 'High' : scriptText.length > 2000 ? 'Medium' : 'Low'}
                 </div>
-                <div className="text-xs text-gray-500">Script complexity level</div>
+                <div className="text-xs text-muted-foreground">Script complexity level</div>
               </div>
 
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+              <div className="bg-muted/60 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  <DollarSign className="h-4 w-4 text-gray-600" />
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">Estimation Type</span>
                 </div>
                 <div className="text-2xl font-bold capitalize">{estimationType}</div>
-                <div className="text-xs text-gray-500">Selected estimation type</div>
+                <div className="text-xs text-muted-foreground">Selected estimation type</div>
               </div>
             </div>
           </CardContent>

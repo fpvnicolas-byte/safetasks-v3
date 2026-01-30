@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_organization, require_admin, get_current_profile
+from app.api.deps import get_current_profile, require_admin
 from app.db.session import get_db
 from app.services.financial import bank_account_service
 from app.schemas.bank_accounts import BankAccount, BankAccountCreate, BankAccountUpdate
@@ -13,7 +13,7 @@ router = APIRouter()
 
 @router.get("/", response_model=List[BankAccount])
 async def get_bank_accounts(
-    organization_id: UUID = Depends(get_current_organization),
+    profile: "Profile" = Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -21,6 +21,7 @@ async def get_bank_accounts(
     """
     Get all bank accounts for the current user's organization.
     """
+    organization_id = profile.organization_id
     accounts = await bank_account_service.get_multi(
         db=db,
         organization_id=organization_id,
@@ -33,12 +34,13 @@ async def get_bank_accounts(
 @router.post("/", response_model=BankAccount)
 async def create_bank_account(
     account_in: BankAccountCreate,
-    organization_id: UUID = Depends(get_current_organization),
+    profile: "Profile" = Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> BankAccount:
     """
     Create a new bank account in the current user's organization.
     """
+    organization_id = profile.organization_id
     account = await bank_account_service.create(
         db=db,
         organization_id=organization_id,
@@ -50,12 +52,13 @@ async def create_bank_account(
 @router.get("/{account_id}", response_model=BankAccount)
 async def get_bank_account(
     account_id: UUID,
-    organization_id: UUID = Depends(get_current_organization),
+    profile: "Profile" = Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> BankAccount:
     """
     Get bank account by ID (must belong to current user's organization).
     """
+    organization_id = profile.organization_id
     account = await bank_account_service.get(
         db=db,
         organization_id=organization_id,
@@ -75,14 +78,14 @@ async def get_bank_account(
 async def update_bank_account(
     account_id: UUID,
     account_in: BankAccountUpdate,
-    organization_id: UUID = Depends(get_current_organization),
-    profile = Depends(get_current_profile),
+    profile: "Profile" = Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> BankAccount:
     """
     Update bank account (must belong to current user's organization).
     Only admins can update bank accounts.
     """
+    organization_id = profile.organization_id
     if profile.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -108,14 +111,14 @@ async def update_bank_account(
 @router.delete("/{account_id}", response_model=BankAccount)
 async def delete_bank_account(
     account_id: UUID,
-    organization_id: UUID = Depends(get_current_organization),
-    profile = Depends(get_current_profile),
+    profile: "Profile" = Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> BankAccount:
     """
     Delete bank account (must belong to current user's organization).
     Only admins can delete bank accounts.
     """
+    organization_id = profile.organization_id
     if profile.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

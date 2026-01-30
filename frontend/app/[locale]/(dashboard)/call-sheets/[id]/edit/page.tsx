@@ -226,7 +226,7 @@ export default function EditCallSheetPage() {
 
             {/* Emergency Information */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-red-700 dark:text-red-400">{t('safety')}</h3>
+              <h3 className="text-lg font-semibold text-destructive">{t('safety')}</h3>
 
               <div className="space-y-2">
                 <Label htmlFor="hospital_info">{t('hospital')}</Label>

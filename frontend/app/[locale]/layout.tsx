@@ -5,9 +5,24 @@ import { NextIntlClientProvider } from 'next-intl'
 import { notFound } from 'next/navigation'
 import { locales, isValidLocale, defaultLocale, type Locale } from '@/i18n/config'
 import '../globals.css'
-import { Inter } from 'next/font/google'
+import { DM_Serif_Display, JetBrains_Mono, Sora } from 'next/font/google'
 
-const inter = Inter({ subsets: ['latin'] })
+const uiSans = Sora({
+  subsets: ['latin'],
+  variable: '--font-ui',
+  display: 'swap',
+})
+const display = DM_Serif_Display({
+  subsets: ['latin'],
+  weight: '400',
+  variable: '--font-title',
+  display: 'swap',
+})
+const mono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-code',
+  display: 'swap',
+})
 
 export const metadata = {
   title: 'SafeTasks V3 - Film Production Management',
@@ -55,7 +70,7 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${uiSans.variable} ${display.variable} ${mono.variable} antialiased`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider
             attribute="class"

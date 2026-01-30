@@ -1312,6 +1312,24 @@
     }
   },
   "notifications": {
+    "messages": {
+      "welcome_title": "Bem-vindo ao SafeTasks! 🎬",
+      "welcome_message": "Seu sistema de gestão de produção está pronto. Comece criando seu primeiro projeto ou enviando um roteiro para análise de IA.",
+      "script_analysis_complete_title": "Análise de Roteiro Completa ✅",
+      "script_analysis_complete_message": "Seu roteiro foi analisado. Encontrados {characters} personagens e {scenes} cenas.",
+      "budget_alert_title": "Alerta de Orçamento ⚠️",
+      "budget_alert_message": "O projeto '{project}' está se aproximando de {percent}% do orçamento alocado.",
+      "equipment_maintenance_title": "Manutenção de Equipamento Vencida 🔧",
+      "equipment_maintenance_message": "{item} precisa de manutenção preventiva. Último serviço foi há {days} dias.",
+      "proposal_approved_title": "Proposta Aprovada 🎉",
+      "proposal_approved_message": "Parabéns! Sua proposta para '{project}' foi aprovada.",
+      "payment_received_title": "Pagamento Recebido 💰",
+      "payment_received_message": "Pagamento de {amount} recebido do cliente '{client}' para a fatura #{invoice}.",
+      "upload_failed_title": "Falha no Upload ❌",
+      "upload_failed_message": "Falha ao enviar '{file}'. Erro: {error}",
+      "test_notification_title": "Notificação de Teste 🧪",
+      "test_notification_message": "Esta é uma notificação de teste localizada. Parâmetro: {param}"
+    },
     "title": "Notificações",
     "description": "Fique atualizado com alertas em tempo real e atualizações importantes",
     "unableToLoad": "Não foi possível carregar notificações",
@@ -1344,7 +1362,8 @@
     "unread": "Não Lida",
     "today": "Hoje",
     "earlier": "Anterior",
-    "noNotifications": "Nenhuma notificação"
+    "noNotifications": "Nenhuma notificação",
+    "viewAll": "Ver todas as notificações"
   },
   "landing": {
     "title": "SafeTasks V3",
@@ -1640,7 +1659,8 @@
       "generating": "Gerando...",
       "clear": "Limpar",
       "generateBudgetSuggestions": "Gerar Sugestões de Orçamento",
-      "generateScheduleSuggestions": "Gerar Sugestões de Cronograma"
+      "generateScheduleSuggestions": "Gerar Sugestões de Cronograma",
+      "analyzeScript": "Analisar Roteiro"
     }
   }
 }

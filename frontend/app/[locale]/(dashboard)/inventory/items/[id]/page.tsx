@@ -74,11 +74,11 @@ export default function InventoryItemDetailPage() {
   const getHealthBadge = (status: HealthStatus) => {
     switch (status) {
       case 'excellent':
-        return <Badge className="bg-green-500 hover:bg-green-600 px-3 py-1 text-white border-none"><CheckCircle className="w-3 h-3 mr-1" /> Excellent</Badge>
+        return <Badge variant="success" className="px-3 py-1"><CheckCircle className="w-3 h-3 mr-1" /> Excellent</Badge>
       case 'good':
-        return <Badge className="bg-blue-500 hover:bg-blue-600 px-3 py-1 text-white border-none"><CheckCircle className="w-3 h-3 mr-1" /> Good</Badge>
+        return <Badge variant="info" className="px-3 py-1"><CheckCircle className="w-3 h-3 mr-1" /> Good</Badge>
       case 'needs_service':
-        return <Badge className="bg-yellow-500 hover:bg-yellow-600 text-black px-3 py-1 border-none"><AlertCircle className="w-3 h-3 mr-1" /> Service Needed</Badge>
+        return <Badge variant="warning" className="px-3 py-1"><AlertCircle className="w-3 h-3 mr-1" /> Service Needed</Badge>
       case 'broken':
         return <Badge variant="destructive" className="px-3 py-1"><AlertCircle className="w-3 h-3 mr-1" /> Broken</Badge>
       case 'retired':
@@ -96,7 +96,7 @@ export default function InventoryItemDetailPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">{item.name}</h1>
+            <h1 className="text-3xl font-bold tracking-tight font-display">{item.name}</h1>
             <p className="text-muted-foreground">{item.category}</p>
           </div>
         </div>
@@ -162,7 +162,7 @@ export default function InventoryItemDetailPage() {
               </div>
               <div className="w-full bg-muted rounded-full h-2">
                 <div
-                  className={`h-2 rounded-full ${item.current_usage_hours / item.max_usage_hours > 0.9 ? 'bg-red-500' : 'bg-blue-500'}`}
+                  className={`h-2 rounded-full ${item.current_usage_hours / item.max_usage_hours > 0.9 ? 'bg-destructive' : 'bg-info'}`}
                   style={{ width: `${Math.min((item.current_usage_hours / item.max_usage_hours) * 100, 100)}%` }}
                 ></div>
               </div>
@@ -215,7 +215,7 @@ export default function InventoryItemDetailPage() {
                     <>
                       {new Date(item.warranty_expiry).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                       {new Date(item.warranty_expiry) < new Date() && (
-                        <Badge variant="outline" className="ml-2 text-destructive border-destructive text-[10px] h-4">Expired</Badge>
+                        <Badge variant="destructive" className="ml-2 text-[10px] h-4">Expired</Badge>
                       )}
                     </>
                   ) : 'N/A'}
@@ -255,7 +255,7 @@ export default function InventoryItemDetailPage() {
             <div className="space-y-4">
               <div className="p-4 bg-muted rounded-lg flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Activity className="h-5 w-5 text-blue-500" />
+                  <Activity className="h-5 w-5 text-info" />
                   <div>
                     <div className="text-sm font-medium">Last maintenance performed</div>
                     <div className="text-xs text-muted-foreground">

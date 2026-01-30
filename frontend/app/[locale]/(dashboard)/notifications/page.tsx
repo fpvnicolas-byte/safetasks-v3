@@ -29,20 +29,20 @@ export default function NotificationsPage() {
 
   const getNotificationIcon = (type: string) => {
     const icons = {
-      info: <Info className="h-4 w-4 text-blue-600" />,
-      success: <Check className="h-4 w-4 text-green-600" />,
-      warning: <AlertCircle className="h-4 w-4 text-yellow-600" />,
-      error: <X className="h-4 w-4 text-red-600" />
+      info: <Info className="h-4 w-4 text-info-foreground" />,
+      success: <Check className="h-4 w-4 text-success-foreground" />,
+      warning: <AlertCircle className="h-4 w-4 text-warning-foreground" />,
+      error: <X className="h-4 w-4 text-destructive" />
     }
     return icons[type as keyof typeof icons] || icons.info
   }
 
   const getNotificationColor = (type: string) => {
     const colors = {
-      info: 'bg-blue-100 text-blue-800 border-blue-200',
-      success: 'bg-green-100 text-green-800 border-green-200',
-      warning: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      error: 'bg-red-100 text-red-800 border-red-200'
+      info: 'bg-info text-info-foreground border-info/30',
+      success: 'bg-success text-success-foreground border-success/30',
+      warning: 'bg-warning text-warning-foreground border-warning/30',
+      error: 'bg-destructive/15 text-destructive border-destructive/30'
     }
     return colors[type as keyof typeof colors] || colors.info
   }
@@ -59,12 +59,12 @@ export default function NotificationsPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
           <p className="text-muted-foreground">{t('unableToLoad')}</p>
         </div>
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center gap-3 text-red-600">
+            <div className="flex items-center gap-3 text-destructive">
               <AlertCircle className="h-5 w-5" />
               <span>{t('failedToLoad', { message: error.message })}</span>
               <Button
@@ -86,7 +86,7 @@ export default function NotificationsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+        <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
         <p className="text-muted-foreground">
           {t('description')}
         </p>
@@ -111,7 +111,7 @@ export default function NotificationsPage() {
               <BellRing className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-600">{stats.unread_count}</div>
+              <div className="text-2xl font-bold text-warning">{stats.unread_count}</div>
             </CardContent>
           </Card>
 
@@ -181,56 +181,107 @@ export default function NotificationsPage() {
             </div>
           ) : notifications && notifications.length > 0 ? (
             <div className="space-y-4">
-              {notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`p-4 rounded-lg border transition-all ${!notification.is_read
-                    ? 'bg-orange-50 border-orange-200 dark:bg-orange-900/20'
-                    : 'bg-muted/50 border-transparent'
-                    }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3 flex-1">
-                      <div className={`p-2 rounded-full ${getNotificationColor(notification.type)}`}>
-                        {getNotificationIcon(notification.type)}
+              {notifications.map((notification) => {
+                // Translation logic
+                const tMessages = useTranslations('notifications.messages')
+
+                // Helper to get translated text or fallback to original
+                const getTranslatedContent = (key: string, defaultText: string, metadata: any) => {
+                  // Check if the text mimics a key structure (e.g. contains underscores, no spaces)
+                  // or checks if the key exists in our known keys list
+                  // A simpler approach is to try to translate and if it returns the key, use default
+                  // But next-intl returns the key if missing.
+
+                  // For this specific implementation, we'll try to translate if the text is likely a key
+                  // OR simply try to translate and check if the result is different from the key
+                  // BUT next-intl namespaces make this tricky.
+
+                  // Let's check if the defaultText matches one of our known keys
+                  // We can't easily check "has" with nested keys in all versions, 
+                  // so we'll check if the translation is different from the key path
+
+                  // Better approach for this project:
+                  // The backend sends keys like "welcome_title". 
+                  // If we try tMessages('welcome_title'), it returns "Welcome to SafeTasks...".
+                  // If we try tMessages('Some random text'), it returns "notifications.messages.Some random text".
+
+                  // However, strict mode might throw errors. 
+                  // Let's assume if the backend sends a key, it matches our schema.
+
+                  // To be safe and support legacy/AI notifications, we can check if the text contains spaces.
+                  // Keys usually don't have spaces.
+                  const isLikelyKey = !defaultText.includes(' ') && defaultText.length < 50;
+
+                  if (isLikelyKey) {
+                    try {
+                      // We need to handle potential missing keys gracefully to avoid UI crashes
+                      // relying on next-intl's behavior to return the key if missing
+                      const translated = tMessages(defaultText as any, metadata || {});
+                      // If the translated text is just the key (with full namespace), fallback
+                      if (translated.includes('notifications.messages.')) return defaultText;
+                      return translated;
+                    } catch (e) {
+                      return defaultText;
+                    }
+                  }
+
+                  return defaultText;
+                };
+
+                const title = getTranslatedContent(notification.title, notification.title, notification.metadata);
+                const message = getTranslatedContent(notification.message, notification.message, notification.metadata);
+
+                return (
+                  <div
+                    key={notification.id}
+                    className={`p-4 rounded-lg border transition-all ${!notification.is_read
+                      ? 'bg-warning/10 border-warning/30'
+                      : 'bg-muted/50 border-transparent'
+                      }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-3 flex-1">
+                        <div className={`p-2 rounded-full ${getNotificationColor(notification.type)}`}>
+                          {getNotificationIcon(notification.type)}
+                        </div>
+
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold">{title}</h3>
+                            {!notification.is_read && (
+                              <Badge variant="secondary" className="text-xs">
+                                {t('list.newBadge')}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            {message}
+                          </p>
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                            </span>
+                            <span className="capitalize">{notification.type}</span>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold">{notification.title}</h3>
-                          {!notification.is_read && (
-                            <Badge variant="secondary" className="text-xs">
-                              {t('list.newBadge')}
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {notification.message}
-                        </p>
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
-                          </span>
-                          <span className="capitalize">{notification.type}</span>
-                        </div>
-                      </div>
+                      {!notification.is_read && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleMarkAsRead(notification.id)}
+                          disabled={markAsRead.isPending}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
-
-                    {!notification.is_read && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleMarkAsRead(notification.id)}
-                        disabled={markAsRead.isPending}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Check className="h-4 w-4" />
-                      </Button>
-                    )}
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">

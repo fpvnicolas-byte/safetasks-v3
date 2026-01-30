@@ -11,7 +11,7 @@ export interface Notification {
   message: string
   type: 'info' | 'success' | 'warning' | 'error'
   is_read: boolean
-  metadata: string | null
+  metadata: any | null
   created_at: string
   read_at: string | null
 }

@@ -61,7 +61,7 @@ export default function BankAccountsPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Bank Accounts</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">Bank Accounts</h1>
           <p className="text-muted-foreground">Loading bank accounts...</p>
         </div>
       </div>
@@ -72,7 +72,7 @@ export default function BankAccountsPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Bank Accounts</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">Bank Accounts</h1>
           <p className="text-destructive">Failed to load bank accounts. Please try again.</p>
         </div>
       </div>
@@ -83,7 +83,7 @@ export default function BankAccountsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Bank Accounts</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">Bank Accounts</h1>
           <p className="text-muted-foreground">
             Manage your company bank accounts and track balances
           </p>
@@ -175,7 +175,7 @@ export default function BankAccountsPage() {
                   <div className="flex-1">
                     <CardTitle className="text-lg">{account.name}</CardTitle>
                     <CardDescription className="mt-1">
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                      <Badge variant="info">
                         {account.currency}
                       </Badge>
                     </CardDescription>
@@ -186,10 +186,10 @@ export default function BankAccountsPage() {
                 <div className="space-y-4">
                   {/* Balance Display */}
                   <div className="flex items-baseline gap-2">
-                    <TrendingUp className={`h-5 w-5 ${account.balance_cents >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                    <TrendingUp className={`h-5 w-5 ${account.balance_cents >= 0 ? 'text-success' : 'text-destructive'}`} />
                     <div>
                       <p className="text-xs text-muted-foreground">Current Balance</p>
-                      <p className={`text-2xl font-bold ${account.balance_cents >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      <p className={`text-2xl font-bold ${account.balance_cents >= 0 ? 'text-success' : 'text-destructive'}`}>
                         {formatCurrency(account.balance_cents, account.currency)}
                       </p>
                     </div>
@@ -212,7 +212,7 @@ export default function BankAccountsPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleDeleteAccount(account.id, account.name)}
-                      className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

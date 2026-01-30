@@ -41,17 +41,17 @@ export default function AiRecommendationsPage() {
   const { data: recommendations, isLoading: isLoadingRecommendations } = useAiRecommendations(selectedProjectId)
 
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.9) return 'bg-green-100 text-green-800'
-    if (confidence >= 0.7) return 'bg-yellow-100 text-yellow-800'
-    return 'bg-red-100 text-red-800'
+    if (confidence >= 0.9) return 'bg-success/15 text-success'
+    if (confidence >= 0.7) return 'bg-warning/20 text-warning-foreground'
+    return 'bg-destructive/15 text-destructive'
   }
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800'
-      case 'medium': return 'bg-yellow-100 text-yellow-800'
-      case 'low': return 'bg-green-100 text-green-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'high': return 'bg-destructive/15 text-destructive'
+      case 'medium': return 'bg-warning/20 text-warning-foreground'
+      case 'low': return 'bg-success/15 text-success'
+      default: return 'bg-secondary text-secondary-foreground'
     }
   }
 
@@ -115,7 +115,7 @@ export default function AiRecommendationsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('recommendations.pageTitle')}</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('recommendations.pageTitle')}</h1>
           <p className="text-muted-foreground">
             {t('recommendations.pageSubtitle')}
           </p>
@@ -214,24 +214,24 @@ export default function AiRecommendationsPage() {
               <div className="space-y-3">
                 <h4 className="font-semibold">{t('recommendations.stats.title')}</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="bg-gray-100 p-2 rounded">
-                    <span className="text-gray-600">{t('recommendations.stats.total')}</span>
+                  <div className="bg-muted/60 p-2 rounded">
+                    <span className="text-muted-foreground">{t('recommendations.stats.total')}</span>
                     <div className="font-bold">{recommendations.length}</div>
                   </div>
-                  <div className="bg-red-100 p-2 rounded">
-                    <span className="text-red-600">{t('recommendations.stats.highPriority')}</span>
+                  <div className="bg-destructive/10 p-2 rounded">
+                    <span className="text-destructive">{t('recommendations.stats.highPriority')}</span>
                     <div className="font-bold">
                       {recommendations.filter((r: AiRecommendation) => r.priority === 'high').length}
                     </div>
                   </div>
-                  <div className="bg-yellow-100 p-2 rounded">
-                    <span className="text-yellow-600">{t('recommendations.stats.mediumPriority')}</span>
+                  <div className="bg-warning/20 p-2 rounded">
+                    <span className="text-warning-foreground">{t('recommendations.stats.mediumPriority')}</span>
                     <div className="font-bold">
                       {recommendations.filter((r: AiRecommendation) => r.priority === 'medium').length}
                     </div>
                   </div>
-                  <div className="bg-green-100 p-2 rounded">
-                    <span className="text-green-600">{t('recommendations.stats.avgConfidence')}</span>
+                  <div className="bg-success/15 p-2 rounded">
+                    <span className="text-success">{t('recommendations.stats.avgConfidence')}</span>
                     <div className="font-bold">
                       {recommendations.length > 0
                         ? Math.round(recommendations.reduce((acc: number, r: AiRecommendation) => acc + r.confidence, 0) / recommendations.length * 100)
@@ -269,7 +269,7 @@ export default function AiRecommendationsPage() {
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-gray-100 rounded-full">
+                          <div className="p-2 bg-muted rounded-full">
                             {getRecommendationIcon(recommendation.recommendation_type)}
                           </div>
                           <div>
@@ -307,7 +307,7 @@ export default function AiRecommendationsPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div>
                           <h4 className="font-semibold mb-2 flex items-center gap-2">
-                            <Target className="h-4 w-4 text-green-600" />
+                            <Target className="h-4 w-4 text-destructive" />
                             Action Items
                           </h4>
                           <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
@@ -318,7 +318,7 @@ export default function AiRecommendationsPage() {
                         </div>
                         <div>
                           <h4 className="font-semibold mb-2 flex items-center gap-2">
-                            <TrendingUp className="h-4 w-4 text-blue-600" />
+                            <TrendingUp className="h-4 w-4 text-info" />
                             Estimated Impact
                           </h4>
                           <div className="space-y-1 text-sm text-muted-foreground">
@@ -346,7 +346,7 @@ export default function AiRecommendationsPage() {
                         </div>
                         <div>
                           <h4 className="font-semibold mb-2 flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-purple-600" />
+                            <Clock className="h-4 w-4 text-muted-foreground" />
                             Created
                           </h4>
                           <div className="text-sm text-muted-foreground">
@@ -361,10 +361,10 @@ export default function AiRecommendationsPage() {
             ) : (
               <div className="text-center py-8">
                 <div className="flex justify-center mb-4">
-                  <CheckCircle className="h-12 w-12 text-gray-400" />
+                  <CheckCircle className="h-12 w-12 text-muted-foreground/60" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('recommendations.noRecommendations.title')}</h3>
-                <p className="text-gray-600 mb-4">
+                <h3 className="text-lg font-semibold text-foreground mb-2">{t('recommendations.noRecommendations.title')}</h3>
+                <p className="text-muted-foreground mb-4">
                   {selectedProjectId
                     ? t('recommendations.noRecommendations.description')
                     : t('recommendations.noRecommendations.selectProject')
@@ -373,7 +373,6 @@ export default function AiRecommendationsPage() {
                 {selectedProjectId && (
                   <Button
                     onClick={() => router.push('/ai/script-analysis')}
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                   >
                     <Sparkles className="mr-2 h-4 w-4" />
                     {t('actions.generateSuggestions')}
@@ -399,10 +398,10 @@ export default function AiRecommendationsPage() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-red-600" />
+                    <AlertTriangle className="h-4 w-4 text-destructive" />
                     <CardTitle className="text-sm font-medium">High Priority</CardTitle>
                   </div>
-                  <div className="text-2xl font-bold text-red-600">
+                  <div className="text-2xl font-bold text-destructive">
                     {recommendations.filter((r: AiRecommendation) => r.priority === 'high').length}
                   </div>
                 </CardHeader>
@@ -415,10 +414,10 @@ export default function AiRecommendationsPage() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-yellow-600" />
+                    <Clock className="h-4 w-4 text-warning-foreground" />
                     <CardTitle className="text-sm font-medium">Medium Priority</CardTitle>
                   </div>
-                  <div className="text-2xl font-bold text-yellow-600">
+                  <div className="text-2xl font-bold text-warning-foreground">
                     {recommendations.filter((r: AiRecommendation) => r.priority === 'medium').length}
                   </div>
                 </CardHeader>
@@ -431,10 +430,10 @@ export default function AiRecommendationsPage() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-green-600" />
+                    <TrendingUp className="h-4 w-4 text-success" />
                     <CardTitle className="text-sm font-medium">Low Priority</CardTitle>
                   </div>
-                  <div className="text-2xl font-bold text-green-600">
+                  <div className="text-2xl font-bold text-success">
                     {recommendations.filter((r: AiRecommendation) => r.priority === 'low').length}
                   </div>
                 </CardHeader>
@@ -461,7 +460,7 @@ export default function AiRecommendationsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-600" />
+                <CheckCircle className="h-4 w-4 text-success" />
                 <span className="font-semibold">{t('recommendations.guide.highPriority')}</span>
               </div>
               <p className="text-sm text-muted-foreground">
@@ -470,7 +469,7 @@ export default function AiRecommendationsPage() {
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Target className="h-4 w-4 text-blue-600" />
+                <Target className="h-4 w-4 text-info" />
                 <span className="font-semibold">{t('recommendations.guide.actionItems')}</span>
               </div>
               <p className="text-sm text-muted-foreground">
@@ -479,7 +478,7 @@ export default function AiRecommendationsPage() {
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-purple-600" />
+                <TrendingUp className="h-4 w-4 text-success" />
                 <span className="font-semibold">{t('recommendations.guide.trackImpact')}</span>
               </div>
               <p className="text-sm text-muted-foreground">

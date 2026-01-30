@@ -313,7 +313,7 @@ export default function ProjectDetailPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">{t('details.financials.remaining')}</span>
-                  <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                  <span className="text-lg font-bold text-success">
                     {formatCurrency(project.budget_total_cents)}
                   </span>
                 </div>

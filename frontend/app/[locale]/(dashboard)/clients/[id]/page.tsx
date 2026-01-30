@@ -74,14 +74,14 @@ export default function ClientViewPage({ params }: { params: Promise<{ id: strin
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{client.name}</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{client.name}</h1>
           <div className="mt-2">
             {client.is_active ? (
-              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              <Badge variant="success">
                 Active
               </Badge>
             ) : (
-              <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+              <Badge variant="outline">
                 Inactive
               </Badge>
             )}

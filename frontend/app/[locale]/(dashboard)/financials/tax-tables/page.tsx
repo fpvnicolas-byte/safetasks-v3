@@ -170,13 +170,9 @@ export default function TaxTablesPage() {
 
                   <div className="flex items-center">
                     {taxTable.is_active ? (
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                        Active
-                      </Badge>
+                      <Badge variant="success">Active</Badge>
                     ) : (
-                      <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
-                        Inactive
-                      </Badge>
+                      <Badge variant="outline">Inactive</Badge>
                     )}
                   </div>
                 </div>
@@ -192,7 +188,7 @@ export default function TaxTablesPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => handleDeleteTaxTable(taxTable.id, taxTable.name)}
-                    className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

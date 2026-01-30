@@ -52,19 +52,26 @@ export default function SuppliersPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
-          <p className="text-muted-foreground">
-            {t('description')}
-          </p>
+      <div className="rounded-xl border bg-card/60 px-6 py-5">
+        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          Procurement / Vendors
         </div>
-        <Button asChild>
-          <Link href="/suppliers/new">
-            <Plus className="mr-2 h-4 w-4" />
-            {t('newSupplier')}
-          </Link>
-        </Button>
+        <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight font-display">
+              {t('title')}
+            </h1>
+            <p className="text-muted-foreground">
+              {t('description')}
+            </p>
+          </div>
+          <Button asChild>
+            <Link href="/suppliers/new">
+              <Plus className="mr-2 h-4 w-4" />
+              {t('newSupplier')}
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -188,11 +195,11 @@ interface SupplierCardProps {
 
 function SupplierCard({ supplier, onDelete, t }: SupplierCardProps) {
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader>
+    <Card className="h-full hover:shadow-md transition-shadow">
+      <CardHeader className="min-h-[96px]">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="text-lg flex items-center gap-2 line-clamp-1">
               {supplier.name}
               {!supplier.is_active && (
                 <Badge variant="outline" className="text-xs">{t('card.inactive')}</Badge>
@@ -207,7 +214,7 @@ function SupplierCard({ supplier, onDelete, t }: SupplierCardProps) {
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className="flex h-full flex-col gap-4">
         <div className="space-y-2 text-sm">
           {supplier.email && (
             <div className="flex items-center gap-2">
@@ -224,7 +231,7 @@ function SupplierCard({ supplier, onDelete, t }: SupplierCardProps) {
         </div>
 
         {supplier.total_transactions > 0 && (
-          <div className="pt-2 border-t">
+          <div className="pt-2 border-t mt-auto">
             <div className="text-xs text-muted-foreground">{t('card.transactionSummary')}</div>
             <div className="flex items-baseline justify-between mt-1">
               <span className="text-sm">{supplier.total_transactions !== 1 ? t('card.transaction_other', { count: supplier.total_transactions }) : t('card.transaction', { count: 1 })}</span>
@@ -233,7 +240,7 @@ function SupplierCard({ supplier, onDelete, t }: SupplierCardProps) {
           </div>
         )}
 
-        <div className="flex gap-2 pt-2">
+        <div className="flex gap-2 pt-2 mt-auto">
           <Button asChild variant="outline" size="sm" className="flex-1">
             <Link href={`/suppliers/${supplier.id}`}>
               <Eye className="mr-2 h-3 w-3" />
@@ -250,7 +257,7 @@ function SupplierCard({ supplier, onDelete, t }: SupplierCardProps) {
             variant="outline"
             size="sm"
             onClick={onDelete}
-            className="text-destructive hover:text-destructive"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
           >
             <Trash2 className="h-3 w-3" />
           </Button>

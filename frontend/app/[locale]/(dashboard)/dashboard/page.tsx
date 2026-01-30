@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useExecutiveDashboard } from '@/lib/api/hooks/useAnalytics'
 import { useProjects } from '@/lib/api/hooks'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Loader2, DollarSign, TrendingUp, Package, Cloud, FolderOpen } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils/money'
 import { RevenueChart } from '@/components/dashboard/RevenueChart'
@@ -50,7 +51,7 @@ export default function DashboardPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
           <p className="text-muted-foreground">{t('welcome', { email: user?.email ?? '' })}</p>
         </div>
 
@@ -73,7 +74,7 @@ export default function DashboardPage() {
         </div>
 
         {error && (
-          <Card className="border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950">
+          <Card className="border-warning/30 bg-warning/10">
             <CardHeader>
               <CardTitle className="text-sm">{t('analyticsUnavailable')}</CardTitle>
               <CardDescription>
@@ -89,11 +90,22 @@ export default function DashboardPage() {
   // Full analytics dashboard
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">{t('title')}</h1>
-        <p className="text-sm sm:text-base lg:text-lg text-muted-foreground">
-          {t('welcome', { email: user?.email ?? '' })}
-        </p>
+      <div className="rounded-xl border bg-card/60 px-6 py-5">
+        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          Dashboard / Overview
+        </div>
+        <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight font-display">{t('title')}</h1>
+            <p className="text-sm sm:text-base lg:text-lg text-muted-foreground">
+              {t('welcome', { email: user?.email ?? '' })}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline">Export</Button>
+            <Button>Create report</Button>
+          </div>
+        </div>
       </div>
 
       {/* Financial Overview Cards */}
@@ -119,7 +131,7 @@ export default function DashboardPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${dashboard.financial.month_to_date.net_profit_cents >= 0 ? 'text-green-600' : 'text-red-600'
+            <div className={`text-2xl font-bold ${dashboard.financial.month_to_date.net_profit_cents >= 0 ? 'text-success' : 'text-destructive'
               }`}>
               {formatCurrency(dashboard.financial.month_to_date.net_profit_cents)}
             </div>
@@ -185,10 +197,10 @@ export default function DashboardPage() {
                 <CardDescription>{t('cloudSyncDesc')}</CardDescription>
               </div>
               <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${dashboard.cloud.cloud_health_status === 'healthy'
-                ? 'bg-green-100 text-green-700'
+                ? 'bg-success/15 text-success'
                 : dashboard.cloud.cloud_health_status === 'warning'
-                  ? 'bg-yellow-100 text-yellow-700'
-                  : 'bg-red-100 text-red-700'
+                  ? 'bg-warning/20 text-warning-foreground'
+                  : 'bg-destructive/15 text-destructive'
                 }`}>
                 <Cloud className="h-4 w-4" />
                 {t(dashboard.cloud.cloud_health_status)}

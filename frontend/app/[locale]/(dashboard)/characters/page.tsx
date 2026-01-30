@@ -24,19 +24,24 @@ export default function CharactersPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
-          <p className="text-muted-foreground">
-            {t('description')}
-          </p>
+      <div className="rounded-xl border bg-card/60 px-6 py-5">
+        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          Cast / Characters
         </div>
-        <Button asChild disabled={!selectedProjectId}>
-          <Link href={selectedProjectId ? `/characters/new?project=${selectedProjectId}` : '#'}>
-            <Plus className="mr-2 h-4 w-4" />
-            {t('newCharacter')}
-          </Link>
-        </Button>
+        <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
+            <p className="text-muted-foreground">
+              {t('description')}
+            </p>
+          </div>
+          <Button asChild disabled={!selectedProjectId}>
+            <Link href={selectedProjectId ? `/characters/new?project=${selectedProjectId}` : '#'}>
+              <Plus className="mr-2 h-4 w-4" />
+              {t('newCharacter')}
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Project Selection */}
@@ -65,7 +70,10 @@ export default function CharactersPage() {
             </Select>
           ) : (
             <div className="text-sm text-muted-foreground">
-              {t('projectSelection.noProjects')} <Link href="/projects/new" className="text-blue-600 hover:underline">{t('projectSelection.createFirst')}</Link>
+              {t('projectSelection.noProjects')}{' '}
+              <Link href="/projects/new" className="text-info hover:underline">
+                {t('projectSelection.createFirst')}
+              </Link>
             </div>
           )}
         </CardContent>
@@ -82,7 +90,7 @@ export default function CharactersPage() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {characters.map((character) => (
                 <Link key={character.id} href={`/characters/${character.id}`}>
-                  <Card className="hover:bg-slate-50 transition-colors cursor-pointer">
+                  <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
                     <CardHeader>
                       <CardTitle className="text-lg">{character.name}</CardTitle>
                       {character.actor_name && (

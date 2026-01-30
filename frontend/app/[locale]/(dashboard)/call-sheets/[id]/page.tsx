@@ -17,10 +17,10 @@ import { useLocale, useTranslations } from 'next-intl'
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
 
-const statusColors = {
-  draft: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
-  confirmed: 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200',
-  completed: 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200',
+const statusVariant: Record<string, 'secondary' | 'success' | 'info'> = {
+  draft: 'secondary',
+  confirmed: 'success',
+  completed: 'info',
 }
 
 export default function CallSheetDetailPage() {
@@ -83,7 +83,7 @@ export default function CallSheetDetailPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-3xl font-bold tracking-tight font-display">
             {t('title')} - {callSheet.project_id}
           </h1>
           <p className="text-muted-foreground">
@@ -123,7 +123,7 @@ export default function CallSheetDetailPage() {
 
       {/* Status Badge */}
       <div className="flex items-center gap-4">
-        <Badge className={statusColors[callSheet.status]}>
+        <Badge variant={statusVariant[callSheet.status] ?? 'secondary'}>
           {t(`status.${callSheet.status}`)}
         </Badge>
         <span className="text-sm text-muted-foreground">
@@ -197,9 +197,9 @@ export default function CallSheetDetailPage() {
 
       {/* Emergency Information */}
       {callSheet.hospital_info && (
-        <Card className="border-red-200 dark:border-red-800">
+        <Card className="border-destructive/30 bg-destructive/5">
           <CardHeader>
-            <CardTitle className="text-red-700 dark:text-red-400">
+            <CardTitle className="text-destructive">
               🚨 {t('emergencyInfo')}
             </CardTitle>
           </CardHeader>

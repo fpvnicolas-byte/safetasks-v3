@@ -21,12 +21,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { InvoiceStatus } from '@/types'
 import { useLocale } from 'next-intl'
 
-const statusColors: Record<InvoiceStatus, string> = {
-  draft: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
-  sent: 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200',
-  paid: 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200',
-  overdue: 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200',
-  canceled: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400',
+const statusVariant: Record<InvoiceStatus, 'secondary' | 'info' | 'success' | 'destructive' | 'outline'> = {
+  draft: 'secondary',
+  sent: 'info',
+  paid: 'success',
+  overdue: 'destructive',
+  canceled: 'outline',
 }
 
 export default function InvoiceDetailPage() {
@@ -88,7 +88,7 @@ export default function InvoiceDetailPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
+            <h1 className="text-3xl font-bold tracking-tight font-display">
               Invoice #{invoice.invoice_number}
             </h1>
             <p className="text-muted-foreground">
@@ -123,7 +123,7 @@ export default function InvoiceDetailPage() {
       {/* Status and Actions */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Badge className={`${statusColors[invoice.status as InvoiceStatus]} text-lg px-4 py-2`}>
+          <Badge variant={statusVariant[invoice.status as InvoiceStatus]} className="text-lg px-4 py-2">
             {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
           </Badge>
           {isOverdue && (
@@ -183,7 +183,7 @@ export default function InvoiceDetailPage() {
                 </div>
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">Due Date</div>
-                  <div className={isOverdue ? 'text-red-600 dark:text-red-400 font-medium' : ''}>
+                  <div className={isOverdue ? 'text-destructive font-medium' : ''}>
                     {dueDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                     {isOverdue && ' (Overdue)'}
                   </div>
@@ -265,7 +265,7 @@ export default function InvoiceDetailPage() {
                 <>
                   <Separator />
                   <div className="text-center">
-                    <Badge className="bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200">
+                    <Badge variant="success">
                       Paid on {paidDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                     </Badge>
                   </div>
@@ -283,7 +283,7 @@ export default function InvoiceDetailPage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Status</span>
-                  <Badge className={statusColors[invoice.status as InvoiceStatus]}>
+                  <Badge variant={statusVariant[invoice.status as InvoiceStatus]}>
                     {invoice.status}
                   </Badge>
                 </div>
@@ -299,7 +299,7 @@ export default function InvoiceDetailPage() {
 
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Days Until Due</span>
-                  <span className={`text-sm ${isOverdue ? 'text-red-600 dark:text-red-400 font-medium' : ''}`}>
+                  <span className={`text-sm ${isOverdue ? 'text-destructive font-medium' : ''}`}>
                     {Math.ceil((dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days
                   </span>
                 </div>

@@ -64,7 +64,7 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Transaction Details</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">Transaction Details</h1>
           <p className="text-muted-foreground">Loading transaction...</p>
         </div>
       </div>
@@ -75,7 +75,7 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Transaction Details</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">Transaction Details</h1>
           <p className="text-destructive">Failed to load transaction. Please try again.</p>
         </div>
         <Button asChild>
@@ -115,16 +115,16 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               {transaction.type === 'income' ? (
-                <ArrowUpCircle className="h-10 w-10 text-green-600" />
+                <ArrowUpCircle className="h-10 w-10 text-success" />
               ) : (
-                <ArrowDownCircle className="h-10 w-10 text-red-600" />
+                <ArrowDownCircle className="h-10 w-10 text-destructive" />
               )}
               <div>
                 <CardTitle className="text-2xl">
                   {transaction.description || 'Untitled Transaction'}
                 </CardTitle>
                 <CardDescription className="flex items-center gap-2 mt-1">
-                  <Badge variant="outline" className={transaction.type === 'income' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}>
+                  <Badge variant={transaction.type === 'income' ? 'success' : 'destructive'}>
                     {transaction.type}
                   </Badge>
                   <Badge variant="secondary">
@@ -133,7 +133,7 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
                 </CardDescription>
               </div>
             </div>
-            <div className={`text-3xl font-bold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`text-3xl font-bold ${transaction.type === 'income' ? 'text-success' : 'text-destructive'}`}>
               {transaction.type === 'income' ? '+' : '-'}
               {formatCurrency(transaction.amount_cents, transaction.bank_account?.currency || 'BRL')}
             </div>

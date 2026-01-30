@@ -142,7 +142,7 @@ export default function EditBankAccountPage({ params }: { params: Promise<{ id: 
         <Card className="max-w-2xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-yellow-600" />
+              <Shield className="h-5 w-5 text-warning-foreground" />
               Administrator Access Required
             </CardTitle>
             <CardDescription>
@@ -190,7 +190,7 @@ export default function EditBankAccountPage({ params }: { params: Promise<{ id: 
             {/* Current Balance Display */}
             <div className="rounded-lg border p-4 bg-muted/50">
               <h4 className="text-sm font-medium mb-1">Current Balance</h4>
-              <p className={`text-2xl font-bold ${account.balance_cents >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <p className={`text-2xl font-bold ${account.balance_cents >= 0 ? 'text-success' : 'text-destructive'}`}>
                 {formatCurrency(account.balance_cents, account.currency)}
               </p>
               <p className="text-xs text-muted-foreground mt-2">

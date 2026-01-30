@@ -78,7 +78,7 @@ export default function AiCallSheetSuggestionsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('callSheetSuggestions.pageTitle')}</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('callSheetSuggestions.pageTitle')}</h1>
           <p className="text-muted-foreground">
             {t('callSheetSuggestions.pageSubtitle')}
           </p>
@@ -92,7 +92,6 @@ export default function AiCallSheetSuggestionsPage() {
           </Button>
           <Button
             onClick={() => router.push('/ai/script-analysis')}
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
           >
             <Sparkles className="mr-2 h-4 w-4" />
             {t('actions.analyzeScript')}
@@ -252,9 +251,9 @@ export default function AiCallSheetSuggestionsPage() {
             </div>
 
             {/* Suggestion Tips */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-              <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">{t('callSheetSuggestions.tips.title')}</h4>
-              <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+            <div className="bg-info/10 p-4 rounded-lg">
+              <h4 className="font-semibold text-info mb-2">{t('callSheetSuggestions.tips.title')}</h4>
+              <ul className="text-sm text-info-foreground space-y-1">
                 <li>• {t('callSheetSuggestions.tips.location')}</li>
                 <li>• {t('callSheetSuggestions.tips.cast')}</li>
                 <li>• {t('callSheetSuggestions.tips.weather')}</li>
@@ -277,40 +276,40 @@ export default function AiCallSheetSuggestionsPage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+              <div className="bg-muted/60 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="h-4 w-4 text-gray-600" />
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">Scenes</span>
                 </div>
                 <div className="text-2xl font-bold">{scriptText.match(/INT\.|EXT\./g)?.length || 0}</div>
-                <div className="text-xs text-gray-500">{t('callSheetSuggestions.analysisPreview.estimatedScenes')}</div>
+                <div className="text-xs text-muted-foreground">{t('callSheetSuggestions.analysisPreview.estimatedScenes')}</div>
               </div>
 
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+              <div className="bg-muted/60 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  <Users className="h-4 w-4 text-gray-600" />
+                  <Users className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">Characters</span>
                 </div>
                 <div className="text-2xl font-bold">{scriptText.match(/\b[A-Z][A-Z\s]+\b/g)?.length || 0}</div>
-                <div className="text-xs text-gray-500">{t('callSheetSuggestions.analysisPreview.estimatedCharacters')}</div>
+                <div className="text-xs text-muted-foreground">{t('callSheetSuggestions.analysisPreview.estimatedCharacters')}</div>
               </div>
 
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+              <div className="bg-muted/60 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  <MapPin className="h-4 w-4 text-gray-600" />
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">Locations</span>
                 </div>
                 <div className="text-2xl font-bold">{scriptText.match(/INT\. [A-Z]|EXT\. [A-Z]/g)?.length || 0}</div>
-                <div className="text-xs text-gray-500">{t('callSheetSuggestions.analysisPreview.estimatedLocations')}</div>
+                <div className="text-xs text-muted-foreground">{t('callSheetSuggestions.analysisPreview.estimatedLocations')}</div>
               </div>
 
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+              <div className="bg-muted/60 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  <Target className="h-4 w-4 text-gray-600" />
+                  <Target className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">{t('callSheetSuggestions.settings.suggestionTypeLabel')}</span>
                 </div>
                 <div className="text-2xl font-bold capitalize">{suggestionType}</div>
-                <div className="text-xs text-gray-500">{t('callSheetSuggestions.analysisPreview.selectedType')}</div>
+                <div className="text-xs text-muted-foreground">{t('callSheetSuggestions.analysisPreview.selectedType')}</div>
               </div>
             </div>
           </CardContent>

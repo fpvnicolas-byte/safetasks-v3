@@ -162,7 +162,7 @@ export default function NewKitPage() {
                 )}
               </div>
               {selectedItems.length > 0 && (
-                <p className="text-xs text-blue-600 font-medium">
+                <p className="text-xs text-info font-medium">
                   {selectedItems.length} item(s) will be reassigned to this new kit.
                 </p>
               )}

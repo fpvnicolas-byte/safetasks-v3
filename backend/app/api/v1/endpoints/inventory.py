@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_organization_from_profile, require_admin_or_manager
+from app.api.deps import get_current_profile, require_admin_or_manager
 from app.db.session import get_db
 from app.services.maintenance import (
     kit_item_service, maintenance_service, inventory_health_service
@@ -20,7 +20,7 @@ router = APIRouter()
 
 @router.get("/items/", response_model=List[KitItem])
 async def get_kit_items(
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -31,6 +31,7 @@ async def get_kit_items(
     """
     Get all kit items for the current user's organization.
     """
+    organization_id = profile.organization_id
     filters = {}
     if kit_id:
         filters["kit_id"] = kit_id
@@ -52,13 +53,14 @@ async def get_kit_items(
 @router.post("/items/", response_model=KitItem, dependencies=[Depends(require_admin_or_manager)])
 async def create_kit_item(
     kit_item_in: KitItemCreate,
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> KitItem:
     """
     Create a new kit item in the current user's organization.
     Only admins and managers can create kit items.
     """
+    organization_id = profile.organization_id
     try:
         kit_item = await kit_item_service.create(
             db=db,
@@ -76,12 +78,13 @@ async def create_kit_item(
 @router.get("/items/{kit_item_id}", response_model=KitItemWithMaintenance)
 async def get_kit_item(
     kit_item_id: UUID,
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> KitItemWithMaintenance:
     """
     Get kit item by ID with maintenance summary.
     """
+    organization_id = profile.organization_id
     kit_item_info = await kit_item_service.get_with_maintenance_info(
         db=db, organization_id=organization_id, kit_item_id=kit_item_id
     )
@@ -101,13 +104,14 @@ async def get_kit_item(
 async def update_kit_item(
     kit_item_id: UUID,
     kit_item_in: KitItemUpdate,
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> KitItem:
     """
     Update kit item (must belong to current user's organization).
     Only admins and managers can update kit items.
     """
+    organization_id = profile.organization_id
     try:
         kit_item = await kit_item_service.update(
             db=db,
@@ -133,13 +137,14 @@ async def update_kit_item(
 @router.delete("/items/{kit_item_id}", response_model=KitItem, dependencies=[Depends(require_admin_or_manager)])
 async def delete_kit_item(
     kit_item_id: UUID,
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> KitItem:
     """
     Delete kit item (must belong to current user's organization).
     Only admins and managers can delete kit items.
     """
+    organization_id = profile.organization_id
     kit_item = await kit_item_service.remove(
         db=db,
         organization_id=organization_id,
@@ -159,7 +164,7 @@ async def delete_kit_item(
 async def create_maintenance_log(
     kit_item_id: UUID,
     maintenance_in: MaintenanceLogCreate,
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> MaintenanceLog:
     """
@@ -167,6 +172,7 @@ async def create_maintenance_log(
     Automatically creates financial transaction if cost > 0.
     Only admins and managers can create maintenance logs.
     """
+    organization_id = profile.organization_id
     try:
         maintenance_log = await maintenance_service.create_maintenance_log(
             db=db,
@@ -185,12 +191,13 @@ async def create_maintenance_log(
 @router.get("/items/{kit_item_id}/history")
 async def get_maintenance_history(
     kit_item_id: UUID,
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> KitItemMaintenanceHistory:
     """
     Get complete maintenance history for a kit item.
     """
+    organization_id = profile.organization_id
     try:
         history = await maintenance_service.get_maintenance_history(
             db=db,
@@ -207,13 +214,14 @@ async def get_maintenance_history(
 
 @router.get("/health-report")
 async def get_inventory_health_report(
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> InventoryHealthReport:
     """
     Get comprehensive inventory health report.
     Shows items by health status, maintenance needs, and usage alerts.
     """
+    organization_id = profile.organization_id
     try:
         report = await inventory_health_service.generate_health_report(
             db=db,
@@ -230,13 +238,14 @@ async def get_inventory_health_report(
 @router.post("/check-alerts", dependencies=[Depends(require_admin_or_manager)])
 async def check_inventory_alerts(
     background_tasks: BackgroundTasks,
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
     """
     Manually trigger inventory health check and send alerts for maintenance issues.
     Only admins and managers can trigger alerts.
     """
+    organization_id = profile.organization_id
     try:
         # Run health check and send alerts
         alert_result = await inventory_health_service.check_and_send_alerts(
@@ -260,7 +269,7 @@ async def check_inventory_alerts(
 
 @router.get("/maintenance/", response_model=List[MaintenanceLog])
 async def get_maintenance_logs(
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -270,6 +279,7 @@ async def get_maintenance_logs(
     """
     Get all maintenance logs for the current user's organization.
     """
+    organization_id = profile.organization_id
     filters = {}
     if kit_item_id:
         filters["kit_item_id"] = kit_item_id
@@ -289,12 +299,13 @@ async def get_maintenance_logs(
 @router.get("/maintenance/{maintenance_id}", response_model=MaintenanceLog)
 async def get_maintenance_log(
     maintenance_id: UUID,
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> MaintenanceLog:
     """
     Get maintenance log by ID (must belong to current user's organization).
     """
+    organization_id = profile.organization_id
     maintenance_log = await maintenance_service.get(
         db=db,
         organization_id=organization_id,

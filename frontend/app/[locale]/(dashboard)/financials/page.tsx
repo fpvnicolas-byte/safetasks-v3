@@ -14,12 +14,12 @@ import { formatCurrency } from '@/lib/utils/money'
 import { InvoiceWithItems, InvoiceStatus } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
 
-const statusColors: Record<InvoiceStatus, string> = {
-  draft: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
-  sent: 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200',
-  paid: 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200',
-  overdue: 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200',
-  canceled: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400',
+const statusVariant: Record<InvoiceStatus, 'secondary' | 'info' | 'success' | 'destructive' | 'outline'> = {
+  draft: 'secondary',
+  sent: 'info',
+  paid: 'success',
+  overdue: 'destructive',
+  canceled: 'outline',
 }
 
 export default function FinancialsPage() {
@@ -38,19 +38,24 @@ export default function FinancialsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
-          <p className="text-muted-foreground">
-            {t('description')}
-          </p>
+      <div className="rounded-xl border bg-card/60 px-6 py-5">
+        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          Financials / Overview
         </div>
-        <Button asChild>
-          <Link href="/financials/new-invoice">
-            <Plus className="mr-2 h-4 w-4" />
-            {t('newInvoice')}
-          </Link>
-        </Button>
+        <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
+            <p className="text-muted-foreground">
+              {t('description')}
+            </p>
+          </div>
+          <Button asChild>
+            <Link href="/financials/new-invoice">
+              <Plus className="mr-2 h-4 w-4" />
+              {t('newInvoice')}
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="overview">
@@ -207,7 +212,7 @@ export default function FinancialsPage() {
                           {new Date(transaction.transaction_date).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} • {transaction.category}
                         </div>
                       </div>
-                      <div className={`font-bold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                      <div className={`font-bold ${transaction.type === 'income' ? 'text-success' : 'text-destructive'}`}>
                         {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount_cents)}
                       </div>
                     </div>
@@ -247,7 +252,7 @@ export default function FinancialsPage() {
                           {new Date(expense.transaction_date).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} • {expense.category}
                         </div>
                       </div>
-                      <div className="font-bold text-red-600">
+                      <div className="font-bold text-destructive">
                         -{formatCurrency(expense.amount_cents)}
                       </div>
                     </div>
@@ -306,7 +311,7 @@ function InvoiceCard({ invoice, t, tCommon, locale }: InvoiceCardProps) {
   }
 
   return (
-    <Card className={`hover:shadow-md transition-shadow ${isOverdue ? 'border-red-200 dark:border-red-800' : ''}`}>
+    <Card className={`hover:shadow-md transition-shadow ${isOverdue ? 'border-destructive/30' : ''}`}>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div>
@@ -316,13 +321,13 @@ function InvoiceCard({ invoice, t, tCommon, locale }: InvoiceCardProps) {
             <CardDescription>
               {t('invoicesTab.invoice.issued')} {issueDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} • {t('invoicesTab.invoice.due')} {dueDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
               {isOverdue && (
-                <span className="text-red-600 dark:text-red-400 font-medium ml-2">
+                <span className="text-destructive font-medium ml-2">
                   {t('invoicesTab.invoice.overdue')}
                 </span>
               )}
             </CardDescription>
           </div>
-          <Badge className={statusColors[invoice.status]}>
+          <Badge variant={statusVariant[invoice.status]}>
             {invoice.status}
           </Badge>
         </div>
@@ -369,7 +374,7 @@ function InvoiceCard({ invoice, t, tCommon, locale }: InvoiceCardProps) {
           <Button
             variant="outline"
             size="sm"
-            className="text-destructive hover:text-destructive"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
             onClick={handleDelete}
             disabled={isDeleting}
           >

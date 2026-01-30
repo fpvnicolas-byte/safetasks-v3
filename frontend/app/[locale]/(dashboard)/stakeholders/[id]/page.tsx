@@ -116,7 +116,7 @@ export default function EditStakeholderPage() {
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Edit Stakeholder</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">Edit Stakeholder</h1>
           <p className="text-muted-foreground">Update stakeholder information</p>
         </div>
       </div>
@@ -130,7 +130,7 @@ export default function EditStakeholderPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="project_id">
-                Project <span className="text-red-500">*</span>
+                Project <span className="text-destructive">*</span>
               </Label>
               <Select
                 value={formData.project_id}
@@ -151,7 +151,7 @@ export default function EditStakeholderPage() {
 
             <div className="space-y-2">
               <Label htmlFor="name">
-                Name <span className="text-red-500">*</span>
+                Name <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="name"
@@ -164,7 +164,7 @@ export default function EditStakeholderPage() {
 
             <div className="space-y-2">
               <Label htmlFor="role">
-                Role <span className="text-red-500">*</span>
+                Role <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="role"
@@ -213,7 +213,7 @@ export default function EditStakeholderPage() {
                 id="is_active"
                 checked={formData.is_active}
                 onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                className="h-4 w-4 rounded border-gray-300"
+                className="h-4 w-4 rounded border-input"
               />
               <Label htmlFor="is_active" className="cursor-pointer">
                 Active

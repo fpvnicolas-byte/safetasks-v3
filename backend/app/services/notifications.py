@@ -37,7 +37,8 @@ class NotificationService(BaseService[Notification, NotificationCreate, Notifica
             title=title,
             message=message,
             type=type,
-            metadata=json.dumps(metadata) if metadata else None
+            profile_id=profile_id,
+            metadata=metadata
         )
 
         # Override the organization_id filtering for this specific case
@@ -48,7 +49,7 @@ class NotificationService(BaseService[Notification, NotificationCreate, Notifica
             title=title,
             message=message,
             type=type,
-            metadata=json.dumps(metadata) if metadata else None
+            notification_metadata=json.dumps(metadata) if metadata else None
         )
 
         db.add(notification)

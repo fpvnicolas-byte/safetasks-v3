@@ -69,7 +69,7 @@ export default function StakeholdersPage() {
       <div className="space-y-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+            <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
             <p className="text-muted-foreground">{t('loading')}</p>
           </div>
         </div>
@@ -85,7 +85,7 @@ export default function StakeholdersPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
           <p className="text-muted-foreground">
             {t('description')}
           </p>
@@ -165,7 +165,7 @@ export default function StakeholdersPage() {
                     <TableCell>
                       <Link
                         href={`/projects/${stakeholder.project_id}`}
-                        className="text-blue-600 hover:underline"
+                        className="text-info hover:underline"
                       >
                         {getProjectName(stakeholder.project_id)}
                       </Link>
@@ -181,7 +181,7 @@ export default function StakeholdersPage() {
                         </Button>
                         <Button variant="ghost" size="icon" asChild title={t('table.addPayment')}>
                           <Link href={`/financials/transactions/new?project_id=${stakeholder.project_id}&stakeholder_id=${stakeholder.id}`}>
-                            <DollarSign className="h-4 w-4 text-green-600" />
+                            <DollarSign className="h-4 w-4 text-success" />
                           </Link>
                         </Button>
                         <Button
@@ -190,7 +190,7 @@ export default function StakeholdersPage() {
                           onClick={() => handleDelete(stakeholder.id, stakeholder.name)}
                           disabled={deleteStakeholder.isPending}
                         >
-                          <Trash2 className="h-4 w-4 text-red-600" />
+                          <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
                     </TableCell>

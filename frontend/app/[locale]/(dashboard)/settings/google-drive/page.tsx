@@ -91,11 +91,18 @@ export default function GoogleDriveSettingsPage() {
 
   return (
     <div className="container max-w-4xl py-8 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">{t('title')}</h1>
-        <p className="text-muted-foreground">
-          {t('description')}
-        </p>
+      <div className="rounded-xl border bg-card/60 px-6 py-5">
+        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          Settings / Integrations
+        </div>
+        <div className="mt-2">
+          <h1 className="text-3xl font-bold tracking-tight font-display">
+            {t('title')}
+          </h1>
+          <p className="text-muted-foreground">
+            {t('description')}
+          </p>
+        </div>
       </div>
 
       {/* Connection Status */}
@@ -114,7 +121,7 @@ export default function GoogleDriveSettingsPage() {
               </div>
             </div>
             {isConnected ? (
-              <Badge className="gap-2 bg-green-500 hover:bg-green-600">
+              <Badge variant="success" className="gap-2">
                 <CheckCircle2 className="h-4 w-4" />
                 {t('status.connectedBadge')}
               </Badge>

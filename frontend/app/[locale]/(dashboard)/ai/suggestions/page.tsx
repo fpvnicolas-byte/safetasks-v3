@@ -83,17 +83,17 @@ export default function AiSuggestionsPage() {
   }
 
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.8) return 'bg-green-100 text-green-800'
-    if (confidence >= 0.6) return 'bg-yellow-100 text-yellow-800'
-    return 'bg-red-100 text-red-800'
+    if (confidence >= 0.8) return 'bg-success/15 text-success'
+    if (confidence >= 0.6) return 'bg-warning/20 text-warning-foreground'
+    return 'bg-destructive/15 text-destructive'
   }
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800'
-      case 'medium': return 'bg-yellow-100 text-yellow-800'
-      case 'low': return 'bg-green-100 text-green-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'high': return 'bg-destructive/15 text-destructive'
+      case 'medium': return 'bg-warning/20 text-warning-foreground'
+      case 'low': return 'bg-success/15 text-success'
+      default: return 'bg-secondary text-secondary-foreground'
     }
   }
 
@@ -117,7 +117,7 @@ export default function AiSuggestionsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('suggestions.pageTitle')}</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('suggestions.pageTitle')}</h1>
           <p className="text-muted-foreground">
             {t('suggestions.pageSubtitle')}
           </p>
@@ -230,24 +230,24 @@ export default function AiSuggestionsPage() {
               <div className="space-y-3">
                 <h4 className="font-semibold">{t('suggestions.stats.title') || 'Statistics'}</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="bg-gray-100 p-2 rounded">
-                    <span className="text-gray-600">{t('suggestions.stats.total')}</span>
+                  <div className="bg-muted/60 p-2 rounded">
+                    <span className="text-muted-foreground">{t('suggestions.stats.total')}</span>
                     <div className="font-bold">{suggestions.length}</div>
                   </div>
-                  <div className="bg-green-100 p-2 rounded">
-                    <span className="text-green-600">{t('suggestions.stats.highPriority')}</span>
+                  <div className="bg-destructive/10 p-2 rounded">
+                    <span className="text-destructive">{t('suggestions.stats.highPriority')}</span>
                     <div className="font-bold">
                       {suggestions.filter((s: AiSuggestion) => s.priority === 'high').length}
                     </div>
                   </div>
-                  <div className="bg-yellow-100 p-2 rounded">
-                    <span className="text-yellow-600">{t('suggestions.stats.mediumPriority')}</span>
+                  <div className="bg-warning/20 p-2 rounded">
+                    <span className="text-warning-foreground">{t('suggestions.stats.mediumPriority')}</span>
                     <div className="font-bold">
                       {suggestions.filter((s: AiSuggestion) => s.priority === 'medium').length}
                     </div>
                   </div>
-                  <div className="bg-blue-100 p-2 rounded">
-                    <span className="text-blue-600">{t('suggestions.stats.avgConfidence')}</span>
+                  <div className="bg-info/15 p-2 rounded">
+                    <span className="text-info-foreground">{t('suggestions.stats.avgConfidence')}</span>
                     <div className="font-bold">
                       {suggestions.length > 0
                         ? Math.round(suggestions.reduce((acc: number, s: AiSuggestion) => acc + s.confidence, 0) / suggestions.length * 100)
@@ -285,7 +285,7 @@ export default function AiSuggestionsPage() {
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-gray-100 rounded-full">
+                          <div className="p-2 bg-muted rounded-full">
                             {getSuggestionIcon(suggestion.suggestion_type)}
                           </div>
                           <div>
@@ -316,12 +316,12 @@ export default function AiSuggestionsPage() {
                             </div>
                           )}
                           {suggestion.estimated_savings_cents && (
-                            <div className="text-sm text-green-600 mb-1">
+                            <div className="text-sm text-success mb-1">
                               <span className="font-medium">{t('suggestions.list.estimatedSavings')}</span> {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(suggestion.estimated_savings_cents / 100)}
                             </div>
                           )}
                           {suggestion.estimated_time_saved_minutes && (
-                            <div className="text-sm text-blue-600">
+                            <div className="text-sm text-info">
                               <span className="font-medium">{t('suggestions.list.timeSaved')}</span> {suggestion.estimated_time_saved_minutes} minutes
                             </div>
                           )}
@@ -351,10 +351,10 @@ export default function AiSuggestionsPage() {
             ) : (
               <div className="text-center py-8">
                 <div className="flex justify-center mb-4">
-                  <Sparkles className="h-12 w-12 text-gray-400" />
+                  <Sparkles className="h-12 w-12 text-muted-foreground/60" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('suggestions.noSuggestions.title')}</h3>
-                <p className="text-gray-600 mb-4">
+                <h3 className="text-lg font-semibold text-foreground mb-2">{t('suggestions.noSuggestions.title')}</h3>
+                <p className="text-muted-foreground mb-4">
                   {selectedProjectId
                     ? t('suggestions.noSuggestions.description')
                     : t('suggestions.noSuggestions.selectProject')
@@ -365,7 +365,6 @@ export default function AiSuggestionsPage() {
                     <Button
                       onClick={handleGenerateBudget}
                       disabled={isGeneratingBudget}
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                     >
                       <TrendingUp className="mr-2 h-4 w-4" />
                       {t('actions.generateBudgetSuggestions')}
@@ -400,7 +399,7 @@ export default function AiSuggestionsPage() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    <Target className="h-4 w-4 text-green-600" />
+                    <Target className="h-4 w-4 text-destructive" />
                     <CardTitle className="text-sm font-medium">{t('suggestions.insights.topPriority')}</CardTitle>
                   </div>
                   <div className="text-2xl font-bold">
@@ -411,7 +410,7 @@ export default function AiSuggestionsPage() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-blue-600" />
+                    <Clock className="h-4 w-4 text-info" />
                     <CardTitle className="text-sm font-medium">{t('suggestions.insights.timeSavings')}</CardTitle>
                   </div>
                   <div className="text-2xl font-bold">
@@ -425,7 +424,7 @@ export default function AiSuggestionsPage() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-green-600" />
+                    <DollarSign className="h-4 w-4 text-success" />
                     <CardTitle className="text-sm font-medium">{t('suggestions.insights.costSavings')}</CardTitle>
                   </div>
                   <div className="text-2xl font-bold">

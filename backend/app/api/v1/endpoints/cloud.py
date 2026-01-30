@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_organization_from_profile, require_admin_or_manager
+from app.api.deps import get_current_profile, require_admin_or_manager
 from app.db.session import get_db
 from app.services.google_drive import google_drive_service
 from app.services.cloud import cloud_sync_service
@@ -21,7 +21,7 @@ router = APIRouter()
 @router.post("/google/auth", response_model=GoogleDriveCredentials, dependencies=[Depends(require_admin_or_manager)])
 async def setup_google_drive_auth(
     credentials_in: GoogleDriveCredentialsCreate,
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile: "Profile" = Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> GoogleDriveCredentials:
     """
@@ -29,6 +29,7 @@ async def setup_google_drive_auth(
     Only admins and managers can configure Google Drive access.
     Requires a Google Service Account key for backend automation.
     """
+    organization_id = profile.organization_id
     from app.models.cloud import GoogleDriveCredentials as GDCModel
 
     # Check if credentials already exist
@@ -62,12 +63,13 @@ async def setup_google_drive_auth(
 
 @router.get("/google/auth", response_model=GoogleDriveCredentials)
 async def get_google_drive_auth(
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile: "Profile" = Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> GoogleDriveCredentials:
     """
     Get Google Drive authentication status for the organization.
     """
+    organization_id = profile.organization_id
     from app.models.cloud import GoogleDriveCredentials as GDCModel
     from sqlalchemy import select
 
@@ -87,13 +89,14 @@ async def get_google_drive_auth(
 @router.put("/google/auth", response_model=GoogleDriveCredentials, dependencies=[Depends(require_admin_or_manager)])
 async def update_google_drive_auth(
     credentials_in: GoogleDriveCredentialsUpdate,
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile: "Profile" = Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> GoogleDriveCredentials:
     """
     Update Google Drive authentication settings.
     Only admins and managers can update Google Drive settings.
     """
+    organization_id = profile.organization_id
     from app.models.cloud import GoogleDriveCredentials as GDCModel
     from sqlalchemy import select
 
@@ -120,13 +123,14 @@ async def update_google_drive_auth(
 
 @router.delete("/google/auth", dependencies=[Depends(require_admin_or_manager)])
 async def remove_google_drive_auth(
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile: "Profile" = Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
     """
     Remove Google Drive authentication for the organization.
     Only admins and managers can remove Google Drive access.
     """
+    organization_id = profile.organization_id
     from app.models.cloud import GoogleDriveCredentials as GDCModel
     from sqlalchemy import select
 
@@ -150,13 +154,14 @@ async def remove_google_drive_auth(
 async def sync_file_to_drive(
     sync_request: SyncFileRequest,
     background_tasks: BackgroundTasks,
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> SyncResult:
     """
     Sync a specific file to Google Drive.
     This operation runs in the background to prevent API timeouts.
     """
+    organization_id = profile.organization_id
     try:
         # Start the sync operation
         result = await cloud_sync_service.sync_file_to_drive(
@@ -180,13 +185,14 @@ async def sync_project_files(
     project_id: UUID,
     sync_request: ProjectSyncRequest = None,
     background_tasks: BackgroundTasks = None,
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> ProjectSyncResult:
     """
     Sync all files for a project to Google Drive.
     This operation syncs files from all modules (proposals, call_sheets, scripts, media).
     """
+    organization_id = profile.organization_id
     if sync_request is None:
         sync_request = ProjectSyncRequest()
 
@@ -211,13 +217,14 @@ async def sync_project_files(
 async def get_sync_status(
     project_id: UUID = None,
     file_path: str = None,
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> SyncStatusResponse:
     """
     Get synchronization status for files.
     Can filter by project or specific file path.
     """
+    organization_id = profile.organization_id
     try:
         status_result = await cloud_sync_service.get_sync_status(
             organization_id=organization_id,
@@ -238,13 +245,14 @@ async def get_sync_status(
 @router.post("/check-alerts", dependencies=[Depends(require_admin_or_manager)])
 async def check_sync_alerts(
     background_tasks: BackgroundTasks,
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
     """
     Manually trigger sync status checks and send alerts.
     Only admins and managers can trigger alerts.
     """
+    organization_id = profile.organization_id
     try:
         # This could check for failed syncs and send notifications
         # For now, return a placeholder response
@@ -264,12 +272,13 @@ async def check_sync_alerts(
 @router.get("/projects/{project_id}/folders")
 async def get_project_drive_folders(
     project_id: UUID,
-    organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ):
     """
     Get Google Drive folder information for a project.
     """
+    organization_id = profile.organization_id
     from app.models.cloud import ProjectDriveFolder
     from sqlalchemy import select
 

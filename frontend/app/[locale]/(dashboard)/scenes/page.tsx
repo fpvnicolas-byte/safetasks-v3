@@ -13,16 +13,16 @@ import Link from 'next/link'
 import { Scene } from '@/types'
 import { useTranslations } from 'next-intl'
 
-const locationColors: Record<string, string> = {
-  internal: 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200',
-  external: 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200',
+const locationVariant: Record<string, 'info' | 'success'> = {
+  internal: 'info',
+  external: 'success',
 }
 
-const timeOfDayColors: Record<string, string> = {
-  day: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200',
-  night: 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-200',
-  dawn: 'bg-orange-100 text-orange-800 dark:bg-orange-800 dark:text-orange-200',
-  dusk: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-800 dark:text-indigo-200',
+const timeOfDayVariant: Record<string, 'warning' | 'secondary' | 'outline'> = {
+  day: 'warning',
+  night: 'secondary',
+  dawn: 'outline',
+  dusk: 'outline',
 }
 
 function ScenesContent() {
@@ -66,7 +66,7 @@ function ScenesContent() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('noProjectContext.title')}</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('noProjectContext.title')}</h1>
           <p className="text-muted-foreground">
             {t('noProjectContext.description')}
           </p>
@@ -92,7 +92,7 @@ function ScenesContent() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
           <p className="text-muted-foreground">
             {t('description')}
           </p>
@@ -237,10 +237,10 @@ function SceneCard({ scene, onDelete, t }: SceneCardProps) {
             </CardDescription>
           </div>
           <div className="flex gap-1">
-            <Badge className={locationColors[scene.internal_external]}>
+            <Badge variant={locationVariant[scene.internal_external] ?? 'outline'}>
               {t(scene.internal_external)}
             </Badge>
-            <Badge className={timeOfDayColors[scene.day_night]}>
+            <Badge variant={timeOfDayVariant[scene.day_night] ?? 'outline'}>
               {t(scene.day_night)}
             </Badge>
           </div>
@@ -284,7 +284,7 @@ function SceneCard({ scene, onDelete, t }: SceneCardProps) {
             variant="outline"
             size="sm"
             onClick={onDelete}
-            className="text-destructive hover:text-destructive"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
           >
             <Trash2 className="h-3 w-3" />
           </Button>
