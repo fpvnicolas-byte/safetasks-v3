@@ -30,6 +30,7 @@ export default function KitsPage() {
     targetId: idToDelete,
     additionalData: kitName
   } = useConfirmDelete()
+  const kitNameText = typeof kitName === 'string' ? kitName : ''
 
   const handleDeleteKit = async () => {
     if (!idToDelete) return
@@ -157,8 +158,8 @@ export default function KitsPage() {
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         onConfirm={handleDeleteKit}
-        title={t('delete.title', { name: kitName || '' })}
-        description={t('delete.description', { name: kitName || '' })}
+        title={t('delete.title', { name: kitNameText })}
+        description={t('delete.description', { name: kitNameText })}
         loading={deleteKit.isPending}
       />
     </div>

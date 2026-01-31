@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_profile, get_effective_role
+from app.api.deps import get_current_profile, get_effective_role, require_billing_read
 from app.db.session import get_db
 from app.models.profiles import Profile
 
 router = APIRouter()
 
 
-@router.get("/me")
+@router.get("/me", dependencies=[Depends(require_billing_read())])
 async def get_my_profile(
     profile: Profile = Depends(get_current_profile),
 ):

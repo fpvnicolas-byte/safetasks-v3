@@ -21,6 +21,7 @@
     "email": "Email",
     "phone": "Phone",
     "address": "Address",
+    "language": "Language",
     "notes": "Notes",
     "active": "Active",
     "inactive": "Inactive",
@@ -59,6 +60,7 @@
     "login": {
       "title": "Welcome to SafeTasks V3",
       "subtitle": "Sign in to your account",
+      "backToHome": "Back to Home",
       "email": "Email",
       "password": "Password",
       "signIn": "Sign In",
@@ -80,7 +82,15 @@
       "creatingAccount": "Creating account...",
       "alreadyHaveAccount": "Already have an account?",
       "signIn": "Sign in",
-      "passwordsDoNotMatch": "Passwords do not match"
+      "passwordsDoNotMatch": "Passwords do not match",
+      "passwordStrength": {
+        "label": "Password strength",
+        "empty": "empty",
+        "weak": "weak",
+        "fair": "fair",
+        "good": "good",
+        "strong": "strong"
+      }
     },
     "forgotPassword": {
       "title": "Reset Password",
@@ -719,7 +729,8 @@
       "tab": "Overview",
       "totalBudget": "Total Budget",
       "totalSpent": "Total Spent",
-      "remaining": "Remaining"
+      "remaining": "Remaining",
+      "breadcrumb": "Financials / Overview"
     },
     "invoicesTab": {
       "tab": "Invoices",
@@ -773,6 +784,695 @@
       "description": "Track production costs and expenses",
       "noRecentExpenses": "No recent expenses.",
       "viewExpenses": "View Expenses"
+    },
+    "status": {
+      "draft": "Draft",
+      "sent": "Sent",
+      "paid": "Paid",
+      "overdue": "Overdue",
+      "canceled": "Canceled",
+      "cancelled": "Cancelled"
+    },
+    "pages": {
+      "transactions": {
+        "title": "Transactions",
+        "subtitle": "Record income and expenses to track cash flow",
+        "loading": "Loading transactions...",
+        "error": "Failed to load transactions. Please try again.",
+        "actions": {
+          "new": "New Transaction"
+        },
+        "summary": {
+          "totalIncome": "Total Income",
+          "totalExpenses": "Total Expenses",
+          "netBalance": "Net Balance",
+          "transactionCount": "{count, plural, one {# transaction} other {# transactions}}",
+          "totalTransactionCount": "{count, plural, one {# total transaction} other {# total transactions}}",
+          "showing": "Showing {filtered} of {total} {total, plural, one {transaction} other {transactions}}",
+          "netLabel": "Net:"
+        },
+        "filters": {
+          "title": "Filter Transactions",
+          "description": "Search and filter transactions by type, account, project, or category",
+          "searchPlaceholder": "Search by description, account, or project...",
+          "type": {
+            "label": "Type",
+            "all": "All Types",
+            "income": "Income",
+            "expense": "Expense"
+          },
+          "bankAccount": {
+            "label": "Bank Account",
+            "all": "All Accounts"
+          },
+          "project": {
+            "label": "Project",
+            "all": "All Projects",
+            "none": "No Project"
+          },
+          "category": {
+            "label": "Category",
+            "all": "All Categories"
+          }
+        },
+        "categories": {
+          "crew_hire": "Crew Hire",
+          "equipment_rental": "Equipment Rental",
+          "logistics": "Logistics",
+          "post_production": "Post Production",
+          "maintenance": "Maintenance",
+          "production_revenue": "Production Revenue",
+          "other": "Other"
+        },
+        "empty": {
+          "filteredTitle": "No transactions found",
+          "noTransactionsTitle": "No transactions yet",
+          "filteredDescription": "Try adjusting your filters",
+          "noTransactionsDescription": "Get started by recording your first transaction",
+          "addFirst": "Add First Transaction"
+        },
+        "list": {
+          "title": "Recent Transactions",
+          "description": "All transactions sorted by date (newest first)",
+          "untitled": "Untitled Transaction"
+        },
+        "types": {
+          "income": "Income",
+          "expense": "Expense"
+        }
+      },
+      "transactionsNew": {
+        "title": "New Transaction",
+        "actions": {
+          "back": "Back to Transactions",
+          "record": "Record Transaction",
+          "recording": "Recording..."
+        },
+        "noBankAccounts": {
+          "title": "No Bank Accounts",
+          "description": "You need to create at least one bank account before recording transactions",
+          "action": "Create Bank Account"
+        },
+        "form": {
+          "title": "Record New Transaction",
+          "description": "Record income or expenses to track your cash flow and update bank balances"
+        },
+        "note": {
+          "title": "Note:",
+          "description": "Recording this transaction will automatically update the selected bank account's balance."
+        },
+        "fields": {
+          "type": {
+            "label": "Transaction Type *",
+            "income": "Income",
+            "expense": "Expense",
+            "incomeHint": "Money received",
+            "expenseHint": "Money spent"
+          },
+          "bankAccount": {
+            "label": "Bank Account *",
+            "placeholder": "Select a bank account",
+            "help": "The bank account that this transaction affects"
+          },
+          "category": {
+            "label": "Category *",
+            "helpIncome": "Type of revenue",
+            "helpExpense": "Type of expense"
+          },
+          "amount": {
+            "label": "Amount *",
+            "placeholder": "0.00",
+            "help": "Enter the amount in the account's currency (e.g., 100.50)"
+          },
+          "date": {
+            "label": "Transaction Date *",
+            "help": "When did this transaction occur?"
+          },
+          "description": {
+            "label": "Description",
+            "placeholder": "Brief description of this transaction...",
+            "help": "Optional details about this transaction"
+          },
+          "project": {
+            "label": "Project (Optional)",
+            "placeholder": "No project (general expense/income)",
+            "none": "No project",
+            "help": "Link this transaction to a specific project (optional)"
+          },
+          "stakeholder": {
+            "label": "Stakeholder (Optional)",
+            "placeholder": "Select a team member",
+            "none": "No stakeholder",
+            "paidViaSupplier": "Paid via Supplier",
+            "help": "Link this payment to a specific team member"
+          }
+        },
+        "errors": {
+          "bankAccountRequired": "Bank account is required",
+          "categoryRequired": "Category is required",
+          "amountRequired": "Amount must be greater than 0",
+          "dateRequired": "Transaction date is required",
+          "organizationMissing": "Organization not found. Please log in again.",
+          "createFailed": "Failed to create transaction"
+        }
+      },
+      "transactionDetail": {
+        "title": "Transaction Details",
+        "loading": "Loading transaction...",
+        "error": "Failed to load transaction. Please try again.",
+        "untitled": "Untitled Transaction",
+        "actions": {
+          "back": "Back to Transactions",
+          "delete": "Delete Transaction",
+          "deleting": "Deleting..."
+        },
+        "deleteConfirm": "Are you sure you want to delete this transaction?\\n\\nThis will {direction} the bank account balance by {amount}.\\n\\nThis action cannot be undone.",
+        "balance": {
+          "decrease": "decrease",
+          "increase": "increase"
+        },
+        "errors": {
+          "organizationMissing": "Organization not found. Please log in again.",
+          "deleteFailed": "Failed to delete transaction: {message}"
+        },
+        "types": {
+          "income": "Income",
+          "expense": "Expense"
+        },
+        "bankAccount": {
+          "title": "Bank Account",
+          "currency": "Currency: {currency}",
+          "balance": "Current Balance: {amount}",
+          "viewAccounts": "View Accounts"
+        },
+        "date": {
+          "title": "Transaction Date",
+          "created": "Created: {date}"
+        },
+        "project": {
+          "title": "Linked Project",
+          "noDescription": "No description",
+          "view": "View Project"
+        },
+        "info": {
+          "title": "Transaction Information",
+          "description": "Complete details about this transaction",
+          "transactionId": "Transaction ID",
+          "organizationId": "Organization ID",
+          "descriptionLabel": "Description",
+          "type": "Type",
+          "category": "Category",
+          "amountCents": "Amount (Cents)",
+          "amountFormatted": "Amount (Formatted)"
+        },
+        "warning": {
+          "title": "Note:",
+          "description": "Deleting this transaction will reverse its effect on the bank account balance.",
+          "balanceDecrease": "The balance will decrease by {amount}.",
+          "balanceIncrease": "The balance will increase by {amount}."
+        }
+      },
+      "bankAccounts": {
+        "title": "Bank Accounts",
+        "subtitle": "Manage your company bank accounts and track balances",
+        "loading": "Loading bank accounts...",
+        "error": "Failed to load bank accounts. Please try again.",
+        "actions": {
+          "new": "New Bank Account"
+        },
+        "summary": {
+          "totalBalance": "Total Balance ({currency})",
+          "accountCount": "{count, plural, one {# account} other {# accounts}}",
+          "showing": "Showing {filtered} of {total} bank {total, plural, one {account} other {accounts}}",
+          "currencyCount": "{count, plural, one {# currency} other {# currencies}}"
+        },
+        "search": {
+          "title": "Search Accounts",
+          "description": "Find bank accounts by name or currency",
+          "placeholder": "Search by name or currency..."
+        },
+        "empty": {
+          "filteredTitle": "No accounts found",
+          "noAccountsTitle": "No bank accounts yet",
+          "filteredDescription": "Try adjusting your search",
+          "noAccountsDescription": "Get started by adding your first bank account",
+          "addFirst": "Add First Bank Account"
+        },
+        "list": {
+          "currentBalance": "Current Balance",
+          "created": "Created: {date}"
+        },
+        "deleteConfirm": "Are you sure you want to delete bank account \"{name}\"? This action cannot be undone.",
+        "deleteError": "Failed to delete bank account: {message}"
+      },
+      "bankAccountsNew": {
+        "title": "Create New Bank Account",
+        "subtitle": "Add a new bank account to track your organization's finances",
+        "actions": {
+          "back": "Back to Bank Accounts",
+          "create": "Create Bank Account",
+          "creating": "Creating..."
+        },
+        "note": {
+          "title": "Note:",
+          "description": "The initial balance will be 0. You can update the balance by creating transactions."
+        },
+        "fields": {
+          "name": {
+            "label": "Account Name *",
+            "placeholder": "Business Checking Account",
+            "help": "A descriptive name for this bank account (e.g., \"Main Checking\", \"Savings\", \"PayPal\")"
+          },
+          "currency": {
+            "label": "Currency *",
+            "help": "Select the currency for this account. Cannot be changed after creation."
+          }
+        },
+        "balance": {
+          "title": "Account Balance",
+          "description": "The account will start with a balance of 0.00. To set an opening balance or record transactions:",
+          "items": {
+            "income": "Create income transactions to add funds",
+            "expense": "Create expense transactions to deduct funds",
+            "auto": "The balance updates automatically with each transaction"
+          }
+        },
+        "currencies": {
+          "BRL": "Brazilian Real (R$)",
+          "USD": "US Dollar ($)",
+          "EUR": "Euro (€)",
+          "GBP": "British Pound (£)",
+          "JPY": "Japanese Yen (¥)",
+          "CAD": "Canadian Dollar (C$)",
+          "AUD": "Australian Dollar (A$)",
+          "MXN": "Mexican Peso (MX$)"
+        },
+        "errors": {
+          "nameRequired": "Account name is required",
+          "currencyRequired": "Currency is required",
+          "validationTitle": "Validation Error",
+          "authTitle": "Authentication Error",
+          "organizationMissing": "Organization not found. Please log in again.",
+          "createTitle": "Error Creating Bank Account"
+        }
+      },
+      "bankAccountsEdit": {
+        "title": "Edit Bank Account",
+        "subtitle": "Update bank account information for {name}",
+        "loading": "Loading...",
+        "actions": {
+          "back": "Back to Bank Accounts",
+          "save": "Save Changes",
+          "saving": "Saving..."
+        },
+        "admin": {
+          "title": "Administrator Access Required",
+          "description": "Only administrators can edit bank accounts",
+          "details": "Bank account settings can only be modified by users with administrator privileges. This is to protect sensitive financial information."
+        },
+        "balance": {
+          "title": "Current Balance",
+          "description": "Balance is updated automatically by transactions and cannot be edited directly."
+        },
+        "fields": {
+          "name": {
+            "label": "Account Name *",
+            "placeholder": "Business Checking Account",
+            "help": "A descriptive name for this bank account"
+          },
+          "currency": {
+            "label": "Currency *",
+            "help": "The currency for this account"
+          }
+        },
+        "adminNote": {
+          "title": "Administrator Note:",
+          "description": "Changes to bank account settings affect all users in your organization. The balance cannot be edited directly - it updates automatically through transactions."
+        },
+        "currencies": {
+          "BRL": "Brazilian Real (R$)",
+          "USD": "US Dollar ($)",
+          "EUR": "Euro (€)",
+          "GBP": "British Pound (£)",
+          "JPY": "Japanese Yen (¥)",
+          "CAD": "Canadian Dollar (C$)",
+          "AUD": "Australian Dollar (A$)",
+          "MXN": "Mexican Peso (MX$)"
+        },
+        "errors": {
+          "nameRequired": "Account name is required",
+          "currencyRequired": "Currency is required",
+          "validationTitle": "Validation Error",
+          "updateTitle": "Error Updating Bank Account",
+          "notFound": "Bank account not found."
+        }
+      },
+      "taxTables": {
+        "title": "Tax Tables",
+        "subtitle": "Configure tax rates for Brazilian tax compliance",
+        "loading": "Loading tax tables...",
+        "error": "Failed to load tax tables. Please try again.",
+        "actions": {
+          "new": "New Tax Table"
+        },
+        "search": {
+          "title": "Search Tax Tables",
+          "description": "Find tax tables by name or type",
+          "placeholder": "Search by name or type...",
+          "showInactive": "Show inactive tax tables"
+        },
+        "empty": {
+          "filteredTitle": "No tax tables found",
+          "noTablesTitle": "No tax tables yet",
+          "filteredDescription": "Try adjusting your search or filters",
+          "noTablesDescription": "Get started by creating your first tax table",
+          "addFirst": "Create First Tax Table"
+        },
+        "list": {
+          "rate": "Rate:"
+        },
+        "status": {
+          "active": "Active",
+          "inactive": "Inactive"
+        },
+        "summary": {
+          "showing": "Showing {filtered} of {total} tax {total, plural, one {table} other {tables}}",
+          "statusCounts": "{active} active • {inactive} inactive"
+        },
+        "deleteConfirm": "Are you sure you want to delete tax table \"{name}\"? This action cannot be undone.",
+        "deleteError": "Failed to delete tax table: {message}"
+      },
+      "taxTablesNew": {
+        "title": "Create Tax Table",
+        "subtitle": "Configure a new tax rate for Brazilian tax compliance",
+        "form": {
+          "title": "Tax Table Details",
+          "description": "Enter the tax information and applicable rate"
+        },
+        "fields": {
+          "name": {
+            "label": "Name *",
+            "placeholder": "e.g., ISS 5% - São Paulo",
+            "help": "A descriptive name for this tax table"
+          },
+          "type": {
+            "label": "Tax Type *",
+            "placeholder": "Select tax type"
+          },
+          "rate": {
+            "label": "Rate Percentage *",
+            "placeholder": "e.g., 5.00",
+            "help": "Enter the tax rate as a percentage (0-100)"
+          },
+          "description": {
+            "label": "Description",
+            "placeholder": "Additional notes about this tax..."
+          }
+        },
+        "taxTypes": {
+          "iss": "ISS (Service Tax)",
+          "irrf": "IRRF (Income Tax Withholding)",
+          "pis": "PIS (Social Contribution)",
+          "cofins": "COFINS (Social Contribution)",
+          "csll": "CSLL (Social Contribution)",
+          "inss": "INSS (Social Security)",
+          "rental_tax": "Rental Tax",
+          "other": "Other"
+        },
+        "actions": {
+          "create": "Create Tax Table",
+          "creating": "Creating..."
+        },
+        "errors": {
+          "rateRange": "Rate percentage must be between 0 and 100",
+          "createFailed": "Failed to create tax table"
+        }
+      },
+      "taxTablesEdit": {
+        "title": "Edit Tax Table",
+        "subtitle": "Update tax table configuration",
+        "loading": "Loading tax table...",
+        "form": {
+          "title": "Tax Table Details",
+          "description": "Modify the tax information and rate"
+        },
+        "fields": {
+          "name": {
+            "label": "Name *",
+            "placeholder": "e.g., ISS 5% - São Paulo"
+          },
+          "type": {
+            "label": "Tax Type *",
+            "placeholder": "Select tax type"
+          },
+          "rate": {
+            "label": "Rate Percentage *"
+          },
+          "description": {
+            "label": "Description"
+          },
+          "active": {
+            "label": "Active"
+          }
+        },
+        "taxTypes": {
+          "iss": "ISS (Service Tax)",
+          "irrf": "IRRF (Income Tax Withholding)",
+          "pis": "PIS (Social Contribution)",
+          "cofins": "COFINS (Social Contribution)",
+          "csll": "CSLL (Social Contribution)",
+          "inss": "INSS (Social Security)",
+          "rental_tax": "Rental Tax",
+          "other": "Other"
+        },
+        "meta": {
+          "created": "Created: {date}",
+          "updated": "Last updated: {date}"
+        },
+        "actions": {
+          "delete": "Delete",
+          "save": "Save Changes",
+          "saving": "Saving..."
+        },
+        "deleteConfirm": "Are you sure you want to delete tax table \"{name}\"? This action cannot be undone.",
+        "errors": {
+          "notFound": "Tax table not found",
+          "rateRange": "Rate percentage must be between 0 and 100",
+          "updateFailed": "Failed to update tax table",
+          "deleteFailed": "Failed to delete tax table"
+        }
+      },
+      "invoicesNew": {
+        "title": "Create New Invoice",
+        "subtitle": "Generate a professional invoice for your film production services",
+        "form": {
+          "title": "Invoice Details",
+          "description": "Fill in the basic information for this invoice"
+        },
+        "fields": {
+          "client": {
+            "label": "Client *",
+            "placeholder": "Select a client"
+          },
+          "project": {
+            "label": "Project (Optional)",
+            "placeholder": "Select a project"
+          },
+          "dueDate": {
+            "label": "Due Date *"
+          },
+          "description": {
+            "label": "Invoice Description",
+            "placeholder": "Brief description of services..."
+          },
+          "notes": {
+            "label": "Additional Notes",
+            "placeholder": "Payment terms, special instructions..."
+          }
+        },
+        "items": {
+          "title": "Invoice Items",
+          "add": "Add Item",
+          "remove": "Remove",
+          "fields": {
+            "description": "Description *",
+            "descriptionPlaceholder": "Service description",
+            "quantity": "Quantity *",
+            "unitPrice": "Unit Price (R$) *",
+            "unitPricePlaceholder": "0.00",
+            "category": "Category",
+            "categoryPlaceholder": "Select category"
+          }
+        },
+        "categories": {
+          "pre_production": "Pre-Production",
+          "production": "Production",
+          "post_production": "Post-Production",
+          "marketing": "Marketing",
+          "other": "Other"
+        },
+        "summary": {
+          "title": "Invoice Summary",
+          "subtotal": "Subtotal:",
+          "tax": "Tax ({rate}%):",
+          "total": "Total:"
+        },
+        "actions": {
+          "create": "Create Invoice",
+          "creating": "Creating Invoice..."
+        },
+        "errors": {
+          "organizationMissing": "No organization found. Please contact support.",
+          "clientRequired": "Please select a client",
+          "itemsRequired": "Please add at least one valid invoice item",
+          "createFailed": "Failed to create invoice"
+        }
+      },
+      "invoiceDetail": {
+        "title": "Invoice #{number}",
+        "loading": "Loading invoice...",
+        "deleteConfirm": "Are you sure you want to delete this invoice? This action cannot be undone.",
+        "actions": {
+          "back": "Back to Invoices",
+          "delete": "Delete",
+          "sendEmail": "Send Email",
+          "downloadPdf": "Download PDF",
+          "title": "Quick Actions",
+          "sendToClient": "Send to Client",
+          "markAsPaid": "Mark as Paid",
+          "processing": "Processing..."
+        },
+        "status": {
+          "draft": "Draft",
+          "sent": "Sent",
+          "paid": "Paid",
+          "overdue": "Overdue",
+          "canceled": "Canceled",
+          "cancelled": "Cancelled"
+        },
+        "dates": {
+          "issuedDue": "Issued {issued} • Due {due}"
+        },
+        "paidOn": "Paid on {date}",
+        "pdfUnavailable": "PDF generation under construction",
+        "info": {
+          "title": "Invoice Information",
+          "client": "Client",
+          "noClient": "No client assigned",
+          "project": "Project",
+          "noProject": "No project assigned",
+          "issueDate": "Issue Date",
+          "dueDate": "Due Date",
+          "notes": "Notes"
+        },
+        "items": {
+          "title": "Line Items",
+          "description": "Detailed breakdown of invoice items",
+          "headers": {
+            "description": "Description",
+            "quantity": "Quantity",
+            "unitPrice": "Unit Price",
+            "total": "Total"
+          }
+        },
+        "summary": {
+          "title": "Invoice Summary",
+          "subtotal": "Subtotal:",
+          "tax": "Tax:",
+          "total": "Total:"
+        },
+        "payment": {
+          "title": "Payment Status",
+          "status": "Status",
+          "date": "Payment Date",
+          "daysUntilDue": "Days Until Due",
+          "daysCount": "{count, plural, one {# day} other {# days}}"
+        },
+        "paymentDialog": {
+          "title": "Mark Invoice as Paid",
+          "description": "Record payment details for invoice #{id}",
+          "totalLabel": "Invoice Total",
+          "fields": {
+            "date": "Payment Date *",
+            "method": "Payment Method *",
+            "methodPlaceholder": "Select payment method",
+            "reference": "Reference/Transaction ID",
+            "referencePlaceholder": "Transaction ID, check number, etc.",
+            "notes": "Payment Notes",
+            "notesPlaceholder": "Additional payment details..."
+          }
+        },
+        "paymentMethods": {
+          "bank_transfer": "Bank Transfer",
+          "credit_card": "Credit Card",
+          "debit_card": "Debit Card",
+          "cash": "Cash",
+          "check": "Check",
+          "paypal": "PayPal",
+          "other": "Other"
+        },
+        "errors": {
+          "load": "Error loading invoice: {message}",
+          "notFound": "Invoice not found",
+          "deleteFailed": "Failed to delete invoice"
+        }
+      },
+      "invoicesEdit": {
+        "title": "Edit Invoice #{number}",
+        "loading": "Loading invoice...",
+        "subtitle": {
+          "editItems": "Modify line items and invoice details",
+          "updateStatus": "Update invoice status and dates only"
+        },
+        "warnings": {
+          "readOnly": "This invoice is {status}. Only draft invoices can have line items edited. You can still update the status and dates below."
+        },
+        "items": {
+          "title": "Invoice Items",
+          "description": "Add, edit, or remove line items",
+          "add": "Add Item",
+          "fields": {
+            "description": "Description",
+            "descriptionPlaceholder": "Service description",
+            "quantity": "Quantity",
+            "unitPrice": "Unit Price (R$)",
+            "unitPricePlaceholder": "0.00"
+          },
+          "total": "Total: {total}"
+        },
+        "summary": {
+          "subtotal": "Subtotal:",
+          "tax": "Tax:",
+          "total": "Total:"
+        },
+        "statusForm": {
+          "title": "Invoice Status",
+          "description": "Update invoice status and dates",
+          "fields": {
+            "status": "Status",
+            "dueDate": "Due Date"
+          }
+        },
+        "status": {
+          "draft": "Draft",
+          "sent": "Sent",
+          "paid": "Paid",
+          "overdue": "Overdue",
+          "cancelled": "Cancelled"
+        },
+        "actions": {
+          "saveItems": "Save Items",
+          "saving": "Saving...",
+          "updateStatus": "Update Status",
+          "updating": "Updating..."
+        },
+        "errors": {
+          "notFound": "Invoice not found",
+          "deleteItem": "Failed to delete item: {message}",
+          "saveItems": "Failed to save items",
+          "updateInvoice": "Failed to update invoice"
+        }
+      }
     }
   },
   "inventory": {
@@ -1366,40 +2066,261 @@
     "viewAll": "View all notifications"
   },
   "landing": {
-    "title": "SafeTasks V3",
-    "subtitle": "Professional Film Production Management",
-    "getStarted": "Get Started",
-    "signIn": "Sign In",
-    "createAccount": "Create Free Account",
-    "features": {
-      "projectManagement": {
-        "title": "Project Management",
-        "description": "Organize multiple film projects with detailed tracking and status updates"
+    "nav": {
+      "features": "Features",
+      "modules": "Modules",
+      "workflow": "Workflow",
+      "pricing": "Pricing",
+      "signIn": "Sign In",
+      "getStarted": "Start Trial"
+    },
+    "hero": {
+      "eyebrow": "Built for audiovisual production companies",
+      "title": "SafeTasks is the production OS that connects projects, people, and money.",
+      "subtitle": "All the best of Yandu + Jobb System, rebuilt into a modern, role-based platform for film crews.",
+      "primaryCta": "Create account",
+      "secondaryCta": "See pricing",
+      "note": "7-day Pro trial with limited usage. Cancel anytime."
+    },
+    "badges": {
+      "roles": "Role-based access",
+      "billing": "Plan limits and usage",
+      "drive": "Google Drive sync",
+      "ai": "AI breakdowns"
+    },
+    "sections": {
+      "modules": {
+        "title": "Everything a production needs",
+        "subtitle": "From pre-production to final delivery, keep every moving part in sync."
       },
-      "callSheets": {
-        "title": "Call Sheets",
-        "description": "Create professional call sheets with crew times, locations, and contact info"
+      "workflow": {
+        "title": "A workflow that mirrors real sets",
+        "subtitle": "Plan, shoot, approve, and close without losing context."
+      },
+      "access": {
+        "title": "Clear access for every role",
+        "subtitle": "Owners, producers, finance, and freelancers see exactly what they need."
+      },
+      "integrations": {
+        "title": "Connected to your stack",
+        "subtitle": "Keep files, payments, and automation in one flow."
+      },
+      "testimonials": {
+        "title": "Built with production teams",
+        "subtitle": "Designed to replace scattered sheets and fragile spreadsheets."
+      },
+      "cta": {
+        "title": "Ready to run your next production on SafeTasks?",
+        "subtitle": "Create your company account and start the trial in minutes."
+      }
+    },
+    "modules": {
+      "production": {
+        "title": "Projects and breakdowns",
+        "description": "Scenes, characters, shooting days and call sheets linked to each production."
+      },
+      "scheduling": {
+        "title": "Scheduling and crew",
+        "description": "Plan calendars, notifications, proposals and approvals in one timeline."
       },
       "financials": {
-        "title": "Financial Tracking",
-        "description": "Track budgets, invoices, and expenses with precision down to the cent"
+        "title": "Budgets and cashflow",
+        "description": "Clients, invoices, transactions and taxes with role-based approvals."
       },
-      "team": {
-        "title": "Team Collaboration",
-        "description": "Manage clients, crew, and talent with centralized contact information"
+      "inventory": {
+        "title": "Inventory and kits",
+        "description": "Track gear, maintenance, and kits tied to productions."
+      },
+      "files": {
+        "title": "Files and Drive",
+        "description": "Centralize assets with Google Drive integration and usage limits."
+      },
+      "ai": {
+        "title": "AI production assist",
+        "description": "Script analysis, call sheet suggestions and smarter estimates."
+      }
+    },
+    "workflow": {
+      "step1": {
+        "title": "Pre-production",
+        "description": "Briefs, budgets, proposals, stakeholders and approvals."
+      },
+      "step2": {
+        "title": "Production",
+        "description": "Call sheets, crew, locations, schedules and live updates."
+      },
+      "step3": {
+        "title": "Post-production",
+        "description": "Invoices, payments, delivery status and financial close-out."
+      }
+    },
+    "access": {
+      "owner": {
+        "title": "Owner",
+        "description": "Full control, billing, approvals and organization settings."
+      },
+      "producer": {
+        "title": "Producer",
+        "description": "Creates productions, manages crews, schedules and deliverables."
+      },
+      "finance": {
+        "title": "Finance",
+        "description": "Manages invoices, transactions, tax tables and approvals."
+      },
+      "freelancer": {
+        "title": "Freelancer",
+        "description": "Sees only assigned projects and personal fees."
+      }
+    },
+    "integrations": {
+      "drive": {
+        "title": "Google Drive",
+        "description": "Sync folders and keep assets aligned with productions."
+      },
+      "stripe": {
+        "title": "Stripe billing",
+        "description": "Subscription management, webhooks and reliable status checks."
+      },
+      "automation": {
+        "title": "Automation ready",
+        "description": "Webhooks and APIs for your existing studio stack."
+      }
+    },
+    "testimonials": {
+      "one": {
+        "quote": "We finally have one source of truth for the show.",
+        "name": "Production Manager",
+        "role": "Series production"
+      },
+      "two": {
+        "quote": "Finance can approve without blocking the creative flow.",
+        "name": "Finance Lead",
+        "role": "Commercial studio"
       }
     },
     "cta": {
-      "title": "Ready to get started?",
-      "description": "Join professional filmmakers using SafeTasks V3"
+      "primary": "Start your trial",
+      "secondary": "View plans"
     },
-    "footer": "© 2026 SafeTasks V3. Built for film production professionals."
+    "footer": "© 2026 SafeTasks V3. Built for audiovisual production."
+  },
+  "pricing": {
+    "eyebrow": "Plans",
+    "title": "Plans built for production scale",
+    "subtitle": "Choose a plan based on team size and usage. Upgrade anytime.",
+    "note": "Enterprise pricing is custom and includes SLA.",
+    "mostPopular": "Most popular",
+    "backToHome": "Back to Home",
+    "plans": {
+      "starter": {
+        "name": "Starter",
+        "price": "R$ 39,90",
+        "period": "month",
+        "description": "For small teams testing SafeTasks.",
+        "billingNote": "Monthly",
+        "cta": "Choose Starter",
+        "features": [
+          "Up to 5 projects",
+          "Up to 20 clients",
+          "Up to 20 proposals",
+          "Up to 5 team members",
+          "25 GB storage",
+          "100 AI credits per month"
+        ]
+      },
+      "pro": {
+        "name": "Pro",
+        "price": "R$ 89,90",
+        "period": "month",
+        "description": "For active productions with growing teams.",
+        "billingNote": "Monthly",
+        "cta": "Start Pro trial",
+        "features": [
+          "Unlimited projects and clients",
+          "Unlimited proposals and users",
+          "50 GB storage",
+          "1,000 AI credits per month",
+          "Role-based approvals",
+          "Advanced reporting"
+        ]
+      },
+      "proAnnual": {
+        "name": "Pro Annual",
+        "price": "R$ 755",
+        "period": "year",
+        "description": "Save with annual billing and higher limits.",
+        "billingNote": "Annual",
+        "cta": "Choose Pro Annual",
+        "features": [
+          "Everything in Pro",
+          "75 GB storage",
+          "2,000 AI credits per month",
+          "Annual savings built-in",
+          "Priority support"
+        ]
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "price": "Custom",
+        "period": "contract",
+        "description": "Tailored to large studios and complex workflows.",
+        "billingNote": "SLA",
+        "cta": "Contact sales",
+        "features": [
+          "Custom limits and onboarding",
+          "Dedicated success team",
+          "Security and compliance review",
+          "Custom integrations"
+        ]
+      }
+    },
+    "includes": {
+      "title": "Every plan includes",
+      "items": [
+        "Role-based access control",
+        "Project scoped freelancer views",
+        "Usage and billing status guardrails",
+        "Google Drive integration",
+        "Audit-friendly workflows"
+      ]
+    },
+    "faq": {
+      "title": "FAQ",
+      "items": [
+        {
+          "q": "Is there a free trial?",
+          "a": "Yes. Every new organization starts with a 7-day Pro trial with limited usage."
+        },
+        {
+          "q": "Can I change plans later?",
+          "a": "Yes, you can upgrade or change plans at any time."
+        },
+        {
+          "q": "Do freelancers need paid seats?",
+          "a": "No. Freelancers have scoped access and do not require paid seats."
+        }
+      ]
+    },
+    "cta": {
+      "title": "Start production today",
+      "subtitle": "Launch your account and bring the whole studio under one roof.",
+      "primary": "Create account",
+      "secondary": "Back to home"
+    }
   },
   "ai": {
     "title": "AI Features",
     "subtitle": "Leverage AI to enhance your production workflow",
     "viewProjects": "View Projects",
     "analyzeScript": "Analyze Script",
+    "usage": {
+      "title": "AI Usage",
+      "description": "Track your AI credits consumption",
+      "label": "AI Credits",
+      "unlimited": "Unlimited",
+      "loading": "Loading AI usage...",
+      "unavailable": "AI usage data unavailable"
+    },
     "tabs": {
       "overview": "Overview",
       "suggestions": "Suggestions",
@@ -1651,6 +2572,7 @@
       "generatingBudget": "Generating Budget...",
       "generatingCallSheet": "Generating Call Sheet...",
       "viewAiDashboard": "View AI Dashboard",
+      "backToDashboard": "Back to AI Dashboard",
       "viewShootingDays": "View Shooting Days",
       "analyzeScriptRecommendations": "Analyze Script for Recommendations",
       "viewAiSuggestions": "View AI Suggestions",
@@ -1661,6 +2583,161 @@
       "generateBudgetSuggestions": "Generate Budget Suggestions",
       "generateScheduleSuggestions": "Generate Schedule Suggestions",
       "analyzeScript": "Analyze Script"
+    },
+    "scriptAnalysis": {
+      "pageTitle": "AI Script Analysis",
+      "pageSubtitle": "Analyze scripts to extract characters, scenes, locations, and production requirements",
+      "settings": {
+        "title": "Analysis Settings",
+        "description": "Configure your script analysis parameters",
+        "projectLabel": "Project",
+        "projectPlaceholder": "Select a project"
+      },
+      "analysisType": {
+        "label": "Analysis Type",
+        "placeholder": "Select analysis type",
+        "types": {
+          "full": "Full Analysis",
+          "characters": "Character Analysis",
+          "scenes": "Scene Analysis",
+          "locations": "Location Analysis"
+        },
+        "descriptions": {
+          "full": "Complete analysis including characters, scenes, locations, and production requirements",
+          "characters": "Focus on character analysis, dialogue patterns, and casting requirements",
+          "scenes": "Scene breakdown, shot planning, and sequence analysis",
+          "locations": "Location requirements, set design, and shooting logistics"
+        }
+      },
+      "features": {
+        "title": "Analysis Features",
+        "characters": "Character identification and dialogue analysis",
+        "scenes": "Scene breakdown and sequence planning",
+        "production": "Production requirement identification",
+        "schedule": "Shooting schedule optimization"
+      },
+      "actions": {
+        "viewProduction": "View Production",
+        "analyzing": "Analyzing Script..."
+      },
+      "scriptInput": {
+        "title": "Script Input",
+        "description": "Paste your script text below for AI analysis",
+        "label": "Script Text",
+        "placeholder": "Paste your script text here... Include character names, dialogue, scene descriptions, and any production notes for the most accurate analysis.",
+        "charCount": "{current}/{max} characters"
+      },
+      "tips": {
+        "title": "Analysis Tips",
+        "items": {
+          "characters": "Use proper character names (all caps) for accurate identification",
+          "scenes": "Include scene headings (INT./EXT. locations)",
+          "production": "Add production notes in parentheses for special requirements",
+          "full": "Full analysis provides the most comprehensive results",
+          "casting": "Character analysis is great for casting planning"
+        }
+      },
+      "preview": {
+        "title": "Script Preview",
+        "description": "AI will analyze this script based on your selected parameters",
+        "cards": {
+          "characters": "Characters",
+          "scenes": "Scenes",
+          "analysisType": "Analysis Type",
+          "complexity": "Complexity"
+        },
+        "labels": {
+          "aiCharacters": "AI-analyzed characters",
+          "estimatedCharacters": "Estimated characters (regex-based)",
+          "aiScenes": "AI-analyzed scenes",
+          "estimatedScenes": "Estimated scenes",
+          "selectedType": "Selected analysis type",
+          "complexity": "Analysis complexity"
+        },
+        "complexity": {
+          "high": "High",
+          "medium": "Medium",
+          "low": "Low"
+        }
+      },
+      "analysisStatus": {
+        "title": "AI Analysis Complete",
+        "summary": "{characters} characters, {scenes} scenes, {locations} locations identified"
+      },
+      "errors": {
+        "unknown": "Unknown error"
+      }
+    },
+    "budgetEstimation": {
+      "pageTitle": "AI Budget Estimation",
+      "pageSubtitle": "Get AI-powered budget estimates based on script analysis",
+      "settings": {
+        "title": "Estimation Settings",
+        "description": "Configure your budget estimation parameters",
+        "projectLabel": "Project",
+        "projectPlaceholder": "Select a project"
+      },
+      "estimationType": {
+        "label": "Estimation Type",
+        "placeholder": "Select estimation type",
+        "types": {
+          "quick": "Quick Estimate",
+          "detailed": "Detailed Analysis"
+        }
+      },
+      "actions": {
+        "viewFinancials": "View Financials",
+        "estimate": "Estimate Budget",
+        "estimating": "Estimating Budget..."
+      },
+      "scriptInput": {
+        "title": "Script Analysis",
+        "description": "Paste your script text below for AI analysis and budget estimation",
+        "label": "Script Text",
+        "placeholder": "Paste your script text here... The AI will analyze characters, scenes, locations, and production requirements to generate an accurate budget estimate.",
+        "charCount": "{current}/{max} characters"
+      },
+      "tips": {
+        "title": "Estimation Tips",
+        "items": {
+          "characters": "Include character descriptions and dialogue",
+          "locations": "Mention locations and set requirements",
+          "effects": "Note any special effects or equipment needs",
+          "quick": "Quick estimates are faster but less detailed",
+          "detailed": "Detailed analysis provides comprehensive breakdowns"
+        }
+      },
+      "preview": {
+        "title": "Analysis Preview",
+        "description": "AI will analyze this script for budget estimation",
+        "cards": {
+          "characters": "Characters",
+          "complexity": "Complexity",
+          "estimationType": "Estimation Type"
+        },
+        "labels": {
+          "estimatedCharacters": "Estimated characters",
+          "complexity": "Script complexity level",
+          "selectedType": "Selected estimation type"
+        },
+        "complexity": {
+          "high": "High",
+          "medium": "Medium",
+          "low": "Low"
+        }
+      },
+      "errors": {
+        "estimateFailed": "Failed to estimate budget"
+      }
     }
+  },
+  "billingBanner": {
+    "trialEndingTitle": "Trial ending soon",
+    "trialEndingMessage": "Your free trial ends {time}. Upgrade now to keep full access.",
+    "trialEndedTitle": "Trial ended",
+    "trialEndedMessage": "Your trial has ended. Upgrade now to continue using SafeTasks.",
+    "ctaPrimary": "Upgrade now",
+    "ctaSecondary": "View pricing",
+    "timeFallback": "soon"
   }
 }

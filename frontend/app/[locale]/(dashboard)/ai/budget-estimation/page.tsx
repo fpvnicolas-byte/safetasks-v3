@@ -24,7 +24,10 @@ import type { AiBudgetEstimation } from '@/types'
 export default function AiBudgetEstimationPage() {
   const router = useRouter()
   const { user, organizationId } = useAuth()
+  const t = useTranslations('ai.budgetEstimation')
+  const tAi = useTranslations('ai')
   const tCommon = useTranslations('common.feedback')
+  const tCommonLabels = useTranslations('common')
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [scriptText, setScriptText] = useState<string>('')
@@ -55,7 +58,7 @@ export default function AiBudgetEstimationPage() {
       toast.success(tCommon('actionSuccess'))
       console.log('Budget estimation result:', result)
     } catch (error: any) {
-      const errorMsg = error?.message || 'Failed to estimate budget'
+      const errorMsg = error?.message || t('errors.estimateFailed')
       toast.error(tCommon('actionError', { message: errorMsg }))
       console.error('Budget estimation error:', error)
     }
@@ -65,9 +68,9 @@ export default function AiBudgetEstimationPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight font-display">AI Budget Estimation</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('pageTitle')}</h1>
           <p className="text-muted-foreground">
-            Get AI-powered budget estimates based on script analysis
+            {t('pageSubtitle')}
           </p>
         </div>
         <div className="flex gap-2">
@@ -75,13 +78,13 @@ export default function AiBudgetEstimationPage() {
             variant="outline"
             onClick={() => router.push('/ai')}
           >
-            Back to AI Dashboard
+            {tAi('actions.backToDashboard')}
           </Button>
           <Button
             onClick={() => router.push('/ai/script-analysis')}
           >
             <Sparkles className="mr-2 h-4 w-4" />
-            Analyze Script
+            {tAi('actions.analyzeScript')}
           </Button>
         </div>
       </div>
@@ -90,22 +93,22 @@ export default function AiBudgetEstimationPage() {
         {/* Controls */}
         <Card className="lg:col-span-1">
           <CardHeader>
-            <CardTitle>Estimation Settings</CardTitle>
+            <CardTitle>{t('settings.title')}</CardTitle>
             <CardDescription>
-              Configure your budget estimation parameters
+              {t('settings.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Project Selection */}
             <div className="space-y-2">
-              <Label htmlFor="project">Project</Label>
+              <Label htmlFor="project">{t('settings.projectLabel')}</Label>
               <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
                 <SelectTrigger id="project">
-                  <SelectValue placeholder="Select a project" />
+                  <SelectValue placeholder={t('settings.projectPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {isLoadingProjects ? (
-                    <div className="p-2 text-sm text-muted-foreground">Loading projects...</div>
+                    <div className="p-2 text-sm text-muted-foreground">{tCommonLabels('loading')}</div>
                   ) : projects && projects.length > 0 ? (
                     projects.map((project) => (
                       <SelectItem key={project.id} value={project.id}>
@@ -113,7 +116,7 @@ export default function AiBudgetEstimationPage() {
                       </SelectItem>
                     ))
                   ) : (
-                    <div className="p-2 text-sm text-muted-foreground">No projects available</div>
+                    <div className="p-2 text-sm text-muted-foreground">{tAi('empty.projects')}</div>
                   )}
                 </SelectContent>
               </Select>
@@ -121,21 +124,21 @@ export default function AiBudgetEstimationPage() {
 
             {/* Estimation Type */}
             <div className="space-y-2">
-              <Label htmlFor="estimation-type">Estimation Type</Label>
+              <Label htmlFor="estimation-type">{t('estimationType.label')}</Label>
               <Select value={estimationType} onValueChange={(value) => setEstimationType(value as 'detailed' | 'quick')}>
                 <SelectTrigger id="estimation-type">
-                  <SelectValue placeholder="Select estimation type" />
+                  <SelectValue placeholder={t('estimationType.placeholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="quick">Quick Estimate</SelectItem>
-                  <SelectItem value="detailed">Detailed Analysis</SelectItem>
+                  <SelectItem value="quick">{t('estimationType.types.quick')}</SelectItem>
+                  <SelectItem value="detailed">{t('estimationType.types.detailed')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Quick Actions */}
             <div className="space-y-3">
-              <h4 className="font-semibold">Quick Actions</h4>
+              <h4 className="font-semibold">{tAi('quickActions.title')}</h4>
               <div className="space-y-2">
                 <Button
                   variant="outline"
@@ -143,7 +146,7 @@ export default function AiBudgetEstimationPage() {
                   onClick={() => router.push('/ai')}
                 >
                   <Calculator className="mr-2 h-4 w-4" />
-                  View AI Dashboard
+                  {tAi('actions.viewAiDashboard')}
                 </Button>
                 <Button
                   variant="outline"
@@ -151,7 +154,7 @@ export default function AiBudgetEstimationPage() {
                   onClick={() => router.push('/financials')}
                 >
                   <DollarSign className="mr-2 h-4 w-4" />
-                  View Financials
+                  {t('actions.viewFinancials')}
                 </Button>
               </div>
             </div>
@@ -161,24 +164,24 @@ export default function AiBudgetEstimationPage() {
         {/* Script Input */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Script Analysis</CardTitle>
+            <CardTitle>{t('scriptInput.title')}</CardTitle>
             <CardDescription>
-              Paste your script text below for AI analysis and budget estimation
+              {t('scriptInput.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="script-input">Script Text</Label>
+              <Label htmlFor="script-input">{t('scriptInput.label')}</Label>
               <Textarea
                 id="script-input"
-                placeholder="Paste your script text here... The AI will analyze characters, scenes, locations, and production requirements to generate an accurate budget estimate."
+                placeholder={t('scriptInput.placeholder')}
                 value={scriptText}
                 onChange={(e) => setScriptText(e.target.value)}
                 className="min-h-[200px]"
                 maxLength={10000}
               />
               <div className="text-sm text-muted-foreground">
-                {scriptText.length}/10000 characters
+                {t('scriptInput.charCount', { current: scriptText.length, max: 10000 })}
               </div>
             </div>
 
@@ -191,12 +194,12 @@ export default function AiBudgetEstimationPage() {
                 {isEstimating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Estimating Budget...
+                    {t('actions.estimating')}
                   </>
                 ) : (
                   <>
                     <Calculator className="mr-2 h-4 w-4" />
-                    Estimate Budget
+                    {t('actions.estimate')}
                   </>
                 )}
               </Button>
@@ -205,19 +208,19 @@ export default function AiBudgetEstimationPage() {
                 onClick={() => setScriptText('')}
                 disabled={isEstimating}
               >
-                Clear
+                {tAi('actions.clear')}
               </Button>
             </div>
 
             {/* Estimation Tips */}
             <div className="bg-info/10 p-4 rounded-lg">
-              <h4 className="font-semibold text-info mb-2">Estimation Tips</h4>
+              <h4 className="font-semibold text-info mb-2">{t('tips.title')}</h4>
               <ul className="text-sm text-info-foreground space-y-1">
-                <li>• Include character descriptions and dialogue</li>
-                <li>• Mention locations and set requirements</li>
-                <li>• Note any special effects or equipment needs</li>
-                <li>• Quick estimates are faster but less detailed</li>
-                <li>• Detailed analysis provides comprehensive breakdowns</li>
+                <li>• {t('tips.items.characters')}</li>
+                <li>• {t('tips.items.locations')}</li>
+                <li>• {t('tips.items.effects')}</li>
+                <li>• {t('tips.items.quick')}</li>
+                <li>• {t('tips.items.detailed')}</li>
               </ul>
             </div>
           </CardContent>
@@ -228,9 +231,9 @@ export default function AiBudgetEstimationPage() {
       {scriptText.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Analysis Preview</CardTitle>
+            <CardTitle>{t('preview.title')}</CardTitle>
             <CardDescription>
-              AI will analyze this script for budget estimation
+              {t('preview.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -238,30 +241,34 @@ export default function AiBudgetEstimationPage() {
               <div className="bg-muted/60 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <FileText className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Characters</span>
+                  <span className="text-sm font-medium">{t('preview.cards.characters')}</span>
                 </div>
                 <div className="text-2xl font-bold">{scriptText.match(/\b[A-Z][A-Z\s]+\b/g)?.length || 0}</div>
-                <div className="text-xs text-muted-foreground">Estimated characters</div>
+                <div className="text-xs text-muted-foreground">{t('preview.labels.estimatedCharacters')}</div>
               </div>
 
               <div className="bg-muted/60 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Complexity</span>
+                  <span className="text-sm font-medium">{t('preview.cards.complexity')}</span>
                 </div>
                 <div className="text-2xl font-bold">
-                  {scriptText.length > 5000 ? 'High' : scriptText.length > 2000 ? 'Medium' : 'Low'}
+                  {scriptText.length > 5000
+                    ? t('preview.complexity.high')
+                    : scriptText.length > 2000
+                      ? t('preview.complexity.medium')
+                      : t('preview.complexity.low')}
                 </div>
-                <div className="text-xs text-muted-foreground">Script complexity level</div>
+                <div className="text-xs text-muted-foreground">{t('preview.labels.complexity')}</div>
               </div>
 
               <div className="bg-muted/60 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Estimation Type</span>
+                  <span className="text-sm font-medium">{t('preview.cards.estimationType')}</span>
                 </div>
-                <div className="text-2xl font-bold capitalize">{estimationType}</div>
-                <div className="text-xs text-muted-foreground">Selected estimation type</div>
+                <div className="text-2xl font-bold capitalize">{t(`estimationType.types.${estimationType}`)}</div>
+                <div className="text-xs text-muted-foreground">{t('preview.labels.selectedType')}</div>
               </div>
             </div>
           </CardContent>

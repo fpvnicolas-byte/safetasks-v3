@@ -19,7 +19,7 @@ import { formatCurrency } from '@/lib/utils/money'
 import { useState } from 'react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { InvoiceStatus } from '@/types'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 const statusVariant: Record<InvoiceStatus, 'secondary' | 'info' | 'success' | 'destructive' | 'outline'> = {
   draft: 'secondary',
@@ -34,6 +34,8 @@ export default function InvoiceDetailPage() {
   const router = useRouter()
   const invoiceId = params.id as string
   const locale = useLocale()
+  const t = useTranslations('financials.pages.invoiceDetail')
+  const tCommon = useTranslations('common')
 
   const { organizationId } = useAuth()
   const { data: invoice, isLoading, error } = useInvoice(invoiceId, organizationId || undefined)
@@ -41,7 +43,7 @@ export default function InvoiceDetailPage() {
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
   async function handleDelete() {
-    if (!confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) {
+    if (!confirm(t('deleteConfirm'))) {
       return
     }
 
@@ -50,20 +52,20 @@ export default function InvoiceDetailPage() {
       router.push('/financials?tab=invoices')
     } catch (err: unknown) {
       const error = err as Error
-      setDeleteError(error.message || 'Failed to delete invoice')
+      setDeleteError(error.message || t('errors.deleteFailed'))
     }
   }
 
   if (isLoading) {
-    return <div>Loading invoice...</div>
+    return <div>{t('loading')}</div>
   }
 
   if (error) {
-    return <div>Error loading invoice: {error.message}</div>
+    return <div>{t('errors.load', { message: error.message })}</div>
   }
 
   if (!invoice) {
-    return <div>Invoice not found</div>
+    return <div>{t('errors.notFound')}</div>
   }
 
   const dueDate = new Date(invoice.due_date)
@@ -84,15 +86,18 @@ export default function InvoiceDetailPage() {
           <Button asChild variant="outline" size="sm">
             <Link href="/financials?tab=invoices">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Invoices
+              {t('actions.back')}
             </Link>
           </Button>
           <div>
             <h1 className="text-3xl font-bold tracking-tight font-display">
-              Invoice #{invoice.invoice_number}
+              {t('title', { number: invoice.invoice_number })}
             </h1>
             <p className="text-muted-foreground">
-              Issued {issueDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} • Due {dueDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+              {t('dates.issuedDue', {
+                issued: issueDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }),
+                due: dueDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+              })}
             </p>
           </div>
         </div>
@@ -100,7 +105,7 @@ export default function InvoiceDetailPage() {
           <Button asChild variant="outline">
             <Link href={`/financials/invoices/${invoiceId}/edit`}>
               <Edit className="mr-2 h-4 w-4" />
-              Edit
+              {tCommon('edit')}
             </Link>
           </Button>
           <Button
@@ -109,7 +114,7 @@ export default function InvoiceDetailPage() {
             disabled={deleteInvoice.isPending}
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete
+            {t('actions.delete')}
           </Button>
         </div>
       </div>
@@ -124,16 +129,16 @@ export default function InvoiceDetailPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Badge variant={statusVariant[invoice.status as InvoiceStatus]} className="text-lg px-4 py-2">
-            {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+            {t(`status.${invoice.status}`)}
           </Badge>
           {isOverdue && (
             <Badge variant="destructive" className="text-lg px-4 py-2">
-              Overdue
+              {t('status.overdue')}
             </Badge>
           )}
           {paidDate && (
             <span className="text-sm text-muted-foreground">
-              Paid on {paidDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+              {t('paidOn', { date: paidDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) })}
             </span>
           )}
         </div>
@@ -141,18 +146,18 @@ export default function InvoiceDetailPage() {
         <div className="flex gap-2">
           <Button variant="outline">
             <Mail className="mr-2 h-4 w-4" />
-            Send Email
+            {t('actions.sendEmail')}
           </Button>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="outline" disabled>
                   <Download className="mr-2 h-4 w-4" />
-                  Download PDF
+                  {t('actions.downloadPdf')}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>PDF generation under construction</p>
+                <p>{t('pdfUnavailable')}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -165,27 +170,27 @@ export default function InvoiceDetailPage() {
           {/* Client & Project Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Invoice Information</CardTitle>
+              <CardTitle>{t('info.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground">Client</div>
-                  <div className="text-lg">{invoice.client?.name || 'No client assigned'}</div>
+                  <div className="text-sm font-medium text-muted-foreground">{t('info.client')}</div>
+                  <div className="text-lg">{invoice.client?.name || t('info.noClient')}</div>
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground">Project</div>
-                  <div className="text-lg">{invoice.project?.title || 'No project assigned'}</div>
+                  <div className="text-sm font-medium text-muted-foreground">{t('info.project')}</div>
+                  <div className="text-lg">{invoice.project?.title || t('info.noProject')}</div>
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground">Issue Date</div>
+                  <div className="text-sm font-medium text-muted-foreground">{t('info.issueDate')}</div>
                   <div>{issueDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</div>
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground">Due Date</div>
+                  <div className="text-sm font-medium text-muted-foreground">{t('info.dueDate')}</div>
                   <div className={isOverdue ? 'text-destructive font-medium' : ''}>
                     {dueDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-                    {isOverdue && ' (Overdue)'}
+                    {isOverdue && ` (${t('status.overdue')})`}
                   </div>
                 </div>
               </div>
@@ -194,7 +199,7 @@ export default function InvoiceDetailPage() {
                 <>
                   <Separator />
                   <div>
-                    <div className="text-sm font-medium text-muted-foreground mb-2">Notes</div>
+                    <div className="text-sm font-medium text-muted-foreground mb-2">{t('info.notes')}</div>
                     <div className="text-sm">{invoice.notes}</div>
                   </div>
                 </>
@@ -205,17 +210,17 @@ export default function InvoiceDetailPage() {
           {/* Line Items */}
           <Card>
             <CardHeader>
-              <CardTitle>Line Items</CardTitle>
-              <CardDescription>Detailed breakdown of invoice items</CardDescription>
+              <CardTitle>{t('items.title')}</CardTitle>
+              <CardDescription>{t('items.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Description</TableHead>
-                    <TableHead className="text-right">Quantity</TableHead>
-                    <TableHead className="text-right">Unit Price</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead>{t('items.headers.description')}</TableHead>
+                    <TableHead className="text-right">{t('items.headers.quantity')}</TableHead>
+                    <TableHead className="text-right">{t('items.headers.unitPrice')}</TableHead>
+                    <TableHead className="text-right">{t('items.headers.total')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -243,21 +248,21 @@ export default function InvoiceDetailPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
-                Invoice Summary
+                {t('summary.title')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between">
-                <span>Subtotal:</span>
+                <span>{t('summary.subtotal')}</span>
                 <span>{formatCurrency(subtotal)}</span>
               </div>
               <div className="flex justify-between">
-                <span>Tax:</span>
+                <span>{t('summary.tax')}</span>
                 <span>{formatCurrency(tax)}</span>
               </div>
               <Separator />
               <div className="flex justify-between text-lg font-bold">
-                <span>Total:</span>
+                <span>{t('summary.total')}</span>
                 <span>{formatCurrency(total)}</span>
               </div>
 
@@ -266,7 +271,7 @@ export default function InvoiceDetailPage() {
                   <Separator />
                   <div className="text-center">
                     <Badge variant="success">
-                      Paid on {paidDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                      {t('paidOn', { date: paidDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) })}
                     </Badge>
                   </div>
                 </>
@@ -277,20 +282,20 @@ export default function InvoiceDetailPage() {
           {/* Payment Status */}
           <Card>
             <CardHeader>
-              <CardTitle>Payment Status</CardTitle>
+              <CardTitle>{t('payment.title')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Status</span>
+                  <span className="text-sm">{t('payment.status')}</span>
                   <Badge variant={statusVariant[invoice.status as InvoiceStatus]}>
-                    {invoice.status}
+                    {t(`status.${invoice.status}`)}
                   </Badge>
                 </div>
 
                 {invoice.status === 'paid' && (
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">Payment Date</span>
+                    <span className="text-sm">{t('payment.date')}</span>
                     <span className="text-sm">
                       {paidDate?.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                     </span>
@@ -298,9 +303,11 @@ export default function InvoiceDetailPage() {
                 )}
 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Days Until Due</span>
+                  <span className="text-sm">{t('payment.daysUntilDue')}</span>
                   <span className={`text-sm ${isOverdue ? 'text-destructive font-medium' : ''}`}>
-                    {Math.ceil((dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days
+                    {t('payment.daysCount', {
+                      count: Math.ceil((dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+                    })}
                   </span>
                 </div>
               </div>
@@ -310,23 +317,23 @@ export default function InvoiceDetailPage() {
           {/* Quick Actions */}
           <Card>
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+              <CardTitle>{t('actions.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <Button className="w-full" variant="outline">
                 <Mail className="mr-2 h-4 w-4" />
-                Send to Client
+                {t('actions.sendToClient')}
               </Button>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button className="w-full" variant="outline" disabled>
                       <Download className="mr-2 h-4 w-4" />
-                      Download PDF
+                      {t('actions.downloadPdf')}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>PDF generation under construction</p>
+                    <p>{t('pdfUnavailable')}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -354,6 +361,8 @@ function PaymentDialog({ invoiceId, invoiceTotal }: PaymentDialogProps) {
   const [reference, setReference] = useState('')
   const [notes, setNotes] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
+  const t = useTranslations('financials.pages.invoiceDetail')
+  const tCommon = useTranslations('common')
 
   // TODO: Implement payment tracking - for now just show dialog
   const handleMarkAsPaid = async () => {
@@ -390,25 +399,25 @@ function PaymentDialog({ invoiceId, invoiceTotal }: PaymentDialogProps) {
       <DialogTrigger asChild>
         <Button className="w-full" variant="default">
           <CreditCard className="mr-2 h-4 w-4" />
-          Mark as Paid
+          {t('actions.markAsPaid')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Mark Invoice as Paid</DialogTitle>
+          <DialogTitle>{t('paymentDialog.title')}</DialogTitle>
           <DialogDescription>
-            Record payment details for invoice #{invoiceId}
+            {t('paymentDialog.description', { id: invoiceId })}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="text-center p-4 bg-muted rounded-lg">
-            <div className="text-sm text-muted-foreground">Invoice Total</div>
+            <div className="text-sm text-muted-foreground">{t('paymentDialog.totalLabel')}</div>
             <div className="text-2xl font-bold">{formatCurrency(invoiceTotal)}</div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="payment_date">Payment Date *</Label>
+            <Label htmlFor="payment_date">{t('paymentDialog.fields.date')}</Label>
             <Input
               id="payment_date"
               type="date"
@@ -419,38 +428,38 @@ function PaymentDialog({ invoiceId, invoiceTotal }: PaymentDialogProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="payment_method">Payment Method *</Label>
+            <Label htmlFor="payment_method">{t('paymentDialog.fields.method')}</Label>
             <Select value={paymentMethod} onValueChange={setPaymentMethod} required>
               <SelectTrigger>
-                <SelectValue placeholder="Select payment method" />
+                <SelectValue placeholder={t('paymentDialog.fields.methodPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                <SelectItem value="credit_card">Credit Card</SelectItem>
-                <SelectItem value="debit_card">Debit Card</SelectItem>
-                <SelectItem value="cash">Cash</SelectItem>
-                <SelectItem value="check">Check</SelectItem>
-                <SelectItem value="paypal">PayPal</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                <SelectItem value="bank_transfer">{t('paymentMethods.bank_transfer')}</SelectItem>
+                <SelectItem value="credit_card">{t('paymentMethods.credit_card')}</SelectItem>
+                <SelectItem value="debit_card">{t('paymentMethods.debit_card')}</SelectItem>
+                <SelectItem value="cash">{t('paymentMethods.cash')}</SelectItem>
+                <SelectItem value="check">{t('paymentMethods.check')}</SelectItem>
+                <SelectItem value="paypal">{t('paymentMethods.paypal')}</SelectItem>
+                <SelectItem value="other">{t('paymentMethods.other')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="reference">Reference/Transaction ID</Label>
+            <Label htmlFor="reference">{t('paymentDialog.fields.reference')}</Label>
             <Input
               id="reference"
-              placeholder="Transaction ID, check number, etc."
+              placeholder={t('paymentDialog.fields.referencePlaceholder')}
               value={reference}
               onChange={(e) => setReference(e.target.value)}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="payment_notes">Payment Notes</Label>
+            <Label htmlFor="payment_notes">{t('paymentDialog.fields.notes')}</Label>
             <Input
               id="payment_notes"
-              placeholder="Additional payment details..."
+              placeholder={t('paymentDialog.fields.notesPlaceholder')}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
@@ -459,13 +468,13 @@ function PaymentDialog({ invoiceId, invoiceTotal }: PaymentDialogProps) {
 
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <Button
             onClick={handleMarkAsPaid}
             disabled={isProcessing || !paymentDate || !paymentMethod}
           >
-            {isProcessing ? 'Processing...' : 'Mark as Paid'}
+            {isProcessing ? t('actions.processing') : t('actions.markAsPaid')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, 
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 
-from app.api.deps import get_current_organization, get_current_profile
+from app.api.deps import get_current_profile, require_billing_active, require_billing_read
 from app.db.session import get_db
 from app.services.notifications import notification_service
 from app.schemas.notifications import Notification, NotificationStats
@@ -20,7 +20,7 @@ class CreateTestNotificationRequest(BaseModel):
     type: str = "info"  # info, success, warning, error
 
 
-@router.get("/", response_model=List[Notification])
+@router.get("/", response_model=List[Notification], dependencies=[Depends(require_billing_read())])
 async def get_notifications(
     profile = Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
@@ -43,7 +43,7 @@ async def get_notifications(
     return notifications
 
 
-@router.get("/stats", response_model=NotificationStats)
+@router.get("/stats", response_model=NotificationStats, dependencies=[Depends(require_billing_read())])
 async def get_notification_stats(
     profile = Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
@@ -71,7 +71,7 @@ async def get_notification_stats(
     )
 
 
-@router.patch("/{notification_id}/read")
+@router.patch("/{notification_id}/read", dependencies=[Depends(require_billing_active())])
 async def mark_notification_as_read(
     notification_id: UUID,
     profile = Depends(get_current_profile),
@@ -96,7 +96,7 @@ async def mark_notification_as_read(
     return {"message": "Notification marked as read", "notification_id": notification_id}
 
 
-@router.patch("/mark-all-read")
+@router.patch("/mark-all-read", dependencies=[Depends(require_billing_active())])
 async def mark_all_notifications_as_read(
     profile = Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
@@ -113,7 +113,7 @@ async def mark_all_notifications_as_read(
     return {"message": f"Marked {updated_count} notifications as read"}
 
 
-@router.post("/test/create")
+@router.post("/test/create", dependencies=[Depends(require_billing_active())])
 async def create_test_notification(
     request: CreateTestNotificationRequest,
     profile = Depends(get_current_profile),

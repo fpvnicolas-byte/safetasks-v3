@@ -21,6 +21,7 @@
     "email": "E-mail",
     "phone": "Telefone",
     "address": "Endereço",
+    "language": "Idioma",
     "notes": "Observações",
     "active": "Ativo",
     "inactive": "Inativo",
@@ -59,6 +60,7 @@
     "login": {
       "title": "Bem-vindo ao SafeTasks V3",
       "subtitle": "Entre na sua conta",
+      "backToHome": "Voltar para Home",
       "email": "E-mail",
       "password": "Senha",
       "signIn": "Entrar",
@@ -80,7 +82,15 @@
       "creatingAccount": "Criando conta...",
       "alreadyHaveAccount": "Já tem uma conta?",
       "signIn": "Entrar",
-      "passwordsDoNotMatch": "As senhas não coincidem"
+      "passwordsDoNotMatch": "As senhas não coincidem",
+      "passwordStrength": {
+        "label": "Força da senha",
+        "empty": "vazia",
+        "weak": "fraca",
+        "fair": "média",
+        "good": "boa",
+        "strong": "forte"
+      }
     },
     "forgotPassword": {
       "title": "Redefinir Senha",
@@ -719,7 +729,8 @@
       "tab": "Visão Geral",
       "totalBudget": "Orçamento Total",
       "totalSpent": "Total Gasto",
-      "remaining": "Restante"
+      "remaining": "Restante",
+      "breadcrumb": "Financeiro / Visão Geral"
     },
     "invoicesTab": {
       "tab": "Faturas",
@@ -773,6 +784,695 @@
       "description": "Acompanhe custos e despesas de produção",
       "noRecentExpenses": "Nenhuma despesa recente.",
       "viewExpenses": "Ver Despesas"
+    },
+    "status": {
+      "draft": "Rascunho",
+      "sent": "Enviada",
+      "paid": "Paga",
+      "overdue": "Em atraso",
+      "canceled": "Cancelada",
+      "cancelled": "Cancelada"
+    },
+    "pages": {
+      "transactions": {
+        "title": "Transações",
+        "subtitle": "Registre receitas e despesas para acompanhar o fluxo de caixa",
+        "loading": "Carregando transações...",
+        "error": "Falha ao carregar transações. Tente novamente.",
+        "actions": {
+          "new": "Nova Transação"
+        },
+        "summary": {
+          "totalIncome": "Total de Receitas",
+          "totalExpenses": "Total de Despesas",
+          "netBalance": "Saldo Líquido",
+          "transactionCount": "{count, plural, one {# transação} other {# transações}}",
+          "totalTransactionCount": "{count, plural, one {# transação no total} other {# transações no total}}",
+          "showing": "Mostrando {filtered} de {total} {total, plural, one {transação} other {transações}}",
+          "netLabel": "Saldo:"
+        },
+        "filters": {
+          "title": "Filtrar Transações",
+          "description": "Pesquise e filtre transações por tipo, conta, projeto ou categoria",
+          "searchPlaceholder": "Buscar por descrição, conta ou projeto...",
+          "type": {
+            "label": "Tipo",
+            "all": "Todos os Tipos",
+            "income": "Receita",
+            "expense": "Despesa"
+          },
+          "bankAccount": {
+            "label": "Conta Bancária",
+            "all": "Todas as Contas"
+          },
+          "project": {
+            "label": "Projeto",
+            "all": "Todos os Projetos",
+            "none": "Sem Projeto"
+          },
+          "category": {
+            "label": "Categoria",
+            "all": "Todas as Categorias"
+          }
+        },
+        "categories": {
+          "crew_hire": "Contratação de Equipe",
+          "equipment_rental": "Aluguel de Equipamentos",
+          "logistics": "Logística",
+          "post_production": "Pós-Produção",
+          "maintenance": "Manutenção",
+          "production_revenue": "Receita de Produção",
+          "other": "Outros"
+        },
+        "empty": {
+          "filteredTitle": "Nenhuma transação encontrada",
+          "noTransactionsTitle": "Ainda não há transações",
+          "filteredDescription": "Tente ajustar seus filtros",
+          "noTransactionsDescription": "Comece registrando sua primeira transação",
+          "addFirst": "Adicionar Primeira Transação"
+        },
+        "list": {
+          "title": "Transações Recentes",
+          "description": "Todas as transações ordenadas por data (mais recentes primeiro)",
+          "untitled": "Transação Sem Título"
+        },
+        "types": {
+          "income": "Receita",
+          "expense": "Despesa"
+        }
+      },
+      "transactionsNew": {
+        "title": "Nova Transação",
+        "actions": {
+          "back": "Voltar para Transações",
+          "record": "Registrar Transação",
+          "recording": "Registrando..."
+        },
+        "noBankAccounts": {
+          "title": "Nenhuma Conta Bancária",
+          "description": "Você precisa criar pelo menos uma conta bancária antes de registrar transações",
+          "action": "Criar Conta Bancária"
+        },
+        "form": {
+          "title": "Registrar Nova Transação",
+          "description": "Registre receitas ou despesas para acompanhar o fluxo de caixa e atualizar saldos"
+        },
+        "note": {
+          "title": "Nota:",
+          "description": "Registrar esta transação atualizará automaticamente o saldo da conta bancária selecionada."
+        },
+        "fields": {
+          "type": {
+            "label": "Tipo de Transação *",
+            "income": "Receita",
+            "expense": "Despesa",
+            "incomeHint": "Dinheiro recebido",
+            "expenseHint": "Dinheiro gasto"
+          },
+          "bankAccount": {
+            "label": "Conta Bancária *",
+            "placeholder": "Selecione uma conta bancária",
+            "help": "A conta bancária que esta transação afeta"
+          },
+          "category": {
+            "label": "Categoria *",
+            "helpIncome": "Tipo de receita",
+            "helpExpense": "Tipo de despesa"
+          },
+          "amount": {
+            "label": "Valor *",
+            "placeholder": "0.00",
+            "help": "Informe o valor na moeda da conta (ex.: 100,50)"
+          },
+          "date": {
+            "label": "Data da Transação *",
+            "help": "Quando esta transação ocorreu?"
+          },
+          "description": {
+            "label": "Descrição",
+            "placeholder": "Breve descrição desta transação...",
+            "help": "Detalhes opcionais sobre esta transação"
+          },
+          "project": {
+            "label": "Projeto (Opcional)",
+            "placeholder": "Sem projeto (despesa/receita geral)",
+            "none": "Sem projeto",
+            "help": "Vincule esta transação a um projeto específico (opcional)"
+          },
+          "stakeholder": {
+            "label": "Stakeholder (Opcional)",
+            "placeholder": "Selecione um membro da equipe",
+            "none": "Sem stakeholder",
+            "paidViaSupplier": "Pago via Fornecedor",
+            "help": "Vincule este pagamento a um membro específico da equipe"
+          }
+        },
+        "errors": {
+          "bankAccountRequired": "Conta bancária é obrigatória",
+          "categoryRequired": "Categoria é obrigatória",
+          "amountRequired": "O valor deve ser maior que 0",
+          "dateRequired": "Data da transação é obrigatória",
+          "organizationMissing": "Organização não encontrada. Faça login novamente.",
+          "createFailed": "Falha ao criar transação"
+        }
+      },
+      "transactionDetail": {
+        "title": "Detalhes da Transação",
+        "loading": "Carregando transação...",
+        "error": "Falha ao carregar transação. Tente novamente.",
+        "untitled": "Transação Sem Título",
+        "actions": {
+          "back": "Voltar para Transações",
+          "delete": "Excluir Transação",
+          "deleting": "Excluindo..."
+        },
+        "deleteConfirm": "Tem certeza de que deseja excluir esta transação?\\n\\nIsso irá {direction} o saldo da conta bancária em {amount}.\\n\\nEsta ação não pode ser desfeita.",
+        "balance": {
+          "decrease": "diminuir",
+          "increase": "aumentar"
+        },
+        "errors": {
+          "organizationMissing": "Organização não encontrada. Faça login novamente.",
+          "deleteFailed": "Falha ao excluir transação: {message}"
+        },
+        "types": {
+          "income": "Receita",
+          "expense": "Despesa"
+        },
+        "bankAccount": {
+          "title": "Conta Bancária",
+          "currency": "Moeda: {currency}",
+          "balance": "Saldo Atual: {amount}",
+          "viewAccounts": "Ver Contas"
+        },
+        "date": {
+          "title": "Data da Transação",
+          "created": "Criado em: {date}"
+        },
+        "project": {
+          "title": "Projeto Vinculado",
+          "noDescription": "Sem descrição",
+          "view": "Ver Projeto"
+        },
+        "info": {
+          "title": "Informações da Transação",
+          "description": "Detalhes completos desta transação",
+          "transactionId": "ID da Transação",
+          "organizationId": "ID da Organização",
+          "descriptionLabel": "Descrição",
+          "type": "Tipo",
+          "category": "Categoria",
+          "amountCents": "Valor (Centavos)",
+          "amountFormatted": "Valor (Formatado)"
+        },
+        "warning": {
+          "title": "Nota:",
+          "description": "Excluir esta transação irá reverter o efeito no saldo da conta bancária.",
+          "balanceDecrease": "O saldo diminuirá em {amount}.",
+          "balanceIncrease": "O saldo aumentará em {amount}."
+        }
+      },
+      "bankAccounts": {
+        "title": "Contas Bancárias",
+        "subtitle": "Gerencie contas bancárias da empresa e acompanhe saldos",
+        "loading": "Carregando contas bancárias...",
+        "error": "Falha ao carregar contas bancárias. Tente novamente.",
+        "actions": {
+          "new": "Nova Conta Bancária"
+        },
+        "summary": {
+          "totalBalance": "Saldo Total ({currency})",
+          "accountCount": "{count, plural, one {# conta} other {# contas}}",
+          "showing": "Mostrando {filtered} de {total} {total, plural, one {conta} other {contas}}",
+          "currencyCount": "{count, plural, one {# moeda} other {# moedas}}"
+        },
+        "search": {
+          "title": "Buscar Contas",
+          "description": "Encontre contas bancárias por nome ou moeda",
+          "placeholder": "Buscar por nome ou moeda..."
+        },
+        "empty": {
+          "filteredTitle": "Nenhuma conta encontrada",
+          "noAccountsTitle": "Ainda não há contas bancárias",
+          "filteredDescription": "Tente ajustar sua busca",
+          "noAccountsDescription": "Comece adicionando sua primeira conta bancária",
+          "addFirst": "Adicionar Primeira Conta"
+        },
+        "list": {
+          "currentBalance": "Saldo Atual",
+          "created": "Criado em: {date}"
+        },
+        "deleteConfirm": "Tem certeza de que deseja excluir a conta bancária \"{name}\"? Esta ação não pode ser desfeita.",
+        "deleteError": "Falha ao excluir conta bancária: {message}"
+      },
+      "bankAccountsNew": {
+        "title": "Criar Nova Conta Bancária",
+        "subtitle": "Adicione uma nova conta bancária para acompanhar as finanças da organização",
+        "actions": {
+          "back": "Voltar para Contas Bancárias",
+          "create": "Criar Conta Bancária",
+          "creating": "Criando..."
+        },
+        "note": {
+          "title": "Nota:",
+          "description": "O saldo inicial será 0. Você pode atualizar o saldo criando transações."
+        },
+        "fields": {
+          "name": {
+            "label": "Nome da Conta *",
+            "placeholder": "Conta Corrente Empresarial",
+            "help": "Um nome descritivo para esta conta (ex.: \"Conta Principal\", \"Poupança\", \"PayPal\")"
+          },
+          "currency": {
+            "label": "Moeda *",
+            "help": "Selecione a moeda desta conta. Não pode ser alterada após a criação."
+          }
+        },
+        "balance": {
+          "title": "Saldo da Conta",
+          "description": "A conta começará com saldo 0,00. Para definir um saldo inicial ou registrar transações:",
+          "items": {
+            "income": "Crie transações de receita para adicionar fundos",
+            "expense": "Crie transações de despesa para reduzir fundos",
+            "auto": "O saldo é atualizado automaticamente a cada transação"
+          }
+        },
+        "currencies": {
+          "BRL": "Real Brasileiro (R$)",
+          "USD": "Dólar Americano ($)",
+          "EUR": "Euro (€)",
+          "GBP": "Libra Esterlina (£)",
+          "JPY": "Iene Japonês (¥)",
+          "CAD": "Dólar Canadense (C$)",
+          "AUD": "Dólar Australiano (A$)",
+          "MXN": "Peso Mexicano (MX$)"
+        },
+        "errors": {
+          "nameRequired": "Nome da conta é obrigatório",
+          "currencyRequired": "Moeda é obrigatória",
+          "validationTitle": "Erro de Validação",
+          "authTitle": "Erro de Autenticação",
+          "organizationMissing": "Organização não encontrada. Faça login novamente.",
+          "createTitle": "Erro ao Criar Conta Bancária"
+        }
+      },
+      "bankAccountsEdit": {
+        "title": "Editar Conta Bancária",
+        "subtitle": "Atualize informações da conta bancária de {name}",
+        "loading": "Carregando...",
+        "actions": {
+          "back": "Voltar para Contas Bancárias",
+          "save": "Salvar Alterações",
+          "saving": "Salvando..."
+        },
+        "admin": {
+          "title": "Acesso de Administrador Necessário",
+          "description": "Apenas administradores podem editar contas bancárias",
+          "details": "As configurações de conta bancária só podem ser modificadas por usuários com privilégios de administrador. Isso protege informações financeiras sensíveis."
+        },
+        "balance": {
+          "title": "Saldo Atual",
+          "description": "O saldo é atualizado automaticamente por transações e não pode ser editado diretamente."
+        },
+        "fields": {
+          "name": {
+            "label": "Nome da Conta *",
+            "placeholder": "Conta Corrente Empresarial",
+            "help": "Um nome descritivo para esta conta bancária"
+          },
+          "currency": {
+            "label": "Moeda *",
+            "help": "A moeda desta conta"
+          }
+        },
+        "adminNote": {
+          "title": "Nota do Administrador:",
+          "description": "Alterações nas configurações da conta afetam todos os usuários da organização. O saldo não pode ser editado diretamente — ele é atualizado automaticamente pelas transações."
+        },
+        "currencies": {
+          "BRL": "Real Brasileiro (R$)",
+          "USD": "Dólar Americano ($)",
+          "EUR": "Euro (€)",
+          "GBP": "Libra Esterlina (£)",
+          "JPY": "Iene Japonês (¥)",
+          "CAD": "Dólar Canadense (C$)",
+          "AUD": "Dólar Australiano (A$)",
+          "MXN": "Peso Mexicano (MX$)"
+        },
+        "errors": {
+          "nameRequired": "Nome da conta é obrigatório",
+          "currencyRequired": "Moeda é obrigatória",
+          "validationTitle": "Erro de Validação",
+          "updateTitle": "Erro ao Atualizar Conta Bancária",
+          "notFound": "Conta bancária não encontrada."
+        }
+      },
+      "taxTables": {
+        "title": "Tabelas de Impostos",
+        "subtitle": "Configure taxas de impostos para conformidade fiscal brasileira",
+        "loading": "Carregando tabelas de impostos...",
+        "error": "Falha ao carregar tabelas de impostos. Tente novamente.",
+        "actions": {
+          "new": "Nova Tabela de Impostos"
+        },
+        "search": {
+          "title": "Buscar Tabelas de Impostos",
+          "description": "Encontre tabelas de impostos por nome ou tipo",
+          "placeholder": "Buscar por nome ou tipo...",
+          "showInactive": "Mostrar tabelas de impostos inativas"
+        },
+        "empty": {
+          "filteredTitle": "Nenhuma tabela de impostos encontrada",
+          "noTablesTitle": "Ainda não há tabelas de impostos",
+          "filteredDescription": "Tente ajustar sua busca ou filtros",
+          "noTablesDescription": "Comece criando sua primeira tabela de impostos",
+          "addFirst": "Criar Primeira Tabela de Impostos"
+        },
+        "list": {
+          "rate": "Alíquota:"
+        },
+        "status": {
+          "active": "Ativa",
+          "inactive": "Inativa"
+        },
+        "summary": {
+          "showing": "Mostrando {filtered} de {total} {total, plural, one {tabela} other {tabelas}}",
+          "statusCounts": "{active} ativas • {inactive} inativas"
+        },
+        "deleteConfirm": "Tem certeza de que deseja excluir a tabela de impostos \"{name}\"? Esta ação não pode ser desfeita.",
+        "deleteError": "Falha ao excluir tabela de impostos: {message}"
+      },
+      "taxTablesNew": {
+        "title": "Criar Tabela de Impostos",
+        "subtitle": "Configure uma nova taxa de imposto para conformidade fiscal brasileira",
+        "form": {
+          "title": "Detalhes da Tabela de Impostos",
+          "description": "Informe os dados do imposto e a alíquota aplicável"
+        },
+        "fields": {
+          "name": {
+            "label": "Nome *",
+            "placeholder": "ex.: ISS 5% - São Paulo",
+            "help": "Um nome descritivo para esta tabela de impostos"
+          },
+          "type": {
+            "label": "Tipo de Imposto *",
+            "placeholder": "Selecione o tipo de imposto"
+          },
+          "rate": {
+            "label": "Percentual da Alíquota *",
+            "placeholder": "ex.: 5,00",
+            "help": "Informe a taxa como porcentagem (0-100)"
+          },
+          "description": {
+            "label": "Descrição",
+            "placeholder": "Notas adicionais sobre este imposto..."
+          }
+        },
+        "taxTypes": {
+          "iss": "ISS (Imposto sobre Serviços)",
+          "irrf": "IRRF (Imposto de Renda Retido na Fonte)",
+          "pis": "PIS (Contribuição Social)",
+          "cofins": "COFINS (Contribuição Social)",
+          "csll": "CSLL (Contribuição Social)",
+          "inss": "INSS (Seguridade Social)",
+          "rental_tax": "Imposto de Aluguel",
+          "other": "Outros"
+        },
+        "actions": {
+          "create": "Criar Tabela de Impostos",
+          "creating": "Criando..."
+        },
+        "errors": {
+          "rateRange": "O percentual da alíquota deve estar entre 0 e 100",
+          "createFailed": "Falha ao criar tabela de impostos"
+        }
+      },
+      "taxTablesEdit": {
+        "title": "Editar Tabela de Impostos",
+        "subtitle": "Atualize a configuração da tabela de impostos",
+        "loading": "Carregando tabela de impostos...",
+        "form": {
+          "title": "Detalhes da Tabela de Impostos",
+          "description": "Modifique as informações e a alíquota"
+        },
+        "fields": {
+          "name": {
+            "label": "Nome *",
+            "placeholder": "ex.: ISS 5% - São Paulo"
+          },
+          "type": {
+            "label": "Tipo de Imposto *",
+            "placeholder": "Selecione o tipo de imposto"
+          },
+          "rate": {
+            "label": "Percentual da Alíquota *"
+          },
+          "description": {
+            "label": "Descrição"
+          },
+          "active": {
+            "label": "Ativa"
+          }
+        },
+        "taxTypes": {
+          "iss": "ISS (Imposto sobre Serviços)",
+          "irrf": "IRRF (Imposto de Renda Retido na Fonte)",
+          "pis": "PIS (Contribuição Social)",
+          "cofins": "COFINS (Contribuição Social)",
+          "csll": "CSLL (Contribuição Social)",
+          "inss": "INSS (Seguridade Social)",
+          "rental_tax": "Imposto de Aluguel",
+          "other": "Outros"
+        },
+        "meta": {
+          "created": "Criado em: {date}",
+          "updated": "Última atualização: {date}"
+        },
+        "actions": {
+          "delete": "Excluir",
+          "save": "Salvar Alterações",
+          "saving": "Salvando..."
+        },
+        "deleteConfirm": "Tem certeza de que deseja excluir a tabela de impostos \"{name}\"? Esta ação não pode ser desfeita.",
+        "errors": {
+          "notFound": "Tabela de impostos não encontrada",
+          "rateRange": "O percentual da alíquota deve estar entre 0 e 100",
+          "updateFailed": "Falha ao atualizar tabela de impostos",
+          "deleteFailed": "Falha ao excluir tabela de impostos"
+        }
+      },
+      "invoicesNew": {
+        "title": "Criar Nova Fatura",
+        "subtitle": "Gere uma fatura profissional para seus serviços de produção",
+        "form": {
+          "title": "Detalhes da Fatura",
+          "description": "Preencha as informações básicas desta fatura"
+        },
+        "fields": {
+          "client": {
+            "label": "Cliente *",
+            "placeholder": "Selecione um cliente"
+          },
+          "project": {
+            "label": "Projeto (Opcional)",
+            "placeholder": "Selecione um projeto"
+          },
+          "dueDate": {
+            "label": "Data de Vencimento *"
+          },
+          "description": {
+            "label": "Descrição da Fatura",
+            "placeholder": "Breve descrição dos serviços..."
+          },
+          "notes": {
+            "label": "Notas Adicionais",
+            "placeholder": "Termos de pagamento, instruções especiais..."
+          }
+        },
+        "items": {
+          "title": "Itens da Fatura",
+          "add": "Adicionar Item",
+          "remove": "Remover",
+          "fields": {
+            "description": "Descrição *",
+            "descriptionPlaceholder": "Descrição do serviço",
+            "quantity": "Quantidade *",
+            "unitPrice": "Preço Unitário (R$) *",
+            "unitPricePlaceholder": "0,00",
+            "category": "Categoria",
+            "categoryPlaceholder": "Selecione a categoria"
+          }
+        },
+        "categories": {
+          "pre_production": "Pré-Produção",
+          "production": "Produção",
+          "post_production": "Pós-Produção",
+          "marketing": "Marketing",
+          "other": "Outros"
+        },
+        "summary": {
+          "title": "Resumo da Fatura",
+          "subtotal": "Subtotal:",
+          "tax": "Imposto ({rate}%):",
+          "total": "Total:"
+        },
+        "actions": {
+          "create": "Criar Fatura",
+          "creating": "Criando Fatura..."
+        },
+        "errors": {
+          "organizationMissing": "Nenhuma organização encontrada. Entre em contato com o suporte.",
+          "clientRequired": "Selecione um cliente",
+          "itemsRequired": "Adicione pelo menos um item de fatura válido",
+          "createFailed": "Falha ao criar fatura"
+        }
+      },
+      "invoiceDetail": {
+        "title": "Fatura #{number}",
+        "loading": "Carregando fatura...",
+        "deleteConfirm": "Tem certeza de que deseja excluir esta fatura? Esta ação não pode ser desfeita.",
+        "actions": {
+          "back": "Voltar para Faturas",
+          "delete": "Excluir",
+          "sendEmail": "Enviar Email",
+          "downloadPdf": "Baixar PDF",
+          "title": "Ações Rápidas",
+          "sendToClient": "Enviar para Cliente",
+          "markAsPaid": "Marcar como Paga",
+          "processing": "Processando..."
+        },
+        "status": {
+          "draft": "Rascunho",
+          "sent": "Enviada",
+          "paid": "Paga",
+          "overdue": "Em atraso",
+          "canceled": "Cancelada",
+          "cancelled": "Cancelada"
+        },
+        "dates": {
+          "issuedDue": "Emitida {issued} • Vence {due}"
+        },
+        "paidOn": "Paga em {date}",
+        "pdfUnavailable": "Geração de PDF em construção",
+        "info": {
+          "title": "Informações da Fatura",
+          "client": "Cliente",
+          "noClient": "Nenhum cliente atribuído",
+          "project": "Projeto",
+          "noProject": "Nenhum projeto atribuído",
+          "issueDate": "Data de Emissão",
+          "dueDate": "Data de Vencimento",
+          "notes": "Notas"
+        },
+        "items": {
+          "title": "Itens da Fatura",
+          "description": "Detalhamento dos itens da fatura",
+          "headers": {
+            "description": "Descrição",
+            "quantity": "Quantidade",
+            "unitPrice": "Preço Unitário",
+            "total": "Total"
+          }
+        },
+        "summary": {
+          "title": "Resumo da Fatura",
+          "subtotal": "Subtotal:",
+          "tax": "Imposto:",
+          "total": "Total:"
+        },
+        "payment": {
+          "title": "Status do Pagamento",
+          "status": "Status",
+          "date": "Data do Pagamento",
+          "daysUntilDue": "Dias Até o Vencimento",
+          "daysCount": "{count, plural, one {# dia} other {# dias}}"
+        },
+        "paymentDialog": {
+          "title": "Marcar Fatura como Paga",
+          "description": "Registrar detalhes do pagamento da fatura #{id}",
+          "totalLabel": "Total da Fatura",
+          "fields": {
+            "date": "Data do Pagamento *",
+            "method": "Método de Pagamento *",
+            "methodPlaceholder": "Selecione o método de pagamento",
+            "reference": "Referência/ID da Transação",
+            "referencePlaceholder": "ID da transação, número do cheque, etc.",
+            "notes": "Observações de Pagamento",
+            "notesPlaceholder": "Detalhes adicionais do pagamento..."
+          }
+        },
+        "paymentMethods": {
+          "bank_transfer": "Transferência Bancária",
+          "credit_card": "Cartão de Crédito",
+          "debit_card": "Cartão de Débito",
+          "cash": "Dinheiro",
+          "check": "Cheque",
+          "paypal": "PayPal",
+          "other": "Outros"
+        },
+        "errors": {
+          "load": "Erro ao carregar fatura: {message}",
+          "notFound": "Fatura não encontrada",
+          "deleteFailed": "Falha ao excluir fatura"
+        }
+      },
+      "invoicesEdit": {
+        "title": "Editar Fatura #{number}",
+        "loading": "Carregando fatura...",
+        "subtitle": {
+          "editItems": "Modifique os itens e detalhes da fatura",
+          "updateStatus": "Atualize apenas o status e as datas"
+        },
+        "warnings": {
+          "readOnly": "Esta fatura está {status}. Somente faturas em rascunho podem ter itens editados. Você ainda pode atualizar o status e as datas abaixo."
+        },
+        "items": {
+          "title": "Itens da Fatura",
+          "description": "Adicionar, editar ou remover itens",
+          "add": "Adicionar Item",
+          "fields": {
+            "description": "Descrição",
+            "descriptionPlaceholder": "Descrição do serviço",
+            "quantity": "Quantidade",
+            "unitPrice": "Preço Unitário (R$)",
+            "unitPricePlaceholder": "0,00"
+          },
+          "total": "Total: {total}"
+        },
+        "summary": {
+          "subtotal": "Subtotal:",
+          "tax": "Imposto:",
+          "total": "Total:"
+        },
+        "statusForm": {
+          "title": "Status da Fatura",
+          "description": "Atualize o status e as datas da fatura",
+          "fields": {
+            "status": "Status",
+            "dueDate": "Data de Vencimento"
+          }
+        },
+        "status": {
+          "draft": "Rascunho",
+          "sent": "Enviada",
+          "paid": "Paga",
+          "overdue": "Em atraso",
+          "cancelled": "Cancelada"
+        },
+        "actions": {
+          "saveItems": "Salvar Itens",
+          "saving": "Salvando...",
+          "updateStatus": "Atualizar Status",
+          "updating": "Atualizando..."
+        },
+        "errors": {
+          "notFound": "Fatura não encontrada",
+          "deleteItem": "Falha ao excluir item: {message}",
+          "saveItems": "Falha ao salvar itens",
+          "updateInvoice": "Falha ao atualizar fatura"
+        }
+      }
     }
   },
   "inventory": {
@@ -1366,40 +2066,261 @@
     "viewAll": "Ver todas as notificações"
   },
   "landing": {
-    "title": "SafeTasks V3",
-    "subtitle": "Gerenciamento Profissional de Produção Cinematográfica",
-    "getStarted": "Começar Agora",
-    "signIn": "Entrar",
-    "createAccount": "Criar Conta Grátis",
-    "features": {
-      "projectManagement": {
-        "title": "Gestão de Projetos",
-        "description": "Organize múltiplos projetos cinematográficos com rastreamento detalhado e atualizações de status"
+    "nav": {
+      "features": "Recursos",
+      "modules": "Módulos",
+      "workflow": "Fluxo",
+      "pricing": "Preços",
+      "signIn": "Entrar",
+      "getStarted": "Iniciar teste"
+    },
+    "hero": {
+      "eyebrow": "Feito para produtoras audiovisuais",
+      "title": "SafeTasks é o sistema de produção que conecta projetos, pessoas e dinheiro.",
+      "subtitle": "O melhor do Yandu + Jobb System, reconstruído em uma plataforma moderna e com acesso por função.",
+      "primaryCta": "Criar conta",
+      "secondaryCta": "Ver preços",
+      "note": "Teste Pro de 7 dias com uso limitado. Cancele quando quiser."
+    },
+    "badges": {
+      "roles": "Acesso por função",
+      "billing": "Limites do plano e uso",
+      "drive": "Sincronização Google Drive",
+      "ai": "Breakdowns com IA"
+    },
+    "sections": {
+      "modules": {
+        "title": "Tudo o que uma produção precisa",
+        "subtitle": "Da pré-produção à entrega final, tudo sincronizado."
       },
-      "callSheets": {
-        "title": "Ordens do Dia",
-        "description": "Crie ordens do dia profissionais com horários da equipe, localizações e informações de contato"
+      "workflow": {
+        "title": "Um fluxo que reflete a realidade do set",
+        "subtitle": "Planeje, filme, aprove e feche sem perder contexto."
+      },
+      "access": {
+        "title": "Acesso claro para cada papel",
+        "subtitle": "Owners, produtores, financeiro e freelancers veem somente o necessário."
+      },
+      "integrations": {
+        "title": "Conectado ao seu stack",
+        "subtitle": "Arquivos, pagamentos e automação em um único fluxo."
+      },
+      "testimonials": {
+        "title": "Construído com equipes de produção",
+        "subtitle": "Feito para substituir planilhas soltas e fluxos frágeis."
+      },
+      "cta": {
+        "title": "Pronto para rodar sua próxima produção no SafeTasks?",
+        "subtitle": "Crie sua conta e inicie o teste em minutos."
+      }
+    },
+    "modules": {
+      "production": {
+        "title": "Projetos e breakdowns",
+        "description": "Cenas, personagens, diárias e ordens do dia conectadas à produção."
+      },
+      "scheduling": {
+        "title": "Agenda e equipe",
+        "description": "Calendário, notificações, propostas e aprovações em um só lugar."
       },
       "financials": {
-        "title": "Controle Financeiro",
-        "description": "Monitore orçamentos, faturas e despesas com precisão até os centavos"
+        "title": "Orçamentos e fluxo de caixa",
+        "description": "Clientes, faturas, transações e impostos com aprovações por função."
       },
-      "team": {
-        "title": "Colaboração em Equipe",
-        "description": "Gerencie clientes, equipe e elenco com informações de contato centralizadas"
+      "inventory": {
+        "title": "Inventário e kits",
+        "description": "Controle de equipamentos, manutenção e kits por produção."
+      },
+      "files": {
+        "title": "Arquivos e Drive",
+        "description": "Centralize ativos com Google Drive e limites de uso."
+      },
+      "ai": {
+        "title": "Assistente de produção com IA",
+        "description": "Análise de roteiro, sugestões de ordem do dia e estimativas melhores."
+      }
+    },
+    "workflow": {
+      "step1": {
+        "title": "Pré-produção",
+        "description": "Briefings, orçamentos, propostas, stakeholders e aprovações."
+      },
+      "step2": {
+        "title": "Produção",
+        "description": "Ordens do dia, equipe, locações, cronogramas e atualizações."
+      },
+      "step3": {
+        "title": "Pós-produção",
+        "description": "Faturas, pagamentos, status de entrega e fechamento financeiro."
+      }
+    },
+    "access": {
+      "owner": {
+        "title": "Owner",
+        "description": "Controle total, billing, aprovações e configurações da empresa."
+      },
+      "producer": {
+        "title": "Produtor",
+        "description": "Cria produções, gerencia equipe, agenda e entregas."
+      },
+      "finance": {
+        "title": "Financeiro",
+        "description": "Gerencia faturas, transações, tabelas fiscais e aprovações."
+      },
+      "freelancer": {
+        "title": "Freelancer",
+        "description": "Vê apenas projetos atribuídos e seus cachês."
+      }
+    },
+    "integrations": {
+      "drive": {
+        "title": "Google Drive",
+        "description": "Sincronize pastas e mantenha ativos alinhados com a produção."
+      },
+      "stripe": {
+        "title": "Cobrança Stripe",
+        "description": "Assinaturas, webhooks e status confiável."
+      },
+      "automation": {
+        "title": "Pronto para automação",
+        "description": "Webhooks e APIs para integrar com o seu estúdio."
+      }
+    },
+    "testimonials": {
+      "one": {
+        "quote": "Finalmente temos uma fonte única de verdade para a produção.",
+        "name": "Gerente de Produção",
+        "role": "Série de TV"
+      },
+      "two": {
+        "quote": "O financeiro aprova sem travar o fluxo criativo.",
+        "name": "Líder Financeiro",
+        "role": "Estúdio comercial"
       }
     },
     "cta": {
-      "title": "Pronto para começar?",
-      "description": "Junte-se a cineastas profissionais usando SafeTasks V3"
+      "primary": "Começar teste",
+      "secondary": "Ver planos"
     },
-    "footer": "© 2026 SafeTasks V3. Feito para profissionais de produção cinematográfica."
+    "footer": "© 2026 SafeTasks V3. Feito para produções audiovisuais."
+  },
+  "pricing": {
+    "eyebrow": "Planos",
+    "title": "Planos para escalar sua produção",
+    "subtitle": "Escolha o plano pelo tamanho da equipe e pelo uso. Atualize quando quiser.",
+    "note": "Enterprise é customizado e inclui SLA.",
+    "mostPopular": "Mais popular",
+    "backToHome": "Voltar para Home",
+    "plans": {
+      "starter": {
+        "name": "Starter",
+        "price": "R$ 39,90",
+        "period": "mês",
+        "description": "Para equipes pequenas testando o SafeTasks.",
+        "billingNote": "Mensal",
+        "cta": "Escolher Starter",
+        "features": [
+          "Até 5 projetos",
+          "Até 20 clientes",
+          "Até 20 propostas",
+          "Até 5 membros",
+          "25 GB de armazenamento",
+          "100 créditos de IA por mês"
+        ]
+      },
+      "pro": {
+        "name": "Pro",
+        "price": "R$ 89,90",
+        "period": "mês",
+        "description": "Para produções ativas com equipes maiores.",
+        "billingNote": "Mensal",
+        "cta": "Iniciar teste Pro",
+        "features": [
+          "Projetos e clientes ilimitados",
+          "Propostas e usuários ilimitados",
+          "50 GB de armazenamento",
+          "1.000 créditos de IA por mês",
+          "Aprovações por função",
+          "Relatórios avançados"
+        ]
+      },
+      "proAnnual": {
+        "name": "Pro Anual",
+        "price": "R$ 755",
+        "period": "ano",
+        "description": "Economize no anual e aumente os limites.",
+        "billingNote": "Anual",
+        "cta": "Escolher Pro Anual",
+        "features": [
+          "Tudo do Pro",
+          "75 GB de armazenamento",
+          "2.000 créditos de IA por mês",
+          "Economia anual",
+          "Suporte prioritário"
+        ]
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "price": "Custom",
+        "period": "contrato",
+        "description": "Para grandes estúdios e fluxos complexos.",
+        "billingNote": "SLA",
+        "cta": "Falar com vendas",
+        "features": [
+          "Limites e onboarding sob medida",
+          "Time dedicado de sucesso",
+          "Revisão de segurança e compliance",
+          "Integrações customizadas"
+        ]
+      }
+    },
+    "includes": {
+      "title": "Todo plano inclui",
+      "items": [
+        "Controle de acesso por função",
+        "Freelancers com visão por projeto",
+        "Regras de uso e billing",
+        "Integração Google Drive",
+        "Fluxos auditáveis"
+      ]
+    },
+    "faq": {
+      "title": "FAQ",
+      "items": [
+        {
+          "q": "Existe período de teste?",
+          "a": "Sim. Toda nova organização começa com teste Pro de 7 dias e uso limitado."
+        },
+        {
+          "q": "Posso mudar de plano depois?",
+          "a": "Sim, você pode trocar ou fazer upgrade a qualquer momento."
+        },
+        {
+          "q": "Freelancers precisam de licença paga?",
+          "a": "Não. Freelancers têm acesso limitado e não ocupam licenças pagas."
+        }
+      ]
+    },
+    "cta": {
+      "title": "Comece a produzir hoje",
+      "subtitle": "Crie sua conta e traga o estúdio inteiro para o SafeTasks.",
+      "primary": "Criar conta",
+      "secondary": "Voltar para home"
+    }
   },
   "ai": {
     "title": "Recursos de IA",
     "subtitle": "Aproveite a IA para aprimorar seu fluxo de trabalho de produção",
     "viewProjects": "Ver Projetos",
     "analyzeScript": "Analisar Roteiro",
+    "usage": {
+      "title": "Uso de IA",
+      "description": "Acompanhe o consumo de créditos de IA",
+      "label": "Créditos de IA",
+      "unlimited": "Ilimitado",
+      "loading": "Carregando uso de IA...",
+      "unavailable": "Dados de uso de IA indisponíveis"
+    },
     "tabs": {
       "overview": "Visão Geral",
       "suggestions": "Sugestões",
@@ -1651,6 +2572,7 @@
       "generatingBudget": "Gerando Orçamento...",
       "generatingCallSheet": "Gerando Ordem do Dia...",
       "viewAiDashboard": "Ver Painel de IA",
+      "backToDashboard": "Voltar ao Painel de IA",
       "viewShootingDays": "Ver Dias de Filmagem",
       "analyzeScriptRecommendations": "Analisar Roteiro para Recomendações",
       "viewAiSuggestions": "Ver Sugestões de IA",
@@ -1661,6 +2583,161 @@
       "generateBudgetSuggestions": "Gerar Sugestões de Orçamento",
       "generateScheduleSuggestions": "Gerar Sugestões de Cronograma",
       "analyzeScript": "Analisar Roteiro"
+    },
+    "scriptAnalysis": {
+      "pageTitle": "Análise de Roteiro com IA",
+      "pageSubtitle": "Analise roteiros para extrair personagens, cenas, locações e requisitos de produção",
+      "settings": {
+        "title": "Configurações de Análise",
+        "description": "Configure os parâmetros da análise de roteiro",
+        "projectLabel": "Projeto",
+        "projectPlaceholder": "Selecione um projeto"
+      },
+      "analysisType": {
+        "label": "Tipo de Análise",
+        "placeholder": "Selecione o tipo de análise",
+        "types": {
+          "full": "Análise Completa",
+          "characters": "Análise de Personagens",
+          "scenes": "Análise de Cenas",
+          "locations": "Análise de Locações"
+        },
+        "descriptions": {
+          "full": "Análise completa incluindo personagens, cenas, locações e requisitos de produção",
+          "characters": "Foco na análise de personagens, padrões de diálogo e requisitos de elenco",
+          "scenes": "Desdobramento de cenas, planejamento de tomadas e análise de sequências",
+          "locations": "Requisitos de locação, design de cenários e logística de filmagem"
+        }
+      },
+      "features": {
+        "title": "Recursos de Análise",
+        "characters": "Identificação de personagens e análise de diálogos",
+        "scenes": "Desdobramento de cenas e planejamento de sequências",
+        "production": "Identificação de requisitos de produção",
+        "schedule": "Otimização do cronograma de filmagem"
+      },
+      "actions": {
+        "viewProduction": "Ver Produção",
+        "analyzing": "Analisando Roteiro..."
+      },
+      "scriptInput": {
+        "title": "Entrada do Roteiro",
+        "description": "Cole o texto do seu roteiro abaixo para análise de IA",
+        "label": "Texto do Roteiro",
+        "placeholder": "Cole o texto do seu roteiro aqui... Inclua nomes de personagens, diálogos, descrições de cenas e quaisquer notas de produção para uma análise mais precisa.",
+        "charCount": "{current}/{max} caracteres"
+      },
+      "tips": {
+        "title": "Dicas de Análise",
+        "items": {
+          "characters": "Use nomes de personagens adequados (em MAIÚSCULAS) para identificação precisa",
+          "scenes": "Inclua cabeçalhos de cena (INT./EXT. locações)",
+          "production": "Adicione notas de produção entre parênteses para requisitos especiais",
+          "full": "A análise completa fornece os resultados mais abrangentes",
+          "casting": "A análise de personagens é ótima para planejamento de elenco"
+        }
+      },
+      "preview": {
+        "title": "Prévia do Roteiro",
+        "description": "A IA analisará este roteiro com base nos parâmetros selecionados",
+        "cards": {
+          "characters": "Personagens",
+          "scenes": "Cenas",
+          "analysisType": "Tipo de Análise",
+          "complexity": "Complexidade"
+        },
+        "labels": {
+          "aiCharacters": "Personagens analisados pela IA",
+          "estimatedCharacters": "Personagens estimados (baseado em regex)",
+          "aiScenes": "Cenas analisadas pela IA",
+          "estimatedScenes": "Cenas estimadas",
+          "selectedType": "Tipo de análise selecionado",
+          "complexity": "Complexidade da análise"
+        },
+        "complexity": {
+          "high": "Alta",
+          "medium": "Média",
+          "low": "Baixa"
+        }
+      },
+      "analysisStatus": {
+        "title": "Análise de IA Concluída",
+        "summary": "{characters} personagens, {scenes} cenas, {locations} locações identificadas"
+      },
+      "errors": {
+        "unknown": "Erro desconhecido"
+      }
+    },
+    "budgetEstimation": {
+      "pageTitle": "Estimativa de Orçamento com IA",
+      "pageSubtitle": "Obtenha estimativas de orçamento baseadas em IA a partir da análise do roteiro",
+      "settings": {
+        "title": "Configurações de Estimativa",
+        "description": "Configure os parâmetros de estimativa de orçamento",
+        "projectLabel": "Projeto",
+        "projectPlaceholder": "Selecione um projeto"
+      },
+      "estimationType": {
+        "label": "Tipo de Estimativa",
+        "placeholder": "Selecione o tipo de estimativa",
+        "types": {
+          "quick": "Estimativa Rápida",
+          "detailed": "Análise Detalhada"
+        }
+      },
+      "actions": {
+        "viewFinancials": "Ver Financeiro",
+        "estimate": "Estimar Orçamento",
+        "estimating": "Estimando Orçamento..."
+      },
+      "scriptInput": {
+        "title": "Análise de Roteiro",
+        "description": "Cole o texto do seu roteiro abaixo para análise de IA e estimativa de orçamento",
+        "label": "Texto do Roteiro",
+        "placeholder": "Cole o texto do seu roteiro aqui... A IA analisará personagens, cenas, locações e requisitos de produção para gerar uma estimativa de orçamento precisa.",
+        "charCount": "{current}/{max} caracteres"
+      },
+      "tips": {
+        "title": "Dicas de Estimativa",
+        "items": {
+          "characters": "Inclua descrições de personagens e diálogos",
+          "locations": "Mencione locações e requisitos de cenários",
+          "effects": "Anote quaisquer efeitos especiais ou necessidades de equipamento",
+          "quick": "Estimativas rápidas são mais velozes, mas menos detalhadas",
+          "detailed": "Análises detalhadas fornecem desdobramentos abrangentes"
+        }
+      },
+      "preview": {
+        "title": "Prévia da Análise",
+        "description": "A IA analisará este roteiro para estimativa de orçamento",
+        "cards": {
+          "characters": "Personagens",
+          "complexity": "Complexidade",
+          "estimationType": "Tipo de Estimativa"
+        },
+        "labels": {
+          "estimatedCharacters": "Personagens estimados",
+          "complexity": "Nível de complexidade do roteiro",
+          "selectedType": "Tipo de estimativa selecionado"
+        },
+        "complexity": {
+          "high": "Alta",
+          "medium": "Média",
+          "low": "Baixa"
+        }
+      },
+      "errors": {
+        "estimateFailed": "Falha ao estimar o orçamento"
+      }
     }
+  },
+  "billingBanner": {
+    "trialEndingTitle": "Teste terminando em breve",
+    "trialEndingMessage": "Seu teste grátis termina {time}. Faça upgrade para manter acesso total.",
+    "trialEndedTitle": "Teste encerrado",
+    "trialEndedMessage": "Seu teste terminou. Faça upgrade para continuar usando o SafeTasks.",
+    "ctaPrimary": "Fazer upgrade",
+    "ctaSecondary": "Ver preços",
+    "timeFallback": "em breve"
   }
 }

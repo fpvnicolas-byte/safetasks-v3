@@ -40,7 +40,7 @@ export default function FinancialsPage() {
     <div className="space-y-8">
       <div className="rounded-xl border bg-card/60 px-6 py-5">
         <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-          Financials / Overview
+          {t('overview.breadcrumb')}
         </div>
         <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
@@ -328,7 +328,7 @@ function InvoiceCard({ invoice, t, tCommon, locale }: InvoiceCardProps) {
             </CardDescription>
           </div>
           <Badge variant={statusVariant[invoice.status]}>
-            {invoice.status}
+            {t(`status.${invoice.status}`)}
           </Badge>
         </div>
       </CardHeader>

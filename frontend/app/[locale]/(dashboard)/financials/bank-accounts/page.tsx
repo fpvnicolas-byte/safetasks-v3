@@ -10,11 +10,13 @@ import { Badge } from '@/components/ui/badge'
 import { Plus, Search, Edit, Trash2, Wallet, TrendingUp, DollarSign } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency } from '@/types'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 export default function BankAccountsPage() {
   const { organizationId } = useAuth()
   const locale = useLocale()
+  const t = useTranslations('financials.pages.bankAccounts')
+  const tCommon = useTranslations('common')
   const [searchQuery, setSearchQuery] = useState('')
 
   // Get bank accounts data
@@ -42,7 +44,7 @@ export default function BankAccountsPage() {
   }, {} as Record<string, number>)
 
   const handleDeleteAccount = async (accountId: string, accountName: string) => {
-    if (!confirm(`Are you sure you want to delete bank account "${accountName}"? This action cannot be undone.`)) {
+    if (!confirm(t('deleteConfirm', { name: accountName }))) {
       return
     }
 
@@ -53,7 +55,7 @@ export default function BankAccountsPage() {
       })
     } catch (err: unknown) {
       const error = err as Error
-      alert(`Failed to delete bank account: ${error.message}`)
+      alert(t('deleteError', { message: error.message }))
     }
   }
 
@@ -61,8 +63,8 @@ export default function BankAccountsPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight font-display">Bank Accounts</h1>
-          <p className="text-muted-foreground">Loading bank accounts...</p>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('loading')}</p>
         </div>
       </div>
     )
@@ -72,8 +74,8 @@ export default function BankAccountsPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight font-display">Bank Accounts</h1>
-          <p className="text-destructive">Failed to load bank accounts. Please try again.</p>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
+          <p className="text-destructive">{t('error')}</p>
         </div>
       </div>
     )
@@ -83,15 +85,15 @@ export default function BankAccountsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight font-display">Bank Accounts</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
           <p className="text-muted-foreground">
-            Manage your company bank accounts and track balances
+            {t('subtitle')}
           </p>
         </div>
         <Button asChild>
           <Link href="/financials/bank-accounts/new">
             <Plus className="mr-2 h-4 w-4" />
-            New Bank Account
+            {t('actions.new')}
           </Link>
         </Button>
       </div>
@@ -103,7 +105,7 @@ export default function BankAccountsPage() {
             <Card key={currency}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Total Balance ({currency})
+                  {t('summary.totalBalance', { currency })}
                 </CardTitle>
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
@@ -112,7 +114,9 @@ export default function BankAccountsPage() {
                   {formatCurrency(totalCents, currency)}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {filteredAccounts.filter(a => a.currency === currency).length} account{filteredAccounts.filter(a => a.currency === currency).length !== 1 ? 's' : ''}
+                  {t('summary.accountCount', {
+                    count: filteredAccounts.filter(a => a.currency === currency).length
+                  })}
                 </p>
               </CardContent>
             </Card>
@@ -123,16 +127,16 @@ export default function BankAccountsPage() {
       {/* Search */}
       <Card>
         <CardHeader>
-          <CardTitle>Search Accounts</CardTitle>
+          <CardTitle>{t('search.title')}</CardTitle>
           <CardDescription>
-            Find bank accounts by name or currency
+            {t('search.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name or currency..."
+              placeholder={t('search.placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -148,18 +152,20 @@ export default function BankAccountsPage() {
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Wallet className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-lg font-semibold mb-2">
-                {allAccounts && allAccounts.length > 0 ? 'No accounts found' : 'No bank accounts yet'}
+                {allAccounts && allAccounts.length > 0
+                  ? t('empty.filteredTitle')
+                  : t('empty.noAccountsTitle')}
               </p>
               <p className="text-sm text-muted-foreground mb-4">
                 {allAccounts && allAccounts.length > 0
-                  ? 'Try adjusting your search'
-                  : 'Get started by adding your first bank account'}
+                  ? t('empty.filteredDescription')
+                  : t('empty.noAccountsDescription')}
               </p>
               {(!allAccounts || allAccounts.length === 0) && (
                 <Button asChild>
                   <Link href="/financials/bank-accounts/new">
                     <Plus className="mr-2 h-4 w-4" />
-                    Add First Bank Account
+                    {t('empty.addFirst')}
                   </Link>
                 </Button>
               )}
@@ -186,9 +192,9 @@ export default function BankAccountsPage() {
                 <div className="space-y-4">
                   {/* Balance Display */}
                   <div className="flex items-baseline gap-2">
-                    <TrendingUp className={`h-5 w-5 ${account.balance_cents >= 0 ? 'text-success' : 'text-destructive'}`} />
+                      <TrendingUp className={`h-5 w-5 ${account.balance_cents >= 0 ? 'text-success' : 'text-destructive'}`} />
                     <div>
-                      <p className="text-xs text-muted-foreground">Current Balance</p>
+                      <p className="text-xs text-muted-foreground">{t('list.currentBalance')}</p>
                       <p className={`text-2xl font-bold ${account.balance_cents >= 0 ? 'text-success' : 'text-destructive'}`}>
                         {formatCurrency(account.balance_cents, account.currency)}
                       </p>
@@ -197,7 +203,7 @@ export default function BankAccountsPage() {
 
                   {/* Account Info */}
                   <div className="text-xs text-muted-foreground pt-2 border-t">
-                    <p>Created: {new Date(account.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                    <p>{t('list.created', { date: new Date(account.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) })}</p>
                   </div>
 
                   {/* Actions */}
@@ -205,7 +211,7 @@ export default function BankAccountsPage() {
                     <Button variant="outline" size="sm" asChild className="flex-1">
                       <Link href={`/financials/bank-accounts/${account.id}/edit`}>
                         <Edit className="h-4 w-4 mr-1" />
-                        Edit
+                        {tCommon('edit')}
                       </Link>
                     </Button>
                     <Button
@@ -230,10 +236,10 @@ export default function BankAccountsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span>
-                Showing {filteredAccounts.length} of {allAccounts.length} bank account{allAccounts.length !== 1 ? 's' : ''}
+                {t('summary.showing', { filtered: filteredAccounts.length, total: allAccounts.length })}
               </span>
               <span>
-                {Object.keys(balanceByCurrency).length} currenc{Object.keys(balanceByCurrency).length !== 1 ? 'ies' : 'y'}
+                {t('summary.currencyCount', { count: Object.keys(balanceByCurrency).length })}
               </span>
             </div>
           </CardContent>

@@ -1,0 +1,19 @@
+2026-01-31 00:39:45 [INFO] app: Logging configuration initialized
+2026-01-31 00:40:26 [INFO] stripe: message='Request to Stripe api' method=post url=https://api.stripe.com/v1/customers
+2026-01-31 00:40:27 [INFO] stripe: message='Stripe API response' path=https://api.stripe.com/v1/customers response_code=200
+2026-01-31 00:40:27 [INFO] app.services.billing: Created Stripe customer cus_TtHccG6A64Tb2V for org 10e41a06-0855-4432-9178-980f91b7058e
+2026-01-31 00:40:27 [INFO] app.services.billing: Set up 7-day trial for org 10e41a06-0855-4432-9178-980f91b7058e, expires 2026-02-07 03:40:26.304591
+2026-01-31 00:40:27 [INFO] app.api.v1.endpoints.billing: Received webhook event: customer.created (evt_1SvV2sQBou9YDSD2E2H4EOzH)
+2026-01-31 00:40:27 [INFO] app.api.v1.endpoints.billing: Successfully processed event evt_1SvV2sQBou9YDSD2E2H4EOzH
+2026-01-31 00:42:34 [INFO] stripe: message='Request to Stripe api' method=post url=https://api.stripe.com/v1/customers
+2026-01-31 00:42:35 [INFO] stripe: message='Stripe API response' path=https://api.stripe.com/v1/customers response_code=200
+2026-01-31 00:42:35 [INFO] app.services.billing: Created Stripe customer cus_TtHekWosaZEwMh for org 7b23f274-733f-456f-9502-451094d8b72f
+2026-01-31 00:42:35 [INFO] app.services.billing: Set up 7-day trial for org 7b23f274-733f-456f-9502-451094d8b72f, expires 2026-02-07 03:42:34.813529
+2026-01-31 00:42:35 [INFO] app.api.v1.endpoints.billing: Received webhook event: customer.created (evt_1SvV4xQBou9YDSD2X5TKFQqq)
+2026-01-31 00:42:36 [INFO] app.api.v1.endpoints.billing: Successfully processed event evt_1SvV4xQBou9YDSD2X5TKFQqq
+2026-01-31 00:42:49 [INFO] stripe: message='Request to Stripe api' method=post url=https://api.stripe.com/v1/customers
+2026-01-31 00:42:50 [INFO] stripe: message='Stripe API response' path=https://api.stripe.com/v1/customers response_code=200
+2026-01-31 00:42:50 [INFO] app.services.billing: Created Stripe customer cus_TtHeLjrqeT4xcx for org e17e4ddc-65dc-44fe-a3f1-f29f7f83ff29
+2026-01-31 00:42:50 [INFO] app.services.billing: Set up 7-day trial for org e17e4ddc-65dc-44fe-a3f1-f29f7f83ff29, expires 2026-02-07 03:42:49.967287
+2026-01-31 00:42:50 [INFO] app.api.v1.endpoints.billing: Received webhook event: customer.created (evt_1SvV5CQBou9YDSD2Lpz0O1Mu)
+2026-01-31 00:42:50 [INFO] app.api.v1.endpoints.billing: Successfully processed event evt_1SvV5CQBou9YDSD2Lpz0O1Mu

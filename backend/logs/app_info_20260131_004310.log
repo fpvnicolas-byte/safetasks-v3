@@ -1,0 +1,7 @@
+2026-01-31 00:43:10 [INFO] app: Logging configuration initialized
+2026-01-31 00:43:15 [INFO] stripe: message='Request to Stripe api' method=post url=https://api.stripe.com/v1/customers
+2026-01-31 00:43:16 [INFO] stripe: message='Stripe API response' path=https://api.stripe.com/v1/customers response_code=200
+2026-01-31 00:43:16 [INFO] app.services.billing: Created Stripe customer cus_TtHehfyogUdimo for org 750411a8-1554-4e15-a17a-b16db15f5a64
+2026-01-31 00:43:16 [INFO] app.services.billing: Set up 7-day trial for org 750411a8-1554-4e15-a17a-b16db15f5a64, expires 2026-02-07 03:43:15.891966
+2026-01-31 00:43:16 [INFO] app.api.v1.endpoints.billing: Received webhook event: customer.created (evt_1SvV5cQBou9YDSD2rO5IzTnd)
+2026-01-31 00:43:17 [INFO] app.api.v1.endpoints.billing: Successfully processed event evt_1SvV5cQBou9YDSD2rO5IzTnd

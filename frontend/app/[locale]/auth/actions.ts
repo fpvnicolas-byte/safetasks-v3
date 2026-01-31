@@ -19,6 +19,7 @@ export async function login(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
+  // Send to dashboard; AuthContext will redirect to onboarding if org is missing.
   redirect('/dashboard')
 }
 
@@ -31,6 +32,7 @@ export async function signup(formData: FormData) {
     options: {
       data: {
         full_name: formData.get('full_name') as string,
+        company_name: formData.get('company_name') as string,
       },
     },
   }
@@ -42,7 +44,7 @@ export async function signup(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/dashboard')
+  redirect('/onboarding')
 }
 
 export async function signOut() {

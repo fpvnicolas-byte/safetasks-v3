@@ -1,7 +1,6 @@
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
-import { signOut } from '../../app/[locale]/auth/actions'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { NotificationsBell } from '@/components/NotificationsBell'
 import { Button } from '@/components/ui/button'
@@ -10,31 +9,57 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { User, Settings, LogOut, Menu } from 'lucide-react'
 import { LocaleLink } from '@/components/LocaleLink'
-import { useTranslations } from 'next-intl'
-
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useLocale, useTranslations } from 'next-intl'
+import { locales, localeNames, type Locale } from '@/i18n/config'
 
 interface HeaderProps {
   onSidebarToggle: () => void
 }
 
 export function Header({ onSidebarToggle }: HeaderProps) {
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
   const t = useTranslations('navigation')
   const tHeader = useTranslations('header')
+  const tCommon = useTranslations('common')
+  const locale = useLocale()
+  const pathname = usePathname()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const buildLocalePath = (nextLocale: Locale) => {
+    const segments = pathname.split('/')
+    if (segments.length > 1) {
+      segments[1] = nextLocale
+      return segments.join('/')
+    }
+    return `/${nextLocale}`
+  }
+
+  const handleLocaleChange = (nextLocale: string) => {
+    if (nextLocale === locale) return
+    const nextPath = buildLocalePath(nextLocale as Locale)
+    const queryString = searchParams.toString()
+    const hash = typeof window !== 'undefined' ? window.location.hash : ''
+    router.push(`${nextPath}${queryString ? `?${queryString}` : ''}${hash}`)
+  }
 
   return (
     <header className="border-b">
-      <div className="flex h-16 items-center px-4 gap-4">
-        <LocaleLink href="/dashboard" className="font-bold text-xl">
-          SafeTasks V3
+      <div className="flex h-14 items-center px-4 gap-4 md:h-16">
+        <LocaleLink href="/dashboard" className="inline-flex font-display text-xl font-semibold tracking-tight md:text-2xl">
+          <span className="md:hidden">SafeTasks</span>
+          <span className="hidden md:inline">SafeTasks V3</span>
         </LocaleLink>
 
-        <nav className="flex gap-6 ml-6">
+        <nav className="hidden md:flex gap-6 ml-6">
           <LocaleLink
             href="/dashboard"
             className="text-sm font-medium transition-colors hover:text-primary"
@@ -65,7 +90,7 @@ export function Header({ onSidebarToggle }: HeaderProps) {
           {/* Mobile Navigation Toggle */}
           <button
             onClick={onSidebarToggle}
-            className="lg:hidden p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="md:hidden p-2 rounded-md hover:bg-muted"
           >
             <Menu className="h-6 w-6" />
           </button>
@@ -88,9 +113,21 @@ export function Header({ onSidebarToggle }: HeaderProps) {
                     {t('settings')}
                   </LocaleLink>
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  {tCommon('language')}
+                </DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={locale} onValueChange={handleLocaleChange}>
+                  {locales.map((option) => (
+                    <DropdownMenuRadioItem key={option} value={option}>
+                      {localeNames[option]}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => signOut()}
-                  className="text-red-600"
+                  className="text-destructive"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   {tHeader('signOut')}

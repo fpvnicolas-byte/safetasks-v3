@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Plus, Search, Eye, Trash2, ArrowUpCircle, ArrowDownCircle, Receipt, TrendingUp, TrendingDown } from 'lucide-react'
 import Link from 'next/link'
-import { formatCurrency, getCategoryDisplayName, TransactionType, TransactionCategory } from '@/types'
+import { formatCurrency, TransactionType, TransactionCategory } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
 
 export default function TransactionsPage() {
@@ -26,7 +26,7 @@ export default function TransactionsPage() {
   const { data: bankAccounts } = useBankAccounts(organizationId || '')
   const { data: projects } = useProjects(organizationId || '')
   const deleteTransaction = useDeleteTransaction()
-  const t = useTranslations('financials.transactions')
+  const t = useTranslations('financials.pages.transactions')
   const tCommon = useTranslations('common.feedback')
 
   // Apply filters
@@ -102,8 +102,8 @@ export default function TransactionsPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight font-display">Transactions</h1>
-          <p className="text-muted-foreground">Loading transactions...</p>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('loading')}</p>
         </div>
       </div>
     )
@@ -113,8 +113,8 @@ export default function TransactionsPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight font-display">Transactions</h1>
-          <p className="text-destructive">Failed to load transactions. Please try again.</p>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
+          <p className="text-destructive">{t('error')}</p>
         </div>
       </div>
     )
@@ -124,15 +124,15 @@ export default function TransactionsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight font-display">Transactions</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
           <p className="text-muted-foreground">
-            Record income and expenses to track cash flow
+            {t('subtitle')}
           </p>
         </div>
         <Button asChild>
           <Link href="/financials/transactions/new">
             <Plus className="mr-2 h-4 w-4" />
-            New Transaction
+            {t('actions.new')}
           </Link>
         </Button>
       </div>
@@ -141,7 +141,7 @@ export default function TransactionsPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Income</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('summary.totalIncome')}</CardTitle>
             <TrendingUp className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
@@ -149,14 +149,16 @@ export default function TransactionsPage() {
               {formatCurrency(totalIncome, 'BRL')}
             </div>
             <p className="text-xs text-muted-foreground">
-              {filteredTransactions.filter(t => t.type === 'income').length} transaction{filteredTransactions.filter(t => t.type === 'income').length !== 1 ? 's' : ''}
+              {t('summary.transactionCount', {
+                count: filteredTransactions.filter(t => t.type === 'income').length
+              })}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('summary.totalExpenses')}</CardTitle>
             <TrendingDown className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
@@ -164,14 +166,16 @@ export default function TransactionsPage() {
               {formatCurrency(totalExpense, 'BRL')}
             </div>
             <p className="text-xs text-muted-foreground">
-              {filteredTransactions.filter(t => t.type === 'expense').length} transaction{filteredTransactions.filter(t => t.type === 'expense').length !== 1 ? 's' : ''}
+              {t('summary.transactionCount', {
+                count: filteredTransactions.filter(t => t.type === 'expense').length
+              })}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Net Balance</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('summary.netBalance')}</CardTitle>
             <Receipt className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -179,7 +183,7 @@ export default function TransactionsPage() {
               {formatCurrency(netBalance, 'BRL')}
             </div>
             <p className="text-xs text-muted-foreground">
-              {filteredTransactions.length} total transaction{filteredTransactions.length !== 1 ? 's' : ''}
+              {t('summary.totalTransactionCount', { count: filteredTransactions.length })}
             </p>
           </CardContent>
         </Card>
@@ -188,9 +192,9 @@ export default function TransactionsPage() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Filter Transactions</CardTitle>
+          <CardTitle>{t('filters.title')}</CardTitle>
           <CardDescription>
-            Search and filter transactions by type, account, project, or category
+            {t('filters.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -198,7 +202,7 @@ export default function TransactionsPage() {
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by description, account, or project..."
+              placeholder={t('filters.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -209,27 +213,27 @@ export default function TransactionsPage() {
           <div className="grid gap-4 md:grid-cols-4">
             {/* Type Filter */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Type</label>
+              <label className="text-sm font-medium">{t('filters.type.label')}</label>
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value as TransactionType | 'all')}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
-                <option value="all">All Types</option>
-                <option value="income">Income</option>
-                <option value="expense">Expense</option>
+                <option value="all">{t('filters.type.all')}</option>
+                <option value="income">{t('filters.type.income')}</option>
+                <option value="expense">{t('filters.type.expense')}</option>
               </select>
             </div>
 
             {/* Bank Account Filter */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Bank Account</label>
+              <label className="text-sm font-medium">{t('filters.bankAccount.label')}</label>
               <select
                 value={filterBankAccount}
                 onChange={(e) => setFilterBankAccount(e.target.value)}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
-                <option value="all">All Accounts</option>
+                <option value="all">{t('filters.bankAccount.all')}</option>
                 {bankAccounts?.map(account => (
                   <option key={account.id} value={account.id}>
                     {account.name} ({account.currency})
@@ -240,14 +244,14 @@ export default function TransactionsPage() {
 
             {/* Project Filter */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Project</label>
+              <label className="text-sm font-medium">{t('filters.project.label')}</label>
               <select
                 value={filterProject}
                 onChange={(e) => setFilterProject(e.target.value)}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
-                <option value="all">All Projects</option>
-                <option value="none">No Project</option>
+                <option value="all">{t('filters.project.all')}</option>
+                <option value="none">{t('filters.project.none')}</option>
                 {projects?.map(project => (
                   <option key={project.id} value={project.id}>
                     {project.title}
@@ -258,20 +262,20 @@ export default function TransactionsPage() {
 
             {/* Category Filter */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Category</label>
+              <label className="text-sm font-medium">{t('filters.category.label')}</label>
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
-                <option value="all">All Categories</option>
-                <option value="crew_hire">Crew Hire</option>
-                <option value="equipment_rental">Equipment Rental</option>
-                <option value="logistics">Logistics</option>
-                <option value="post_production">Post Production</option>
-                <option value="maintenance">Maintenance</option>
-                <option value="production_revenue">Production Revenue</option>
-                <option value="other">Other</option>
+                <option value="all">{t('filters.category.all')}</option>
+                <option value="crew_hire">{t('categories.crew_hire')}</option>
+                <option value="equipment_rental">{t('categories.equipment_rental')}</option>
+                <option value="logistics">{t('categories.logistics')}</option>
+                <option value="post_production">{t('categories.post_production')}</option>
+                <option value="maintenance">{t('categories.maintenance')}</option>
+                <option value="production_revenue">{t('categories.production_revenue')}</option>
+                <option value="other">{t('categories.other')}</option>
               </select>
             </div>
           </div>
@@ -285,18 +289,20 @@ export default function TransactionsPage() {
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Receipt className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-lg font-semibold mb-2">
-                {allTransactions && allTransactions.length > 0 ? 'No transactions found' : 'No transactions yet'}
+                {allTransactions && allTransactions.length > 0
+                  ? t('empty.filteredTitle')
+                  : t('empty.noTransactionsTitle')}
               </p>
               <p className="text-sm text-muted-foreground mb-4">
                 {allTransactions && allTransactions.length > 0
-                  ? 'Try adjusting your filters'
-                  : 'Get started by recording your first transaction'}
+                  ? t('empty.filteredDescription')
+                  : t('empty.noTransactionsDescription')}
               </p>
               {(!allTransactions || allTransactions.length === 0) && (
                 <Button asChild>
                   <Link href="/financials/transactions/new">
                     <Plus className="mr-2 h-4 w-4" />
-                    Add First Transaction
+                    {t('empty.addFirst')}
                   </Link>
                 </Button>
               )}
@@ -306,9 +312,9 @@ export default function TransactionsPage() {
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
+            <CardTitle>{t('list.title')}</CardTitle>
             <CardDescription>
-              All transactions sorted by date (newest first)
+              {t('list.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -332,13 +338,13 @@ export default function TransactionsPage() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <p className="font-medium">
-                            {transaction.description || 'Untitled Transaction'}
+                            {transaction.description || t('list.untitled')}
                           </p>
                           <Badge variant={transaction.type === 'income' ? 'success' : 'destructive'}>
-                            {transaction.type}
+                            {t(`types.${transaction.type}`)}
                           </Badge>
                           <Badge variant="secondary">
-                            {getCategoryDisplayName(transaction.category as TransactionCategory)}
+                            {t(`categories.${transaction.category as TransactionCategory}`)}
                           </Badge>
                         </div>
                         <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
@@ -386,10 +392,14 @@ export default function TransactionsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span>
-                Showing {filteredTransactions.length} of {allTransactions.length} transaction{allTransactions.length !== 1 ? 's' : ''}
+                {t('summary.showing', {
+                  filtered: filteredTransactions.length,
+                  total: allTransactions.length
+                })}
               </span>
               <span>
-                Net: <span className={netBalance >= 0 ? 'text-success' : 'text-destructive'}>
+                {t('summary.netLabel')}{' '}
+                <span className={netBalance >= 0 ? 'text-success' : 'text-destructive'}>
                   {formatCurrency(netBalance, 'BRL')}
                 </span>
               </span>

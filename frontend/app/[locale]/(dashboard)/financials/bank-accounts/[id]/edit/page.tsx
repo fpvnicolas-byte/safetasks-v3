@@ -15,23 +15,17 @@ import { ErrorDialog } from '@/components/ui/error-dialog'
 import { ArrowLeft, Shield } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency } from '@/types'
+import { useTranslations } from 'next-intl'
 
 // Common currencies
-const CURRENCIES = [
-  { code: 'BRL', name: 'Brazilian Real (R$)' },
-  { code: 'USD', name: 'US Dollar ($)' },
-  { code: 'EUR', name: 'Euro (€)' },
-  { code: 'GBP', name: 'British Pound (£)' },
-  { code: 'JPY', name: 'Japanese Yen (¥)' },
-  { code: 'CAD', name: 'Canadian Dollar (C$)' },
-  { code: 'AUD', name: 'Australian Dollar (A$)' },
-  { code: 'MXN', name: 'Mexican Peso (MX$)' },
-]
+const CURRENCIES = ['BRL', 'USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'MXN']
 
 export default function EditBankAccountPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const router = useRouter()
   const { profile } = useAuth()
+  const t = useTranslations('financials.pages.bankAccountsEdit')
+  const tCommon = useTranslations('common')
   const { data: account, isLoading: accountLoading } = useBankAccount(resolvedParams.id)
   const updateBankAccount = useUpdateBankAccount()
 
@@ -56,12 +50,12 @@ export default function EditBankAccountPage({ params }: { params: Promise<{ id: 
 
   const validateForm = (): boolean => {
     if (!formData.name.trim()) {
-      showError({ message: 'Account name is required' }, 'Validation Error')
+      showError({ message: t('errors.nameRequired') }, t('errors.validationTitle'))
       return false
     }
 
     if (!formData.currency) {
-      showError({ message: 'Currency is required' }, 'Validation Error')
+      showError({ message: t('errors.currencyRequired') }, t('errors.validationTitle'))
       return false
     }
 
@@ -89,7 +83,7 @@ export default function EditBankAccountPage({ params }: { params: Promise<{ id: 
       router.push('/financials/bank-accounts')
     } catch (err: any) {
       console.error('Update bank account error:', err)
-      showError(err, 'Error Updating Bank Account')
+      showError(err, t('errors.updateTitle'))
     }
   }
 
@@ -101,7 +95,7 @@ export default function EditBankAccountPage({ params }: { params: Promise<{ id: 
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Loading...</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('loading')}</h1>
         </div>
       </div>
     )
@@ -114,13 +108,13 @@ export default function EditBankAccountPage({ params }: { params: Promise<{ id: 
           <Button variant="ghost" size="sm" asChild>
             <Link href="/financials/bank-accounts">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Bank Accounts
+              {t('actions.back')}
             </Link>
           </Button>
         </div>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-destructive">Bank account not found.</p>
+            <p className="text-destructive">{t('errors.notFound')}</p>
           </CardContent>
         </Card>
       </div>
@@ -135,7 +129,7 @@ export default function EditBankAccountPage({ params }: { params: Promise<{ id: 
           <Button variant="ghost" size="sm" asChild>
             <Link href="/financials/bank-accounts">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Bank Accounts
+              {t('actions.back')}
             </Link>
           </Button>
         </div>
@@ -143,20 +137,19 @@ export default function EditBankAccountPage({ params }: { params: Promise<{ id: 
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5 text-warning-foreground" />
-              Administrator Access Required
+              {t('admin.title')}
             </CardTitle>
             <CardDescription>
-              Only administrators can edit bank accounts
+              {t('admin.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              Bank account settings can only be modified by users with administrator privileges.
-              This is to protect sensitive financial information.
+              {t('admin.details')}
             </p>
             <Button asChild>
               <Link href="/financials/bank-accounts">
-                Back to Bank Accounts
+                {t('actions.back')}
               </Link>
             </Button>
           </CardContent>
@@ -171,7 +164,7 @@ export default function EditBankAccountPage({ params }: { params: Promise<{ id: 
         <Button variant="ghost" size="sm" asChild>
           <Link href="/financials/bank-accounts">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Bank Accounts
+            {t('actions.back')}
           </Link>
         </Button>
       </div>
@@ -179,9 +172,9 @@ export default function EditBankAccountPage({ params }: { params: Promise<{ id: 
       <Card className="max-w-2xl">
         <form onSubmit={handleSubmit}>
           <CardHeader>
-            <CardTitle>Edit Bank Account</CardTitle>
+            <CardTitle>{t('title')}</CardTitle>
             <CardDescription>
-              Update bank account information for {account.name}
+              {t('subtitle', { name: account.name })}
             </CardDescription>
           </CardHeader>
 
@@ -189,36 +182,36 @@ export default function EditBankAccountPage({ params }: { params: Promise<{ id: 
 
             {/* Current Balance Display */}
             <div className="rounded-lg border p-4 bg-muted/50">
-              <h4 className="text-sm font-medium mb-1">Current Balance</h4>
+              <h4 className="text-sm font-medium mb-1">{t('balance.title')}</h4>
               <p className={`text-2xl font-bold ${account.balance_cents >= 0 ? 'text-success' : 'text-destructive'}`}>
                 {formatCurrency(account.balance_cents, account.currency)}
               </p>
               <p className="text-xs text-muted-foreground mt-2">
-                Balance is updated automatically by transactions and cannot be edited directly.
+                {t('balance.description')}
               </p>
             </div>
 
             {/* Name - Required */}
             <div className="space-y-2">
               <Label htmlFor="name">
-                Account Name *
+                {t('fields.name.label')}
               </Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder="Business Checking Account"
+                placeholder={t('fields.name.placeholder')}
                 required
               />
               <p className="text-xs text-muted-foreground">
-                A descriptive name for this bank account
+                {t('fields.name.help')}
               </p>
             </div>
 
             {/* Currency - Required */}
             <div className="space-y-2">
               <Label htmlFor="currency">
-                Currency *
+                {t('fields.currency.label')}
               </Label>
               <Select
                 value={formData.currency}
@@ -228,15 +221,15 @@ export default function EditBankAccountPage({ params }: { params: Promise<{ id: 
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {CURRENCIES.map((curr) => (
-                    <SelectItem key={curr.code} value={curr.code}>
-                      {curr.name}
+                  {CURRENCIES.map((code) => (
+                    <SelectItem key={code} value={code}>
+                      {t(`currencies.${code}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                The currency for this account
+                {t('fields.currency.help')}
               </p>
             </div>
 
@@ -244,18 +237,17 @@ export default function EditBankAccountPage({ params }: { params: Promise<{ id: 
             <Alert>
               <Shield className="h-4 w-4" />
               <AlertDescription>
-                <strong>Administrator Note:</strong> Changes to bank account settings affect all users in your organization.
-                The balance cannot be edited directly - it updates automatically through transactions.
+                <strong>{t('adminNote.title')}</strong> {t('adminNote.description')}
               </AlertDescription>
             </Alert>
           </CardContent>
 
           <CardFooter className="flex gap-2">
             <Button type="submit" disabled={updateBankAccount.isPending}>
-              {updateBankAccount.isPending ? 'Saving...' : 'Save Changes'}
+              {updateBankAccount.isPending ? t('actions.saving') : t('actions.save')}
             </Button>
             <Button type="button" variant="outline" asChild>
-              <Link href="/financials/bank-accounts">Cancel</Link>
+              <Link href="/financials/bank-accounts">{tCommon('cancel')}</Link>
             </Button>
           </CardFooter>
         </form>

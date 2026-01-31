@@ -57,6 +57,9 @@
 }
 
 :root {
+  --font-ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+  --font-title: ui-serif, "Times New Roman", Times, serif;
+  --font-code: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --radius: 0.75rem;
   --background: oklch(0.985 0.005 255);
   --foreground: oklch(0.18 0.02 260);
@@ -184,5 +187,22 @@
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border-width: 0;
+  }
+
+  .animate-blob {
+    animation: blob 18s ease-in-out infinite;
+  }
+}
+
+@keyframes blob {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(18px, -28px) scale(1.08);
+  }
+  66% {
+    transform: translate(-22px, 16px) scale(0.94);
   }
 }

@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, text
 from jose import jwt, JWTError
 
 import logging
@@ -67,7 +67,8 @@ async def get_current_user_id(
 
 async def get_current_profile(
     user_id: UUID = Depends(get_current_user_id),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
 ) -> Profile:
     """
     Get the current user's profile.
@@ -77,43 +78,93 @@ async def get_current_profile(
     profile = result.scalar_one_or_none()
 
     if not profile:
-        logger.error(f"Profile not found for user_id: {user_id}")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Profile not found"
+        if not credentials:
+            logger.error(f"Profile not found for user_id: {user_id} (missing credentials)")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Profile not found"
+            )
+
+        try:
+            payload = jwt.get_unverified_claims(credentials.credentials)
+        except JWTError as e:
+            logger.error(f"Failed to decode token for profile creation: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )
+
+        email = payload.get("email")
+        user_metadata = payload.get("user_metadata") or {}
+        full_name = user_metadata.get("full_name") or user_metadata.get("name")
+        avatar_url = user_metadata.get("avatar_url")
+
+        if not email:
+            try:
+                result = await db.execute(
+                    text("SELECT email, raw_user_meta_data FROM auth.users WHERE id = :user_id"),
+                    {"user_id": str(user_id)},
+                )
+                row = result.first()
+                if row:
+                    email = row[0]
+                    raw_meta = row[1] or {}
+                    if isinstance(raw_meta, str):
+                        raw_meta = {}
+                    full_name = full_name or raw_meta.get("full_name") or raw_meta.get("name")
+                    avatar_url = avatar_url or raw_meta.get("avatar_url")
+            except Exception as e:
+                logger.error(f"Failed to fetch auth user for profile creation: {e}")
+
+        if not email:
+            logger.error(f"Profile not found for user_id: {user_id} (missing email claim)")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Profile not found"
+            )
+
+        profile = Profile(
+            id=user_id,
+            email=email,
+            full_name=full_name,
+            avatar_url=avatar_url,
         )
-    
+        db.add(profile)
+        await db.commit()
+        await db.refresh(profile)
+        logger.info(f"Auto-created profile for user_id: {user_id}")
+
     # logger.info(f"Profile found: {profile.id}, Org: {profile.organization_id}")
 
     return profile
 
 
 async def get_current_organization(
-    organization_id: UUID,
-    user_id: UUID = Depends(get_current_user_id),
-    db: AsyncSession = Depends(get_db)
+    organization_id: Optional[UUID] = None,
+    profile: Profile = Depends(get_current_profile),
 ) -> UUID:
     """
-    Validate that the current user has access to the requested organization.
-    Returns the organization_id if access is granted.
+    Resolve the current organization ID from the authenticated user's profile.
+    If an organization_id is provided, it must match the user's organization.
     """
-    # Check if the user belongs to the requested organization
-    query = select(Profile).where(
-        Profile.id == user_id,
-        Profile.organization_id == organization_id
-    )
+    if not profile.organization_id:
+        logger.warning(f"User {profile.id} does not belong to any organization")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User does not belong to any organization"
+        )
 
-    result = await db.execute(query)
-    profile = result.scalar_one_or_none()
-
-    if not profile:
-        logger.warning(f"Access denied: User {user_id} does not belong to organization {organization_id}")
+    if organization_id and organization_id != profile.organization_id:
+        logger.warning(
+            f"Access denied: User {profile.id} attempted org {organization_id} "
+            f"but belongs to {profile.organization_id}"
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied: user does not belong to this organization"
         )
 
-    return organization_id
+    return profile.organization_id
 
 
 async def get_organization_from_profile(
@@ -288,6 +339,9 @@ def require_billing_active():
         profile: Profile = Depends(get_current_profile),
         db: AsyncSession = Depends(get_db)
     ) -> Profile:
+        if not profile.organization_id:
+            return profile
+
         organization = await get_organization_record(profile, db)
         status_value = _normalize_billing_status(organization)
 
@@ -316,6 +370,9 @@ def require_billing_read():
         profile: Profile = Depends(get_current_profile),
         db: AsyncSession = Depends(get_db)
     ) -> Profile:
+        if not profile.organization_id:
+            return profile
+
         organization = await get_organization_record(profile, db)
         status_value = _normalize_billing_status(organization)
 

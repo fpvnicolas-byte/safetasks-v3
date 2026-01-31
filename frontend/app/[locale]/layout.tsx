@@ -1,28 +1,11 @@
 import { AuthProvider } from '@/contexts/AuthContext'
+import { BillingProvider } from '@/contexts/BillingContext'
 import { QueryProvider } from '@/lib/api/query-provider'
 import { ThemeProvider } from '@/components/theme-provider'
 import { NextIntlClientProvider } from 'next-intl'
 import { notFound } from 'next/navigation'
 import { locales, isValidLocale, defaultLocale, type Locale } from '@/i18n/config'
 import '../globals.css'
-import { DM_Serif_Display, JetBrains_Mono, Sora } from 'next/font/google'
-
-const uiSans = Sora({
-  subsets: ['latin'],
-  variable: '--font-ui',
-  display: 'swap',
-})
-const display = DM_Serif_Display({
-  subsets: ['latin'],
-  weight: '400',
-  variable: '--font-title',
-  display: 'swap',
-})
-const mono = JetBrains_Mono({
-  subsets: ['latin'],
-  variable: '--font-code',
-  display: 'swap',
-})
 
 export const metadata = {
   title: 'SafeTasks V3 - Film Production Management',
@@ -70,7 +53,7 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className={`${uiSans.variable} ${display.variable} ${mono.variable} antialiased`}>
+      <body className="antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider
             attribute="class"
@@ -79,7 +62,9 @@ export default async function LocaleLayout({
             disableTransitionOnChange
           >
             <QueryProvider>
-              <AuthProvider>{children}</AuthProvider>
+              <AuthProvider>
+                <BillingProvider>{children}</BillingProvider>
+              </AuthProvider>
             </QueryProvider>
           </ThemeProvider>
         </NextIntlClientProvider>

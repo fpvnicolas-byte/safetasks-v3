@@ -10,11 +10,14 @@ import { Badge } from '@/components/ui/badge'
 import { Plus, Search, Edit, Trash2, FileText } from 'lucide-react'
 import Link from 'next/link'
 import { getTaxTypeDisplayName } from '@/types'
+import { useTranslations } from 'next-intl'
 
 export default function TaxTablesPage() {
   const { organizationId } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
   const [showInactive, setShowInactive] = useState(false)
+  const t = useTranslations('financials.pages.taxTables')
+  const tCommon = useTranslations('common')
 
   const { data: allTaxTables, isLoading, error } = useTaxTables(
     organizationId || '',
@@ -32,7 +35,7 @@ export default function TaxTablesPage() {
   }) || []
 
   const handleDeleteTaxTable = async (taxTableId: string, taxTableName: string) => {
-    if (!confirm(`Are you sure you want to delete tax table "${taxTableName}"? This action cannot be undone.`)) {
+    if (!confirm(t('deleteConfirm', { name: taxTableName }))) {
       return
     }
 
@@ -40,7 +43,7 @@ export default function TaxTablesPage() {
       await deleteTaxTable.mutateAsync(taxTableId)
     } catch (err: unknown) {
       const error = err as Error
-      alert(`Failed to delete tax table: ${error.message}`)
+      alert(t('deleteError', { message: error.message }))
     }
   }
 
@@ -48,8 +51,8 @@ export default function TaxTablesPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Tax Tables</h1>
-          <p className="text-muted-foreground">Loading tax tables...</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('loading')}</p>
         </div>
       </div>
     )
@@ -59,8 +62,8 @@ export default function TaxTablesPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Tax Tables</h1>
-          <p className="text-destructive">Failed to load tax tables. Please try again.</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-destructive">{t('error')}</p>
         </div>
       </div>
     )
@@ -70,15 +73,15 @@ export default function TaxTablesPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Tax Tables</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground">
-            Configure tax rates for Brazilian tax compliance
+            {t('subtitle')}
           </p>
         </div>
         <Button asChild>
           <Link href="/financials/tax-tables/new">
             <Plus className="mr-2 h-4 w-4" />
-            New Tax Table
+            {t('actions.new')}
           </Link>
         </Button>
       </div>
@@ -86,16 +89,16 @@ export default function TaxTablesPage() {
       {/* Search and Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Search Tax Tables</CardTitle>
+          <CardTitle>{t('search.title')}</CardTitle>
           <CardDescription>
-            Find tax tables by name or type
+            {t('search.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name or type..."
+              placeholder={t('search.placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -110,7 +113,7 @@ export default function TaxTablesPage() {
               className="rounded"
             />
             <label htmlFor="showInactive" className="text-sm">
-              Show inactive tax tables
+              {t('search.showInactive')}
             </label>
           </div>
         </CardContent>
@@ -123,18 +126,20 @@ export default function TaxTablesPage() {
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <FileText className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-lg font-semibold mb-2">
-                {allTaxTables && allTaxTables.length > 0 ? 'No tax tables found' : 'No tax tables yet'}
+                {allTaxTables && allTaxTables.length > 0
+                  ? t('empty.filteredTitle')
+                  : t('empty.noTablesTitle')}
               </p>
               <p className="text-sm text-muted-foreground mb-4">
                 {allTaxTables && allTaxTables.length > 0
-                  ? 'Try adjusting your search or filters'
-                  : 'Get started by creating your first tax table'}
+                  ? t('empty.filteredDescription')
+                  : t('empty.noTablesDescription')}
               </p>
               {(!allTaxTables || allTaxTables.length === 0) && (
                 <Button asChild>
                   <Link href="/financials/tax-tables/new">
                     <Plus className="mr-2 h-4 w-4" />
-                    Create First Tax Table
+                    {t('empty.addFirst')}
                   </Link>
                 </Button>
               )}
@@ -158,7 +163,7 @@ export default function TaxTablesPage() {
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Rate:</span>
+                    <span className="text-sm text-muted-foreground">{t('list.rate')}</span>
                     <span className="text-lg font-semibold">{taxTable.rate_percentage}%</span>
                   </div>
 
@@ -170,9 +175,9 @@ export default function TaxTablesPage() {
 
                   <div className="flex items-center">
                     {taxTable.is_active ? (
-                      <Badge variant="success">Active</Badge>
+                      <Badge variant="success">{t('status.active')}</Badge>
                     ) : (
-                      <Badge variant="outline">Inactive</Badge>
+                      <Badge variant="outline">{t('status.inactive')}</Badge>
                     )}
                   </div>
                 </div>
@@ -181,7 +186,7 @@ export default function TaxTablesPage() {
                   <Button variant="outline" size="sm" asChild className="flex-1">
                     <Link href={`/financials/tax-tables/${taxTable.id}/edit`}>
                       <Edit className="h-4 w-4 mr-1" />
-                      Edit
+                      {tCommon('edit')}
                     </Link>
                   </Button>
                   <Button
@@ -205,10 +210,13 @@ export default function TaxTablesPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span>
-                Showing {filteredTaxTables.length} of {allTaxTables.length} tax table{allTaxTables.length !== 1 ? 's' : ''}
+                {t('summary.showing', { filtered: filteredTaxTables.length, total: allTaxTables.length })}
               </span>
               <span>
-                {allTaxTables.filter(t => t.is_active).length} active • {allTaxTables.filter(t => !t.is_active).length} inactive
+                {t('summary.statusCounts', {
+                  active: allTaxTables.filter(t => t.is_active).length,
+                  inactive: allTaxTables.filter(t => !t.is_active).length
+                })}
               </span>
             </div>
           </CardContent>

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "NEXT_FONT_GOOGLE_DISABLE_DOWNLOAD=1 next build",
     "start": "next start",
     "lint": "eslint",
     "check-translations": "node scripts/check-translations.js"

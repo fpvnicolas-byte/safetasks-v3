@@ -19,7 +19,7 @@ from app.db.session import get_db
 from app.models.clients import Client as ClientModel
 from app.models.projects import Project as ProjectModel
 from app.modules.commercial.service import project_service, client_service
-from app.services.entitlements import ensure_resource_limit
+from app.services.entitlements import ensure_resource_limit, increment_usage_count
 from app.schemas.projects import Project, ProjectCreate, ProjectUpdate, ProjectWithClient
 
 router = APIRouter()
@@ -96,6 +96,7 @@ async def create_project(
         organization_id=organization_id,
         obj_in=project_in
     )
+    await increment_usage_count(db, organization_id, resource="projects", delta=1)
 
     # Load client relationship for response
     return await project_service.get(
@@ -218,5 +219,6 @@ async def delete_project(
         organization_id=organization_id,
         id=project_id
     )
+    await increment_usage_count(db, organization_id, resource="projects", delta=-1)
 
     return project

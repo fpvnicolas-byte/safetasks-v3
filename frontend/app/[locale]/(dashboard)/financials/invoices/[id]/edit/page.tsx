@@ -19,6 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Plus, Trash2 } from 'lucide-react'
 import { dollarsToCents, formatCurrency, centsToDollars } from '@/lib/utils/money'
+import { useTranslations } from 'next-intl'
 
 interface InvoiceItemForm {
   id?: string
@@ -32,6 +33,8 @@ export default function EditInvoicePage() {
   const router = useRouter()
   const params = useParams()
   const invoiceId = params.id as string
+  const t = useTranslations('financials.pages.invoicesEdit')
+  const tCommon = useTranslations('common')
 
   const { organizationId } = useAuth()
   const [error, setError] = useState<string | null>(null)
@@ -56,13 +59,13 @@ export default function EditInvoicePage() {
   })
 
   if (isLoading) {
-    return <div>Loading invoice...</div>
+    return <div>{t('loading')}</div>
   }
 
   if (!invoice) {
     return (
       <Alert variant="destructive">
-        <AlertDescription>Invoice not found</AlertDescription>
+        <AlertDescription>{t('errors.notFound')}</AlertDescription>
       </Alert>
     )
   }
@@ -84,7 +87,7 @@ export default function EditInvoicePage() {
         setItems(items.filter((_, i) => i !== index))
       } catch (err: unknown) {
         const error = err as Error
-        setError(`Failed to delete item: ${error.message}`)
+        setError(t('errors.deleteItem', { message: error.message }))
       }
     } else {
       // Just remove from UI (not saved yet)
@@ -131,10 +134,10 @@ export default function EditInvoicePage() {
       }
 
       router.push(`/financials/invoices/${invoiceId}`)
-    } catch (err: unknown) {
-      const error = err as Error
-      setError(error.message || 'Failed to save items')
-    }
+  } catch (err: unknown) {
+    const error = err as Error
+    setError(error.message || t('errors.saveItems'))
+  }
   }
 
   async function handleUpdateStatus(e: React.FormEvent<HTMLFormElement>) {
@@ -151,10 +154,10 @@ export default function EditInvoicePage() {
 
       await updateInvoice.mutateAsync({ invoiceId, data })
       router.push(`/financials/invoices/${invoiceId}`)
-    } catch (err: unknown) {
-      const error = err as Error
-      setError(error.message || 'Failed to update invoice')
-    }
+  } catch (err: unknown) {
+    const error = err as Error
+    setError(error.message || t('errors.updateInvoice'))
+  }
   }
 
   const subtotal = calculateSubtotal()
@@ -164,9 +167,9 @@ export default function EditInvoicePage() {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Edit Invoice #{invoice.invoice_number}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('title', { number: invoice.invoice_number })}</h1>
         <p className="text-muted-foreground">
-          {canEditItems ? 'Modify line items and invoice details' : 'Update invoice status and dates only'}
+          {canEditItems ? t('subtitle.editItems') : t('subtitle.updateStatus')}
         </p>
       </div>
 
@@ -179,8 +182,7 @@ export default function EditInvoicePage() {
       {!canEditItems && (
         <Alert>
           <AlertDescription>
-            This invoice is {invoice.status}. Only draft invoices can have line items edited.
-            You can still update the status and dates below.
+            {t('warnings.readOnly', { status: t(`status.${invoice.status}`) })}
           </AlertDescription>
         </Alert>
       )}
@@ -191,12 +193,12 @@ export default function EditInvoicePage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Invoice Items</CardTitle>
-                <CardDescription>Add, edit, or remove line items</CardDescription>
+                <CardTitle>{t('items.title')}</CardTitle>
+                <CardDescription>{t('items.description')}</CardDescription>
               </div>
               <Button type="button" onClick={addNewItem} size="sm">
                 <Plus className="mr-2 h-4 w-4" />
-                Add Item
+                {t('items.add')}
               </Button>
             </div>
           </CardHeader>
@@ -204,15 +206,15 @@ export default function EditInvoicePage() {
             {items.map((item, index) => (
               <div key={index} className="grid gap-4 md:grid-cols-4 p-4 border rounded">
                 <div className="md:col-span-2">
-                  <Label>Description</Label>
+                  <Label>{t('items.fields.description')}</Label>
                   <Input
-                    placeholder="Service description"
+                    placeholder={t('items.fields.descriptionPlaceholder')}
                     value={item.description}
                     onChange={(e) => updateItemField(index, 'description', e.target.value)}
                   />
                 </div>
                 <div>
-                  <Label>Quantity</Label>
+                  <Label>{t('items.fields.quantity')}</Label>
                   <Input
                     type="number"
                     min="1"
@@ -221,16 +223,16 @@ export default function EditInvoicePage() {
                   />
                 </div>
                 <div>
-                  <Label>Unit Price (R$)</Label>
+                  <Label>{t('items.fields.unitPrice')}</Label>
                   <Input
-                    placeholder="0.00"
+                    placeholder={t('items.fields.unitPricePlaceholder')}
                     value={item.unit_price}
                     onChange={(e) => updateItemField(index, 'unit_price', e.target.value)}
                   />
                 </div>
                 <div className="md:col-span-4 flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">
-                    Total: {formatCurrency(dollarsToCents(parseFloat(item.unit_price || '0') * item.quantity))}
+                    {t('items.total', { total: formatCurrency(dollarsToCents(parseFloat(item.unit_price || '0') * item.quantity)) })}
                   </span>
                   <Button
                     type="button"
@@ -246,21 +248,21 @@ export default function EditInvoicePage() {
 
             <div className="pt-4 border-t space-y-2">
               <div className="flex justify-between">
-                <span>Subtotal:</span>
+                <span>{t('summary.subtotal')}</span>
                 <span>{formatCurrency(dollarsToCents(subtotal))}</span>
               </div>
               <div className="flex justify-between">
-                <span>Tax:</span>
+                <span>{t('summary.tax')}</span>
                 <span>{formatCurrency(invoice.tax_amount_cents)}</span>
               </div>
               <div className="flex justify-between font-bold text-lg">
-                <span>Total:</span>
+                <span>{t('summary.total')}</span>
                 <span>{formatCurrency(dollarsToCents(total))}</span>
               </div>
             </div>
 
             <Button onClick={handleSaveItems} disabled={addItem.isPending || deleteItem.isPending}>
-              {addItem.isPending || deleteItem.isPending ? 'Saving...' : 'Save Items'}
+              {addItem.isPending || deleteItem.isPending ? t('actions.saving') : t('actions.saveItems')}
             </Button>
           </CardContent>
         </Card>
@@ -270,28 +272,28 @@ export default function EditInvoicePage() {
       <Card>
         <form onSubmit={handleUpdateStatus}>
           <CardHeader>
-            <CardTitle>Invoice Status</CardTitle>
-            <CardDescription>Update invoice status and dates</CardDescription>
+            <CardTitle>{t('statusForm.title')}</CardTitle>
+            <CardDescription>{t('statusForm.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <Label htmlFor="status">Status</Label>
+                <Label htmlFor="status">{t('statusForm.fields.status')}</Label>
                 <Select name="status" defaultValue={invoice.status}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="sent">Sent</SelectItem>
-                    <SelectItem value="paid">Paid</SelectItem>
-                    <SelectItem value="overdue">Overdue</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                    <SelectItem value="draft">{t('status.draft')}</SelectItem>
+                    <SelectItem value="sent">{t('status.sent')}</SelectItem>
+                    <SelectItem value="paid">{t('status.paid')}</SelectItem>
+                    <SelectItem value="overdue">{t('status.overdue')}</SelectItem>
+                    <SelectItem value="cancelled">{t('status.cancelled')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="due_date">Due Date</Label>
+                <Label htmlFor="due_date">{t('statusForm.fields.dueDate')}</Label>
                 <Input
                   id="due_date"
                   name="due_date"
@@ -302,10 +304,10 @@ export default function EditInvoicePage() {
             </div>
             <div className="flex gap-2">
               <Button type="button" variant="outline" onClick={() => router.back()}>
-                Cancel
+                {tCommon('cancel')}
               </Button>
               <Button type="submit" disabled={updateInvoice.isPending}>
-                {updateInvoice.isPending ? 'Updating...' : 'Update Status'}
+                {updateInvoice.isPending ? t('actions.updating') : t('actions.updateStatus')}
               </Button>
             </div>
           </CardContent>

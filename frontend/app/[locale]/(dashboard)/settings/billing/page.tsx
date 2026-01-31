@@ -15,6 +15,7 @@ import { useSearchParams } from 'next/navigation'
 interface UsageData {
   organization_id: string
   plan_id: string | null
+  plan_name?: string | null
   billing_status: string
   trial_ends_at: string | null
   usage: {
@@ -135,7 +136,9 @@ export default function BillingPage() {
     )
   }
 
-  const planName = usageData.plan_id ? PLAN_NAMES[usageData.plan_id] || 'Unknown' : 'No Plan'
+  const planName = usageData.plan_name
+    ? (PLAN_NAMES[usageData.plan_name] || usageData.plan_name)
+    : (usageData.plan_id ? 'Unknown' : 'No Plan')
   const isTrial = usageData.billing_status === 'trial_active'
   const isPastDue = usageData.billing_status === 'past_due'
   const isTrialEnded = usageData.billing_status === 'trial_ended'

@@ -6,6 +6,7 @@ from uuid import UUID
 import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from pydantic import BaseModel
 
 from app.api.deps import get_current_profile, get_db, require_billing_read
@@ -117,7 +118,7 @@ async def stripe_webhook(
         return {"status": "error", "message": str(e)}
 
 
-@router.post("/create-checkout-session", response_model=CheckoutSessionResponse)
+@router.post("/create-checkout-session", response_model=CheckoutSessionResponse, dependencies=[Depends(require_billing_read())])
 async def create_checkout_session(
     request: CheckoutSessionRequest,
     profile: Profile = Depends(get_current_profile),
@@ -155,14 +156,21 @@ async def get_usage(
     Returns usage counters and entitlement limits for the current organization.
     """
     from app.services.entitlements import get_entitlement, _get_or_create_usage
+    from app.models.billing import Plan
 
     organization = await get_organization_record(profile, db)
     entitlement = await get_entitlement(db, organization)
     usage = await _get_or_create_usage(db, organization.id)
+    plan_name = None
+    if organization.plan_id:
+        plan_result = await db.execute(select(Plan).where(Plan.id == organization.plan_id))
+        plan = plan_result.scalar_one_or_none()
+        plan_name = plan.name if plan else None
 
     return {
         "organization_id": str(organization.id),
         "plan_id": str(organization.plan_id) if organization.plan_id else None,
+        "plan_name": plan_name,
         "billing_status": organization.billing_status,
         "trial_ends_at": organization.trial_ends_at.isoformat() if organization.trial_ends_at else None,
         "usage": {

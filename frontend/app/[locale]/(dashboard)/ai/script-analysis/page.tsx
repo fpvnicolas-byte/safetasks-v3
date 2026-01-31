@@ -28,7 +28,9 @@ export default function AiScriptAnalysisPage() {
   const router = useRouter()
   const { organizationId } = useAuth()
   const t = useTranslations('ai.scriptAnalysis')
+  const tAi = useTranslations('ai')
   const tCommon = useTranslations('common.feedback')
+  const tCommonLabels = useTranslations('common')
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [scriptText, setScriptText] = useState<string>('')
@@ -82,21 +84,21 @@ export default function AiScriptAnalysisPage() {
       // Check if it's an ApiError with details
       if (error && typeof error === 'object') {
         const apiError = error as { message?: string; detail?: string; statusCode?: number; status?: number }
-        const errorMsg = apiError.message || apiError.detail || 'Unknown error'
+        const errorMsg = apiError.message || apiError.detail || t('errors.unknown')
         toast.error(tCommon('actionError', { message: errorMsg }))
       } else {
-        toast.error(tCommon('actionError', { message: 'Unknown error' }))
+        toast.error(tCommon('actionError', { message: t('errors.unknown') }))
       }
     }
   }
 
   const getAnalysisDescription = (type: string) => {
     switch (type) {
-      case 'full': return 'Complete analysis including characters, scenes, locations, and production requirements'
-      case 'characters': return 'Focus on character analysis, dialogue patterns, and casting requirements'
-      case 'scenes': return 'Scene breakdown, shot planning, and sequence analysis'
-      case 'locations': return 'Location requirements, set design, and shooting logistics'
-      default: return 'Full script analysis'
+      case 'full': return t('analysisType.descriptions.full')
+      case 'characters': return t('analysisType.descriptions.characters')
+      case 'scenes': return t('analysisType.descriptions.scenes')
+      case 'locations': return t('analysisType.descriptions.locations')
+      default: return t('analysisType.descriptions.full')
     }
   }
 
@@ -104,9 +106,9 @@ export default function AiScriptAnalysisPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight font-display">AI Script Analysis</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('pageTitle')}</h1>
           <p className="text-muted-foreground">
-            Analyze scripts to extract characters, scenes, locations, and production requirements
+            {t('pageSubtitle')}
           </p>
         </div>
         <div className="flex gap-2">
@@ -114,13 +116,13 @@ export default function AiScriptAnalysisPage() {
             variant="outline"
             onClick={() => router.push('/ai')}
           >
-            Back to AI Dashboard
+            {tAi('actions.backToDashboard')}
           </Button>
           <Button
             onClick={() => router.push('/ai/budget-estimation')}
           >
             <DollarSign className="mr-2 h-4 w-4" />
-            Budget Estimation
+            {tAi('quickActions.budgetEstimation.title')}
           </Button>
         </div>
       </div>
@@ -129,22 +131,22 @@ export default function AiScriptAnalysisPage() {
         {/* Controls */}
         <Card className="lg:col-span-1">
           <CardHeader>
-            <CardTitle>Analysis Settings</CardTitle>
+            <CardTitle>{t('settings.title')}</CardTitle>
             <CardDescription>
-              Configure your script analysis parameters
+              {t('settings.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Project Selection */}
             <div className="space-y-2">
-              <Label htmlFor="project">Project</Label>
+              <Label htmlFor="project">{t('settings.projectLabel')}</Label>
               <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
                 <SelectTrigger id="project">
-                  <SelectValue placeholder="Select a project" />
+                  <SelectValue placeholder={t('settings.projectPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {isLoadingProjects ? (
-                    <div className="p-2 text-sm text-muted-foreground">Loading projects...</div>
+                    <div className="p-2 text-sm text-muted-foreground">{tCommonLabels('loading')}</div>
                   ) : projects && projects.length > 0 ? (
                     projects.map((project) => (
                       <SelectItem key={project.id} value={project.id}>
@@ -152,7 +154,7 @@ export default function AiScriptAnalysisPage() {
                       </SelectItem>
                     ))
                   ) : (
-                    <div className="p-2 text-sm text-muted-foreground">No projects available</div>
+                    <div className="p-2 text-sm text-muted-foreground">{tAi('empty.projects')}</div>
                   )}
                 </SelectContent>
               </Select>
@@ -160,16 +162,16 @@ export default function AiScriptAnalysisPage() {
 
             {/* Analysis Type */}
             <div className="space-y-2">
-              <Label htmlFor="analysis-type">Analysis Type</Label>
+              <Label htmlFor="analysis-type">{t('analysisType.label')}</Label>
               <Select value={analysisType} onValueChange={(value) => setAnalysisType(value as 'full' | 'characters' | 'scenes' | 'locations')}>
                 <SelectTrigger id="analysis-type">
-                  <SelectValue placeholder="Select analysis type" />
+                  <SelectValue placeholder={t('analysisType.placeholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="full">Full Analysis</SelectItem>
-                  <SelectItem value="characters">Character Analysis</SelectItem>
-                  <SelectItem value="scenes">Scene Analysis</SelectItem>
-                  <SelectItem value="locations">Location Analysis</SelectItem>
+                  <SelectItem value="full">{t('analysisType.types.full')}</SelectItem>
+                  <SelectItem value="characters">{t('analysisType.types.characters')}</SelectItem>
+                  <SelectItem value="scenes">{t('analysisType.types.scenes')}</SelectItem>
+                  <SelectItem value="locations">{t('analysisType.types.locations')}</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-sm text-muted-foreground">
@@ -179,30 +181,30 @@ export default function AiScriptAnalysisPage() {
 
             {/* Analysis Features */}
             <div className="space-y-3">
-              <h4 className="font-semibold">Analysis Features</h4>
+              <h4 className="font-semibold">{t('features.title')}</h4>
               <div className="space-y-2 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4" />
-                  <span>Character identification and dialogue analysis</span>
+                  <span>{t('features.characters')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  <span>Scene breakdown and sequence planning</span>
+                  <span>{t('features.scenes')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Target className="h-4 w-4" />
-                  <span>Production requirement identification</span>
+                  <span>{t('features.production')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  <span>Shooting schedule optimization</span>
+                  <span>{t('features.schedule')}</span>
                 </div>
               </div>
             </div>
 
             {/* Quick Actions */}
             <div className="space-y-3">
-              <h4 className="font-semibold">Quick Actions</h4>
+              <h4 className="font-semibold">{tAi('quickActions.title')}</h4>
               <div className="space-y-2">
                 <Button
                   variant="outline"
@@ -210,7 +212,7 @@ export default function AiScriptAnalysisPage() {
                   onClick={() => router.push('/ai')}
                 >
                   <Sparkles className="mr-2 h-4 w-4" />
-                  View AI Dashboard
+                  {tAi('actions.viewAiDashboard')}
                 </Button>
                 <Button
                   variant="outline"
@@ -218,7 +220,7 @@ export default function AiScriptAnalysisPage() {
                   onClick={() => router.push('/production')}
                 >
                   <FileText className="mr-2 h-4 w-4" />
-                  View Production
+                  {t('actions.viewProduction')}
                 </Button>
               </div>
             </div>
@@ -228,24 +230,24 @@ export default function AiScriptAnalysisPage() {
         {/* Script Input */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Script Input</CardTitle>
+            <CardTitle>{t('scriptInput.title')}</CardTitle>
             <CardDescription>
-              Paste your script text below for AI analysis
+              {t('scriptInput.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="script-input">Script Text</Label>
+              <Label htmlFor="script-input">{t('scriptInput.label')}</Label>
               <Textarea
                 id="script-input"
-                placeholder="Paste your script text here... Include character names, dialogue, scene descriptions, and any production notes for the most accurate analysis."
+                placeholder={t('scriptInput.placeholder')}
                 value={scriptText}
                 onChange={(e) => setScriptText(e.target.value)}
                 className="min-h-[250px]"
                 maxLength={15000}
               />
               <div className="text-sm text-muted-foreground">
-                {scriptText.length}/15000 characters
+                {t('scriptInput.charCount', { current: scriptText.length, max: 15000 })}
               </div>
             </div>
 
@@ -258,12 +260,12 @@ export default function AiScriptAnalysisPage() {
                 {isAnalyzing ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Analyzing Script...
+                    {t('actions.analyzing')}
                   </>
                 ) : (
                   <>
                     <Sparkles className="mr-2 h-4 w-4" />
-                    Analyze Script
+                    {tAi('actions.analyzeScript')}
                   </>
                 )}
               </Button>
@@ -272,19 +274,19 @@ export default function AiScriptAnalysisPage() {
                 onClick={() => setScriptText('')}
                 disabled={isAnalyzing}
               >
-                Clear
+                {tAi('actions.clear')}
               </Button>
             </div>
 
             {/* Analysis Tips */}
             <div className="bg-success/10 p-4 rounded-lg">
-              <h4 className="font-semibold text-success mb-2">Analysis Tips</h4>
+              <h4 className="font-semibold text-success mb-2">{t('tips.title')}</h4>
               <ul className="text-sm text-success/80 space-y-1">
-                <li>• Use proper character names (all caps) for accurate identification</li>
-                <li>• Include scene headings (INT./EXT. locations)</li>
-                <li>• Add production notes in parentheses for special requirements</li>
-                <li>• Full analysis provides the most comprehensive results</li>
-                <li>• Character analysis is great for casting planning</li>
+                <li>• {t('tips.items.characters')}</li>
+                <li>• {t('tips.items.scenes')}</li>
+                <li>• {t('tips.items.production')}</li>
+                <li>• {t('tips.items.full')}</li>
+                <li>• {t('tips.items.casting')}</li>
               </ul>
             </div>
           </CardContent>
@@ -295,9 +297,9 @@ export default function AiScriptAnalysisPage() {
       {scriptText.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Script Preview</CardTitle>
+            <CardTitle>{t('preview.title')}</CardTitle>
             <CardDescription>
-              AI will analyze this script based on your selected parameters
+              {t('preview.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -305,7 +307,7 @@ export default function AiScriptAnalysisPage() {
               <div className="bg-muted/60 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Users className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Characters</span>
+                  <span className="text-sm font-medium">{t('preview.cards.characters')}</span>
                 </div>
                 {/* AI-Assisted Detection (Option 5) */}
                 <div className="text-2xl font-bold">
@@ -314,15 +316,15 @@ export default function AiScriptAnalysisPage() {
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {aiAnalysisResult?.result?.characters?.length
-                    ? 'AI-analyzed characters'
-                    : 'Estimated characters (regex-based)'}
+                    ? t('preview.labels.aiCharacters')
+                    : t('preview.labels.estimatedCharacters')}
                 </div>
               </div>
 
               <div className="bg-muted/60 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Scenes</span>
+                  <span className="text-sm font-medium">{t('preview.cards.scenes')}</span>
                 </div>
                 <div className="text-2xl font-bold">
                   {aiAnalysisResult?.result?.scenes?.length ||
@@ -330,29 +332,33 @@ export default function AiScriptAnalysisPage() {
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {aiAnalysisResult?.result?.scenes?.length
-                    ? 'AI-analyzed scenes'
-                    : 'Estimated scenes'}
+                    ? t('preview.labels.aiScenes')
+                    : t('preview.labels.estimatedScenes')}
                 </div>
               </div>
 
               <div className="bg-muted/60 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Target className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Analysis Type</span>
+                  <span className="text-sm font-medium">{t('preview.cards.analysisType')}</span>
                 </div>
-                <div className="text-2xl font-bold capitalize">{analysisType}</div>
-                <div className="text-xs text-muted-foreground">Selected analysis type</div>
+                <div className="text-2xl font-bold capitalize">{t(`analysisType.types.${analysisType}`)}</div>
+                <div className="text-xs text-muted-foreground">{t('preview.labels.selectedType')}</div>
               </div>
 
               <div className="bg-muted/60 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Complexity</span>
+                  <span className="text-sm font-medium">{t('preview.cards.complexity')}</span>
                 </div>
                 <div className="text-2xl font-bold">
-                  {scriptText.length > 8000 ? 'High' : scriptText.length > 4000 ? 'Medium' : 'Low'}
+                  {scriptText.length > 8000
+                    ? t('preview.complexity.high')
+                    : scriptText.length > 4000
+                      ? t('preview.complexity.medium')
+                      : t('preview.complexity.low')}
                 </div>
-                <div className="text-xs text-muted-foreground">Analysis complexity</div>
+                <div className="text-xs text-muted-foreground">{t('preview.labels.complexity')}</div>
               </div>
             </div>
 
@@ -361,12 +367,14 @@ export default function AiScriptAnalysisPage() {
               <div className="mt-4 p-4 bg-info/10 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles className="h-4 w-4 text-info" />
-                  <span className="font-semibold text-info">AI Analysis Complete</span>
+                  <span className="font-semibold text-info">{t('analysisStatus.title')}</span>
                 </div>
                 <div className="text-sm text-info-foreground">
-                  {aiAnalysisResult.result?.characters?.length || 0} characters,
-                  {aiAnalysisResult.result?.scenes?.length || 0} scenes,
-                  {aiAnalysisResult.result?.locations?.length || 0} locations identified
+                  {t('analysisStatus.summary', {
+                    characters: aiAnalysisResult.result?.characters?.length || 0,
+                    scenes: aiAnalysisResult.result?.scenes?.length || 0,
+                    locations: aiAnalysisResult.result?.locations?.length || 0
+                  })}
                 </div>
               </div>
             )}

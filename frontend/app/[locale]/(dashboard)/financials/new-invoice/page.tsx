@@ -14,6 +14,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Plus, Trash2 } from 'lucide-react'
 import { dollarsToCents, formatCurrency } from '@/lib/utils/money'
+import { useTranslations } from 'next-intl'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,6 +30,8 @@ function NewInvoiceForm() {
   const searchParams = useSearchParams()
   const projectId = searchParams.get('project') || ''
   const clientId = searchParams.get('client') || ''
+  const t = useTranslations('financials.pages.invoicesNew')
+  const tCommon = useTranslations('common')
 
   const [error, setError] = useState<string | null>(null)
   const [items, setItems] = useState<InvoiceItemForm[]>([
@@ -42,13 +45,13 @@ function NewInvoiceForm() {
   const createInvoice = useCreateInvoice(organizationId || undefined)
 
   if (isLoadingOrg) {
-    return <div>Loading...</div>
+    return <div>{tCommon('loading')}</div>
   }
 
   if (!organizationId) {
     return (
       <Alert variant="destructive">
-        <AlertDescription>No organization found. Please contact support.</AlertDescription>
+        <AlertDescription>{t('errors.organizationMissing')}</AlertDescription>
       </Alert>
     )
   }
@@ -96,7 +99,7 @@ function NewInvoiceForm() {
     const selectedProjectId = (formData.get('project_id') as string) || ''
 
     if (!selectedClientId) {
-      setError('Please select a client')
+      setError(t('errors.clientRequired'))
       return
     }
 
@@ -106,7 +109,7 @@ function NewInvoiceForm() {
     )
 
     if (validItems.length === 0) {
-      setError('Please add at least one valid invoice item')
+      setError(t('errors.itemsRequired'))
       return
     }
 
@@ -153,7 +156,7 @@ function NewInvoiceForm() {
       router.push('/financials?tab=invoices')
     } catch (err: unknown) {
       const error = err as Error
-      setError(error.message || 'Failed to create invoice')
+      setError(error.message || t('errors.createFailed'))
     }
   }
 
@@ -164,18 +167,18 @@ function NewInvoiceForm() {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Create New Invoice</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
         <p className="text-muted-foreground">
-          Generate a professional invoice for your film production services
+          {t('subtitle')}
         </p>
       </div>
 
       <Card>
         <form onSubmit={handleSubmit}>
           <CardHeader>
-            <CardTitle>Invoice Details</CardTitle>
+            <CardTitle>{t('form.title')}</CardTitle>
             <CardDescription>
-              Fill in the basic information for this invoice
+              {t('form.description')}
             </CardDescription>
           </CardHeader>
 
@@ -189,10 +192,10 @@ function NewInvoiceForm() {
             {/* Client and Project Selection */}
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="client_id">Client *</Label>
+                <Label htmlFor="client_id">{t('fields.client.label')}</Label>
                 <Select name="client_id" defaultValue={clientId} required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a client" />
+                    <SelectValue placeholder={t('fields.client.placeholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {clients?.map((client) => (
@@ -205,10 +208,10 @@ function NewInvoiceForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="project_id">Project (Optional)</Label>
+                <Label htmlFor="project_id">{t('fields.project.label')}</Label>
                 <Select name="project_id" defaultValue={projectId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a project" />
+                    <SelectValue placeholder={t('fields.project.placeholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {projects?.map((project) => (
@@ -223,7 +226,7 @@ function NewInvoiceForm() {
 
             {/* Due Date */}
             <div className="space-y-2">
-              <Label htmlFor="due_date">Due Date *</Label>
+              <Label htmlFor="due_date">{t('fields.dueDate.label')}</Label>
               <Input
                 id="due_date"
                 name="due_date"
@@ -235,10 +238,10 @@ function NewInvoiceForm() {
             {/* Invoice Items */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Invoice Items</h3>
+                <h3 className="text-lg font-semibold">{t('items.title')}</h3>
                 <Button type="button" onClick={addItem} variant="outline" size="sm">
                   <Plus className="mr-2 h-4 w-4" />
-                  Add Item
+                  {t('items.add')}
                 </Button>
               </div>
 
@@ -248,9 +251,9 @@ function NewInvoiceForm() {
                     <CardContent className="pt-6">
                       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                         <div className="space-y-2">
-                          <Label>Description *</Label>
+                          <Label>{t('items.fields.description')}</Label>
                           <Input
-                            placeholder="Service description"
+                            placeholder={t('items.fields.descriptionPlaceholder')}
                             value={item.description}
                             onChange={(e) => updateItem(index, 'description', e.target.value)}
                             required
@@ -258,7 +261,7 @@ function NewInvoiceForm() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label>Quantity *</Label>
+                          <Label>{t('items.fields.quantity')}</Label>
                           <Input
                             type="number"
                             min="1"
@@ -269,9 +272,9 @@ function NewInvoiceForm() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label>Unit Price (R$) *</Label>
+                          <Label>{t('items.fields.unitPrice')}</Label>
                           <Input
-                            placeholder="0.00"
+                            placeholder={t('items.fields.unitPricePlaceholder')}
                             value={item.unit_price}
                             onChange={(e) => updateItem(index, 'unit_price', e.target.value)}
                             required
@@ -279,20 +282,20 @@ function NewInvoiceForm() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label>Category</Label>
+                          <Label>{t('items.fields.category')}</Label>
                           <Select
                             value={item.category}
                             onValueChange={(value) => updateItem(index, 'category', value)}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Select category" />
+                              <SelectValue placeholder={t('items.fields.categoryPlaceholder')} />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="pre_production">Pre-Production</SelectItem>
-                              <SelectItem value="production">Production</SelectItem>
-                              <SelectItem value="post_production">Post-Production</SelectItem>
-                              <SelectItem value="marketing">Marketing</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
+                              <SelectItem value="pre_production">{t('categories.pre_production')}</SelectItem>
+                              <SelectItem value="production">{t('categories.production')}</SelectItem>
+                              <SelectItem value="post_production">{t('categories.post_production')}</SelectItem>
+                              <SelectItem value="marketing">{t('categories.marketing')}</SelectItem>
+                              <SelectItem value="other">{t('categories.other')}</SelectItem>
                             </SelectContent>
                           </Select>
                           {items.length > 1 && (
@@ -304,7 +307,7 @@ function NewInvoiceForm() {
                               className="mt-2"
                             >
                               <Trash2 className="mr-2 h-3 w-3" />
-                              Remove
+                              {t('items.remove')}
                             </Button>
                           )}
                         </div>
@@ -318,21 +321,21 @@ function NewInvoiceForm() {
             {/* Description and Notes */}
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="description">Invoice Description</Label>
+                <Label htmlFor="description">{t('fields.description.label')}</Label>
                 <Textarea
                   id="description"
                   name="description"
-                  placeholder="Brief description of services..."
+                  placeholder={t('fields.description.placeholder')}
                   rows={3}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes">Additional Notes</Label>
+                <Label htmlFor="notes">{t('fields.notes.label')}</Label>
                 <Textarea
                   id="notes"
                   name="notes"
-                  placeholder="Payment terms, special instructions..."
+                  placeholder={t('fields.notes.placeholder')}
                   rows={3}
                 />
               </div>
@@ -341,19 +344,19 @@ function NewInvoiceForm() {
             {/* Invoice Summary */}
             <Card>
               <CardHeader>
-                <CardTitle>Invoice Summary</CardTitle>
+                <CardTitle>{t('summary.title')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
-                  <span>Subtotal:</span>
+                  <span>{t('summary.subtotal')}</span>
                   <span>{formatCurrency(dollarsToCents(subtotal))}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Tax (10%):</span>
+                  <span>{t('summary.tax', { rate: 10 })}</span>
                   <span>{formatCurrency(dollarsToCents(tax))}</span>
                 </div>
                 <div className="border-t pt-4 flex justify-between font-bold text-lg">
-                  <span>Total:</span>
+                  <span>{t('summary.total')}</span>
                   <span>{formatCurrency(dollarsToCents(total))}</span>
                 </div>
               </CardContent>
@@ -366,10 +369,10 @@ function NewInvoiceForm() {
               variant="outline"
               onClick={() => router.back()}
             >
-              Cancel
+              {tCommon('cancel')}
             </Button>
             <Button type="submit" disabled={createInvoice.isPending}>
-              {createInvoice.isPending ? 'Creating Invoice...' : 'Create Invoice'}
+              {createInvoice.isPending ? t('actions.creating') : t('actions.create')}
             </Button>
           </CardFooter>
         </form>
@@ -379,8 +382,9 @@ function NewInvoiceForm() {
 }
 
 export default function NewInvoicePage() {
+  const tCommon = useTranslations('common')
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div>{tCommon('loading')}</div>}>
       <NewInvoiceForm />
     </Suspense>
   )

@@ -13,13 +13,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Switch } from '@/components/ui/switch'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 export default function EditTaxTablePage() {
   const router = useRouter()
   const params = useParams()
   const taxTableId = params.id as string
   const locale = useLocale()
+  const t = useTranslations('financials.pages.taxTablesEdit')
+  const tCommon = useTranslations('common')
 
   const { organizationId } = useAuth()
   const [error, setError] = useState<string | null>(null)
@@ -28,13 +30,13 @@ export default function EditTaxTablePage() {
   const deleteTaxTable = useDeleteTaxTable()
 
   if (isLoading) {
-    return <div>Loading tax table...</div>
+    return <div>{t('loading')}</div>
   }
 
   if (!taxTable) {
     return (
       <Alert variant="destructive">
-        <AlertDescription>Tax table not found</AlertDescription>
+        <AlertDescription>{t('errors.notFound')}</AlertDescription>
       </Alert>
     )
   }
@@ -48,7 +50,7 @@ export default function EditTaxTablePage() {
 
     // Validation
     if (ratePercentage < 0 || ratePercentage > 100) {
-      setError('Rate percentage must be between 0 and 100')
+      setError(t('errors.rateRange'))
       return
     }
 
@@ -65,14 +67,14 @@ export default function EditTaxTablePage() {
       router.push('/financials/tax-tables')
     } catch (err: unknown) {
       const error = err as Error
-      setError(error.message || 'Failed to update tax table')
+      setError(error.message || t('errors.updateFailed'))
     }
   }
 
   async function handleDelete() {
     if (!taxTable) return
 
-    if (!confirm(`Are you sure you want to delete tax table "${taxTable.name}"? This action cannot be undone.`)) {
+    if (!confirm(t('deleteConfirm', { name: taxTable.name }))) {
       return
     }
 
@@ -81,25 +83,25 @@ export default function EditTaxTablePage() {
       router.push('/financials/tax-tables')
     } catch (err: unknown) {
       const error = err as Error
-      setError(error.message || 'Failed to delete tax table')
+      setError(error.message || t('errors.deleteFailed'))
     }
   }
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Edit Tax Table</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
         <p className="text-muted-foreground">
-          Update tax table configuration
+          {t('subtitle')}
         </p>
       </div>
 
       <Card>
         <form onSubmit={handleSubmit}>
           <CardHeader>
-            <CardTitle>Tax Table Details</CardTitle>
+            <CardTitle>{t('form.title')}</CardTitle>
             <CardDescription>
-              Modify the tax information and rate
+              {t('form.description')}
             </CardDescription>
           </CardHeader>
 
@@ -111,37 +113,37 @@ export default function EditTaxTablePage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name">{t('fields.name.label')}</Label>
               <Input
                 id="name"
                 name="name"
                 defaultValue={taxTable.name}
-                placeholder="e.g., ISS 5% - São Paulo"
+                placeholder={t('fields.name.placeholder')}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="tax_type">Tax Type *</Label>
+              <Label htmlFor="tax_type">{t('fields.type.label')}</Label>
               <Select name="tax_type" defaultValue={taxTable.tax_type} required>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select tax type" />
+                  <SelectValue placeholder={t('fields.type.placeholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="iss">ISS (Service Tax)</SelectItem>
-                  <SelectItem value="irrf">IRRF (Income Tax Withholding)</SelectItem>
-                  <SelectItem value="pis">PIS (Social Contribution)</SelectItem>
-                  <SelectItem value="cofins">COFINS (Social Contribution)</SelectItem>
-                  <SelectItem value="csll">CSLL (Social Contribution)</SelectItem>
-                  <SelectItem value="inss">INSS (Social Security)</SelectItem>
-                  <SelectItem value="rental_tax">Rental Tax</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="iss">{t('taxTypes.iss')}</SelectItem>
+                  <SelectItem value="irrf">{t('taxTypes.irrf')}</SelectItem>
+                  <SelectItem value="pis">{t('taxTypes.pis')}</SelectItem>
+                  <SelectItem value="cofins">{t('taxTypes.cofins')}</SelectItem>
+                  <SelectItem value="csll">{t('taxTypes.csll')}</SelectItem>
+                  <SelectItem value="inss">{t('taxTypes.inss')}</SelectItem>
+                  <SelectItem value="rental_tax">{t('taxTypes.rental_tax')}</SelectItem>
+                  <SelectItem value="other">{t('taxTypes.other')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="rate_percentage">Rate Percentage *</Label>
+              <Label htmlFor="rate_percentage">{t('fields.rate.label')}</Label>
               <Input
                 id="rate_percentage"
                 name="rate_percentage"
@@ -155,7 +157,7 @@ export default function EditTaxTablePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t('fields.description.label')}</Label>
               <Textarea
                 id="description"
                 name="description"
@@ -171,15 +173,19 @@ export default function EditTaxTablePage() {
                 defaultChecked={taxTable.is_active}
                 value="true"
               />
-              <Label htmlFor="is_active">Active</Label>
+              <Label htmlFor="is_active">{t('fields.active.label')}</Label>
             </div>
 
             <div className="pt-4 border-t">
               <p className="text-sm text-muted-foreground">
-                Created: {new Date(taxTable.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                {t('meta.created', {
+                  date: new Date(taxTable.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+                })}
               </p>
               <p className="text-sm text-muted-foreground">
-                Last updated: {new Date(taxTable.updated_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                {t('meta.updated', {
+                  date: new Date(taxTable.updated_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+                })}
               </p>
             </div>
           </CardContent>
@@ -190,7 +196,7 @@ export default function EditTaxTablePage() {
               variant="destructive"
               onClick={handleDelete}
             >
-              Delete
+              {t('actions.delete')}
             </Button>
             <div className="flex gap-2">
               <Button
@@ -198,10 +204,10 @@ export default function EditTaxTablePage() {
                 variant="outline"
                 onClick={() => router.back()}
               >
-                Cancel
+                {tCommon('cancel')}
               </Button>
               <Button type="submit" disabled={updateTaxTable.isPending}>
-                {updateTaxTable.isPending ? 'Saving...' : 'Save Changes'}
+                {updateTaxTable.isPending ? t('actions.saving') : t('actions.save')}
               </Button>
             </div>
           </CardFooter>

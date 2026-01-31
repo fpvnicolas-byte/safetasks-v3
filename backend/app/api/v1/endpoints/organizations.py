@@ -2,13 +2,46 @@ from typing import List
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from pydantic import BaseModel
 
-from app.api.deps import get_current_organization, get_current_profile, require_owner_or_admin, require_read_only
+from app.api.deps import get_current_organization, get_current_profile, require_owner_or_admin, require_read_only, require_billing_active
 from app.db.session import get_db
 from app.modules.commercial.service import organization_service
 from app.schemas.organizations import Organization, OrganizationCreate, OrganizationUpdate
+from app.models.organizations import Organization as OrganizationModel
+from app.models.profiles import Profile
+from app.services.billing import setup_trial_for_organization
+from app.services.entitlements import increment_usage_count
+
+import re
+import uuid
 
 router = APIRouter()
+
+
+class OrganizationOnboardingRequest(BaseModel):
+    name: str
+    slug: str | None = None
+
+
+def _slugify(value: str) -> str:
+    value = value.strip().lower()
+    value = re.sub(r"[^a-z0-9]+", "-", value)
+    value = re.sub(r"-+", "-", value).strip("-")
+    return value or f"org-{uuid.uuid4().hex[:8]}"
+
+
+async def _ensure_unique_slug(db: AsyncSession, slug: str) -> str:
+    base = slug
+    suffix = 1
+    while True:
+        query = select(OrganizationModel).where(OrganizationModel.slug == slug)
+        result = await db.execute(query)
+        if not result.scalar_one_or_none():
+            return slug
+        slug = f"{base}-{suffix}"
+        suffix += 1
 
 
 @router.get("/me", response_model=Organization, dependencies=[Depends(require_read_only)])
@@ -64,7 +97,11 @@ async def get_organization(
     return organization
 
 
-@router.put("/{organization_id}", response_model=Organization, dependencies=[Depends(require_owner_or_admin)])
+@router.put(
+    "/{organization_id}",
+    response_model=Organization,
+    dependencies=[Depends(require_owner_or_admin), Depends(require_billing_active)]
+)
 async def update_organization(
     organization_id: UUID,
     organization_in: OrganizationUpdate,
@@ -87,4 +124,52 @@ async def update_organization(
             detail="Organization not found"
         )
 
+    return organization
+
+
+@router.post("/onboarding", response_model=Organization)
+async def create_organization_onboarding(
+    payload: OrganizationOnboardingRequest,
+    profile: Profile = Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
+) -> Organization:
+    """
+    Create an organization for the current user and start a Pro trial.
+    This is intended for the initial onboarding flow after signup.
+    """
+    if profile.organization_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User already belongs to an organization"
+        )
+
+    slug = payload.slug or _slugify(payload.name)
+    slug = await _ensure_unique_slug(db, slug)
+
+    organization = OrganizationModel(
+        name=payload.name,
+        slug=slug,
+        owner_profile_id=profile.id,
+        billing_contact_user_id=profile.id
+    )
+    db.add(organization)
+    await db.flush()
+    await db.refresh(organization)
+
+    await setup_trial_for_organization(
+        db=db,
+        organization=organization,
+        user_email=profile.email
+    )
+
+    profile.organization_id = organization.id
+    profile.role_v2 = "owner"
+    # Keep legacy role in sync for older checks/UI
+    profile.role = "admin"
+    profile.is_master_owner = True
+    db.add(profile)
+    await increment_usage_count(db, organization.id, resource="users", delta=1)
+
+    await db.commit()
+    await db.refresh(organization)
     return organization

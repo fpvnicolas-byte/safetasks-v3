@@ -1,7 +1,6 @@
 from typing import List
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -98,6 +97,7 @@ async def create_call_sheet(
 async def get_call_sheet(
     call_sheet_id: UUID,
     organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> CallSheet:
     """

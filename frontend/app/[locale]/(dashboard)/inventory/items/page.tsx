@@ -50,6 +50,7 @@ export default function InventoryItemsPage() {
     targetId: idToDelete,
     additionalData: itemName
   } = useConfirmDelete()
+  const itemNameText = typeof itemName === 'string' ? itemName : ''
 
   const handleDeleteItem = async () => {
     if (!idToDelete) return
@@ -224,8 +225,8 @@ export default function InventoryItemsPage() {
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         onConfirm={handleDeleteItem}
-        title={t('delete.title', { name: itemName || '' })}
-        description={t('delete.description', { name: itemName || '' })}
+        title={t('delete.title', { name: itemNameText })}
+        description={t('delete.description', { name: itemNameText })}
         loading={deleteItem.isPending}
       />
     </div >

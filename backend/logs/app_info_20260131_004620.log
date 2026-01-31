@@ -1,0 +1,16 @@
+2026-01-31 00:46:20 [INFO] app: Logging configuration initialized
+2026-01-31 00:46:36 [INFO] stripe: message='Request to Stripe api' method=post url=https://api.stripe.com/v1/customers
+2026-01-31 00:46:36 [INFO] stripe: message='Stripe API response' path=https://api.stripe.com/v1/customers response_code=200
+2026-01-31 00:46:36 [INFO] app.services.billing: Created Stripe customer cus_TtHiIGQpQlgRpe for org b5529827-b215-4bfa-9a4f-d03d521ba1ea
+2026-01-31 00:46:36 [INFO] app.services.billing: Set up 7-day trial for org b5529827-b215-4bfa-9a4f-d03d521ba1ea, expires 2026-02-07 03:46:36.072376
+2026-01-31 00:46:37 [INFO] app.api.v1.endpoints.billing: Received webhook event: customer.created (evt_1SvV8qQBou9YDSD2d035W2vT)
+2026-01-31 00:46:37 [INFO] app.services.billing: Updated org b5529827-b215-4bfa-9a4f-d03d521ba1ea with Stripe customer cus_TtHiIGQpQlgRpe
+2026-01-31 00:46:37 [INFO] app.api.v1.endpoints.billing: Successfully processed event evt_1SvV8qQBou9YDSD2d035W2vT
+2026-01-31 00:46:38 [INFO] app.services.analytics: MTD Financial Metrics for org b5529827-b215-4bfa-9a4f-d03d521ba1ea: Revenue: 0, Expenses: 0, Date range: 2026-01-01 to 2026-01-31
+2026-01-31 00:46:38 [INFO] app.services.analytics: YTD Financial Metrics for org b5529827-b215-4bfa-9a4f-d03d521ba1ea: Revenue: 0, Expenses: 0, Date range: 2026-01-01 to 2026-01-31
+2026-01-31 00:46:41 [INFO] app.services.analytics: MTD Financial Metrics for org b5529827-b215-4bfa-9a4f-d03d521ba1ea: Revenue: 0, Expenses: 0, Date range: 2026-01-01 to 2026-01-31
+2026-01-31 00:46:41 [INFO] app.services.analytics: YTD Financial Metrics for org b5529827-b215-4bfa-9a4f-d03d521ba1ea: Revenue: 0, Expenses: 0, Date range: 2026-01-01 to 2026-01-31
+2026-01-31 00:47:07 [INFO] app.services.analytics: MTD Financial Metrics for org 4384a92c-df41-444b-b34d-6c80e7820486: Revenue: 125000, Expenses: 5E+4, Date range: 2026-01-01 to 2026-01-31
+2026-01-31 00:47:07 [INFO] app.services.analytics: YTD Financial Metrics for org 4384a92c-df41-444b-b34d-6c80e7820486: Revenue: 125000, Expenses: 5E+4, Date range: 2026-01-01 to 2026-01-31
+2026-01-31 00:49:56 [INFO] app.services.analytics: MTD Financial Metrics for org b5529827-b215-4bfa-9a4f-d03d521ba1ea: Revenue: 0, Expenses: 0, Date range: 2026-01-01 to 2026-01-31
+2026-01-31 00:49:56 [INFO] app.services.analytics: YTD Financial Metrics for org b5529827-b215-4bfa-9a4f-d03d521ba1ea: Revenue: 0, Expenses: 0, Date range: 2026-01-01 to 2026-01-31

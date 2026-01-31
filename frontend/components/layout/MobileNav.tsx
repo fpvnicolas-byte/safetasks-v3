@@ -46,16 +46,18 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
     <>
       {/* Mobile Sidebar */}
       <aside
-        className={`fixed left-0 top-0 w-64 h-full bg-white dark:bg-slate-900 border-r z-50 shadow-lg
-          transform transition-transform duration-300 ease-in-out
-          ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={cn(
+          'fixed left-0 top-0 h-full w-[18rem] min-w-[16rem] max-w-[85vw] border-r border-sidebar-border bg-sidebar/85 text-sidebar-foreground backdrop-blur-xl z-50 shadow-lg',
+          'transform transition-transform duration-300 ease-in-out',
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        )}
       >
         <div className="p-4">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold">Menu</h2>
             <button
               onClick={onClose}
-              className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="p-2 rounded-md hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -75,8 +77,8 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
                     'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors w-full',
                     'min-h-[44px] min-w-[44px] p-3', // Touch target optimization
                     isActive
-                      ? 'bg-slate-200 text-slate-900 dark:bg-slate-800 dark:text-slate-100'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-slate-100'
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                      : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground'
                   )}
                 >
                   <item.icon className="h-5 w-5" />
@@ -91,7 +93,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
       {/* Mobile Backdrop */}
       {isOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-white/20 dark:bg-black/20 backdrop-blur-sm transition-all duration-300 ease-in-out z-40"
+          className="md:hidden fixed inset-0 bg-background/20 backdrop-blur-sm transition-all duration-300 ease-in-out z-40"
           onClick={onClose}
         />
       )}

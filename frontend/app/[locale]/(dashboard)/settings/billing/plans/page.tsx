@@ -25,8 +25,8 @@ const PLANS: Plan[] = [
   {
     name: 'starter',
     displayName: 'Starter',
-    price: '$29',
-    interval: 'month',
+    price: 'R$ 39,90',
+    interval: 'mês',
     priceId: 'price_1SmKRMQBou9YDSD2HPqUgldI',
     features: [
       '5 projects',
@@ -40,8 +40,8 @@ const PLANS: Plan[] = [
   {
     name: 'pro',
     displayName: 'Pro',
-    price: '$99',
-    interval: 'month',
+    price: 'R$ 89,90',
+    interval: 'mês',
     priceId: 'price_1SpDHYQBou9YDSD2wu8zH3rt',
     features: [
       'Unlimited projects',
@@ -56,8 +56,8 @@ const PLANS: Plan[] = [
   {
     name: 'pro_annual',
     displayName: 'Pro Annual',
-    price: '$999',
-    interval: 'year',
+    price: 'R$ 755',
+    interval: 'ano',
     priceId: 'price_1SpDYvQBou9YDSD2YsG88KQa',
     features: [
       'Unlimited projects',

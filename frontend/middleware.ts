@@ -64,7 +64,7 @@ export async function middleware(request: NextRequest) {
   const localePattern = new RegExp(`^/(${locales.join('|')})`);
   const pathWithoutLocale = pathname.replace(localePattern, '');
 
-  const protectedRoutes = ['/dashboard', '/projects', '/call-sheets', '/financials', '/settings']
+  const protectedRoutes = ['/dashboard', '/projects', '/call-sheets', '/financials', '/settings', '/onboarding']
   const isProtectedRoute = protectedRoutes.some(route =>
     pathWithoutLocale.startsWith(route)
   )

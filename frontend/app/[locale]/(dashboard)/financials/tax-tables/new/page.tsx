@@ -12,12 +12,15 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useTranslations } from 'next-intl'
 
 export default function NewTaxTablePage() {
   const router = useRouter()
   const { organizationId } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const createTaxTable = useCreateTaxTable()
+  const t = useTranslations('financials.pages.taxTablesNew')
+  const tCommon = useTranslations('common')
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -28,7 +31,7 @@ export default function NewTaxTablePage() {
 
     // Validation
     if (ratePercentage < 0 || ratePercentage > 100) {
-      setError('Rate percentage must be between 0 and 100')
+      setError(t('errors.rateRange'))
       return
     }
 
@@ -44,25 +47,25 @@ export default function NewTaxTablePage() {
       router.push('/financials/tax-tables')
     } catch (err: unknown) {
       const error = err as Error
-      setError(error.message || 'Failed to create tax table')
+      setError(error.message || t('errors.createFailed'))
     }
   }
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Create Tax Table</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
         <p className="text-muted-foreground">
-          Configure a new tax rate for Brazilian tax compliance
+          {t('subtitle')}
         </p>
       </div>
 
       <Card>
         <form onSubmit={handleSubmit}>
           <CardHeader>
-            <CardTitle>Tax Table Details</CardTitle>
+            <CardTitle>{t('form.title')}</CardTitle>
             <CardDescription>
-              Enter the tax information and applicable rate
+              {t('form.description')}
             </CardDescription>
           </CardHeader>
 
@@ -74,39 +77,39 @@ export default function NewTaxTablePage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name">{t('fields.name.label')}</Label>
               <Input
                 id="name"
                 name="name"
-                placeholder="e.g., ISS 5% - São Paulo"
+                placeholder={t('fields.name.placeholder')}
                 required
               />
               <p className="text-sm text-muted-foreground">
-                A descriptive name for this tax table
+                {t('fields.name.help')}
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="tax_type">Tax Type *</Label>
+              <Label htmlFor="tax_type">{t('fields.type.label')}</Label>
               <Select name="tax_type" required>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select tax type" />
+                  <SelectValue placeholder={t('fields.type.placeholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="iss">ISS (Service Tax)</SelectItem>
-                  <SelectItem value="irrf">IRRF (Income Tax Withholding)</SelectItem>
-                  <SelectItem value="pis">PIS (Social Contribution)</SelectItem>
-                  <SelectItem value="cofins">COFINS (Social Contribution)</SelectItem>
-                  <SelectItem value="csll">CSLL (Social Contribution)</SelectItem>
-                  <SelectItem value="inss">INSS (Social Security)</SelectItem>
-                  <SelectItem value="rental_tax">Rental Tax</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="iss">{t('taxTypes.iss')}</SelectItem>
+                  <SelectItem value="irrf">{t('taxTypes.irrf')}</SelectItem>
+                  <SelectItem value="pis">{t('taxTypes.pis')}</SelectItem>
+                  <SelectItem value="cofins">{t('taxTypes.cofins')}</SelectItem>
+                  <SelectItem value="csll">{t('taxTypes.csll')}</SelectItem>
+                  <SelectItem value="inss">{t('taxTypes.inss')}</SelectItem>
+                  <SelectItem value="rental_tax">{t('taxTypes.rental_tax')}</SelectItem>
+                  <SelectItem value="other">{t('taxTypes.other')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="rate_percentage">Rate Percentage *</Label>
+              <Label htmlFor="rate_percentage">{t('fields.rate.label')}</Label>
               <Input
                 id="rate_percentage"
                 name="rate_percentage"
@@ -114,20 +117,20 @@ export default function NewTaxTablePage() {
                 step="0.01"
                 min="0"
                 max="100"
-                placeholder="e.g., 5.00"
+                placeholder={t('fields.rate.placeholder')}
                 required
               />
               <p className="text-sm text-muted-foreground">
-                Enter the tax rate as a percentage (0-100)
+                {t('fields.rate.help')}
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t('fields.description.label')}</Label>
               <Textarea
                 id="description"
                 name="description"
-                placeholder="Additional notes about this tax..."
+                placeholder={t('fields.description.placeholder')}
                 rows={3}
               />
             </div>
@@ -139,10 +142,10 @@ export default function NewTaxTablePage() {
               variant="outline"
               onClick={() => router.back()}
             >
-              Cancel
+              {tCommon('cancel')}
             </Button>
             <Button type="submit" disabled={createTaxTable.isPending}>
-              {createTaxTable.isPending ? 'Creating...' : 'Create Tax Table'}
+              {createTaxTable.isPending ? t('actions.creating') : t('actions.create')}
             </Button>
           </CardFooter>
         </form>

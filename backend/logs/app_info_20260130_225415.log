@@ -1,0 +1,11 @@
+2026-01-30 22:54:15 [INFO] app: Logging configuration initialized
+2026-01-30 22:56:03 [INFO] app.services.analytics: MTD Financial Metrics for org 4384a92c-df41-444b-b34d-6c80e7820486: Revenue: 125000, Expenses: 5E+4, Date range: 2026-01-01 to 2026-01-30
+2026-01-30 22:56:03 [INFO] app.services.analytics: YTD Financial Metrics for org 4384a92c-df41-444b-b34d-6c80e7820486: Revenue: 125000, Expenses: 5E+4, Date range: 2026-01-01 to 2026-01-30
+2026-01-30 22:59:44 [INFO] app.services.analytics: MTD Financial Metrics for org 4384a92c-df41-444b-b34d-6c80e7820486: Revenue: 125000, Expenses: 5E+4, Date range: 2026-01-01 to 2026-01-30
+2026-01-30 22:59:45 [INFO] app.services.analytics: YTD Financial Metrics for org 4384a92c-df41-444b-b34d-6c80e7820486: Revenue: 125000, Expenses: 5E+4, Date range: 2026-01-01 to 2026-01-30
+2026-01-30 23:00:59 [INFO] app.services.analytics: MTD Financial Metrics for org 4384a92c-df41-444b-b34d-6c80e7820486: Revenue: 125000, Expenses: 5E+4, Date range: 2026-01-01 to 2026-01-30
+2026-01-30 23:00:59 [INFO] app.services.analytics: YTD Financial Metrics for org 4384a92c-df41-444b-b34d-6c80e7820486: Revenue: 125000, Expenses: 5E+4, Date range: 2026-01-01 to 2026-01-30
+2026-01-30 23:01:50 [INFO] app.services.analytics: MTD Financial Metrics for org 4384a92c-df41-444b-b34d-6c80e7820486: Revenue: 125000, Expenses: 5E+4, Date range: 2026-01-01 to 2026-01-30
+2026-01-30 23:01:50 [INFO] app.services.analytics: YTD Financial Metrics for org 4384a92c-df41-444b-b34d-6c80e7820486: Revenue: 125000, Expenses: 5E+4, Date range: 2026-01-01 to 2026-01-30
+2026-01-30 23:02:01 [INFO] app.services.analytics: MTD Financial Metrics for org 4384a92c-df41-444b-b34d-6c80e7820486: Revenue: 125000, Expenses: 5E+4, Date range: 2026-01-01 to 2026-01-30
+2026-01-30 23:02:01 [INFO] app.services.analytics: YTD Financial Metrics for org 4384a92c-df41-444b-b34d-6c80e7820486: Revenue: 125000, Expenses: 5E+4, Date range: 2026-01-01 to 2026-01-30

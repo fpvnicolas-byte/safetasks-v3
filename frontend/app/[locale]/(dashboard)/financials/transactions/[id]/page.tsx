@@ -11,12 +11,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ArrowLeft, Trash2, Receipt, Calendar, Wallet, FolderOpen, ArrowUpCircle, ArrowDownCircle } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency, getCategoryDisplayName, TransactionCategory } from '@/types'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 export default function TransactionViewPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const { organizationId } = useAuth()
   const locale = useLocale()
+  const t = useTranslations('financials.pages.transactionDetail')
   const [transactionId, setTransactionId] = useState<string | null>(null)
 
   // Resolve the promise in useEffect
@@ -34,14 +35,15 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
     if (!transaction) return
 
     if (!organizationId) {
-      alert('Organization not found. Please log in again.')
+      alert(t('errors.organizationMissing'))
       return
     }
 
     const confirmed = confirm(
-      `Are you sure you want to delete this transaction?\n\n` +
-      `This will ${transaction.type === 'income' ? 'decrease' : 'increase'} the bank account balance by ${formatCurrency(transaction.amount_cents, transaction.bank_account?.currency || 'BRL')}.\n\n` +
-      `This action cannot be undone.`
+      t('deleteConfirm', {
+        direction: transaction.type === 'income' ? t('balance.decrease') : t('balance.increase'),
+        amount: formatCurrency(transaction.amount_cents, transaction.bank_account?.currency || 'BRL')
+      })
     )
 
     if (!confirmed) return
@@ -55,7 +57,7 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
       router.push('/financials/transactions')
     } catch (err: unknown) {
       const error = err as Error
-      alert(`Failed to delete transaction: ${error.message}`)
+      alert(t('errors.deleteFailed', { message: error.message }))
       setIsDeleting(false)
     }
   }
@@ -64,8 +66,8 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight font-display">Transaction Details</h1>
-          <p className="text-muted-foreground">Loading transaction...</p>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('loading')}</p>
         </div>
       </div>
     )
@@ -75,13 +77,13 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight font-display">Transaction Details</h1>
-          <p className="text-destructive">Failed to load transaction. Please try again.</p>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
+          <p className="text-destructive">{t('error')}</p>
         </div>
         <Button asChild>
           <Link href="/financials/transactions">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Transactions
+            {t('actions.back')}
           </Link>
         </Button>
       </div>
@@ -95,7 +97,7 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
           <Button variant="ghost" size="sm" asChild>
             <Link href="/financials/transactions">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Transactions
+              {t('actions.back')}
             </Link>
           </Button>
         </div>
@@ -105,7 +107,7 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
           disabled={isDeleting}
         >
           <Trash2 className="mr-2 h-4 w-4" />
-          {isDeleting ? 'Deleting...' : 'Delete Transaction'}
+          {isDeleting ? t('actions.deleting') : t('actions.delete')}
         </Button>
       </div>
 
@@ -121,11 +123,11 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
               )}
               <div>
                 <CardTitle className="text-2xl">
-                  {transaction.description || 'Untitled Transaction'}
+                  {transaction.description || t('untitled')}
                 </CardTitle>
                 <CardDescription className="flex items-center gap-2 mt-1">
                   <Badge variant={transaction.type === 'income' ? 'success' : 'destructive'}>
-                    {transaction.type}
+                    {t(`types.${transaction.type}`)}
                   </Badge>
                   <Badge variant="secondary">
                     {getCategoryDisplayName(transaction.category as TransactionCategory)}
@@ -146,21 +148,23 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
         {/* Bank Account */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Bank Account</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('bankAccount.title')}</CardTitle>
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{transaction.bank_account?.name}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Currency: {transaction.bank_account?.currency}
+              {t('bankAccount.currency', { currency: transaction.bank_account?.currency })}
             </p>
             <p className="text-xs text-muted-foreground">
-              Current Balance: {formatCurrency(transaction.bank_account?.balance_cents || 0, transaction.bank_account?.currency || 'BRL')}
+              {t('bankAccount.balance', {
+                amount: formatCurrency(transaction.bank_account?.balance_cents || 0, transaction.bank_account?.currency || 'BRL')
+              })}
             </p>
             <div className="mt-2">
               <Button variant="outline" size="sm" asChild>
                 <Link href="/financials/bank-accounts">
-                  View Accounts
+                  {t('bankAccount.viewAccounts')}
                 </Link>
               </Button>
             </div>
@@ -170,19 +174,21 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
         {/* Transaction Date */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Transaction Date</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('date.title')}</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {new Date(transaction.transaction_date).toLocaleDateString('en-US', {
+              {new Date(transaction.transaction_date).toLocaleDateString(locale, {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
               })}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Created: {new Date(transaction.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+              {t('date.created', {
+                date: new Date(transaction.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+              })}
             </p>
           </CardContent>
         </Card>
@@ -192,7 +198,7 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
       {transaction.project && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Linked Project</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('project.title')}</CardTitle>
             <FolderOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -200,12 +206,12 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
               <div>
                 <div className="text-lg font-bold">{transaction.project.title}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {transaction.project.description || 'No description'}
+                  {transaction.project.description || t('project.noDescription')}
                 </p>
               </div>
               <Button variant="outline" size="sm" asChild>
                 <Link href={`/projects/${transaction.project.id}`}>
-                  View Project
+                  {t('project.view')}
                 </Link>
               </Button>
             </div>
@@ -216,48 +222,48 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
       {/* Transaction Info */}
       <Card>
         <CardHeader>
-          <CardTitle>Transaction Information</CardTitle>
+          <CardTitle>{t('info.title')}</CardTitle>
           <CardDescription>
-            Complete details about this transaction
+            {t('info.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Transaction ID</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('info.transactionId')}</p>
               <p className="text-sm font-mono mt-1">{transaction.id}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Organization ID</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('info.organizationId')}</p>
               <p className="text-sm font-mono mt-1">{transaction.organization_id}</p>
             </div>
           </div>
 
           {transaction.description && (
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Description</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('info.descriptionLabel')}</p>
               <p className="text-sm mt-1">{transaction.description}</p>
             </div>
           )}
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Type</p>
-              <p className="text-sm mt-1 capitalize">{transaction.type}</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('info.type')}</p>
+              <p className="text-sm mt-1 capitalize">{t(`types.${transaction.type}`)}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Category</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('info.category')}</p>
               <p className="text-sm mt-1">{getCategoryDisplayName(transaction.category as TransactionCategory)}</p>
             </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Amount (Cents)</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('info.amountCents')}</p>
               <p className="text-sm mt-1">{transaction.amount_cents}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Amount (Formatted)</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('info.amountFormatted')}</p>
               <p className="text-sm mt-1">{formatCurrency(transaction.amount_cents, transaction.bank_account?.currency || 'BRL')}</p>
             </div>
           </div>
@@ -268,10 +274,10 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
       <Alert>
         <Receipt className="h-4 w-4" />
         <AlertDescription>
-          <strong>Note:</strong> Deleting this transaction will reverse its effect on the bank account balance.
+          <strong>{t('warning.title')}</strong> {t('warning.description')}{' '}
           {transaction.type === 'income'
-            ? ` The balance will decrease by ${formatCurrency(transaction.amount_cents, transaction.bank_account?.currency || 'BRL')}.`
-            : ` The balance will increase by ${formatCurrency(transaction.amount_cents, transaction.bank_account?.currency || 'BRL')}.`
+            ? t('warning.balanceDecrease', { amount: formatCurrency(transaction.amount_cents, transaction.bank_account?.currency || 'BRL') })
+            : t('warning.balanceIncrease', { amount: formatCurrency(transaction.amount_cents, transaction.bank_account?.currency || 'BRL') })
           }
         </AlertDescription>
       </Alert>

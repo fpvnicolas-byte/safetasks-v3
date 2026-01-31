@@ -85,6 +85,7 @@ async def create_scene(
 async def get_scene(
     scene_id: UUID,
     organization_id: UUID = Depends(get_current_organization),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Scene:
     """

@@ -39,28 +39,39 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="w-[288px] h-screen border-r bg-slate-50 dark:bg-slate-900 
-      hidden lg:block lg:sticky lg:top-0 lg:h-screen lg:w-[288px] lg:translate-x-0">
-      <nav className="space-y-1 p-4 h-full overflow-y-auto">
-        {navigation.map((item) => {
-          const isActive = pathname.startsWith(item.href)
-          return (
-            <LocaleLink
-              key={item.key}
-              href={item.href}
-              className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-slate-200 text-slate-900 dark:bg-slate-800 dark:text-slate-100'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-slate-100'
-              )}
-            >
-              <item.icon className="h-5 w-5" />
-              {t(item.key)}
-            </LocaleLink>
-          )
-        })}
-      </nav>
-    </aside>
+    <div className="hidden md:block fixed left-0 top-0 z-40 h-screen w-4 group/sidebar">
+      <div className="absolute left-0 top-0 h-full w-4 bg-gradient-to-r from-sidebar/70 to-transparent opacity-40 transition-opacity duration-200 group-hover/sidebar:opacity-80" />
+      <aside
+        className="absolute left-0 top-0 h-screen w-[288px] border-r border-sidebar-border bg-sidebar/85 text-sidebar-foreground backdrop-blur-xl shadow-lg
+        -translate-x-full transition-transform duration-300 ease-out group-hover/sidebar:translate-x-0"
+      >
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold">Menu</h2>
+          </div>
+          <nav className="space-y-1 h-full overflow-y-auto">
+            {navigation.map((item) => {
+              const isActive = pathname.startsWith(item.href)
+              return (
+                <LocaleLink
+                  key={item.key}
+                  href={item.href}
+                  className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors w-full',
+                    'min-h-[44px] min-w-[44px] p-3',
+                    isActive
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                      : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground'
+                  )}
+                >
+                  <item.icon className="h-5 w-5" />
+                  {t(item.key)}
+                </LocaleLink>
+              )
+            })}
+          </nav>
+        </div>
+      </aside>
+    </div>
   )
 }

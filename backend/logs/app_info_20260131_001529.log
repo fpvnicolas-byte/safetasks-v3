@@ -1,0 +1,9 @@
+2026-01-31 00:15:29 [INFO] app: Logging configuration initialized
+2026-01-31 00:16:07 [INFO] stripe: message='Request to Stripe api' method=post url=https://api.stripe.com/v1/customers
+2026-01-31 00:16:08 [INFO] stripe: message='Stripe API response' path=https://api.stripe.com/v1/customers response_code=200
+2026-01-31 00:16:08 [INFO] app.services.billing: Created Stripe customer cus_TtHDYi3veph0UT for org 7adeb159-dd78-4918-b3e6-3f6c34510c28
+2026-01-31 00:16:08 [INFO] app.services.billing: Set up 7-day trial for org 7adeb159-dd78-4918-b3e6-3f6c34510c28, expires 2026-02-07 03:16:07.871962
+2026-01-31 00:16:13 [INFO] stripe: message='Request to Stripe api' method=post url=https://api.stripe.com/v1/customers
+2026-01-31 00:16:14 [INFO] stripe: message='Stripe API response' path=https://api.stripe.com/v1/customers response_code=200
+2026-01-31 00:16:14 [INFO] app.services.billing: Created Stripe customer cus_TtHD2Y5Ah1Ye37 for org 506c973d-0680-43ce-bf5d-6be343b719a0
+2026-01-31 00:16:14 [INFO] app.services.billing: Set up 7-day trial for org 506c973d-0680-43ce-bf5d-6be343b719a0, expires 2026-02-07 03:16:13.994610

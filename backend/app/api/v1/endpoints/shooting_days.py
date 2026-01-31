@@ -89,6 +89,7 @@ async def create_shooting_day(
 async def get_shooting_day(
     shooting_day_id: UUID,
     organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> ShootingDay:
     """

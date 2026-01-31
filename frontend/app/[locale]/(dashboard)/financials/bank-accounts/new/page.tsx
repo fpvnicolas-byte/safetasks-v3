@@ -14,22 +14,16 @@ import { ErrorDialog } from '@/components/ui/error-dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 
 // Common currencies
-const CURRENCIES = [
-  { code: 'BRL', name: 'Brazilian Real (R$)' },
-  { code: 'USD', name: 'US Dollar ($)' },
-  { code: 'EUR', name: 'Euro (€)' },
-  { code: 'GBP', name: 'British Pound (£)' },
-  { code: 'JPY', name: 'Japanese Yen (¥)' },
-  { code: 'CAD', name: 'Canadian Dollar (C$)' },
-  { code: 'AUD', name: 'Australian Dollar (A$)' },
-  { code: 'MXN', name: 'Mexican Peso (MX$)' },
-]
+const CURRENCIES = ['BRL', 'USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'MXN']
 
 export default function NewBankAccountPage() {
   const router = useRouter()
   const { organizationId } = useAuth()
+  const t = useTranslations('financials.pages.bankAccountsNew')
+  const tCommon = useTranslations('common')
   const [formData, setFormData] = useState({
     name: '',
     currency: 'BRL', // Default to BRL as per backend
@@ -40,12 +34,12 @@ export default function NewBankAccountPage() {
 
   const validateForm = (): boolean => {
     if (!formData.name.trim()) {
-      showError({ message: 'Account name is required' }, 'Validation Error')
+      showError({ message: t('errors.nameRequired') }, t('errors.validationTitle'))
       return false
     }
 
     if (!formData.currency) {
-      showError({ message: 'Currency is required' }, 'Validation Error')
+      showError({ message: t('errors.currencyRequired') }, t('errors.validationTitle'))
       return false
     }
 
@@ -60,7 +54,7 @@ export default function NewBankAccountPage() {
     }
 
     if (!organizationId) {
-      showError({ message: 'Organization not found. Please log in again.' }, 'Authentication Error')
+      showError({ message: t('errors.organizationMissing') }, t('errors.authTitle'))
       return
     }
 
@@ -77,7 +71,7 @@ export default function NewBankAccountPage() {
       router.push('/financials/bank-accounts')
     } catch (err: any) {
       console.error('Create bank account error:', err)
-      showError(err, 'Error Creating Bank Account')
+      showError(err, t('errors.createTitle'))
     }
   }
 
@@ -91,7 +85,7 @@ export default function NewBankAccountPage() {
         <Button variant="ghost" size="sm" asChild>
           <Link href="/financials/bank-accounts">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Bank Accounts
+            {t('actions.back')}
           </Link>
         </Button>
       </div>
@@ -99,9 +93,9 @@ export default function NewBankAccountPage() {
       <Card className="max-w-2xl">
         <form onSubmit={handleSubmit}>
           <CardHeader>
-            <CardTitle>Create New Bank Account</CardTitle>
+            <CardTitle>{t('title')}</CardTitle>
             <CardDescription>
-              Add a new bank account to track your organization&apos;s finances
+              {t('subtitle')}
             </CardDescription>
           </CardHeader>
 
@@ -109,31 +103,31 @@ export default function NewBankAccountPage() {
 
             <Alert>
               <AlertDescription>
-                <strong>Note:</strong> The initial balance will be 0. You can update the balance by creating transactions.
+                <strong>{t('note.title')}</strong> {t('note.description')}
               </AlertDescription>
             </Alert>
 
             {/* Name - Required */}
             <div className="space-y-2">
               <Label htmlFor="name">
-                Account Name *
+                {t('fields.name.label')}
               </Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder="Business Checking Account"
+                placeholder={t('fields.name.placeholder')}
                 required
               />
               <p className="text-xs text-muted-foreground">
-                A descriptive name for this bank account (e.g., &quot;Main Checking&quot;, &quot;Savings&quot;, &quot;PayPal&quot;)
+                {t('fields.name.help')}
               </p>
             </div>
 
             {/* Currency - Required */}
             <div className="space-y-2">
               <Label htmlFor="currency">
-                Currency *
+                {t('fields.currency.label')}
               </Label>
               <Select
                 value={formData.currency}
@@ -143,38 +137,38 @@ export default function NewBankAccountPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {CURRENCIES.map((curr) => (
-                    <SelectItem key={curr.code} value={curr.code}>
-                      {curr.name}
+                  {CURRENCIES.map((code) => (
+                    <SelectItem key={code} value={code}>
+                      {t(`currencies.${code}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Select the currency for this account. Cannot be changed after creation.
+                {t('fields.currency.help')}
               </p>
             </div>
 
             {/* Info about balance */}
             <div className="rounded-lg border p-4 bg-muted/50">
-              <h4 className="text-sm font-medium mb-2">Account Balance</h4>
+              <h4 className="text-sm font-medium mb-2">{t('balance.title')}</h4>
               <p className="text-sm text-muted-foreground">
-                The account will start with a balance of 0.00. To set an opening balance or record transactions:
+                {t('balance.description')}
               </p>
               <ul className="text-sm text-muted-foreground mt-2 ml-4 list-disc">
-                <li>Create income transactions to add funds</li>
-                <li>Create expense transactions to deduct funds</li>
-                <li>The balance updates automatically with each transaction</li>
+                <li>{t('balance.items.income')}</li>
+                <li>{t('balance.items.expense')}</li>
+                <li>{t('balance.items.auto')}</li>
               </ul>
             </div>
           </CardContent>
 
           <CardFooter className="flex gap-2">
             <Button type="submit" disabled={createBankAccount.isPending}>
-              {createBankAccount.isPending ? 'Creating...' : 'Create Bank Account'}
+              {createBankAccount.isPending ? t('actions.creating') : t('actions.create')}
             </Button>
             <Button type="button" variant="outline" asChild>
-              <Link href="/financials/bank-accounts">Cancel</Link>
+              <Link href="/financials/bank-accounts">{tCommon('cancel')}</Link>
             </Button>
           </CardFooter>
         </form>

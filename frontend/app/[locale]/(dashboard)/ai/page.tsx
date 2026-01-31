@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAiAnalysis, useAiSuggestions, useAiRecommendations, useAnalyzeScript } from '@/lib/api/hooks/useAiFeatures'
 import { useProjects } from '@/lib/api/hooks/useProjects'
+import { apiClient } from '@/lib/api/client'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -12,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
 import {
   Sparkles,
   Brain,
@@ -43,6 +45,11 @@ export default function AiFeaturesPage() {
   const { data: recommendations, isLoading: isLoadingRecommendations } = useAiRecommendations(selectedProjectId)
   const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId || undefined)
   const { mutateAsync: analyzeScript, isPending: isAnalyzing } = useAnalyzeScript()
+  const [usageData, setUsageData] = useState<{
+    usage: { ai_credits: number }
+    limits: { ai_credits: number | null }
+  } | null>(null)
+  const [isUsageLoading, setIsUsageLoading] = useState(false)
 
   const handleScriptAnalysis = async () => {
     if (!selectedProjectId) {
@@ -84,6 +91,39 @@ export default function AiFeaturesPage() {
     }
   }
 
+  const calculatePercentage = (current: number, limit: number | null): number => {
+    if (limit === null) return 0
+    if (limit === 0) return 100
+    return Math.min((current / limit) * 100, 100)
+  }
+
+  const getProgressColor = (percentage: number): string => {
+    if (percentage >= 90) return 'bg-destructive'
+    if (percentage >= 75) return 'bg-warning'
+    return 'bg-primary'
+  }
+
+  const loadUsage = async () => {
+    try {
+      setIsUsageLoading(true)
+      const data = await apiClient.get('/api/v1/billing/usage')
+      setUsageData({
+        usage: { ai_credits: data.usage?.ai_credits ?? 0 },
+        limits: { ai_credits: data.limits?.ai_credits ?? null },
+      })
+    } catch (error) {
+      console.error('Failed to load AI usage:', error)
+    } finally {
+      setIsUsageLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (organizationId) {
+      loadUsage()
+    }
+  }, [organizationId])
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -118,6 +158,39 @@ export default function AiFeaturesPage() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
+          {/* AI Usage */}
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('usage.title')}</CardTitle>
+              <CardDescription>{t('usage.description')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {isUsageLoading ? (
+                <div className="text-sm text-muted-foreground">{t('usage.loading')}</div>
+              ) : usageData ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">{t('usage.label')}</span>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {usageData.usage.ai_credits} / {usageData.limits.ai_credits ?? t('usage.unlimited')}
+                    </span>
+                  </div>
+                  {usageData.limits.ai_credits !== null && (
+                    <Progress
+                      value={calculatePercentage(usageData.usage.ai_credits, usageData.limits.ai_credits)}
+                      className={getProgressColor(calculatePercentage(usageData.usage.ai_credits, usageData.limits.ai_credits))}
+                    />
+                  )}
+                </>
+              ) : (
+                <div className="text-sm text-muted-foreground">{t('usage.unavailable')}</div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Quick Actions */}
           <Card>
             <CardHeader>

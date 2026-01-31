@@ -21,6 +21,7 @@ import { useTranslations } from 'next-intl'
 
 export default function NotificationsPage() {
   const t = useTranslations('notifications')
+  const tMessages = useTranslations('notifications.messages')
   const [unreadOnly, setUnreadOnly] = useState(false)
   const { data: notifications, isLoading, error } = useNotifications(unreadOnly)
   const { data: stats } = useNotificationStats()
@@ -53,6 +54,23 @@ export default function NotificationsPage() {
 
   const handleMarkAllAsRead = async () => {
     await markAllAsRead.mutateAsync()
+  }
+
+  // Helper to get translated text or fallback to original
+  const getTranslatedContent = (text: string, metadata: any) => {
+    const isLikelyKey = !text.includes(' ') && text.length < 50
+
+    if (isLikelyKey) {
+      try {
+        const translated = tMessages(text as any, metadata || {})
+        if (translated.includes('notifications.messages.')) return text
+        return translated
+      } catch (e) {
+        return text
+      }
+    }
+
+    return text
   }
 
   if (error) {
@@ -182,54 +200,8 @@ export default function NotificationsPage() {
           ) : notifications && notifications.length > 0 ? (
             <div className="space-y-4">
               {notifications.map((notification) => {
-                // Translation logic
-                const tMessages = useTranslations('notifications.messages')
-
-                // Helper to get translated text or fallback to original
-                const getTranslatedContent = (key: string, defaultText: string, metadata: any) => {
-                  // Check if the text mimics a key structure (e.g. contains underscores, no spaces)
-                  // or checks if the key exists in our known keys list
-                  // A simpler approach is to try to translate and if it returns the key, use default
-                  // But next-intl returns the key if missing.
-
-                  // For this specific implementation, we'll try to translate if the text is likely a key
-                  // OR simply try to translate and check if the result is different from the key
-                  // BUT next-intl namespaces make this tricky.
-
-                  // Let's check if the defaultText matches one of our known keys
-                  // We can't easily check "has" with nested keys in all versions, 
-                  // so we'll check if the translation is different from the key path
-
-                  // Better approach for this project:
-                  // The backend sends keys like "welcome_title". 
-                  // If we try tMessages('welcome_title'), it returns "Welcome to SafeTasks...".
-                  // If we try tMessages('Some random text'), it returns "notifications.messages.Some random text".
-
-                  // However, strict mode might throw errors. 
-                  // Let's assume if the backend sends a key, it matches our schema.
-
-                  // To be safe and support legacy/AI notifications, we can check if the text contains spaces.
-                  // Keys usually don't have spaces.
-                  const isLikelyKey = !defaultText.includes(' ') && defaultText.length < 50;
-
-                  if (isLikelyKey) {
-                    try {
-                      // We need to handle potential missing keys gracefully to avoid UI crashes
-                      // relying on next-intl's behavior to return the key if missing
-                      const translated = tMessages(defaultText as any, metadata || {});
-                      // If the translated text is just the key (with full namespace), fallback
-                      if (translated.includes('notifications.messages.')) return defaultText;
-                      return translated;
-                    } catch (e) {
-                      return defaultText;
-                    }
-                  }
-
-                  return defaultText;
-                };
-
-                const title = getTranslatedContent(notification.title, notification.title, notification.metadata);
-                const message = getTranslatedContent(notification.message, notification.message, notification.metadata);
+                const title = getTranslatedContent(notification.title, notification.metadata)
+                const message = getTranslatedContent(notification.message, notification.metadata)
 
                 return (
                   <div

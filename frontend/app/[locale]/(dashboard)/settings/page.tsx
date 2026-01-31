@@ -1,13 +1,37 @@
 'use client'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Building2, User, Bell, Key, Briefcase, CreditCard } from 'lucide-react'
 import Link from 'next/link'
-import { useTranslations } from 'next-intl'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useLocale, useTranslations } from 'next-intl'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { locales, localeNames, type Locale } from '@/i18n/config'
 
 export default function SettingsPage() {
   const t = useTranslations('settings')
+  const tCommon = useTranslations('common')
+  const locale = useLocale()
+  const pathname = usePathname()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const buildLocalePath = (nextLocale: Locale) => {
+    const segments = pathname.split('/')
+    if (segments.length > 1) {
+      segments[1] = nextLocale
+      return segments.join('/')
+    }
+    return `/${nextLocale}`
+  }
+
+  const handleLocaleChange = (nextLocale: string) => {
+    if (nextLocale === locale) return
+    const nextPath = buildLocalePath(nextLocale as Locale)
+    const queryString = searchParams.toString()
+    const hash = typeof window !== 'undefined' ? window.location.hash : ''
+    router.push(`${nextPath}${queryString ? `?${queryString}` : ''}${hash}`)
+  }
 
   return (
     <div className="space-y-8">
@@ -150,6 +174,26 @@ export default function SettingsPage() {
           </Card>
         </Link>
       </div>
+
+      <footer className="border-t pt-6">
+        <div className="flex flex-col items-start justify-between gap-4 text-sm text-muted-foreground md:flex-row md:items-center">
+          <div className="text-xs uppercase tracking-[0.2em]">
+            {tCommon('language')}
+          </div>
+          <Select value={locale} onValueChange={handleLocaleChange}>
+            <SelectTrigger size="sm" className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent align="end">
+              {locales.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {localeNames[option]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </footer>
     </div>
   )
 }

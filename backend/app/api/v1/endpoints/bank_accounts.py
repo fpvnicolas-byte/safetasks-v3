@@ -3,7 +3,12 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_profile, require_finance_or_admin, require_billing_active
+from app.api.deps import (
+    get_current_profile,
+    require_finance_or_admin,
+    require_admin_producer_or_finance,
+    require_billing_active,
+)
 from app.db.session import get_db
 from app.services.financial import bank_account_service
 from app.schemas.bank_accounts import BankAccount, BankAccountCreate, BankAccountUpdate
@@ -11,7 +16,7 @@ from app.schemas.bank_accounts import BankAccount, BankAccountCreate, BankAccoun
 router = APIRouter()
 
 
-@router.get("/", response_model=List[BankAccount])
+@router.get("/", response_model=List[BankAccount], dependencies=[Depends(require_admin_producer_or_finance)])
 async def get_bank_accounts(
     profile: "Profile" = Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
@@ -53,7 +58,7 @@ async def create_bank_account(
     return account
 
 
-@router.get("/{account_id}", response_model=BankAccount)
+@router.get("/{account_id}", response_model=BankAccount, dependencies=[Depends(require_admin_producer_or_finance)])
 async def get_bank_account(
     account_id: UUID,
     profile: "Profile" = Depends(get_current_profile),

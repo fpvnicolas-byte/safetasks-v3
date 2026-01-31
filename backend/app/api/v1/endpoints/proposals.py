@@ -7,6 +7,7 @@ from app.api.deps import (
     get_current_profile,
     require_owner_admin_or_producer,
     require_admin_producer_or_finance,
+    require_read_only,
     get_effective_role,
     get_assigned_project_ids,
     enforce_project_assignment,
@@ -19,12 +20,12 @@ from app.schemas.proposals import (
     Proposal, ProposalCreate, ProposalUpdate,
     ProposalWithClient, ProposalApproval
 )
-from app.services.entitlements import ensure_resource_limit
+from app.services.entitlements import ensure_resource_limit, increment_usage_count
 
 router = APIRouter()
 
 
-@router.get("/", response_model=List[Proposal], dependencies=[Depends(require_admin_producer_or_finance)])
+@router.get("/", response_model=List[Proposal], dependencies=[Depends(require_read_only)])
 async def get_proposals(
     profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
@@ -84,6 +85,7 @@ async def create_proposal(
             organization_id=organization_id,
             obj_in=proposal_in
         )
+        await increment_usage_count(db, organization_id, resource="proposals", delta=1)
         return proposal
     except ValueError as e:
         raise HTTPException(
@@ -92,7 +94,7 @@ async def create_proposal(
         )
 
 
-@router.get("/{proposal_id}", response_model=Proposal, dependencies=[Depends(require_admin_producer_or_finance)])
+@router.get("/{proposal_id}", response_model=Proposal, dependencies=[Depends(require_read_only)])
 async def get_proposal(
     proposal_id: UUID,
     profile=Depends(get_current_profile),
@@ -183,6 +185,7 @@ async def delete_proposal(
         organization_id=organization_id,
         id=proposal_id
     )
+    await increment_usage_count(db, organization_id, resource="proposals", delta=-1)
 
     if not proposal:
         raise HTTPException(

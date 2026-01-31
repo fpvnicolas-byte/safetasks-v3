@@ -32,7 +32,7 @@ cd /Users/nicolasbertoni/safetasks-v3/backend
 
 # Activate virtual environment
 echo "📦 Activating virtual environment..."
-source venv/bin/activate
+source .venv/bin/activate
 
 # Step 1: Drop database schema
 echo ""

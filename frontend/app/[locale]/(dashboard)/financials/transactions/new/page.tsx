@@ -14,11 +14,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { TransactionType, TransactionCategory, dollarsToCents, getIncomCategories, getExpenseCategories, getCategoryDisplayName } from '@/types'
+import { useTranslations } from 'next-intl'
 
 export default function NewTransactionPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { organizationId } = useAuth()
+  const t = useTranslations('financials.pages.transactionsNew')
+  const tCommon = useTranslations('common')
   const [formData, setFormData] = useState({
     bank_account_id: '',
     type: 'expense' as TransactionType,
@@ -60,19 +63,19 @@ export default function NewTransactionPage() {
     const newErrors: Record<string, string> = {}
 
     if (!formData.bank_account_id) {
-      newErrors.bank_account_id = 'Bank account is required'
+      newErrors.bank_account_id = t('errors.bankAccountRequired')
     }
 
     if (!formData.category) {
-      newErrors.category = 'Category is required'
+      newErrors.category = t('errors.categoryRequired')
     }
 
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      newErrors.amount = 'Amount must be greater than 0'
+      newErrors.amount = t('errors.amountRequired')
     }
 
     if (!formData.transaction_date) {
-      newErrors.transaction_date = 'Transaction date is required'
+      newErrors.transaction_date = t('errors.dateRequired')
     }
 
     setErrors(newErrors)
@@ -87,7 +90,7 @@ export default function NewTransactionPage() {
     }
 
     if (!organizationId) {
-      setErrors({ submit: 'Organization not found. Please log in again.' })
+      setErrors({ submit: t('errors.organizationMissing') })
       return
     }
 
@@ -110,7 +113,7 @@ export default function NewTransactionPage() {
       router.push('/financials/transactions')
     } catch (err: unknown) {
       const error = err as Error
-      setErrors({ submit: error.message || 'Failed to create transaction' })
+      setErrors({ submit: error.message || t('errors.createFailed') })
     }
   }
 
@@ -125,8 +128,8 @@ export default function NewTransactionPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight font-display">New Transaction</h1>
-          <p className="text-muted-foreground">Loading...</p>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
+          <p className="text-muted-foreground">{tCommon('loading')}</p>
         </div>
       </div>
     )
@@ -137,15 +140,15 @@ export default function NewTransactionPage() {
       <div className="space-y-8">
         <Card className="max-w-2xl">
           <CardHeader>
-            <CardTitle>No Bank Accounts</CardTitle>
+            <CardTitle>{t('noBankAccounts.title')}</CardTitle>
             <CardDescription>
-              You need to create at least one bank account before recording transactions
+              {t('noBankAccounts.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild>
               <Link href="/financials/bank-accounts/new">
-                Create Bank Account
+                {t('noBankAccounts.action')}
               </Link>
             </Button>
           </CardContent>
@@ -160,7 +163,7 @@ export default function NewTransactionPage() {
         <Button variant="ghost" size="sm" asChild>
           <Link href="/financials/transactions">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Transactions
+            {t('actions.back')}
           </Link>
         </Button>
       </div>
@@ -168,9 +171,9 @@ export default function NewTransactionPage() {
       <Card className="max-w-2xl">
         <form onSubmit={handleSubmit}>
           <CardHeader>
-          <CardTitle className="font-display">Record New Transaction</CardTitle>
+          <CardTitle className="font-display">{t('form.title')}</CardTitle>
             <CardDescription>
-              Record income or expenses to track your cash flow and update bank balances
+              {t('form.description')}
             </CardDescription>
           </CardHeader>
 
@@ -183,14 +186,14 @@ export default function NewTransactionPage() {
 
             <Alert>
               <AlertDescription>
-                <strong>Note:</strong> Recording this transaction will automatically update the selected bank account&apos;s balance.
+                <strong>{t('note.title')}</strong> {t('note.description')}
               </AlertDescription>
             </Alert>
 
             {/* Transaction Type - Required */}
             <div className="space-y-2">
               <Label htmlFor="type">
-                Transaction Type *
+                {t('fields.type.label')}
               </Label>
               <div className="grid grid-cols-2 gap-4">
                 <button
@@ -201,8 +204,8 @@ export default function NewTransactionPage() {
                     : 'border-border hover:border-success/50'
                     }`}
                 >
-                  <div className="font-semibold">Income</div>
-                  <div className="text-sm text-muted-foreground">Money received</div>
+                  <div className="font-semibold">{t('fields.type.income')}</div>
+                  <div className="text-sm text-muted-foreground">{t('fields.type.incomeHint')}</div>
                 </button>
                 <button
                   type="button"
@@ -212,8 +215,8 @@ export default function NewTransactionPage() {
                     : 'border-border hover:border-destructive/50'
                     }`}
                 >
-                  <div className="font-semibold">Expense</div>
-                  <div className="text-sm text-muted-foreground">Money spent</div>
+                  <div className="font-semibold">{t('fields.type.expense')}</div>
+                  <div className="text-sm text-muted-foreground">{t('fields.type.expenseHint')}</div>
                 </button>
               </div>
             </div>
@@ -221,14 +224,14 @@ export default function NewTransactionPage() {
             {/* Bank Account - Required */}
             <div className="space-y-2">
               <Label htmlFor="bank_account_id">
-                Bank Account *
+                {t('fields.bankAccount.label')}
               </Label>
               <Select
                 value={formData.bank_account_id}
                 onValueChange={(value) => handleInputChange('bank_account_id', value)}
               >
                 <SelectTrigger id="bank_account_id">
-                  <SelectValue placeholder="Select a bank account" />
+                  <SelectValue placeholder={t('fields.bankAccount.placeholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {bankAccounts.map((account) => (
@@ -242,14 +245,14 @@ export default function NewTransactionPage() {
                 <p className="text-sm text-destructive">{errors.bank_account_id}</p>
               )}
               <p className="text-xs text-muted-foreground">
-                The bank account that this transaction affects
+                {t('fields.bankAccount.help')}
               </p>
             </div>
 
             {/* Category - Required */}
             <div className="space-y-2">
               <Label htmlFor="category">
-                Category *
+                {t('fields.category.label')}
               </Label>
               <Select
                 value={formData.category}
@@ -270,14 +273,16 @@ export default function NewTransactionPage() {
                 <p className="text-sm text-destructive">{errors.category}</p>
               )}
               <p className="text-xs text-muted-foreground">
-                {formData.type === 'income' ? 'Type of revenue' : 'Type of expense'}
+                {formData.type === 'income'
+                  ? t('fields.category.helpIncome')
+                  : t('fields.category.helpExpense')}
               </p>
             </div>
 
             {/* Amount - Required */}
             <div className="space-y-2">
               <Label htmlFor="amount">
-                Amount *
+                {t('fields.amount.label')}
               </Label>
               <Input
                 id="amount"
@@ -286,21 +291,21 @@ export default function NewTransactionPage() {
                 min="0.01"
                 value={formData.amount}
                 onChange={(e) => handleInputChange('amount', e.target.value)}
-                placeholder="0.00"
+                placeholder={t('fields.amount.placeholder')}
                 required
               />
               {errors.amount && (
                 <p className="text-sm text-destructive">{errors.amount}</p>
               )}
               <p className="text-xs text-muted-foreground">
-                Enter the amount in the account&apos;s currency (e.g., 100.50)
+                {t('fields.amount.help')}
               </p>
             </div>
 
             {/* Transaction Date - Required */}
             <div className="space-y-2">
               <Label htmlFor="transaction_date">
-                Transaction Date *
+                {t('fields.date.label')}
               </Label>
               <Input
                 id="transaction_date"
@@ -313,41 +318,41 @@ export default function NewTransactionPage() {
                 <p className="text-sm text-destructive">{errors.transaction_date}</p>
               )}
               <p className="text-xs text-muted-foreground">
-                When did this transaction occur?
+                {t('fields.date.help')}
               </p>
             </div>
 
             {/* Description - Optional */}
             <div className="space-y-2">
               <Label htmlFor="description">
-                Description
+                {t('fields.description.label')}
               </Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Brief description of this transaction..."
+                placeholder={t('fields.description.placeholder')}
                 rows={3}
               />
               <p className="text-xs text-muted-foreground">
-                Optional details about this transaction
+                {t('fields.description.help')}
               </p>
             </div>
 
             {/* Project - Optional */}
             <div className="space-y-2">
               <Label htmlFor="project_id">
-                Project (Optional)
+                {t('fields.project.label')}
               </Label>
               <Select
                 value={formData.project_id || 'none'}
                 onValueChange={(value) => handleInputChange('project_id', value === 'none' ? '' : value)}
               >
                 <SelectTrigger id="project_id">
-                  <SelectValue placeholder="No project (general expense/income)" />
+                  <SelectValue placeholder={t('fields.project.placeholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No project</SelectItem>
+                  <SelectItem value="none">{t('fields.project.none')}</SelectItem>
                   {projects?.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.title}
@@ -356,7 +361,7 @@ export default function NewTransactionPage() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Link this transaction to a specific project (optional)
+                {t('fields.project.help')}
               </p>
             </div>
 
@@ -365,27 +370,27 @@ export default function NewTransactionPage() {
             {formData.project_id && (
               <div className="space-y-2">
                 <Label htmlFor="stakeholder_id">
-                  Stakeholder (Optional)
+                  {t('fields.stakeholder.label')}
                 </Label>
                 <Select
                   value={formData.stakeholder_id || 'none'}
                   onValueChange={(value) => handleInputChange('stakeholder_id', value === 'none' ? '' : value)}
                 >
                   <SelectTrigger id="stakeholder_id">
-                    <SelectValue placeholder="Select a team member" />
+                    <SelectValue placeholder={t('fields.stakeholder.placeholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">No stakeholder</SelectItem>
+                    <SelectItem value="none">{t('fields.stakeholder.none')}</SelectItem>
                     {stakeholders?.map((stakeholder) => (
                       <SelectItem key={stakeholder.id} value={stakeholder.id}>
                         {stakeholder.name} ({stakeholder.role})
-                        {stakeholder.supplier_id ? ' - Paid via Supplier' : ''}
+                        {stakeholder.supplier_id ? ` - ${t('fields.stakeholder.paidViaSupplier')}` : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Link this payment to a specific team member
+                  {t('fields.stakeholder.help')}
                 </p>
               </div>
             )}
@@ -393,10 +398,10 @@ export default function NewTransactionPage() {
 
           <CardFooter className="flex gap-2">
             <Button type="submit" disabled={createTransaction.isPending}>
-              {createTransaction.isPending ? 'Recording...' : 'Record Transaction'}
+              {createTransaction.isPending ? t('actions.recording') : t('actions.record')}
             </Button>
             <Button type="button" variant="outline" asChild>
-              <Link href="/financials/transactions">Cancel</Link>
+              <Link href="/financials/transactions">{tCommon('cancel')}</Link>
             </Button>
           </CardFooter>
         </form>

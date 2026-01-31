@@ -47,6 +47,21 @@ async def ensure_resource_limit(
 
 
 async def _get_or_create_usage(db: AsyncSession, organization_id: UUID) -> OrganizationUsage:
+    # Check pending objects in the current session first to avoid duplicate inserts
+    pending = getattr(db, "new", None)
+    if pending is None:
+        pending = db.sync_session.new
+    for obj in pending:
+        if isinstance(obj, OrganizationUsage) and obj.org_id == organization_id:
+            return obj
+
+    identity_map = getattr(db, "identity_map", None)
+    if identity_map is None:
+        identity_map = db.sync_session.identity_map
+    for obj in identity_map.values():
+        if isinstance(obj, OrganizationUsage) and obj.org_id == organization_id:
+            return obj
+
     query = select(OrganizationUsage).where(OrganizationUsage.org_id == organization_id)
     result = await db.execute(query)
     usage = result.scalar_one_or_none()
@@ -120,4 +135,26 @@ async def increment_ai_usage(
 ) -> None:
     usage = await _get_or_create_usage(db, organization_id)
     usage.ai_credits_used = (usage.ai_credits_used or 0) + credits_added
+    db.add(usage)
+
+
+async def increment_usage_count(
+    db: AsyncSession,
+    organization_id: UUID,
+    *,
+    resource: str,
+    delta: int = 1
+) -> None:
+    usage = await _get_or_create_usage(db, organization_id)
+    field_map = {
+        "projects": "projects_count",
+        "clients": "clients_count",
+        "proposals": "proposals_count",
+        "users": "users_count",
+    }
+    field = field_map.get(resource)
+    if not field:
+        return
+    current = getattr(usage, field) or 0
+    setattr(usage, field, max(0, current + delta))
     db.add(usage)

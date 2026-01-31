@@ -3,7 +3,12 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_organization, require_finance_or_admin, require_billing_active
+from app.api.deps import (
+    get_current_organization,
+    require_finance_or_admin,
+    require_admin_producer_or_finance,
+    require_billing_active,
+)
 from app.db.session import get_db
 from app.services.financial_advanced import (
     tax_table_service, invoice_service, financial_report_service
@@ -22,7 +27,7 @@ router = APIRouter()
 @router.get(
     "/projects/{project_id}/financial-report",
     response_model=ProjectFinancialReport,
-    dependencies=[Depends(require_finance_or_admin)]
+    dependencies=[Depends(require_admin_producer_or_finance)]
 )
 async def get_project_financial_report(
     project_id: UUID,
@@ -48,7 +53,7 @@ async def get_project_financial_report(
         )
 
 
-@router.get("/tax-tables/", response_model=List[TaxTable], dependencies=[Depends(require_finance_or_admin)])
+@router.get("/tax-tables/", response_model=List[TaxTable], dependencies=[Depends(require_admin_producer_or_finance)])
 async def get_tax_tables(
     organization_id: UUID = Depends(get_current_organization),
     db: AsyncSession = Depends(get_db),
@@ -95,7 +100,7 @@ async def create_tax_table(
     return tax_table
 
 
-@router.get("/tax-tables/{tax_table_id}", response_model=TaxTable, dependencies=[Depends(require_finance_or_admin)])
+@router.get("/tax-tables/{tax_table_id}", response_model=TaxTable, dependencies=[Depends(require_admin_producer_or_finance)])
 async def get_tax_table(
     tax_table_id: UUID,
     organization_id: UUID = Depends(get_current_organization),
@@ -179,7 +184,7 @@ async def delete_tax_table(
     return tax_table
 
 
-@router.get("/invoices/", response_model=List[InvoiceWithItems], dependencies=[Depends(require_finance_or_admin)])
+@router.get("/invoices/", response_model=List[InvoiceWithItems], dependencies=[Depends(require_admin_producer_or_finance)])
 async def get_invoices(
     organization_id: UUID = Depends(get_current_organization),
     db: AsyncSession = Depends(get_db),
@@ -255,7 +260,7 @@ async def create_invoice(
         raise
 
 
-@router.get("/invoices/{invoice_id}", response_model=InvoiceWithItems, dependencies=[Depends(require_finance_or_admin)])
+@router.get("/invoices/{invoice_id}", response_model=InvoiceWithItems, dependencies=[Depends(require_admin_producer_or_finance)])
 async def get_invoice(
     invoice_id: UUID,
     organization_id: UUID = Depends(get_current_organization),
@@ -443,7 +448,7 @@ async def delete_invoice_item(
         )
 
 
-@router.get("/expense-summary", dependencies=[Depends(require_finance_or_admin)])
+@router.get("/expense-summary", dependencies=[Depends(require_admin_producer_or_finance)])
 async def get_expense_summary(
     organization_id: UUID = Depends(get_current_organization),
     db: AsyncSession = Depends(get_db),

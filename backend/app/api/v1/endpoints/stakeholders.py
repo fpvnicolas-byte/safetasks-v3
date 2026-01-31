@@ -7,6 +7,7 @@ from app.api.deps import (
     get_current_organization,
     require_admin_producer_or_finance,
     require_owner_admin_or_producer,
+    require_read_only,
     get_current_profile,
     get_effective_role,
     get_assigned_project_ids,
@@ -49,7 +50,7 @@ async def get_stakeholder_summary(
 
 
 # CRUD Endpoints for Project Stakeholders
-@router.get("/", response_model=List[Stakeholder], dependencies=[Depends(require_admin_producer_or_finance)])
+@router.get("/", response_model=List[Stakeholder], dependencies=[Depends(require_read_only)])
 async def list_stakeholders(
     project_id: Optional[UUID] = Query(None, description="Filter by project ID"),
     active_only: bool = Query(True, description="Only return active stakeholders"),
@@ -121,10 +122,11 @@ async def create_stakeholder(
         )
 
 
-@router.get("/{stakeholder_id}", response_model=Stakeholder, dependencies=[Depends(require_admin_producer_or_finance)])
+@router.get("/{stakeholder_id}", response_model=Stakeholder, dependencies=[Depends(require_read_only)])
 async def get_stakeholder(
     stakeholder_id: UUID,
     organization_id: UUID = Depends(get_current_organization),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ):
     """Get a specific stakeholder by ID."""

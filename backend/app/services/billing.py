@@ -59,6 +59,9 @@ async def setup_trial_for_organization(
 
     # Set up trial
     organization.plan_id = trial_plan.id
+    # Legacy fields for UI/backward compatibility
+    organization.plan = "professional"
+    organization.subscription_status = "trialing"
     organization.billing_status = "trial_active"
     organization.trial_ends_at = datetime.utcnow() + timedelta(days=7)
 
@@ -237,6 +240,23 @@ async def handle_customer_created(db: AsyncSession, event_data: dict) -> None:
         logger.info(f"Updated org {org_id} with Stripe customer {customer_id}")
 
 
+async def handle_customer_updated(db: AsyncSession, event_data: dict) -> None:
+    """Handle customer.updated event."""
+    customer = event_data["object"]
+    customer_id = customer["id"]
+
+    org = await get_organization_by_stripe_customer_id(db, customer_id)
+    if not org:
+        logger.warning(f"No org found for customer {customer_id} on update")
+        return
+
+    # Keep Stripe customer linkage intact (no other fields to sync yet)
+    if not org.stripe_customer_id:
+        org.stripe_customer_id = customer_id
+        db.add(org)
+        logger.info(f"Linked org {org.id} to Stripe customer {customer_id}")
+
+
 async def handle_customer_deleted(db: AsyncSession, event_data: dict) -> None:
     """Handle customer.deleted event."""
     customer = event_data["object"]
@@ -304,6 +324,23 @@ async def handle_subscription_updated(db: AsyncSession, event_data: dict) -> Non
     logger.info(f"Subscription {subscription_id} updated for org {org.id}: {sub_status}")
 
 
+async def handle_subscription_trial_will_end(db: AsyncSession, event_data: dict) -> None:
+    """Handle customer.subscription.trial_will_end event."""
+    subscription = event_data["object"]
+    customer_id = subscription["customer"]
+    trial_end = subscription.get("trial_end")
+
+    org = await get_organization_by_stripe_customer_id(db, customer_id)
+    if not org:
+        logger.warning(f"No org found for customer {customer_id}")
+        return
+
+    if trial_end:
+        org.trial_ends_at = datetime.utcfromtimestamp(trial_end)
+        db.add(org)
+        logger.info(f"Trial will end for org {org.id} at {org.trial_ends_at}")
+
+
 async def handle_subscription_deleted(db: AsyncSession, event_data: dict) -> None:
     """Handle customer.subscription.deleted event."""
     subscription = event_data["object"]
@@ -359,13 +396,30 @@ async def handle_checkout_session_completed(db: AsyncSession, event_data: dict) 
         logger.info(f"Checkout completed for org {org.id}")
 
 
+async def handle_invoice_finalized(db: AsyncSession, event_data: dict) -> None:
+    """Handle invoice.finalized event."""
+    invoice = event_data["object"]
+    customer_id = invoice["customer"]
+
+    org = await get_organization_by_stripe_customer_id(db, customer_id)
+    if not org:
+        logger.warning(f"No org found for customer {customer_id}")
+        return
+
+    # No billing_status change; keep for audit/logging
+    logger.info(f"Invoice finalized for org {org.id}")
+
+
 # Event handler mapping
 EVENT_HANDLERS = {
     "customer.created": handle_customer_created,
+    "customer.updated": handle_customer_updated,
     "customer.deleted": handle_customer_deleted,
     "customer.subscription.created": handle_subscription_created,
     "customer.subscription.updated": handle_subscription_updated,
+    "customer.subscription.trial_will_end": handle_subscription_trial_will_end,
     "customer.subscription.deleted": handle_subscription_deleted,
+    "invoice.finalized": handle_invoice_finalized,
     "invoice.payment_succeeded": handle_invoice_payment_succeeded,
     "invoice.payment_failed": handle_invoice_payment_failed,
     "checkout.session.completed": handle_checkout_session_completed,

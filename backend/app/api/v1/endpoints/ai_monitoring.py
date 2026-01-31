@@ -9,9 +9,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_organization, get_db, require_owner_or_admin
+from app.api.deps import get_current_profile, get_organization_record, require_owner_or_admin
 from app.core.config import settings
-from app.models.organizations import Organization
+from app.db.session import get_db
 from app.services.ai_engine import ai_engine_service
 
 router = APIRouter()
@@ -19,7 +19,8 @@ router = APIRouter()
 
 @router.get("/health", response_model=dict, dependencies=[Depends(require_owner_or_admin)])
 async def get_ai_service_health(
-    organization: Organization = Depends(get_current_organization)
+    profile=Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Get comprehensive AI service health and monitoring metrics.
@@ -42,6 +43,8 @@ async def get_ai_service_health(
                 }
             )
         
+        organization = await get_organization_record(profile, db)
+
         # Get comprehensive health metrics
         health_metrics = ai_engine_service.get_service_health()
         
@@ -72,7 +75,8 @@ async def get_ai_service_health(
 
 @router.get("/status", response_model=dict, dependencies=[Depends(require_owner_or_admin)])
 async def get_ai_service_status(
-    organization: Organization = Depends(get_current_organization)
+    profile=Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Get basic AI service status for quick health checks.
@@ -81,6 +85,7 @@ async def get_ai_service_status(
     Suitable for load balancers and health check probes.
     """
     try:
+        organization = await get_organization_record(profile, db)
         health_metrics = ai_engine_service.get_service_health()
         
         return {
@@ -104,7 +109,8 @@ async def get_ai_service_status(
 
 @router.post("/validate", response_model=dict, dependencies=[Depends(require_owner_or_admin)])
 async def validate_ai_configuration(
-    organization: Organization = Depends(get_current_organization)
+    profile=Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Validate AI service configuration and connectivity.
@@ -123,6 +129,8 @@ async def validate_ai_configuration(
                 "timestamp": "2024-01-01T00:00:00Z"
             }
         
+        organization = await get_organization_record(profile, db)
+
         # Perform API key validation
         validation_result = await ai_engine_service.validate_api_key()
         
@@ -145,7 +153,8 @@ async def validate_ai_configuration(
 
 @router.get("/metrics", response_model=dict, dependencies=[Depends(require_owner_or_admin)])
 async def get_ai_service_metrics(
-    organization: Organization = Depends(get_current_organization)
+    profile=Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Get detailed AI service performance metrics.
@@ -154,6 +163,7 @@ async def get_ai_service_metrics(
     Includes request rates, error rates, processing times, and resource utilization.
     """
     try:
+        organization = await get_organization_record(profile, db)
         health_metrics = ai_engine_service.get_service_health()
         
         # Return only performance metrics
@@ -179,7 +189,8 @@ async def get_ai_service_metrics(
 
 @router.get("/alerts", response_model=dict, dependencies=[Depends(require_owner_or_admin)])
 async def get_ai_service_alerts(
-    organization: Organization = Depends(get_current_organization)
+    profile=Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Get current monitoring alerts for the AI service.
@@ -188,6 +199,7 @@ async def get_ai_service_alerts(
     and suggested actions for resolution.
     """
     try:
+        organization = await get_organization_record(profile, db)
         health_metrics = ai_engine_service.get_service_health()
         
         return {
@@ -212,7 +224,8 @@ async def get_ai_service_alerts(
 
 @router.get("/recommendations", response_model=dict, dependencies=[Depends(require_owner_or_admin)])
 async def get_ai_service_recommendations(
-    organization: Organization = Depends(get_current_organization)
+    profile=Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Get performance and configuration recommendations.
@@ -221,6 +234,7 @@ async def get_ai_service_recommendations(
     reliability, and configuration.
     """
     try:
+        organization = await get_organization_record(profile, db)
         health_metrics = ai_engine_service.get_service_health()
         
         return {
