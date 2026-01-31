@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Building2, User, Bell, Key, Briefcase } from 'lucide-react'
+import { Building2, User, Bell, Key, Briefcase, CreditCard } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 
@@ -103,6 +103,27 @@ export default function SettingsPage() {
             <CardContent>
               <p className="text-sm text-muted-foreground">
                 {t('main.services.content')}
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/settings/billing">
+          <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-primary/15 rounded-lg">
+                  <CreditCard className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>Billing & Usage</CardTitle>
+                  <CardDescription>Manage subscription and usage</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                View your current plan, usage limits, and upgrade options
               </p>
             </CardContent>
           </Card>
