@@ -5,6 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "Safe Tasks V3"
+    FRONTEND_URL: AnyHttpUrl = "http://localhost:3000"
     
     # Environment
     ENVIRONMENT: str = "development"

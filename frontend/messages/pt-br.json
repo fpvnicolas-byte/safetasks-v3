@@ -1984,6 +1984,67 @@
         "removeConfirm": "Tem certeza de que deseja remover a integração com Google Drive? Isso não excluirá seus arquivos do Drive.",
         "removeNote": "Isso desconectará o Google Drive, mas não excluirá seus arquivos do Drive."
       }
+    },
+    "billingPage": {
+      "breadcrumb": "Configurações / Cobrança e Uso",
+      "title": "Cobrança e Uso",
+      "description": "Gerencie sua assinatura e monitore os limites de uso",
+      "backButton": "Voltar às configurações",
+      "loading": "Carregando informações de cobrança...",
+      "emptyState": "Nenhuma informação de cobrança disponível",
+      "planNames": {
+        "pro_trial": "Trial Pro",
+        "starter": "Starter",
+        "pro": "Pro",
+        "pro_annual": "Pro Anual",
+        "enterprise": "Enterprise",
+        "unknown": "Plano desconhecido",
+        "noPlan": "Sem plano"
+      },
+      "currentPlan": {
+        "title": "Plano Atual",
+        "description": "Seu plano de assinatura ativo",
+        "upgradeButton": "Atualizar Plano",
+        "changeButton": "Alterar Plano",
+        "manageButton": "Gerenciar no Stripe",
+        "cancelButton": "Cancelar plano",
+        "resumeButton": "Retomar plano",
+        "renewalLabel": "Renova em {date}",
+        "cancelAtPeriodEnd": "Cancelamento agendado para {date}",
+        "trialPeriod": "Período de teste",
+        "trialTimeExpired": "Expirado",
+        "trialEnded": "Teste encerrado",
+        "trialEndedMessage": "Atualize para continuar usando a plataforma",
+        "paymentRequiredTitle": "Pagamento necessário",
+        "paymentRequiredMessage": "Atualize seu método de pagamento para continuar"
+      },
+      "planInterval": {
+        "monthly": "Cobrança mensal",
+        "annual": "Cobrança anual"
+      },
+      "usage": {
+        "heading": "Uso e Limites",
+        "description": "Monitore seu uso atual em comparação com os limites do plano",
+        "metrics": {
+          "projects": "Projetos",
+          "clients": "Clientes",
+          "proposals": "Propostas",
+          "team": "Membros da equipe",
+          "storage": "Armazenamento",
+          "aiCredits": "Créditos de IA"
+        },
+        "unlimited": "Ilimitado"
+      },
+      "messages": {
+        "success": "Assinatura ativada com sucesso!",
+        "canceled": "Atualização de plano cancelada",
+        "loadError": "Falha ao carregar informações de cobrança",
+        "cancelSuccess": "Cancelamento agendado. Seu plano permanece ativo até o fim do período.",
+        "cancelError": "Falha ao agendar o cancelamento. Tente novamente.",
+        "resumeSuccess": "Plano retomado com sucesso.",
+        "resumeError": "Falha ao retomar o plano. Tente novamente.",
+        "portalError": "Não foi possível abrir o portal de cobrança do Stripe."
+      }
     }
   },
   "storage": {

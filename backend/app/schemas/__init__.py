@@ -35,6 +35,16 @@ from .financial import (
     ProjectFinancialReport
 )
 from .access import ProjectAssignment, ProjectAssignmentCreate
+from .billing import (
+    BillingUsageResponse,
+    EntitlementInfo,
+    PortalSessionRequest,
+    PortalSessionResponse,
+    PlanInfo,
+    SubscriptionActionResponse,
+    SubscriptionCancelRequest,
+    SubscriptionInfo,
+)
 
 __all__ = [
     "Organization", "OrganizationCreate", "OrganizationUpdate",
@@ -63,6 +73,14 @@ __all__ = [
     "InvoiceItem", "InvoiceItemCreate",
     "ProjectFinancialReport",
     "ProjectAssignment", "ProjectAssignmentCreate",
+    "BillingUsageResponse",
+    "EntitlementInfo",
+    "PortalSessionRequest",
+    "PortalSessionResponse",
+    "PlanInfo",
+    "SubscriptionActionResponse",
+    "SubscriptionCancelRequest",
+    "SubscriptionInfo",
     "GoogleDriveCredentials", "GoogleDriveCredentialsCreate", "GoogleDriveCredentialsUpdate",
     "CloudSyncStatus",
     "ProjectDriveFolder",

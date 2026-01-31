@@ -1984,6 +1984,67 @@
         "removeConfirm": "Are you sure you want to remove Google Drive integration? This will not delete your files from Drive.",
         "removeNote": "This will disconnect Google Drive but will not delete your files from Drive."
       }
+    },
+    "billingPage": {
+      "breadcrumb": "Settings / Billing & Usage",
+      "title": "Billing & Usage",
+      "description": "Manage your subscription and monitor usage limits",
+      "backButton": "Back to Settings",
+      "loading": "Loading billing information...",
+      "emptyState": "No billing information available",
+      "planNames": {
+        "pro_trial": "Pro Trial",
+        "starter": "Starter",
+        "pro": "Pro",
+        "pro_annual": "Pro Annual",
+        "enterprise": "Enterprise",
+        "unknown": "Unknown plan",
+        "noPlan": "No plan"
+      },
+      "currentPlan": {
+        "title": "Current Plan",
+        "description": "Your active subscription plan",
+        "upgradeButton": "Upgrade Plan",
+        "changeButton": "Change Plan",
+        "manageButton": "Manage in Stripe",
+        "cancelButton": "Cancel plan",
+        "resumeButton": "Resume plan",
+        "renewalLabel": "Renews on {date}",
+        "cancelAtPeriodEnd": "Scheduled to cancel on {date}",
+        "trialPeriod": "Trial Period",
+        "trialTimeExpired": "Expired",
+        "trialEnded": "Trial Ended",
+        "trialEndedMessage": "Please upgrade to continue using the platform",
+        "paymentRequiredTitle": "Payment Required",
+        "paymentRequiredMessage": "Please update your payment method to continue"
+      },
+      "planInterval": {
+        "monthly": "Monthly billing",
+        "annual": "Annual billing"
+      },
+      "usage": {
+        "heading": "Usage & Limits",
+        "description": "Monitor your current usage against plan limits",
+        "metrics": {
+          "projects": "Projects",
+          "clients": "Clients",
+          "proposals": "Proposals",
+          "team": "Team Members",
+          "storage": "Storage",
+          "aiCredits": "AI Credits"
+        },
+        "unlimited": "Unlimited"
+      },
+      "messages": {
+        "success": "Subscription activated successfully!",
+        "canceled": "Subscription upgrade canceled",
+        "loadError": "Failed to load billing information",
+        "cancelSuccess": "Plan cancellation scheduled. It will remain active until the billing period ends.",
+        "cancelError": "Failed to schedule the cancellation. Please try again.",
+        "resumeSuccess": "Subscription resumed successfully.",
+        "resumeError": "Failed to resume the subscription. Please try again.",
+        "portalError": "Unable to open the Stripe billing portal."
+      }
     }
   },
   "storage": {

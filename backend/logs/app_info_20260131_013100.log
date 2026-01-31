@@ -40,3 +40,24 @@
 2026-01-31 02:00:38 [INFO] app.services.analytics: YTD Financial Metrics for org 4384a92c-df41-444b-b34d-6c80e7820486: Revenue: 125000, Expenses: 5E+4, Date range: 2026-01-01 to 2026-01-31
 2026-01-31 02:01:25 [INFO] app.services.analytics: MTD Financial Metrics for org b5529827-b215-4bfa-9a4f-d03d521ba1ea: Revenue: 0, Expenses: 0, Date range: 2026-01-01 to 2026-01-31
 2026-01-31 02:01:25 [INFO] app.services.analytics: YTD Financial Metrics for org b5529827-b215-4bfa-9a4f-d03d521ba1ea: Revenue: 0, Expenses: 0, Date range: 2026-01-01 to 2026-01-31
+2026-01-31 02:03:02 [INFO] app.services.analytics: MTD Financial Metrics for org b5529827-b215-4bfa-9a4f-d03d521ba1ea: Revenue: 0, Expenses: 0, Date range: 2026-01-01 to 2026-01-31
+2026-01-31 02:03:02 [INFO] app.services.analytics: YTD Financial Metrics for org b5529827-b215-4bfa-9a4f-d03d521ba1ea: Revenue: 0, Expenses: 0, Date range: 2026-01-01 to 2026-01-31
+2026-01-31 02:15:51 [INFO] stripe: message='Request to Stripe api' method=post url=https://api.stripe.com/v1/checkout/sessions
+2026-01-31 02:15:52 [INFO] stripe: message='Stripe API response' path=https://api.stripe.com/v1/checkout/sessions response_code=200
+2026-01-31 02:15:52 [INFO] app.services.billing: Created checkout session cs_test_a13dHypbUV7AwOT80HMbWHYirsQvOQGis8FUhPKLlK5bkEQEPAo2OEDESF for org b5529827-b215-4bfa-9a4f-d03d521ba1ea
+2026-01-31 02:16:04 [INFO] app.api.v1.endpoints.billing: Received webhook event: customer.updated (evt_1SvWXPQBou9YDSD2T3Ob1kaJ)
+2026-01-31 02:16:04 [INFO] app.api.v1.endpoints.billing: Received webhook event: checkout.session.completed (evt_1SvWXPQBou9YDSD2VUPva9qj)
+2026-01-31 02:16:04 [INFO] app.api.v1.endpoints.billing: Received webhook event: customer.subscription.created (evt_1SvWXQQBou9YDSD2Jha50jcj)
+2026-01-31 02:16:04 [INFO] app.api.v1.endpoints.billing: Received webhook event: customer.subscription.updated (evt_1SvWXQQBou9YDSD2ZSWdEWL2)
+2026-01-31 02:16:04 [INFO] app.services.billing: Checkout completed for org b5529827-b215-4bfa-9a4f-d03d521ba1ea
+2026-01-31 02:16:04 [INFO] app.api.v1.endpoints.billing: Successfully processed event evt_1SvWXPQBou9YDSD2T3Ob1kaJ
+2026-01-31 02:16:04 [INFO] app.services.billing: Subscription sub_1SvWXMQBou9YDSD2uOJZZWKT created for org b5529827-b215-4bfa-9a4f-d03d521ba1ea
+2026-01-31 02:16:04 [INFO] app.api.v1.endpoints.billing: Successfully processed event evt_1SvWXPQBou9YDSD2VUPva9qj
+2026-01-31 02:16:04 [INFO] app.services.billing: Subscription sub_1SvWXMQBou9YDSD2uOJZZWKT updated for org b5529827-b215-4bfa-9a4f-d03d521ba1ea: active
+2026-01-31 02:16:04 [INFO] app.api.v1.endpoints.billing: Successfully processed event evt_1SvWXQQBou9YDSD2Jha50jcj
+2026-01-31 02:16:04 [INFO] app.api.v1.endpoints.billing: Successfully processed event evt_1SvWXQQBou9YDSD2ZSWdEWL2
+2026-01-31 02:16:04 [INFO] app.api.v1.endpoints.billing: Received webhook event: invoice.finalized (evt_1SvWXQQBou9YDSD2SaHMV0Wl)
+2026-01-31 02:16:05 [INFO] app.services.billing: Invoice finalized for org b5529827-b215-4bfa-9a4f-d03d521ba1ea
+2026-01-31 02:16:05 [INFO] app.api.v1.endpoints.billing: Successfully processed event evt_1SvWXQQBou9YDSD2SaHMV0Wl
+2026-01-31 02:16:05 [INFO] app.api.v1.endpoints.billing: Received webhook event: invoice.payment_succeeded (evt_1SvWXQQBou9YDSD2CWE3jccT)
+2026-01-31 02:16:05 [INFO] app.api.v1.endpoints.billing: Successfully processed event evt_1SvWXQQBou9YDSD2CWE3jccT

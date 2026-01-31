@@ -1,6 +1,7 @@
 """Billing and Stripe webhook endpoints."""
 import logging
-from typing import Any
+from datetime import datetime
+from typing import Optional
 from uuid import UUID
 
 import stripe
@@ -12,6 +13,17 @@ from pydantic import BaseModel
 from app.api.deps import get_current_profile, get_db, require_billing_read
 from app.core.config import settings
 from app.models.profiles import Profile
+from app.models.billing import Plan
+from app.schemas.billing import (
+    BillingUsageResponse,
+    EntitlementInfo,
+    PlanInfo,
+    PortalSessionRequest,
+    PortalSessionResponse,
+    SubscriptionActionResponse,
+    SubscriptionCancelRequest,
+    SubscriptionInfo,
+)
 from app.services import billing as billing_service
 from app.api.deps import get_organization_record
 
@@ -145,35 +157,54 @@ async def create_checkout_session(
     return CheckoutSessionResponse(url=checkout_url)
 
 
-@router.get("/usage", dependencies=[Depends(require_billing_read())])
+@router.get("/usage", response_model=BillingUsageResponse, dependencies=[Depends(require_billing_read())])
 async def get_usage(
     profile: Profile = Depends(get_current_profile),
     db: AsyncSession = Depends(get_db)
-) -> dict[str, Any]:
+) -> BillingUsageResponse:
     """
     Get current organization usage and limits.
 
-    Returns usage counters and entitlement limits for the current organization.
+    Returns usage counters, entitlement limits, plan metadata, and the
+    associated Stripe subscription summary for the current organization.
     """
     from app.services.entitlements import get_entitlement, _get_or_create_usage
-    from app.models.billing import Plan
 
     organization = await get_organization_record(profile, db)
     entitlement = await get_entitlement(db, organization)
     usage = await _get_or_create_usage(db, organization.id)
+
+    plan_row = None
+    plan_info = None
     plan_name = None
     if organization.plan_id:
         plan_result = await db.execute(select(Plan).where(Plan.id == organization.plan_id))
-        plan = plan_result.scalar_one_or_none()
-        plan_name = plan.name if plan else None
+        plan_row = plan_result.scalar_one_or_none()
+        if plan_row:
+            plan_name = plan_row.name
+            plan_info = _serialize_plan_info(plan_row, entitlement)
 
-    return {
-        "organization_id": str(organization.id),
-        "plan_id": str(organization.plan_id) if organization.plan_id else None,
-        "plan_name": plan_name,
-        "billing_status": organization.billing_status,
-        "trial_ends_at": organization.trial_ends_at.isoformat() if organization.trial_ends_at else None,
-        "usage": {
+    subscription_info = None
+    if organization.stripe_subscription_id:
+        try:
+            stripe_subscription = await billing_service.retrieve_subscription(
+                organization.stripe_subscription_id
+            )
+            subscription_info = _build_subscription_info(stripe_subscription)
+        except HTTPException:
+            subscription_info = None
+
+    return BillingUsageResponse(
+        organization_id=organization.id,
+        plan_id=plan_row.id if plan_row else None,
+        plan_name=plan_name,
+        plan=plan_info,
+        billing_status=organization.billing_status,
+        subscription_status=organization.subscription_status,
+        stripe_customer_id=organization.stripe_customer_id,
+        stripe_subscription_id=organization.stripe_subscription_id,
+        trial_ends_at=organization.trial_ends_at,
+        usage={
             "projects": usage.projects_count,
             "clients": usage.clients_count,
             "proposals": usage.proposals_count,
@@ -181,12 +212,154 @@ async def get_usage(
             "storage_bytes": usage.storage_bytes_used,
             "ai_credits": usage.ai_credits_used,
         },
-        "limits": {
+        limits={
             "projects": entitlement.max_projects if entitlement else None,
             "clients": entitlement.max_clients if entitlement else None,
             "proposals": entitlement.max_proposals if entitlement else None,
             "users": entitlement.max_users if entitlement else None,
             "storage_bytes": entitlement.max_storage_bytes if entitlement else None,
             "ai_credits": entitlement.ai_credits if entitlement else None,
-        }
-    }
+        },
+        subscription=subscription_info,
+    )
+
+
+@router.post(
+    "/subscription/cancel",
+    response_model=SubscriptionActionResponse,
+    dependencies=[Depends(require_billing_read())]
+)
+async def cancel_subscription(
+    request: SubscriptionCancelRequest,
+    profile: Profile = Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db)
+) -> SubscriptionActionResponse:
+    organization = await get_organization_record(profile, db)
+    if not organization.stripe_subscription_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Organization does not have an active subscription"
+        )
+
+    subscription = await billing_service.cancel_subscription(
+        organization.stripe_subscription_id,
+        at_period_end=request.at_period_end
+    )
+
+    if subscription.status == "canceled":
+        organization.billing_status = "canceled"
+    organization.subscription_status = billing_service.normalize_subscription_status(subscription.status)
+    db.add(organization)
+    await db.commit()
+    await db.refresh(organization)
+
+    return SubscriptionActionResponse(subscription=_build_subscription_info(subscription))
+
+
+@router.post(
+    "/subscription/resume",
+    response_model=SubscriptionActionResponse,
+    dependencies=[Depends(require_billing_read())]
+)
+async def resume_subscription(
+    profile: Profile = Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db)
+) -> SubscriptionActionResponse:
+    organization = await get_organization_record(profile, db)
+    if not organization.stripe_subscription_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Organization does not have an active subscription"
+        )
+
+    subscription = await billing_service.resume_subscription(organization.stripe_subscription_id)
+    organization.billing_status = "active"
+    organization.subscription_status = billing_service.normalize_subscription_status(subscription.status)
+    db.add(organization)
+    await db.commit()
+    await db.refresh(organization)
+
+    return SubscriptionActionResponse(subscription=_build_subscription_info(subscription))
+
+
+@router.post(
+    "/portal-session",
+    response_model=PortalSessionResponse,
+    dependencies=[Depends(require_billing_read())]
+)
+async def create_portal_session(
+    request: PortalSessionRequest,
+    profile: Profile = Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db)
+) -> PortalSessionResponse:
+    organization = await get_organization_record(profile, db)
+    if not organization.stripe_customer_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Organization does not have a Stripe customer"
+        )
+
+    return_url = request.return_url or settings.FRONTEND_URL
+    portal_url = await billing_service.create_portal_session(
+        organization.stripe_customer_id,
+        return_url
+    )
+
+    return PortalSessionResponse(url=portal_url)
+
+
+def _serialize_plan_info(plan: Plan, entitlement) -> PlanInfo:
+    entitlements = None
+    if entitlement:
+        entitlements = EntitlementInfo(
+            max_projects=entitlement.max_projects,
+            max_clients=entitlement.max_clients,
+            max_proposals=entitlement.max_proposals,
+            max_users=entitlement.max_users,
+            max_storage_bytes=entitlement.max_storage_bytes,
+            ai_credits=entitlement.ai_credits,
+        )
+
+    return PlanInfo(
+        id=plan.id,
+        name=plan.name,
+        billing_interval=plan.billing_interval,
+        stripe_price_id=plan.stripe_price_id,
+        entitlements=entitlements,
+    )
+
+
+def _build_subscription_info(subscription: stripe.Subscription) -> SubscriptionInfo:
+    items = subscription.get("items", {}).get("data", [])
+    price_id = None
+    if items:
+        price_info = items[0].get("price")
+        if isinstance(price_info, dict):
+            price_id = price_info.get("id")
+    latest_invoice = subscription.get("latest_invoice")
+    latest_invoice_id = None
+    if isinstance(latest_invoice, dict):
+        latest_invoice_id = latest_invoice.get("id")
+    elif isinstance(latest_invoice, str):
+        latest_invoice_id = latest_invoice
+
+    return SubscriptionInfo(
+        id=subscription["id"],
+        status=subscription["status"],
+        cancel_at_period_end=bool(subscription.get("cancel_at_period_end")),
+        canceled_at=_timestamp_to_datetime(subscription.get("canceled_at")),
+        cancel_at=_timestamp_to_datetime(subscription.get("cancel_at")),
+        current_period_start=_timestamp_to_datetime(subscription.get("current_period_start")),
+        current_period_end=_timestamp_to_datetime(subscription.get("current_period_end")),
+        trial_start=_timestamp_to_datetime(subscription.get("trial_start")),
+        trial_end=_timestamp_to_datetime(subscription.get("trial_end")),
+        price_id=price_id,
+        plan_id=None,
+        latest_invoice=latest_invoice_id,
+    )
+
+
+def _timestamp_to_datetime(value: Optional[int]) -> Optional[datetime]:
+    if value is None:
+        return None
+    return datetime.utcfromtimestamp(value)

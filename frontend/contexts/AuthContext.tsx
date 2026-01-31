@@ -108,11 +108,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         session.removeItem(key)
       }
     }
+
+    // Clear Supabase auth cookies (supabase/ssr uses cookies for auth)
+    const cookiePrefix = ref ? `sb-${ref}` : 'sb-'
+    document.cookie.split(';').forEach((cookie) => {
+      const name = cookie.split('=')[0]?.trim()
+      if (name && name.startsWith(cookiePrefix)) {
+        document.cookie = `${name}=; Max-Age=0; path=/`
+      }
+    })
   }
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut()
+      await supabase.auth.signOut({ scope: 'local' })
     } finally {
       clearSupabaseStorage()
       setProfile(null)

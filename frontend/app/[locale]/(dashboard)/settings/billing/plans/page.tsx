@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,7 +9,7 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/api/client'
 import { useLocale } from 'next-intl'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 interface Plan {
   name: string
@@ -75,7 +75,9 @@ export default function PlansPage() {
   const { organizationId } = useAuth()
   const locale = useLocale()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isUpgrading, setIsUpgrading] = useState<string | null>(null)
+  const autoCheckoutRef = useRef(false)
 
   const handleSelectPlan = async (plan: Plan) => {
     if (!organizationId) {
@@ -100,6 +102,20 @@ export default function PlansPage() {
       setIsUpgrading(null)
     }
   }
+
+  useEffect(() => {
+    if (autoCheckoutRef.current) return
+    if (!organizationId) return
+
+    const planKey = searchParams.get('plan')
+    if (!planKey) return
+
+    const selectedPlan = PLANS.find((plan) => plan.name === planKey)
+    if (!selectedPlan) return
+
+    autoCheckoutRef.current = true
+    handleSelectPlan(selectedPlan)
+  }, [organizationId, searchParams])
 
   return (
     <div className="space-y-8">

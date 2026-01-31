@@ -7,6 +7,7 @@ import { Playfair_Display, Space_Grotesk } from 'next/font/google'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { useAuth } from '@/contexts/AuthContext'
 
 type PricingPlanKey = 'starter' | 'pro' | 'proAnnual' | 'enterprise'
 
@@ -32,6 +33,8 @@ export default function PricingPage() {
   const t = useTranslations('pricing')
   const locale = useLocale()
   const basePath = `/${locale}`
+  const { user } = useAuth()
+  const isLoggedIn = Boolean(user)
 
   const plans: PricingPlan[] = [
     { key: 'starter', icon: CreditCard },
@@ -46,6 +49,15 @@ export default function PricingPage() {
   const getFeatures = (key: PricingPlanKey) => {
     const raw = t.raw(`plans.${key}.features`)
     return Array.isArray(raw) ? (raw as string[]) : []
+  }
+
+  const getPlanCheckoutPath = (key: PricingPlanKey) => {
+    if (!isLoggedIn) {
+      return `${basePath}/auth/register`
+    }
+
+    const billingKey = key === 'proAnnual' ? 'pro_annual' : key
+    return `${basePath}/settings/billing/plans?plan=${encodeURIComponent(billingKey)}`
   }
 
   return (
@@ -124,7 +136,7 @@ export default function PricingPage() {
                       variant={plan.highlight ? 'default' : 'outline'}
                       asChild
                     >
-                      <Link href={`${basePath}/auth/register`}>{t(`plans.${planKey}.cta`)}</Link>
+                      <Link href={getPlanCheckoutPath(planKey)}>{t(`plans.${planKey}.cta`)}</Link>
                     </Button>
                   </CardContent>
                 </Card>
@@ -172,7 +184,7 @@ export default function PricingPage() {
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <Button size="lg" asChild className="bg-amber-300 text-slate-900 hover:bg-amber-200">
-                    <Link href={`${basePath}/auth/register`}>{t('cta.primary')}</Link>
+                    <Link href={getPlanCheckoutPath('pro')}>{t('cta.primary')}</Link>
                   </Button>
                   <Button size="lg" variant="outline" asChild className="border-amber-200/40 text-amber-100 hover:bg-white/10">
                     <Link href={`${basePath}`}>{t('cta.secondary')}</Link>

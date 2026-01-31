@@ -1,0 +1,8 @@
+2026-01-31 02:33:18 [INFO] app: Logging configuration initialized
+2026-01-31 02:39:12 [INFO] stripe: message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SvWXMQBou9YDSD2uOJZZWKT
+2026-01-31 02:39:13 [INFO] stripe: message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SvWXMQBou9YDSD2uOJZZWKT response_code=200
+2026-01-31 02:39:13 [INFO] stripe: message='Request to Stripe api' method=get url=https://api.stripe.com/v1/subscriptions/sub_1SvWXMQBou9YDSD2uOJZZWKT
+2026-01-31 02:39:13 [INFO] stripe: message='Stripe API response' path=https://api.stripe.com/v1/subscriptions/sub_1SvWXMQBou9YDSD2uOJZZWKT response_code=200
+2026-01-31 02:39:31 [INFO] stripe: message='Request to Stripe api' method=post url=https://api.stripe.com/v1/billing_portal/sessions
+2026-01-31 02:39:31 [INFO] stripe: message='Stripe API response' path=https://api.stripe.com/v1/billing_portal/sessions response_code=200
+2026-01-31 02:39:31 [INFO] app.services.billing: Created portal session for customer cus_TtHiIGQpQlgRpe

@@ -209,6 +209,87 @@ async def mark_event_failed(db: AsyncSession, event: BillingEvent) -> None:
     db.add(event)
 
 
+async def retrieve_subscription(subscription_id: str) -> stripe.Subscription:
+    """Retrieve a Stripe subscription."""
+    try:
+        subscription = stripe.Subscription.retrieve(subscription_id)
+        return subscription
+    except stripe.error.StripeError as e:
+        logger.error(f"Failed to retrieve Stripe subscription {subscription_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch Stripe subscription"
+        )
+
+
+async def cancel_subscription(subscription_id: str, at_period_end: bool = True) -> stripe.Subscription:
+    """Update a subscription to cancel at period end or immediately."""
+    try:
+        subscription = stripe.Subscription.modify(
+            subscription_id,
+            cancel_at_period_end=at_period_end
+        )
+        logger.info(f"Canceled subscription {subscription_id} (at_period_end={at_period_end})")
+        return subscription
+    except stripe.error.StripeError as e:
+        logger.error(f"Failed to cancel subscription {subscription_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to cancel subscription"
+        )
+
+
+async def resume_subscription(subscription_id: str) -> stripe.Subscription:
+    """Resume a subscription that was scheduled for cancellation at period end."""
+    try:
+        subscription = stripe.Subscription.modify(
+            subscription_id,
+            cancel_at_period_end=False
+        )
+        logger.info(f"Resumed subscription {subscription_id}")
+        return subscription
+    except stripe.error.StripeError as e:
+        logger.error(f"Failed to resume subscription {subscription_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to resume subscription"
+        )
+
+
+async def create_portal_session(customer_id: str, return_url: str) -> str:
+    """Create a Stripe Billing Portal session."""
+    try:
+        session = stripe.billing_portal.Session.create(
+            customer=customer_id,
+            return_url=return_url
+        )
+        logger.info(f"Created portal session for customer {customer_id}")
+        return session.url
+    except stripe.error.StripeError as e:
+        logger.error(f"Failed to create portal session for customer {customer_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create billing portal session"
+        )
+
+
+SUBSCRIPTION_STATUS_MAP = {
+    "active": "active",
+    "trialing": "trialing",
+    "past_due": "past_due",
+    "unpaid": "past_due",
+    "canceled": "cancelled",
+    "incomplete": "paused",
+    "incomplete_expired": "cancelled",
+}
+
+
+def normalize_subscription_status(stripe_status: Optional[str]) -> str:
+    if not stripe_status:
+        return "active"
+    return SUBSCRIPTION_STATUS_MAP.get(stripe_status, "active")
+
+
 async def get_organization_by_stripe_customer_id(
     db: AsyncSession,
     stripe_customer_id: str
@@ -265,6 +346,7 @@ async def handle_customer_deleted(db: AsyncSession, event_data: dict) -> None:
     org = await get_organization_by_stripe_customer_id(db, customer_id)
     if org:
         org.billing_status = "canceled"
+        org.subscription_status = "cancelled"
         db.add(org)
         logger.info(f"Marked org {org.id} as canceled (customer deleted)")
 
@@ -287,6 +369,7 @@ async def handle_subscription_created(db: AsyncSession, event_data: dict) -> Non
 
     org.stripe_subscription_id = subscription_id
     org.billing_status = "active"
+    org.subscription_status = normalize_subscription_status(subscription.get("status"))
     db.add(org)
     logger.info(f"Subscription {subscription_id} created for org {org.id}")
 
@@ -310,7 +393,7 @@ async def handle_subscription_updated(db: AsyncSession, event_data: dict) -> Non
         org.plan_id = plan.id
 
     # Map Stripe subscription status to billing_status
-    status_map = {
+    billing_status_map = {
         "active": "active",
         "past_due": "past_due",
         "canceled": "canceled",
@@ -319,7 +402,8 @@ async def handle_subscription_updated(db: AsyncSession, event_data: dict) -> Non
         "incomplete_expired": "canceled",
         "trialing": "trial_active",
     }
-    org.billing_status = status_map.get(sub_status, "billing_pending_review")
+    org.billing_status = billing_status_map.get(sub_status, "billing_pending_review")
+    org.subscription_status = normalize_subscription_status(sub_status)
     db.add(org)
     logger.info(f"Subscription {subscription_id} updated for org {org.id}: {sub_status}")
 
@@ -349,6 +433,7 @@ async def handle_subscription_deleted(db: AsyncSession, event_data: dict) -> Non
     org = await get_organization_by_stripe_customer_id(db, customer_id)
     if org:
         org.billing_status = "canceled"
+        org.subscription_status = "cancelled"
         db.add(org)
         logger.info(f"Subscription deleted for org {org.id}")
 
@@ -361,6 +446,7 @@ async def handle_invoice_payment_succeeded(db: AsyncSession, event_data: dict) -
     org = await get_organization_by_stripe_customer_id(db, customer_id)
     if org and org.billing_status == "past_due":
         org.billing_status = "active"
+        org.subscription_status = "active"
         db.add(org)
         logger.info(f"Payment succeeded for org {org.id}, restored to active")
 
@@ -373,6 +459,7 @@ async def handle_invoice_payment_failed(db: AsyncSession, event_data: dict) -> N
     org = await get_organization_by_stripe_customer_id(db, customer_id)
     if org:
         org.billing_status = "past_due"
+        org.subscription_status = "past_due"
         db.add(org)
         logger.info(f"Payment failed for org {org.id}, set to past_due")
 
@@ -392,6 +479,7 @@ async def handle_checkout_session_completed(db: AsyncSession, event_data: dict) 
         if subscription_id:
             org.stripe_subscription_id = subscription_id
         org.billing_status = "active"
+        org.subscription_status = "active"
         db.add(org)
         logger.info(f"Checkout completed for org {org.id}")
 
