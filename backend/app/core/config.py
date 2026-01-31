@@ -68,6 +68,11 @@ class Settings(BaseSettings):
     GOOGLE_PROJECT_ID: Optional[str] = None
     GOOGLE_REDIRECT_URI: Optional[str] = None
 
+    # Stripe
+    STRIPE_SECRET_KEY: Optional[str] = None
+    STRIPE_PUBLISHABLE_KEY: Optional[str] = None
+    STRIPE_WEBHOOK_SECRET: Optional[str] = None
+
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=True,
