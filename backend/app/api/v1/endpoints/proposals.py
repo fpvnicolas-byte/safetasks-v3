@@ -3,18 +3,28 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_profile, require_admin_or_manager, require_admin
+from app.api.deps import (
+    get_current_profile,
+    require_owner_admin_or_producer,
+    require_admin_producer_or_finance,
+    get_effective_role,
+    get_assigned_project_ids,
+    enforce_project_assignment,
+    require_billing_active,
+    get_organization_record,
+)
 from app.db.session import get_db
 from app.modules.commercial.service import proposal_service
 from app.schemas.proposals import (
     Proposal, ProposalCreate, ProposalUpdate,
     ProposalWithClient, ProposalApproval
 )
+from app.services.entitlements import ensure_resource_limit
 
 router = APIRouter()
 
 
-@router.get("/", response_model=List[Proposal])
+@router.get("/", response_model=List[Proposal], dependencies=[Depends(require_admin_producer_or_finance)])
 async def get_proposals(
     profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
@@ -33,6 +43,12 @@ async def get_proposals(
     if status:
         filters["status"] = status
 
+    if get_effective_role(profile) == "freelancer":
+        assigned_project_ids = await get_assigned_project_ids(db, profile)
+        if not assigned_project_ids:
+            return []
+        filters["project_id"] = assigned_project_ids
+
     proposals = await proposal_service.get_multi(
         db=db,
         organization_id=organization_id,
@@ -43,7 +59,11 @@ async def get_proposals(
     return proposals
 
 
-@router.post("/", response_model=Proposal)
+@router.post(
+    "/",
+    response_model=Proposal,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def create_proposal(
     proposal_in: ProposalCreate,
     profile=Depends(get_current_profile),
@@ -55,6 +75,10 @@ async def create_proposal(
     """
     organization_id = profile.organization_id
     try:
+        organization = await get_organization_record(profile, db)
+        proposal_count = await proposal_service.count(db=db, organization_id=organization_id)
+        await ensure_resource_limit(db, organization, resource="proposals", current_count=proposal_count)
+
         proposal = await proposal_service.create(
             db=db,
             organization_id=organization_id,
@@ -68,7 +92,7 @@ async def create_proposal(
         )
 
 
-@router.get("/{proposal_id}", response_model=Proposal)
+@router.get("/{proposal_id}", response_model=Proposal, dependencies=[Depends(require_admin_producer_or_finance)])
 async def get_proposal(
     proposal_id: UUID,
     profile=Depends(get_current_profile),
@@ -90,10 +114,23 @@ async def get_proposal(
             detail="Proposal not found"
         )
 
+    if proposal.project_id:
+        await enforce_project_assignment(proposal.project_id, db, profile)
+    else:
+        if get_effective_role(profile) == "freelancer":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: proposal not assigned to a project"
+            )
+
     return proposal
 
 
-@router.put("/{proposal_id}", response_model=Proposal)
+@router.put(
+    "/{proposal_id}",
+    response_model=Proposal,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def update_proposal(
     proposal_id: UUID,
     proposal_in: ProposalUpdate,
@@ -127,7 +164,11 @@ async def update_proposal(
         )
 
 
-@router.delete("/{proposal_id}", response_model=Proposal)
+@router.delete(
+    "/{proposal_id}",
+    response_model=Proposal,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def delete_proposal(
     proposal_id: UUID,
     profile=Depends(get_current_profile),
@@ -152,7 +193,11 @@ async def delete_proposal(
     return proposal
 
 
-@router.post("/{proposal_id}/approve", response_model=Proposal)
+@router.post(
+    "/{proposal_id}/approve",
+    response_model=Proposal,
+    dependencies=[Depends(require_admin_producer_or_finance), Depends(require_billing_active)]
+)
 async def approve_proposal(
     proposal_id: UUID,
     approval_data: ProposalApproval,

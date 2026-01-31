@@ -23,10 +23,13 @@ class Profile(Base):
     full_name = Column(String)
     avatar_url = Column(String)
     role = Column(String, default="viewer")  # admin, manager, crew, viewer
+    role_v2 = Column(String, nullable=True)  # owner, admin, producer, finance, freelancer
+    is_master_owner = Column(Boolean, default=False, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     __table_args__ = (
         CheckConstraint("role IN ('admin', 'manager', 'crew', 'viewer')"),
+        CheckConstraint("role_v2 IN ('owner', 'admin', 'producer', 'finance', 'freelancer')"),
     )

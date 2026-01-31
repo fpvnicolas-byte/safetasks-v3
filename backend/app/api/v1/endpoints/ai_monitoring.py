@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_organization, get_db
+from app.api.deps import get_current_organization, get_db, require_owner_or_admin
 from app.core.config import settings
 from app.models.organizations import Organization
 from app.services.ai_engine import ai_engine_service
@@ -17,7 +17,7 @@ from app.services.ai_engine import ai_engine_service
 router = APIRouter()
 
 
-@router.get("/health", response_model=dict)
+@router.get("/health", response_model=dict, dependencies=[Depends(require_owner_or_admin)])
 async def get_ai_service_health(
     organization: Organization = Depends(get_current_organization)
 ):
@@ -70,7 +70,7 @@ async def get_ai_service_health(
         )
 
 
-@router.get("/status", response_model=dict)
+@router.get("/status", response_model=dict, dependencies=[Depends(require_owner_or_admin)])
 async def get_ai_service_status(
     organization: Organization = Depends(get_current_organization)
 ):
@@ -102,7 +102,7 @@ async def get_ai_service_status(
         )
 
 
-@router.post("/validate", response_model=dict)
+@router.post("/validate", response_model=dict, dependencies=[Depends(require_owner_or_admin)])
 async def validate_ai_configuration(
     organization: Organization = Depends(get_current_organization)
 ):
@@ -143,7 +143,7 @@ async def validate_ai_configuration(
         )
 
 
-@router.get("/metrics", response_model=dict)
+@router.get("/metrics", response_model=dict, dependencies=[Depends(require_owner_or_admin)])
 async def get_ai_service_metrics(
     organization: Organization = Depends(get_current_organization)
 ):
@@ -177,7 +177,7 @@ async def get_ai_service_metrics(
         )
 
 
-@router.get("/alerts", response_model=dict)
+@router.get("/alerts", response_model=dict, dependencies=[Depends(require_owner_or_admin)])
 async def get_ai_service_alerts(
     organization: Organization = Depends(get_current_organization)
 ):
@@ -210,7 +210,7 @@ async def get_ai_service_alerts(
         )
 
 
-@router.get("/recommendations", response_model=dict)
+@router.get("/recommendations", response_model=dict, dependencies=[Depends(require_owner_or_admin)])
 async def get_ai_service_recommendations(
     organization: Organization = Depends(get_current_organization)
 ):

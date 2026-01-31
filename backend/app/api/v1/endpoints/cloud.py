@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_profile, require_admin_or_manager
+from app.api.deps import get_current_profile, require_owner_admin_or_producer, require_billing_active
 from app.db.session import get_db
 from app.services.google_drive import google_drive_service
 from app.services.cloud import cloud_sync_service
@@ -18,7 +18,11 @@ from app.schemas.cloud import (
 router = APIRouter()
 
 
-@router.post("/google/auth", response_model=GoogleDriveCredentials, dependencies=[Depends(require_admin_or_manager)])
+@router.post(
+    "/google/auth",
+    response_model=GoogleDriveCredentials,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def setup_google_drive_auth(
     credentials_in: GoogleDriveCredentialsCreate,
     profile: "Profile" = Depends(get_current_profile),
@@ -61,7 +65,7 @@ async def setup_google_drive_auth(
         return new_credentials
 
 
-@router.get("/google/auth", response_model=GoogleDriveCredentials)
+@router.get("/google/auth", response_model=GoogleDriveCredentials, dependencies=[Depends(require_owner_admin_or_producer)])
 async def get_google_drive_auth(
     profile: "Profile" = Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
@@ -86,7 +90,11 @@ async def get_google_drive_auth(
     return credentials
 
 
-@router.put("/google/auth", response_model=GoogleDriveCredentials, dependencies=[Depends(require_admin_or_manager)])
+@router.put(
+    "/google/auth",
+    response_model=GoogleDriveCredentials,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def update_google_drive_auth(
     credentials_in: GoogleDriveCredentialsUpdate,
     profile: "Profile" = Depends(get_current_profile),
@@ -121,7 +129,10 @@ async def update_google_drive_auth(
     return credentials
 
 
-@router.delete("/google/auth", dependencies=[Depends(require_admin_or_manager)])
+@router.delete(
+    "/google/auth",
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def remove_google_drive_auth(
     profile: "Profile" = Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
@@ -150,7 +161,11 @@ async def remove_google_drive_auth(
     return {"message": "Google Drive authentication removed successfully"}
 
 
-@router.post("/sync/file", response_model=SyncResult)
+@router.post(
+    "/sync/file",
+    response_model=SyncResult,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def sync_file_to_drive(
     sync_request: SyncFileRequest,
     background_tasks: BackgroundTasks,
@@ -180,7 +195,11 @@ async def sync_file_to_drive(
         )
 
 
-@router.post("/projects/{project_id}/sync-all", response_model=ProjectSyncResult)
+@router.post(
+    "/projects/{project_id}/sync-all",
+    response_model=ProjectSyncResult,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def sync_project_files(
     project_id: UUID,
     sync_request: ProjectSyncRequest = None,
@@ -213,7 +232,7 @@ async def sync_project_files(
         )
 
 
-@router.get("/status", response_model=SyncStatusResponse)
+@router.get("/status", response_model=SyncStatusResponse, dependencies=[Depends(require_owner_admin_or_producer)])
 async def get_sync_status(
     project_id: UUID = None,
     file_path: str = None,
@@ -242,7 +261,10 @@ async def get_sync_status(
         )
 
 
-@router.post("/check-alerts", dependencies=[Depends(require_admin_or_manager)])
+@router.post(
+    "/check-alerts",
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def check_sync_alerts(
     background_tasks: BackgroundTasks,
     profile=Depends(get_current_profile),
@@ -269,7 +291,7 @@ async def check_sync_alerts(
         )
 
 
-@router.get("/projects/{project_id}/folders")
+@router.get("/projects/{project_id}/folders", dependencies=[Depends(require_owner_admin_or_producer)])
 async def get_project_drive_folders(
     project_id: UUID,
     profile=Depends(get_current_profile),

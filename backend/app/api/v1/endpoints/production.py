@@ -3,7 +3,14 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_organization, require_admin_or_manager, get_current_profile
+from app.api.deps import (
+    get_current_organization,
+    require_owner_admin_or_producer,
+    require_read_only,
+    get_current_profile,
+    enforce_project_assignment,
+    require_billing_active,
+)
 from app.db.session import get_db
 from app.services.production import production_service
 from app.services.ai_engine import ai_engine_service
@@ -15,16 +22,18 @@ from app.models.scheduling import ShootingDay
 router = APIRouter()
 
 
-@router.get("/projects/{project_id}/breakdown")
+@router.get("/projects/{project_id}/breakdown", dependencies=[Depends(require_read_only)])
 async def get_project_breakdown(
     project_id: UUID,
     organization_id: UUID = Depends(get_current_organization),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> ProjectBreakdown:
     """
     Get complete project breakdown with scenes, characters, and shooting days.
     """
     try:
+        await enforce_project_assignment(project_id, db, profile)
         breakdown = await production_service.get_project_breakdown(
             db=db,
             organization_id=organization_id,
@@ -38,7 +47,10 @@ async def get_project_breakdown(
         )
 
 
-@router.post("/projects/{project_id}/commit-ai-analysis", dependencies=[Depends(require_admin_or_manager)])
+@router.post(
+    "/projects/{project_id}/commit-ai-analysis",
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def commit_ai_analysis(
     project_id: UUID,
     analysis_data: AIScriptAnalysisCommit,
@@ -70,7 +82,10 @@ async def commit_ai_analysis(
         )
 
 
-@router.post("/projects/{project_id}/generate-breakdown", dependencies=[Depends(require_admin_or_manager)])
+@router.post(
+    "/projects/{project_id}/generate-breakdown",
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def generate_breakdown_from_ai(
     project_id: UUID,
     background_tasks: BackgroundTasks,
@@ -192,7 +207,10 @@ async def process_ai_breakdown_generation(
         )
 
 
-@router.delete("/projects/{project_id}/breakdown", dependencies=[Depends(require_admin_or_manager)])
+@router.delete(
+    "/projects/{project_id}/breakdown",
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def clear_project_breakdown(
     project_id: UUID,
     organization_id: UUID = Depends(get_current_organization),

@@ -18,6 +18,8 @@ from .storage import StoredFile
 from .transactions import Transaction
 from .services import Service
 from .ai import ScriptAnalysis, AiSuggestion, AiRecommendation, AiUsageLog
+from .billing import Plan, Entitlement, OrganizationUsage, BillingEvent
+from .access import ProjectAssignment
 
 
 __all__ = [
@@ -56,4 +58,9 @@ __all__ = [
     "AiSuggestion",
     "AiRecommendation",
     "AiUsageLog",
+    "Plan",
+    "Entitlement",
+    "OrganizationUsage",
+    "BillingEvent",
+    "ProjectAssignment",
 ]

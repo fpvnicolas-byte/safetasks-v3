@@ -5,7 +5,7 @@ from app.api.v1.endpoints import (
     kits, call_sheets, proposals, storage, notifications, ai,
     scenes, characters, shooting_days, production, financial,
     suppliers, stakeholders, inventory, cloud, dashboard, profiles,
-    ai_monitoring, services
+    ai_monitoring, services, project_assignments, billing
 )
 
 api_router = APIRouter()
@@ -154,4 +154,16 @@ api_router.include_router(
     services.router,
     prefix="/services",
     tags=["services"]
+)
+
+api_router.include_router(
+    project_assignments.router,
+    prefix="/project-assignments",
+    tags=["project_assignments"]
+)
+
+api_router.include_router(
+    billing.router,
+    prefix="/billing",
+    tags=["billing"]
 )

@@ -5,7 +5,16 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.deps import get_organization_from_profile, require_admin_manager_or_crew, require_admin_or_manager
+from app.api.deps import (
+    get_organization_from_profile,
+    require_read_only,
+    require_owner_admin_or_producer,
+    get_current_profile,
+    get_effective_role,
+    get_assigned_project_ids,
+    enforce_project_assignment,
+    require_billing_active,
+)
 from app.db.session import get_db
 from app.modules.scheduling.service import call_sheet_service
 from app.schemas.call_sheets import CallSheet, CallSheetCreate, CallSheetUpdate
@@ -13,9 +22,10 @@ from app.schemas.call_sheets import CallSheet, CallSheetCreate, CallSheetUpdate
 router = APIRouter()
 
 
-@router.get("/", response_model=List[CallSheet])
+@router.get("/", response_model=List[CallSheet], dependencies=[Depends(require_read_only)])
 async def get_call_sheets(
     organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -26,7 +36,13 @@ async def get_call_sheets(
     """
     filters = {}
     if project_id:
+        await enforce_project_assignment(project_id, db, profile)
         filters["project_id"] = project_id
+    elif get_effective_role(profile) == "freelancer":
+        assigned_project_ids = await get_assigned_project_ids(db, profile)
+        if not assigned_project_ids:
+            return []
+        filters["project_id"] = assigned_project_ids
 
     call_sheets = await call_sheet_service.get_multi(
         db=db,
@@ -41,10 +57,15 @@ async def get_call_sheets(
     return call_sheets
 
 
-@router.post("/", response_model=CallSheet, dependencies=[Depends(require_admin_or_manager)])
+@router.post(
+    "/",
+    response_model=CallSheet,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def create_call_sheet(
     call_sheet_in: CallSheetCreate,
     organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> CallSheet:
     """
@@ -73,7 +94,7 @@ async def create_call_sheet(
         )
 
 
-@router.get("/{call_sheet_id}", response_model=CallSheet)
+@router.get("/{call_sheet_id}", response_model=CallSheet, dependencies=[Depends(require_read_only)])
 async def get_call_sheet(
     call_sheet_id: UUID,
     organization_id: UUID = Depends(get_organization_from_profile),
@@ -97,10 +118,16 @@ async def get_call_sheet(
             detail="Call sheet not found"
         )
 
+    await enforce_project_assignment(call_sheet.project_id, db, profile)
+
     return call_sheet
 
 
-@router.put("/{call_sheet_id}", response_model=CallSheet, dependencies=[Depends(require_admin_or_manager)])
+@router.put(
+    "/{call_sheet_id}",
+    response_model=CallSheet,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def update_call_sheet(
     call_sheet_id: UUID,
     call_sheet_in: CallSheetUpdate,
@@ -142,7 +169,11 @@ async def update_call_sheet(
         )
 
 
-@router.delete("/{call_sheet_id}", response_model=CallSheet, dependencies=[Depends(require_admin_or_manager)])
+@router.delete(
+    "/{call_sheet_id}",
+    response_model=CallSheet,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def delete_call_sheet(
     call_sheet_id: UUID,
     organization_id: UUID = Depends(get_organization_from_profile),

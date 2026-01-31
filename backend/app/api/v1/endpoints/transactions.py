@@ -4,7 +4,7 @@ from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_organization, require_admin
+from app.api.deps import get_current_organization, require_finance_or_admin, require_billing_active
 from app.db.session import get_db
 from app.services.financial import transaction_service
 from app.schemas.transactions import (
@@ -15,7 +15,7 @@ from app.schemas.transactions import (
 router = APIRouter()
 
 
-@router.get("/", response_model=List[TransactionWithRelations])
+@router.get("/", response_model=List[TransactionWithRelations], dependencies=[Depends(require_finance_or_admin)])
 async def get_transactions(
     organization_id: UUID = Depends(get_current_organization),
     db: AsyncSession = Depends(get_db),
@@ -49,7 +49,11 @@ async def get_transactions(
     return transactions
 
 
-@router.post("/", response_model=TransactionWithRelations)
+@router.post(
+    "/",
+    response_model=TransactionWithRelations,
+    dependencies=[Depends(require_finance_or_admin), Depends(require_billing_active)]
+)
 async def create_transaction(
     transaction_in: TransactionCreate,
     organization_id: UUID = Depends(get_current_organization),
@@ -82,7 +86,7 @@ async def create_transaction(
         )
 
 
-@router.get("/{transaction_id}", response_model=TransactionWithRelations)
+@router.get("/{transaction_id}", response_model=TransactionWithRelations, dependencies=[Depends(require_finance_or_admin)])
 async def get_transaction(
     transaction_id: UUID,
     organization_id: UUID = Depends(get_current_organization),
@@ -114,7 +118,7 @@ async def get_transaction(
     return transaction
 
 
-@router.put("/{transaction_id}", response_model=TransactionWithRelations)
+@router.put("/{transaction_id}", response_model=TransactionWithRelations, dependencies=[Depends(require_finance_or_admin)])
 async def update_transaction(
     transaction_id: UUID,
     transaction_in: TransactionUpdate,
@@ -132,7 +136,11 @@ async def update_transaction(
     )
 
 
-@router.delete("/{transaction_id}", response_model=TransactionWithRelations)
+@router.delete(
+    "/{transaction_id}",
+    response_model=TransactionWithRelations,
+    dependencies=[Depends(require_finance_or_admin), Depends(require_billing_active)]
+)
 async def delete_transaction(
     transaction_id: UUID,
     organization_id: UUID = Depends(get_current_organization),
@@ -172,7 +180,7 @@ async def delete_transaction(
     return transaction
 
 
-@router.get("/stats/monthly", response_model=TransactionStats)
+@router.get("/stats/monthly", response_model=TransactionStats, dependencies=[Depends(require_finance_or_admin)])
 async def get_monthly_stats(
     year: int = Query(..., ge=2000, le=2100),
     month: int = Query(..., ge=1, le=12),
@@ -191,7 +199,7 @@ async def get_monthly_stats(
     return stats
 
 
-@router.get("/stats/overview", response_model=TransactionOverviewStats)
+@router.get("/stats/overview", response_model=TransactionOverviewStats, dependencies=[Depends(require_finance_or_admin)])
 async def get_overview_stats(
     organization_id: UUID = Depends(get_current_organization),
     db: AsyncSession = Depends(get_db),

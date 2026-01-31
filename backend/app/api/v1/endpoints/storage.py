@@ -3,10 +3,18 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_organization_from_profile
+from app.api.deps import (
+    get_organization_from_profile,
+    require_owner_admin_or_producer,
+    require_read_only,
+    require_billing_active,
+    get_current_profile,
+    get_organization_record,
+)
 from app.db.session import get_db
 from app.services.storage import storage_service
 from app.services.cloud import cloud_sync_service
+from app.services.entitlements import ensure_storage_capacity, increment_storage_usage, decrement_storage_usage
 from app.schemas.storage import (
     FileUploadResponse, SignedUrlRequest, SignedUrlResponse,
     CloudSyncRequest, CloudSyncResponse, SyncStatusResponse
@@ -15,9 +23,14 @@ from app.schemas.storage import (
 router = APIRouter()
 
 
-@router.post("/upload", response_model=FileUploadResponse)
+@router.post(
+    "/upload",
+    response_model=FileUploadResponse,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def upload_file(
     organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     module: str = Form(..., description="Module name: kits, scripts, call-sheets, proposals"),
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
@@ -29,6 +42,9 @@ async def upload_file(
     try:
         # Read file content
         file_content = await file.read()
+
+        organization = await get_organization_record(profile, db)
+        await ensure_storage_capacity(db, organization, bytes_to_add=len(file_content))
 
         # Determine bucket based on module/file type
         if module == "kits":
@@ -58,6 +74,7 @@ async def upload_file(
                 # Log but don't fail the upload if cloud sync fails
                 print(f"Cloud sync failed: {str(e)}")
 
+        await increment_storage_usage(db, organization_id, bytes_added=len(file_content))
         return FileUploadResponse(**result)
 
     except ValueError as e:
@@ -72,7 +89,7 @@ async def upload_file(
         )
 
 
-@router.post("/sign-url", response_model=SignedUrlResponse)
+@router.post("/sign-url", response_model=SignedUrlResponse, dependencies=[Depends(require_read_only)])
 async def generate_signed_url(
     request: SignedUrlRequest,
     organization_id: UUID = Depends(get_organization_from_profile),
@@ -115,7 +132,11 @@ async def generate_signed_url(
         )
 
 
-@router.post("/sync-cloud", response_model=CloudSyncResponse)
+@router.post(
+    "/sync-cloud",
+    response_model=CloudSyncResponse,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def sync_to_cloud(
     request: CloudSyncRequest,
     organization_id: UUID = Depends(get_organization_from_profile),
@@ -161,7 +182,7 @@ async def sync_to_cloud(
         )
 
 
-@router.get("/sync-status/{file_path:path}", response_model=SyncStatusResponse)
+@router.get("/sync-status/{file_path:path}", response_model=SyncStatusResponse, dependencies=[Depends(require_read_only)])
 async def get_sync_status(
     file_path: str,
     organization_id: UUID = Depends(get_organization_from_profile),
@@ -197,7 +218,7 @@ async def get_sync_status(
         )
 
 
-@router.get("/list/{module}")
+@router.get("/list/{module}", dependencies=[Depends(require_read_only)])
 async def list_files(
     module: str,
     organization_id: UUID = Depends(get_organization_from_profile),
@@ -249,7 +270,10 @@ async def list_files(
         )
 
 
-@router.delete("/{bucket}/{file_path:path}")
+@router.delete(
+    "/{bucket}/{file_path:path}",
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def delete_file(
     bucket: str,
     file_path: str,
@@ -276,9 +300,12 @@ async def delete_file(
                 detail=f"Invalid bucket: {bucket}"
             )
 
+        file_size = await storage_service.get_file_size(bucket, file_path)
         success = await storage_service.delete_file(bucket, file_path)
 
         if success:
+            if file_size:
+                await decrement_storage_usage(db, organization_id, bytes_removed=file_size)
             return {"message": "File deleted successfully", "file_path": file_path}
         else:
             raise HTTPException(

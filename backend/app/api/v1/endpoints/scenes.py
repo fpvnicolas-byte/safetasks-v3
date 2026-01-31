@@ -3,7 +3,16 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_organization, require_admin_or_manager
+from app.api.deps import (
+    get_current_organization,
+    require_owner_admin_or_producer,
+    require_read_only,
+    get_current_profile,
+    get_effective_role,
+    get_assigned_project_ids,
+    enforce_project_assignment,
+    require_billing_active,
+)
 from app.db.session import get_db
 from app.services.production import scene_service
 from app.schemas.production import Scene, SceneCreate, SceneUpdate
@@ -11,9 +20,10 @@ from app.schemas.production import Scene, SceneCreate, SceneUpdate
 router = APIRouter()
 
 
-@router.get("/", response_model=List[Scene])
+@router.get("/", response_model=List[Scene], dependencies=[Depends(require_read_only)])
 async def get_scenes(
     organization_id: UUID = Depends(get_current_organization),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -24,7 +34,13 @@ async def get_scenes(
     """
     filters = {}
     if project_id:
+        await enforce_project_assignment(project_id, db, profile)
         filters["project_id"] = project_id
+    elif get_effective_role(profile) == "freelancer":
+        assigned_project_ids = await get_assigned_project_ids(db, profile)
+        if not assigned_project_ids:
+            return []
+        filters["project_id"] = assigned_project_ids
 
     scenes = await scene_service.get_multi(
         db=db,
@@ -36,10 +52,15 @@ async def get_scenes(
     return scenes
 
 
-@router.post("/", response_model=Scene, dependencies=[Depends(require_admin_or_manager)])
+@router.post(
+    "/",
+    response_model=Scene,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def create_scene(
     scene_in: SceneCreate,
     organization_id: UUID = Depends(get_current_organization),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Scene:
     """
@@ -60,7 +81,7 @@ async def create_scene(
         )
 
 
-@router.get("/{scene_id}", response_model=Scene)
+@router.get("/{scene_id}", response_model=Scene, dependencies=[Depends(require_read_only)])
 async def get_scene(
     scene_id: UUID,
     organization_id: UUID = Depends(get_current_organization),
@@ -81,10 +102,16 @@ async def get_scene(
             detail="Scene not found"
         )
 
+    await enforce_project_assignment(scene.project_id, db, profile)
+
     return scene
 
 
-@router.put("/{scene_id}", response_model=Scene, dependencies=[Depends(require_admin_or_manager)])
+@router.put(
+    "/{scene_id}",
+    response_model=Scene,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def update_scene(
     scene_id: UUID,
     scene_in: SceneUpdate,
@@ -117,7 +144,11 @@ async def update_scene(
         )
 
 
-@router.delete("/{scene_id}", response_model=Scene, dependencies=[Depends(require_admin_or_manager)])
+@router.delete(
+    "/{scene_id}",
+    response_model=Scene,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def delete_scene(
     scene_id: UUID,
     organization_id: UUID = Depends(get_current_organization),

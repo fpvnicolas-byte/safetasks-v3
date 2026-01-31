@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_profile, require_admin
+from app.api.deps import get_current_profile, require_finance_or_admin, require_billing_active
 from app.db.session import get_db
 from app.services.financial import bank_account_service
 from app.schemas.bank_accounts import BankAccount, BankAccountCreate, BankAccountUpdate
@@ -31,7 +31,11 @@ async def get_bank_accounts(
     return accounts
 
 
-@router.post("/", response_model=BankAccount)
+@router.post(
+    "/",
+    response_model=BankAccount,
+    dependencies=[Depends(require_finance_or_admin), Depends(require_billing_active)]
+)
 async def create_bank_account(
     account_in: BankAccountCreate,
     profile: "Profile" = Depends(get_current_profile),
@@ -74,7 +78,11 @@ async def get_bank_account(
     return account
 
 
-@router.put("/{account_id}", response_model=BankAccount)
+@router.put(
+    "/{account_id}",
+    response_model=BankAccount,
+    dependencies=[Depends(require_finance_or_admin), Depends(require_billing_active)]
+)
 async def update_bank_account(
     account_id: UUID,
     account_in: BankAccountUpdate,
@@ -83,15 +91,9 @@ async def update_bank_account(
 ) -> BankAccount:
     """
     Update bank account (must belong to current user's organization).
-    Only admins can update bank accounts.
+    Only finance/admin can update bank accounts.
     """
     organization_id = profile.organization_id
-    if profile.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only administrators can update bank accounts"
-        )
-
     account = await bank_account_service.update(
         db=db,
         organization_id=organization_id,
@@ -108,7 +110,11 @@ async def update_bank_account(
     return account
 
 
-@router.delete("/{account_id}", response_model=BankAccount)
+@router.delete(
+    "/{account_id}",
+    response_model=BankAccount,
+    dependencies=[Depends(require_finance_or_admin), Depends(require_billing_active)]
+)
 async def delete_bank_account(
     account_id: UUID,
     profile: "Profile" = Depends(get_current_profile),
@@ -116,15 +122,9 @@ async def delete_bank_account(
 ) -> BankAccount:
     """
     Delete bank account (must belong to current user's organization).
-    Only admins can delete bank accounts.
+    Only finance/admin can delete bank accounts.
     """
     organization_id = profile.organization_id
-    if profile.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only administrators can delete bank accounts"
-        )
-
     # Check if account has any transactions
     from app.services.financial import transaction_service
     transactions = await transaction_service.get_multi(

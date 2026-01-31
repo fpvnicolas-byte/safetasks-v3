@@ -186,6 +186,30 @@ class StorageService:
         except Exception as e:
             raise Exception(f"File deletion failed: {str(e)}")
 
+    async def get_file_size(self, bucket: str, file_path: str) -> Optional[int]:
+        """
+        Return file size in bytes if available, otherwise None.
+        """
+        try:
+            supabase_client = self._get_supabase_client()
+            parts = file_path.split("/")
+            if len(parts) < 2:
+                return None
+            directory = "/".join(parts[:-1])
+            filename = parts[-1]
+            entries = supabase_client.storage.from_(bucket).list(directory)
+            if not isinstance(entries, list):
+                return None
+            for entry in entries:
+                if entry.get("name") == filename:
+                    metadata = entry.get("metadata") or {}
+                    size = metadata.get("size")
+                    if isinstance(size, int):
+                        return size
+            return None
+        except Exception:
+            return None
+
     async def generate_signed_url(
         self,
         bucket: str,

@@ -34,6 +34,7 @@ from .financial import (
     InvoiceItem, InvoiceItemCreate,
     ProjectFinancialReport
 )
+from .access import ProjectAssignment, ProjectAssignmentCreate
 
 __all__ = [
     "Organization", "OrganizationCreate", "OrganizationUpdate",
@@ -61,6 +62,7 @@ __all__ = [
     "Invoice", "InvoiceCreate", "InvoiceUpdate", "InvoiceWithItems",
     "InvoiceItem", "InvoiceItemCreate",
     "ProjectFinancialReport",
+    "ProjectAssignment", "ProjectAssignmentCreate",
     "GoogleDriveCredentials", "GoogleDriveCredentialsCreate", "GoogleDriveCredentialsUpdate",
     "CloudSyncStatus",
     "ProjectDriveFolder",

@@ -149,7 +149,10 @@ class StakeholderService:
         crew_query = select(Profile).where(
             and_(
                 Profile.organization_id == organization_id,
-                Profile.role.in_(["crew", "manager", "admin"])
+                or_(
+                    Profile.role.in_(["crew", "manager", "admin"]),
+                    Profile.role_v2.in_(["freelancer", "producer", "admin", "owner"])
+                )
             )
         )
         crew_result = await db.execute(crew_query)

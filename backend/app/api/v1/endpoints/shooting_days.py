@@ -4,7 +4,16 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.deps import get_organization_from_profile, require_admin_or_manager
+from app.api.deps import (
+    get_organization_from_profile,
+    require_read_only,
+    require_owner_admin_or_producer,
+    get_current_profile,
+    get_effective_role,
+    get_assigned_project_ids,
+    enforce_project_assignment,
+    require_billing_active,
+)
 from app.db.session import get_db
 from app.services.production import shooting_day_service, production_service
 from app.schemas.production import ShootingDay, ShootingDayCreate, ShootingDayUpdate
@@ -12,9 +21,10 @@ from app.schemas.production import ShootingDay, ShootingDayCreate, ShootingDayUp
 router = APIRouter()
 
 
-@router.get("/", response_model=List[ShootingDay])
+@router.get("/", response_model=List[ShootingDay], dependencies=[Depends(require_read_only)])
 async def get_shooting_days(
     organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -25,7 +35,13 @@ async def get_shooting_days(
     """
     filters = {}
     if project_id:
+        await enforce_project_assignment(project_id, db, profile)
         filters["project_id"] = project_id
+    elif get_effective_role(profile) == "freelancer":
+        assigned_project_ids = await get_assigned_project_ids(db, profile)
+        if not assigned_project_ids:
+            return []
+        filters["project_id"] = assigned_project_ids
 
     shooting_days = await shooting_day_service.get_multi(
         db=db,
@@ -40,10 +56,15 @@ async def get_shooting_days(
     return shooting_days
 
 
-@router.post("/", response_model=ShootingDay, dependencies=[Depends(require_admin_or_manager)])
+@router.post(
+    "/",
+    response_model=ShootingDay,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def create_shooting_day(
     shooting_day_in: ShootingDayCreate,
     organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> ShootingDay:
     """
@@ -64,7 +85,7 @@ async def create_shooting_day(
         )
 
 
-@router.get("/{shooting_day_id}", response_model=ShootingDay)
+@router.get("/{shooting_day_id}", response_model=ShootingDay, dependencies=[Depends(require_read_only)])
 async def get_shooting_day(
     shooting_day_id: UUID,
     organization_id: UUID = Depends(get_organization_from_profile),
@@ -85,10 +106,16 @@ async def get_shooting_day(
             detail="Shooting day not found"
         )
 
+    await enforce_project_assignment(shooting_day.project_id, db, profile)
+
     return shooting_day
 
 
-@router.put("/{shooting_day_id}", response_model=ShootingDay, dependencies=[Depends(require_admin_or_manager)])
+@router.put(
+    "/{shooting_day_id}",
+    response_model=ShootingDay,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def update_shooting_day(
     shooting_day_id: UUID,
     shooting_day_in: ShootingDayUpdate,
@@ -121,7 +148,11 @@ async def update_shooting_day(
         )
 
 
-@router.delete("/{shooting_day_id}", response_model=ShootingDay, dependencies=[Depends(require_admin_or_manager)])
+@router.delete(
+    "/{shooting_day_id}",
+    response_model=ShootingDay,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def delete_shooting_day(
     shooting_day_id: UUID,
     organization_id: UUID = Depends(get_organization_from_profile),
@@ -146,7 +177,10 @@ async def delete_shooting_day(
     return shooting_day
 
 
-@router.post("/{shooting_day_id}/assign-scenes", dependencies=[Depends(require_admin_or_manager)])
+@router.post(
+    "/{shooting_day_id}/assign-scenes",
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def assign_scenes_to_shooting_day(
     shooting_day_id: UUID,
     scene_ids: List[UUID],

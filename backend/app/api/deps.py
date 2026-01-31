@@ -10,6 +10,8 @@ import logging
 from app.core.config import settings
 from app.db.session import get_db
 from app.models.profiles import Profile
+from app.models.access import ProjectAssignment
+from app.models.organizations import Organization
 
 logger = logging.getLogger(__name__)
 
@@ -154,8 +156,207 @@ def check_permissions(required_roles: list[str]):
     return permission_checker
 
 
+def get_effective_role(profile: Profile) -> str:
+    """
+    Return role_v2 if set, otherwise map legacy role to v2.
+    This is non-breaking and only used by new authorization logic.
+    """
+    if profile.is_master_owner:
+        return "owner"
+    if profile.role_v2:
+        return profile.role_v2
+
+    legacy_map = {
+        "admin": "admin",
+        "manager": "producer",
+        "crew": "freelancer",
+        "viewer": "freelancer",
+    }
+    return legacy_map.get(profile.role, "finance")
+
+
+async def get_assigned_project_ids(
+    db: AsyncSession,
+    profile: Profile
+) -> list[UUID]:
+    """
+    Return project IDs assigned to the profile (freelancers only).
+    """
+    query = select(ProjectAssignment.project_id).where(ProjectAssignment.user_id == profile.id)
+    result = await db.execute(query)
+    return [row[0] for row in result.all()]
+
+
+async def enforce_project_assignment(
+    project_id: UUID,
+    db: AsyncSession,
+    profile: Profile
+) -> None:
+    """
+    Ensure freelancers can only access assigned projects.
+    """
+    if get_effective_role(profile) != "freelancer":
+        return
+
+    assigned = await get_assigned_project_ids(db, profile)
+    if project_id not in assigned:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: project is not assigned to this user"
+        )
+
+
+def check_permissions_v2(required_roles: list[str]):
+    """
+    Dependency factory for v2 role-based permissions.
+    Uses role_v2 when available and falls back to legacy mapping.
+    Owner is treated as superuser.
+    """
+    async def permission_checker(
+        profile: Profile = Depends(get_current_profile),
+        db: AsyncSession = Depends(get_db)
+    ) -> Profile:
+        effective_role = get_effective_role(profile)
+
+        if effective_role == "owner":
+            # Even owners are blocked if org is canceled/blocked
+            organization = await get_organization_record(profile, db)
+            status_value = _normalize_billing_status(organization)
+            if status_value in {"canceled", "blocked"}:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Billing is not active. Access denied."
+                )
+            return profile
+
+        if effective_role not in required_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Insufficient permissions for this operation. Required roles: {', '.join(required_roles)}. Your role: {effective_role}"
+            )
+
+        organization = await get_organization_record(profile, db)
+        status_value = _normalize_billing_status(organization)
+        if status_value in {"canceled", "blocked"}:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Billing is not active. Access denied."
+            )
+
+        return profile
+
+    return permission_checker
+
+
+async def get_organization_record(
+    profile: Profile,
+    db: AsyncSession
+) -> Organization:
+    query = select(Organization).where(Organization.id == profile.organization_id)
+    result = await db.execute(query)
+    organization = result.scalar_one_or_none()
+    if not organization:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organization not found"
+        )
+    return organization
+
+
+def _normalize_billing_status(organization: Organization) -> str:
+    if organization.billing_status:
+        return organization.billing_status
+
+    # Backward compatibility mapping
+    legacy_map = {
+        "trialing": "trial_active",
+        "active": "active",
+        "past_due": "past_due",
+        "cancelled": "canceled",
+        "paused": "past_due",
+    }
+    return legacy_map.get(organization.subscription_status or "", "active")
+
+
+def require_billing_active():
+    """
+    Block mutations for non-active billing states.
+    trial_ended/past_due/billing_pending_review => read-only (402)
+    canceled/blocked => deny (403)
+    """
+    async def billing_checker(
+        profile: Profile = Depends(get_current_profile),
+        db: AsyncSession = Depends(get_db)
+    ) -> Profile:
+        organization = await get_organization_record(profile, db)
+        status_value = _normalize_billing_status(organization)
+
+        if status_value in {"canceled", "blocked"}:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Billing is not active. Access denied."
+            )
+
+        if status_value in {"trial_ended", "past_due", "billing_pending_review"}:
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail="Billing is not active. Please update payment to continue."
+            )
+
+        return profile
+
+    return billing_checker
+
+
+def require_billing_read():
+    """
+    Block all access for canceled/blocked organizations.
+    """
+    async def billing_checker(
+        profile: Profile = Depends(get_current_profile),
+        db: AsyncSession = Depends(get_db)
+    ) -> Profile:
+        organization = await get_organization_record(profile, db)
+        status_value = _normalize_billing_status(organization)
+
+        if status_value in {"canceled", "blocked"}:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Billing is not active. Access denied."
+            )
+
+        return profile
+
+    return billing_checker
+
+
+def require_master_owner():
+    """
+    Dependency that allows only the master owner.
+    """
+    async def permission_checker(
+        profile: Profile = Depends(get_current_profile)
+    ) -> Profile:
+        if not profile.is_master_owner:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only the master owner can perform this operation."
+            )
+        return profile
+
+    return permission_checker
+
+
 # Convenience dependencies for common permission checks
-require_admin = check_permissions(["admin"])
-require_admin_or_manager = check_permissions(["admin", "manager"])
-require_admin_manager_or_crew = check_permissions(["admin", "manager", "crew"])
-require_read_only = check_permissions(["admin", "manager", "crew", "viewer"])
+require_admin = check_permissions_v2(["admin"])
+require_admin_or_manager = check_permissions_v2(["admin", "producer"])
+require_admin_manager_or_crew = check_permissions_v2(["admin", "producer", "freelancer"])
+require_read_only = check_permissions_v2(["admin", "producer", "finance", "freelancer"])
+
+# V2-specific convenience dependencies
+require_owner_or_admin = check_permissions_v2(["admin"])
+require_owner_admin_or_producer = check_permissions_v2(["admin", "producer"])
+require_owner_admin_producer_or_freelancer = check_permissions_v2(["admin", "producer", "freelancer"])
+require_read_only_v2 = check_permissions_v2(["admin", "producer", "finance", "freelancer"])
+require_finance_or_admin = check_permissions_v2(["admin", "finance"])
+require_admin_producer_or_finance = check_permissions_v2(["admin", "producer", "finance"])

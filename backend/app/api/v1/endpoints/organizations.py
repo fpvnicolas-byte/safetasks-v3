@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_organization, get_current_profile
+from app.api.deps import get_current_organization, get_current_profile, require_owner_or_admin, require_read_only
 from app.db.session import get_db
 from app.modules.commercial.service import organization_service
 from app.schemas.organizations import Organization, OrganizationCreate, OrganizationUpdate
@@ -11,7 +11,7 @@ from app.schemas.organizations import Organization, OrganizationCreate, Organiza
 router = APIRouter()
 
 
-@router.get("/me", response_model=Organization)
+@router.get("/me", response_model=Organization, dependencies=[Depends(require_read_only)])
 async def get_my_organization(
     profile = Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
@@ -40,7 +40,7 @@ async def get_my_organization(
     return organization
 
 
-@router.get("/{organization_id}", response_model=Organization)
+@router.get("/{organization_id}", response_model=Organization, dependencies=[Depends(require_read_only)])
 async def get_organization(
     organization_id: UUID,
     organization_id_validated: UUID = Depends(get_current_organization),
@@ -64,7 +64,7 @@ async def get_organization(
     return organization
 
 
-@router.put("/{organization_id}", response_model=Organization)
+@router.put("/{organization_id}", response_model=Organization, dependencies=[Depends(require_owner_or_admin)])
 async def update_organization(
     organization_id: UUID,
     organization_in: OrganizationUpdate,

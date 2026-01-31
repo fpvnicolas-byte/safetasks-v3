@@ -59,7 +59,10 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         if filters:
             for field, value in filters.items():
                 if hasattr(self.model, field):
-                    query = query.where(getattr(self.model, field) == value)
+                    if isinstance(value, (list, tuple, set)):
+                        query = query.where(getattr(self.model, field).in_(list(value)))
+                    else:
+                        query = query.where(getattr(self.model, field) == value)
 
         if options:
             query = query.options(*options)
@@ -152,7 +155,10 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         if filters:
             for field, value in filters.items():
                 if hasattr(self.model, field):
-                    query = query.where(getattr(self.model, field) == value)
+                    if isinstance(value, (list, tuple, set)):
+                        query = query.where(getattr(self.model, field).in_(list(value)))
+                    else:
+                        query = query.where(getattr(self.model, field) == value)
 
         result = await db.execute(query)
         return result.scalar() or 0

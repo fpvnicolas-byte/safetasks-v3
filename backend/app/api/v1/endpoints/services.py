@@ -10,7 +10,7 @@ from app.schemas.services import Service, ServiceCreate, ServiceUpdate
 
 router = APIRouter()
 
-@router.get("/", response_model=List[Service])
+@router.get("/", response_model=List[Service], dependencies=[Depends(deps.require_read_only)])
 def read_services(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
@@ -29,7 +29,11 @@ def read_services(
     )
     return services
 
-@router.post("/", response_model=Service)
+@router.post(
+    "/",
+    response_model=Service,
+    dependencies=[Depends(deps.require_owner_admin_or_producer), Depends(deps.require_billing_active)]
+)
 def create_service(
     *,
     db: Session = Depends(deps.get_db),
@@ -48,7 +52,11 @@ def create_service(
     db.refresh(service)
     return service
 
-@router.put("/{service_id}", response_model=Service)
+@router.put(
+    "/{service_id}",
+    response_model=Service,
+    dependencies=[Depends(deps.require_owner_admin_or_producer), Depends(deps.require_billing_active)]
+)
 def update_service(
     *,
     db: Session = Depends(deps.get_db),
@@ -76,7 +84,11 @@ def update_service(
     db.refresh(service)
     return service
 
-@router.delete("/{service_id}", response_model=Service)
+@router.delete(
+    "/{service_id}",
+    response_model=Service,
+    dependencies=[Depends(deps.require_owner_admin_or_producer), Depends(deps.require_billing_active)]
+)
 def delete_service(
     *,
     db: Session = Depends(deps.get_db),

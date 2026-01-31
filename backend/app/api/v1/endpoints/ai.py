@@ -5,11 +5,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 import time
 
-from app.api.deps import get_current_organization, get_current_profile, get_organization_from_profile
+from app.api.deps import (
+    get_current_organization,
+    get_current_profile,
+    get_organization_from_profile,
+    require_owner_admin_or_producer,
+    require_billing_active,
+    get_organization_record,
+)
 from app.db.session import get_db
 from app.services.ai_engine import ai_engine_service
 from app.services.notifications import notification_service
 from app.services.storage import storage_service
+from app.services.entitlements import ensure_ai_credits, increment_ai_usage
 from app.modules.ai.service import (
     script_analysis_service,
     ai_suggestion_service,
@@ -141,7 +149,10 @@ async def process_script_analysis(
         )
 
 
-@router.post("/projects/{project_id}/analyze-script")
+@router.post(
+    "/projects/{project_id}/analyze-script",
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def analyze_script(
     project_id: UUID,
     background_tasks: BackgroundTasks,
@@ -184,6 +195,10 @@ async def analyze_script(
         FADE OUT.
         """
 
+        organization = await get_organization_record(profile, db)
+        await ensure_ai_credits(db, organization, credits_to_add=1)
+        await increment_ai_usage(db, organization.id, credits_added=1)
+
         # Start background processing
         background_tasks.add_task(
             process_script_analysis,
@@ -218,7 +233,7 @@ async def analyze_script(
         )
 
 
-@router.get("/analysis/status/{request_id}")
+@router.get("/analysis/status/{request_id}", dependencies=[Depends(require_owner_admin_or_producer)])
 async def get_analysis_status(
     request_id: str,
     organization_id: UUID = Depends(get_current_organization),
@@ -241,7 +256,7 @@ async def get_analysis_status(
         )
 
 
-@router.get("/analysis/")
+@router.get("/analysis/", dependencies=[Depends(require_owner_admin_or_producer)])
 async def get_ai_analysis(
     organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
@@ -280,7 +295,7 @@ async def get_ai_analysis(
         )
 
 
-@router.get("/suggestions/{project_id}")
+@router.get("/suggestions/{project_id}", dependencies=[Depends(require_owner_admin_or_producer)])
 async def get_ai_suggestions(
     project_id: UUID,
     organization_id: UUID = Depends(get_organization_from_profile),
@@ -332,7 +347,7 @@ async def get_ai_suggestions(
         )
 
 
-@router.get("/recommendations/{project_id}")
+@router.get("/recommendations/{project_id}", dependencies=[Depends(require_owner_admin_or_producer)])
 async def get_ai_recommendations(
     project_id: UUID,
     organization_id: UUID = Depends(get_organization_from_profile),
@@ -384,10 +399,11 @@ async def get_ai_recommendations(
         )
 
 
-@router.post("/budget-estimation")
+@router.post("/budget-estimation", dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)])
 async def estimate_budget(
     request: BudgetEstimationRequest,
     organization_id: UUID = Depends(get_current_organization),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
     """
@@ -402,6 +418,10 @@ async def estimate_budget(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Project not found"
             )
+
+        organization = await get_organization_record(profile, db)
+        await ensure_ai_credits(db, organization, credits_to_add=1)
+        await increment_ai_usage(db, organization.id, credits_added=1)
 
         # For now, return mock budget estimation
         return {
@@ -425,10 +445,11 @@ async def estimate_budget(
         )
 
 
-@router.post("/call-sheet-suggestions")
+@router.post("/call-sheet-suggestions", dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)])
 async def generate_call_sheet_suggestions(
     request: CallSheetSuggestionRequest,
     organization_id: UUID = Depends(get_current_organization),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
     """
@@ -443,6 +464,10 @@ async def generate_call_sheet_suggestions(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Project not found"
             )
+
+        organization = await get_organization_record(profile, db)
+        await ensure_ai_credits(db, organization, credits_to_add=1)
+        await increment_ai_usage(db, organization.id, credits_added=1)
 
         # For now, return mock call sheet suggestions
         return {
@@ -462,10 +487,11 @@ async def generate_call_sheet_suggestions(
         )
 
 
-@router.post("/script-analysis")
+@router.post("/script-analysis", dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)])
 async def analyze_script_content(
     request: ScriptAnalysisRequest,
     organization_id: UUID = Depends(get_organization_from_profile),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
     """
@@ -482,6 +508,10 @@ async def analyze_script_content(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Project not found"
             )
+
+        organization = await get_organization_record(profile, db)
+        await ensure_ai_credits(db, organization, credits_to_add=1)
+        await increment_ai_usage(db, organization.id, credits_added=1)
 
         # Analyze the script with AI
         analysis_result = await ai_engine_service.analyze_script_content(
@@ -606,10 +636,11 @@ async def analyze_script_content(
         )
 
 
-@router.post("/analyze-text")
+@router.post("/analyze-text", dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)])
 async def analyze_text_content(
     request: TextAnalysisRequest,
     organization_id: UUID = Depends(get_current_organization),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
     """
@@ -623,6 +654,10 @@ async def analyze_text_content(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Text too long for synchronous analysis. Use project script analysis instead."
             )
+
+        organization = await get_organization_record(profile, db)
+        await ensure_ai_credits(db, organization, credits_to_add=1)
+        await increment_ai_usage(db, organization.id, credits_added=1)
 
         result = await ai_engine_service.analyze_script_content(
             organization_id=organization_id,

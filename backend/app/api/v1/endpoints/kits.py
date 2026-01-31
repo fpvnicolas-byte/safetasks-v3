@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_organization_from_profile
+from app.api.deps import get_organization_from_profile, require_owner_admin_or_producer, require_read_only, require_billing_active
 from app.db.session import get_db
 from app.modules.inventory.service import kit_service
 from app.schemas.kits import Kit, KitCreate, KitUpdate
@@ -11,7 +11,7 @@ from app.schemas.kits import Kit, KitCreate, KitUpdate
 router = APIRouter()
 
 
-@router.get("/", response_model=List[Kit])
+@router.get("/", response_model=List[Kit], dependencies=[Depends(require_read_only)])
 async def get_kits(
     organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
@@ -30,7 +30,11 @@ async def get_kits(
     return kits
 
 
-@router.post("/", response_model=Kit)
+@router.post(
+    "/",
+    response_model=Kit,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def create_kit(
     kit_in: KitCreate,
     organization_id: UUID = Depends(get_organization_from_profile),
@@ -47,7 +51,7 @@ async def create_kit(
     return kit
 
 
-@router.get("/{kit_id}", response_model=Kit)
+@router.get("/{kit_id}", response_model=Kit, dependencies=[Depends(require_read_only)])
 async def get_kit(
     kit_id: UUID,
     organization_id: UUID = Depends(get_organization_from_profile),
@@ -71,7 +75,11 @@ async def get_kit(
     return kit
 
 
-@router.put("/{kit_id}", response_model=Kit)
+@router.put(
+    "/{kit_id}",
+    response_model=Kit,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def update_kit(
     kit_id: UUID,
     kit_in: KitUpdate,
@@ -97,7 +105,11 @@ async def update_kit(
     return kit
 
 
-@router.delete("/{kit_id}", response_model=Kit)
+@router.delete(
+    "/{kit_id}",
+    response_model=Kit,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def delete_kit(
     kit_id: UUID,
     organization_id: UUID = Depends(get_organization_from_profile),

@@ -4,19 +4,31 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.deps import get_current_organization
+from app.api.deps import (
+    get_current_organization,
+    require_read_only,
+    require_owner_admin_or_producer,
+    get_current_profile,
+    get_effective_role,
+    get_assigned_project_ids,
+    enforce_project_assignment,
+    require_billing_active,
+    get_organization_record,
+)
 from app.db.session import get_db
 from app.models.clients import Client as ClientModel
 from app.models.projects import Project as ProjectModel
 from app.modules.commercial.service import project_service, client_service
+from app.services.entitlements import ensure_resource_limit
 from app.schemas.projects import Project, ProjectCreate, ProjectUpdate, ProjectWithClient
 
 router = APIRouter()
 
 
-@router.get("/", response_model=List[ProjectWithClient])
+@router.get("/", response_model=List[ProjectWithClient], dependencies=[Depends(require_read_only)])
 async def get_projects(
     organization_id: UUID = Depends(get_current_organization),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -24,26 +36,48 @@ async def get_projects(
     """
     Get all projects for the current user's organization with client data.
     """
-    projects = await project_service.get_multi(
-        db=db,
-        organization_id=organization_id,
-        skip=skip,
-        limit=limit,
-        options=[selectinload(ProjectModel.client)]
-    )
+    if get_effective_role(profile) == "freelancer":
+        assigned_project_ids = await get_assigned_project_ids(db, profile)
+        if not assigned_project_ids:
+            return []
+        projects = await project_service.get_multi(
+            db=db,
+            organization_id=organization_id,
+            skip=skip,
+            limit=limit,
+            options=[selectinload(ProjectModel.client)],
+            filters={"id": assigned_project_ids}
+        )
+    else:
+        projects = await project_service.get_multi(
+            db=db,
+            organization_id=organization_id,
+            skip=skip,
+            limit=limit,
+            options=[selectinload(ProjectModel.client)]
+        )
     return projects
 
 
-@router.post("/", response_model=ProjectWithClient)
+@router.post(
+    "/",
+    response_model=ProjectWithClient,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def create_project(
     project_in: ProjectCreate,
     organization_id: UUID = Depends(get_current_organization),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> ProjectWithClient:
     """
     Create a new project in the current user's organization.
     Validates that the client belongs to the same organization.
     """
+    organization = await get_organization_record(profile, db)
+    project_count = await project_service.count(db=db, organization_id=organization_id)
+    await ensure_resource_limit(db, organization, resource="projects", current_count=project_count)
+
     # Validate that the client belongs to the same organization
     client = await client_service.get(
         db=db,
@@ -72,10 +106,11 @@ async def create_project(
     )
 
 
-@router.get("/{project_id}", response_model=ProjectWithClient)
+@router.get("/{project_id}", response_model=ProjectWithClient, dependencies=[Depends(require_read_only)])
 async def get_project(
     project_id: UUID,
     organization_id: UUID = Depends(get_current_organization),
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> ProjectWithClient:
     """
@@ -94,10 +129,16 @@ async def get_project(
             detail="Project not found"
         )
 
+    await enforce_project_assignment(project_id, db, profile)
+
     return project
 
 
-@router.put("/{project_id}", response_model=ProjectWithClient)
+@router.put(
+    "/{project_id}",
+    response_model=ProjectWithClient,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def update_project(
     project_id: UUID,
     project_in: ProjectUpdate,
@@ -144,7 +185,11 @@ async def update_project(
     )
 
 
-@router.delete("/{project_id}", response_model=ProjectWithClient)
+@router.delete(
+    "/{project_id}",
+    response_model=ProjectWithClient,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def delete_project(
     project_id: UUID,
     organization_id: UUID = Depends(get_current_organization),

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_profile
+from app.api.deps import get_current_profile, get_effective_role
 from app.db.session import get_db
 from app.models.profiles import Profile
 
@@ -26,7 +26,10 @@ async def get_my_profile(
         "email": profile.email,
         "organization_id": str(profile.organization_id) if profile.organization_id else None,
         "role": profile.role,
+        "role_v2": profile.role_v2,
+        "effective_role": get_effective_role(profile),
         "full_name": profile.full_name,
         "avatar_url": profile.avatar_url,
         "is_active": profile.is_active,
+        "is_master_owner": profile.is_master_owner,
     }

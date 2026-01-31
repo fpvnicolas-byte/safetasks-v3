@@ -3,7 +3,13 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_organization_from_profile, require_admin_or_manager
+from app.api.deps import (
+    get_organization_from_profile,
+    require_owner_admin_or_producer,
+    require_admin_producer_or_finance,
+    require_finance_or_admin,
+    require_billing_active,
+)
 from app.db.session import get_db
 from app.services.commercial import supplier_service, supplier_statement_service
 from app.schemas.commercial import Supplier, SupplierCreate, SupplierUpdate, SupplierStatement, SupplierWithTransactions
@@ -11,7 +17,7 @@ from app.schemas.commercial import Supplier, SupplierCreate, SupplierUpdate, Sup
 router = APIRouter()
 
 
-@router.get("/", response_model=List[SupplierWithTransactions])
+@router.get("/", response_model=List[SupplierWithTransactions], dependencies=[Depends(require_admin_producer_or_finance)])
 async def get_suppliers(
     organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
@@ -30,7 +36,11 @@ async def get_suppliers(
     return suppliers
 
 
-@router.post("/", response_model=Supplier, dependencies=[Depends(require_admin_or_manager)])
+@router.post(
+    "/",
+    response_model=Supplier,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def create_supplier(
     supplier_in: SupplierCreate,
     organization_id: UUID = Depends(get_organization_from_profile),
@@ -48,7 +58,7 @@ async def create_supplier(
     return supplier
 
 
-@router.get("/{supplier_id}", response_model=Supplier)
+@router.get("/{supplier_id}", response_model=Supplier, dependencies=[Depends(require_admin_producer_or_finance)])
 async def get_supplier(
     supplier_id: UUID,
     organization_id: UUID = Depends(get_organization_from_profile),
@@ -72,7 +82,11 @@ async def get_supplier(
     return supplier
 
 
-@router.put("/{supplier_id}", response_model=Supplier, dependencies=[Depends(require_admin_or_manager)])
+@router.put(
+    "/{supplier_id}",
+    response_model=Supplier,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def update_supplier(
     supplier_id: UUID,
     supplier_in: SupplierUpdate,
@@ -99,7 +113,11 @@ async def update_supplier(
     return supplier
 
 
-@router.delete("/{supplier_id}", response_model=Supplier, dependencies=[Depends(require_admin_or_manager)])
+@router.delete(
+    "/{supplier_id}",
+    response_model=Supplier,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
 async def delete_supplier(
     supplier_id: UUID,
     organization_id: UUID = Depends(get_organization_from_profile),
@@ -124,7 +142,7 @@ async def delete_supplier(
     return supplier
 
 
-@router.get("/{supplier_id}/statement")
+@router.get("/{supplier_id}/statement", dependencies=[Depends(require_finance_or_admin)])
 async def get_supplier_statement(
     supplier_id: UUID,
     organization_id: UUID = Depends(get_organization_from_profile),
