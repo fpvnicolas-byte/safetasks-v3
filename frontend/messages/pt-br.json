@@ -1717,6 +1717,27 @@
       "cancelled": "Cancelado"
     }
   },
+  "budget": {
+    "title": "Orçamento",
+    "total": "Orçamento Total",
+    "spent": "gasto",
+    "overBudget": "acima do orçamento",
+    "byCategory": "Por Categoria",
+    "noBudgetLines": "Nenhuma linha de orçamento definida.",
+    "categories": {
+      "crew": "Equipe",
+      "equipment": "Equipamento",
+      "locations": "Locações",
+      "talent": "Talento",
+      "transportation": "Transporte",
+      "catering": "Alimentação",
+      "post_production": "Pós-Produção",
+      "music_licensing": "Licenciamento Musical",
+      "insurance": "Seguro",
+      "contingency": "Contingência",
+      "other": "Outros"
+    }
+  },
   "proposals": {
     "title": "Propostas",
     "description": "Crie e gerencie propostas de clientes",

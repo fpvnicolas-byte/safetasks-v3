@@ -1717,6 +1717,27 @@
       "cancelled": "Cancelled"
     }
   },
+  "budget": {
+    "title": "Budget",
+    "total": "Total Budget",
+    "spent": "spent",
+    "overBudget": "over budget",
+    "byCategory": "By Category",
+    "noBudgetLines": "No budget lines defined yet.",
+    "categories": {
+      "crew": "Crew",
+      "equipment": "Equipment",
+      "locations": "Locations",
+      "talent": "Talent",
+      "transportation": "Transportation",
+      "catering": "Catering",
+      "post_production": "Post Production",
+      "music_licensing": "Music Licensing",
+      "insurance": "Insurance",
+      "contingency": "Contingency",
+      "other": "Other"
+    }
+  },
   "proposals": {
     "title": "Proposals",
     "description": "Create and manage client proposals",
