@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timedelta, date
+from decimal import Decimal
 from typing import Dict, Any, Optional
 from uuid import UUID
 from zoneinfo import ZoneInfo
@@ -482,7 +483,7 @@ class AnalyticsService:
             latest_profit = monthly_trends[-1]["net_profit_cents"]
             if latest_profit < 0:
                 insights.append("Negative profit margin this month - review cost controls")
-            elif latest_profit > latest_revenue * 0.3:  # 30% profit margin
+            elif latest_profit > latest_revenue * Decimal("0.3"):  # 30% profit margin
                 insights.append("Strong profitability - excellent financial health")
 
         if not insights:

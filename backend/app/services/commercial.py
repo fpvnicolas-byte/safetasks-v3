@@ -4,10 +4,12 @@ from app.models.transactions import Transaction
 from app.models.clients import Client
 from app.models.profiles import Profile
 from app.models.projects import Project
+from app.models.scheduling import ShootingDay
 from app.schemas.commercial import (
     SupplierCreate, SupplierUpdate,
     SupplierStatement, StakeholderSummary,
-    StakeholderCreate, StakeholderUpdate
+    StakeholderCreate, StakeholderUpdate,
+    StakeholderWithRateInfo, RateCalculationBreakdown
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_
@@ -116,7 +118,7 @@ class StakeholderService:
                 "id": str(client.id),
                 "name": client.name,
                 "email": client.email,
-                "document_id": client.document_id,
+                "document_id": client.document,
                 "type": "client",
                 "relationship": "revenue_source"
             }
@@ -341,6 +343,145 @@ class StakeholderCRUDService(BaseService[Stakeholder, StakeholderCreate, Stakeho
         query = select(Stakeholder).where(and_(*conditions)).order_by(Stakeholder.created_at.desc())
         result = await db.execute(query)
         return list(result.scalars().all())
+
+    async def get_with_rate_calculation(
+        self,
+        db: AsyncSession,
+        *,
+        organization_id: UUID,
+        stakeholder_id: UUID
+    ) -> Optional[StakeholderWithRateInfo]:
+        """
+        Get stakeholder with calculated payment suggestion and payment tracking.
+
+        Returns rate info including:
+        - suggested_amount_cents: calculated from rate × units
+        - total_paid_cents: sum of transactions already paid
+        - pending_amount_cents: suggested - paid
+        - payment_status: not_configured, pending, partial, paid, overpaid
+        """
+        # Get stakeholder
+        stakeholder = await self.get(db=db, organization_id=organization_id, id=stakeholder_id)
+        if not stakeholder:
+            return None
+
+        # Count shooting days for the project
+        shooting_days_query = select(func.count(ShootingDay.id)).where(
+            and_(
+                ShootingDay.organization_id == organization_id,
+                ShootingDay.project_id == stakeholder.project_id
+            )
+        )
+        shooting_days_result = await db.execute(shooting_days_query)
+        shooting_days_count = shooting_days_result.scalar() or 0
+
+        # Sum transactions already paid to this stakeholder
+        paid_query = select(func.coalesce(func.sum(Transaction.amount_cents), 0)).where(
+            and_(
+                Transaction.organization_id == organization_id,
+                Transaction.stakeholder_id == stakeholder_id,
+                Transaction.type == "expense"
+            )
+        )
+        paid_result = await db.execute(paid_query)
+        total_paid_cents = paid_result.scalar() or 0
+
+        # Calculate suggested amount based on rate
+        suggested_amount_cents = None
+        calculation_breakdown = None
+
+        if stakeholder.rate_type and stakeholder.rate_value_cents:
+            if stakeholder.rate_type == 'daily':
+                # Use estimated_units if set, otherwise use shooting days count
+                days = stakeholder.estimated_units or shooting_days_count
+                suggested_amount_cents = stakeholder.rate_value_cents * days
+                calculation_breakdown = RateCalculationBreakdown(
+                    type="daily",
+                    rate_per_day_cents=stakeholder.rate_value_cents,
+                    days=days,
+                    source="estimated_units" if stakeholder.estimated_units else "shooting_days"
+                )
+            elif stakeholder.rate_type == 'hourly':
+                hours = stakeholder.estimated_units or 0
+                suggested_amount_cents = stakeholder.rate_value_cents * hours
+                calculation_breakdown = RateCalculationBreakdown(
+                    type="hourly",
+                    rate_per_hour_cents=stakeholder.rate_value_cents,
+                    hours=hours
+                )
+            elif stakeholder.rate_type == 'fixed':
+                suggested_amount_cents = stakeholder.rate_value_cents
+                calculation_breakdown = RateCalculationBreakdown(
+                    type="fixed",
+                    fixed_amount_cents=stakeholder.rate_value_cents
+                )
+
+        # Calculate pending amount and payment status
+        pending_amount_cents = None
+        payment_status = "not_configured"
+
+        if suggested_amount_cents is not None:
+            pending_amount_cents = suggested_amount_cents - total_paid_cents
+            if total_paid_cents == 0:
+                payment_status = "pending"
+            elif total_paid_cents < suggested_amount_cents:
+                payment_status = "partial"
+            elif total_paid_cents == suggested_amount_cents:
+                payment_status = "paid"
+            else:
+                payment_status = "overpaid"
+
+        return StakeholderWithRateInfo(
+            id=stakeholder.id,
+            organization_id=stakeholder.organization_id,
+            project_id=stakeholder.project_id,
+            supplier_id=stakeholder.supplier_id,
+            name=stakeholder.name,
+            role=stakeholder.role,
+            email=stakeholder.email,
+            phone=stakeholder.phone,
+            notes=stakeholder.notes,
+            is_active=stakeholder.is_active,
+            rate_type=stakeholder.rate_type,
+            rate_value_cents=stakeholder.rate_value_cents,
+            estimated_units=stakeholder.estimated_units,
+            created_at=stakeholder.created_at,
+            updated_at=stakeholder.updated_at,
+            shooting_days_count=shooting_days_count,
+            suggested_amount_cents=suggested_amount_cents,
+            calculation_breakdown=calculation_breakdown,
+            total_paid_cents=total_paid_cents,
+            pending_amount_cents=pending_amount_cents,
+            payment_status=payment_status
+        )
+
+    async def get_project_stakeholders_with_rates(
+        self,
+        db: AsyncSession,
+        *,
+        organization_id: UUID,
+        project_id: UUID,
+        active_only: bool = True
+    ) -> List[StakeholderWithRateInfo]:
+        """Get all stakeholders for a project with rate calculations."""
+        stakeholders = await self.get_by_project(
+            db=db,
+            organization_id=organization_id,
+            project_id=project_id,
+            active_only=active_only
+        )
+
+        result = []
+        for stakeholder in stakeholders:
+            rate_info = await self.get_with_rate_calculation(
+                db=db,
+                organization_id=organization_id,
+                stakeholder_id=stakeholder.id
+            )
+            if rate_info:
+                result.append(rate_info)
+
+        return result
 
 
 # Service instances

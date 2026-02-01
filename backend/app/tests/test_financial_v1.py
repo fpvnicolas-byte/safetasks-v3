@@ -40,12 +40,14 @@ async def setup_test_data():
             slug="test-org-a"
         )
         db.add(org_a)
+        await db.flush()
 
         # Create Profile for Org A
         profile_a = Profile(
             id=uuid.UUID("12345678-9012-3456-7890-123456789012"),
             organization_id=org_a.id,
             full_name="Financial User",
+            email="finance@test.com",
             role="admin"
         )
         db.add(profile_a)
@@ -110,7 +112,7 @@ async def test_financial_flow():
             income_transaction = TransactionCreate(
                 bank_account_id=bank_account_id,
                 project_id=project_id,
-                category="Production Revenue",
+                category="production_revenue",
                 type="income",
                 amount_cents=500000,  # R$ 5,000.00
                 description="Initial production payment",
@@ -138,7 +140,7 @@ async def test_financial_flow():
             expense_transaction = TransactionCreate(
                 bank_account_id=bank_account_id,
                 project_id=project_id,
-                category="Equipment Rental",
+                category="equipment_rental",
                 type="expense",
                 amount_cents=150000,  # R$ 1,500.00
                 description="Camera rental for week 1",
@@ -213,7 +215,7 @@ async def test_financial_flow():
                 # This should fail because bank account belongs to Org A, not Org B
                 invalid_transaction = TransactionCreate(
                     bank_account_id=bank_account_id,  # From Org A
-                    category="Test",
+                    category="other",
                     type="income",
                     amount_cents=10000,
                     transaction_date=date.today()

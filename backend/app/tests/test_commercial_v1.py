@@ -46,12 +46,14 @@ async def setup_test_data():
             slug="test-org-b"
         )
         db.add(org_b)
+        await db.flush()
 
         # Create Profile for Org A
         profile_a = Profile(
             id=uuid.UUID("12345678-9012-3456-7890-123456789012"),
             organization_id=org_a.id,
             full_name="User from Org A",
+            email="usera@test.com",
             role="admin"
         )
         db.add(profile_a)
@@ -61,6 +63,7 @@ async def setup_test_data():
             id=uuid.UUID("98765432-1234-5678-9012-123456789012"),
             organization_id=org_b.id,
             full_name="User from Org B",
+            email="userb@test.com",
             role="admin"
         )
         db.add(profile_b)

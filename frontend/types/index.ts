@@ -559,6 +559,9 @@ export function getSupplierCategoryDisplayName(category: SupplierCategory): stri
 // STAKEHOLDER TYPES (Project Team Members)
 // ============================================================================
 
+// Rate type for stakeholder payment calculation
+export type RateType = 'daily' | 'hourly' | 'fixed'
+
 export interface Stakeholder {
   id: UUID
   organization_id: UUID
@@ -570,6 +573,10 @@ export interface Stakeholder {
   phone: string | null
   notes: string | null
   is_active: boolean
+  // Rate management fields
+  rate_type: RateType | null
+  rate_value_cents: number | null
+  estimated_units: number | null  // hours for hourly, days override for daily
   created_at: ISODateTime
   updated_at: ISODateTime
 }
@@ -582,6 +589,10 @@ export interface StakeholderCreate {
   email?: string
   phone?: string
   notes?: string
+  // Rate management fields
+  rate_type?: RateType
+  rate_value_cents?: number
+  estimated_units?: number
 }
 
 export interface StakeholderUpdate {
@@ -593,6 +604,34 @@ export interface StakeholderUpdate {
   phone?: string
   notes?: string
   is_active?: boolean
+  // Rate management fields
+  rate_type?: RateType | null
+  rate_value_cents?: number | null
+  estimated_units?: number | null
+}
+
+// Rate calculation breakdown
+export interface RateCalculationBreakdown {
+  type: RateType
+  rate_per_day_cents?: number
+  rate_per_hour_cents?: number
+  fixed_amount_cents?: number
+  days?: number
+  hours?: number
+  source?: 'estimated_units' | 'shooting_days'
+}
+
+// Payment status for stakeholder
+export type PaymentStatus = 'not_configured' | 'pending' | 'partial' | 'paid' | 'overpaid'
+
+// Stakeholder with rate calculation and payment tracking
+export interface StakeholderWithRateInfo extends Stakeholder {
+  shooting_days_count: number
+  suggested_amount_cents: number | null
+  calculation_breakdown: RateCalculationBreakdown | null
+  total_paid_cents: number
+  pending_amount_cents: number | null
+  payment_status: PaymentStatus
 }
 
 // ============================================================================
@@ -822,6 +861,7 @@ export interface Service {
   organization_id: UUID
   name: string
   description: string | null
+  value_cents: number
   created_at: ISODateTime
   updated_at: ISODateTime
 }
@@ -829,11 +869,13 @@ export interface Service {
 export interface ServiceCreate {
   name: string
   description?: string
+  value_cents?: number
 }
 
 export interface ServiceUpdate {
   name?: string
   description?: string
+  value_cents?: number
 }
 
 /**

@@ -39,10 +39,12 @@ async def setup_test_data():
             slug="film-finance"
         )
         db.add(org)
+        await db.flush()
 
         # Admin user
         admin_user = Profile(
             id=uuid.UUID("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"),
+            email="finance.admin@test.com",
             organization_id=org_id,
             full_name="Finance Admin",
             role="admin"
@@ -60,7 +62,7 @@ async def setup_test_data():
 
         # Project
         project = Project(
-            id=uuid.UUID("cccccccc-dddd-eeee-ffff-gggggggggggg"),
+            id=uuid.UUID("cccccccc-dddd-eeee-ffff-aaaaaaaaaaaa"),
             organization_id=org_id,
             client_id=client.id,
             title="Epic Blockbuster Film",
@@ -70,7 +72,7 @@ async def setup_test_data():
 
         # Bank Account
         bank_account = BankAccount(
-            id=uuid.UUID("dddddddd-eeee-ffff-gggg-hhhhhhhhhhhh"),
+            id=uuid.UUID("dddddddd-eeee-ffff-aaaa-bbbbbbbbbbbb"),
             organization_id=org_id,
             name="Production Account",
             balance_cents=10000000,  # R$ 100,000.00
@@ -89,8 +91,8 @@ async def test_expense_categorization():
     print("-" * 50)
 
     async_session, org_id = await setup_test_data()
-    project_id = uuid.UUID("cccccccc-dddd-eeee-ffff-gggggggggggg")
-    bank_account_id = uuid.UUID("dddddddd-eeee-ffff-gggg-hhhhhhhhhhhh")
+    project_id = uuid.UUID("cccccccc-dddd-eeee-ffff-aaaaaaaaaaaa")
+    bank_account_id = uuid.UUID("dddddddd-eeee-ffff-aaaa-bbbbbbbbbbbb")
 
     async with async_session() as db:
         try:
@@ -186,7 +188,7 @@ async def test_invoicing_and_revenue():
 
     async_session, org_id = await setup_test_data()
     client_id = uuid.UUID("bbbbbbbb-cccc-dddd-eeee-ffffffffffff")
-    project_id = uuid.UUID("cccccccc-dddd-eeee-ffff-gggggggggggg")
+    project_id = uuid.UUID("cccccccc-dddd-eeee-ffff-aaaaaaaaaaaa")
 
     async with async_session() as db:
         try:
@@ -256,7 +258,7 @@ async def test_invoicing_and_revenue():
             from app.services.financial import bank_account_service
             from app.schemas.transactions import TransactionCreate
 
-            bank_account_id = uuid.UUID("dddddddd-eeee-ffff-gggg-hhhhhhhhhhhh")
+            bank_account_id = uuid.UUID("dddddddd-eeee-ffff-aaaa-bbbbbbbbbbbb")
 
             revenue_transaction = TransactionCreate(
                 bank_account_id=bank_account_id,
@@ -286,7 +288,7 @@ async def test_profit_loss_reporting():
     print("-" * 50)
 
     async_session, org_id = await setup_test_data()
-    project_id = uuid.UUID("cccccccc-dddd-eeee-ffff-gggggggggggg")
+    project_id = uuid.UUID("cccccccc-dddd-eeee-ffff-aaaaaaaaaaaa")
 
     async with async_session() as db:
         try:
@@ -352,27 +354,30 @@ async def test_organization_wide_expense_analysis():
 
     async_session, org_id = await setup_test_data()
 
-    try:
-        print("Generating organization expense summary...")
+    async with async_session() as db:
+        try:
+            print("Generating organization expense summary...")
 
-        # Get expense summary for the entire organization
-        summary = await financial_report_service.get_expense_summary_by_category(
-            db=async_session, organization_id=org_id
-        )
+            # Get expense summary for the entire organization
+            summary = await financial_report_service.get_expense_summary_by_category(
+                db=db, organization_id=org_id
+            )
 
-        print("✅ Organization Expense Summary Generated!")
-        print(f"   Organization: {summary['organization_id']}")
-        print(f"   Total Expenses: {summary['formatted_total']}")
-        print(f"   Total Transactions: {summary['total_transactions']}")
+            print("✅ Organization Expense Summary Generated!")
+            print(f"   Organization: {summary['organization_id']}")
+            print(f"   Total Expenses: {summary['formatted_total']}")
+            print(f"   Total Transactions: {summary['total_transactions']}")
 
-        print(f"\n📊 EXPENSES BY CATEGORY:")
-        for category in summary['expenses_by_category']:
-            print(f"   {category['category']}: {category['formatted_total']} ({category['transaction_count']} transactions)")
+            print(f"\n📊 EXPENSES BY CATEGORY:")
+            for category in summary['expenses_by_category']:
+                print(
+                    f"   {category['category']}: {category['formatted_total']} ({category['transaction_count']} transactions)"
+                )
 
-        print("\n✅ ORGANIZATION ANALYSIS: Multi-project expense tracking working!")
+            print("\n✅ ORGANIZATION ANALYSIS: Multi-project expense tracking working!")
 
-    finally:
-        await async_session.close()
+        finally:
+            await db.close()
 
 
 async def main():

@@ -90,7 +90,7 @@ export default function PricingPage() {
               return (
                 <Card
                   key={planKey}
-                  className={`relative border-slate-200/80 bg-[#fbf7f0] shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl animate-in fade-in-0 slide-in-from-bottom-4 duration-700 ${
+                  className={`relative border-slate-200/80 bg-[#fbf7f0] text-slate-900 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl animate-in fade-in-0 slide-in-from-bottom-4 duration-700 ${
                     plan.highlight ? 'ring-2 ring-amber-300/70' : ''
                   }`}
                   style={{ animationDelay: `${index * 90}ms` }}
@@ -102,7 +102,13 @@ export default function PricingPage() {
                   )}
                   <CardContent className="flex h-full flex-col gap-5 p-6">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-amber-200">
+                      <div
+                        className={`flex h-10 w-10 shrink-0 aspect-square items-center justify-center rounded-full shadow-sm ${
+                          planKey === 'proAnnual'
+                            ? 'bg-amber-300 text-slate-900'
+                            : 'bg-slate-900 text-amber-200'
+                        }`}
+                      >
                         <plan.icon className="h-5 w-5" />
                       </div>
                       <div>
@@ -145,7 +151,7 @@ export default function PricingPage() {
           </section>
 
           <section className="mt-16 grid gap-8 lg:grid-cols-[1fr_1.2fr]">
-            <Card className="border-slate-200/80 bg-white/85">
+            <Card className="border-slate-200/80 bg-white/85 text-slate-900">
               <CardContent className="space-y-4 p-6">
                 <h2 className="text-2xl font-semibold [font-family:var(--font-pricing-display)]">{t('includes.title')}</h2>
                 <div className="space-y-3 text-sm text-slate-600">
@@ -160,7 +166,7 @@ export default function PricingPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-slate-200/80 bg-white/85">
+            <Card className="border-slate-200/80 bg-white/85 text-slate-900">
               <CardContent className="space-y-6 p-6">
                 <h2 className="text-2xl font-semibold [font-family:var(--font-pricing-display)]">{t('faq.title')}</h2>
                 <div className="space-y-5 text-sm text-slate-600">

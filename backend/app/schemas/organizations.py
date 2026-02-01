@@ -9,6 +9,7 @@ class OrganizationBase(BaseModel):
     name: str
     slug: str
     tax_id: Optional[str] = None
+    default_bank_account_id: Optional[UUID] = None
     plan: Literal["free", "starter", "professional", "enterprise"] = "free"
     subscription_status: Literal["trialing", "active", "past_due", "cancelled", "paused"] = "trialing"
 
@@ -25,6 +26,7 @@ class OrganizationUpdate(BaseModel):
     name: Optional[str] = None
     slug: Optional[str] = None
     tax_id: Optional[str] = None
+    default_bank_account_id: Optional[UUID] = None
     plan: Optional[Literal["free", "starter", "professional", "enterprise"]] = None
     subscription_status: Optional[Literal["trialing", "active", "past_due", "cancelled", "paused"]] = None
     is_active: Optional[bool] = None

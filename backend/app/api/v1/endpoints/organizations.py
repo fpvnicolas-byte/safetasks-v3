@@ -12,6 +12,7 @@ from app.schemas.organizations import Organization, OrganizationCreate, Organiza
 from app.models.organizations import Organization as OrganizationModel
 from app.models.profiles import Profile
 from app.services.billing import setup_trial_for_organization
+from app.services.financial import bank_account_service
 from app.services.entitlements import increment_usage_count
 
 import re
@@ -111,6 +112,19 @@ async def update_organization(
     """
     Update organization (must belong to current user).
     """
+    if "default_bank_account_id" in organization_in.model_fields_set:
+        if organization_in.default_bank_account_id is not None:
+            account = await bank_account_service.get(
+                db=db,
+                organization_id=organization_id_validated,
+                id=organization_in.default_bank_account_id
+            )
+            if not account:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Default bank account not found or does not belong to your organization"
+                )
+
     organization = await organization_service.update(
         db=db,
         organization_id=organization_id_validated,

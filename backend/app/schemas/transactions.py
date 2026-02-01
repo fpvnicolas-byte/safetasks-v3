@@ -13,6 +13,7 @@ class TransactionBase(BaseModel):
     description: Optional[str] = None
     transaction_date: date
     project_id: Optional[UUID] = None
+    invoice_id: Optional[UUID] = None
     supplier_id: Optional[UUID] = None  # ADDED: Link to supplier/vendor
     stakeholder_id: Optional[UUID] = None  # ADDED: Link to specific team member
 
@@ -52,6 +53,7 @@ class TransactionUpdate(BaseModel):
     description: Optional[str] = None
     transaction_date: Optional[date] = None
     project_id: Optional[UUID] = None
+    invoice_id: Optional[UUID] = None
     supplier_id: Optional[UUID] = None  # ADDED: Link to supplier/vendor
     stakeholder_id: Optional[UUID] = None  # ADDED: Link to specific team member
 

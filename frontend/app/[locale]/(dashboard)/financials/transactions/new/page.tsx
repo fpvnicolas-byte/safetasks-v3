@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useCreateTransaction, useBankAccounts, useProjects, useStakeholders } from '@/lib/api/hooks'
+import { useCreateTransaction, useBankAccounts, useProjects, useStakeholders, useStakeholderRateCalculation } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,7 +11,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Calculator, Check, AlertCircle } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { TransactionType, TransactionCategory, dollarsToCents, getIncomCategories, getExpenseCategories, getCategoryDisplayName } from '@/types'
 import { useTranslations } from 'next-intl'
@@ -38,6 +39,7 @@ export default function NewTransactionPage() {
   const { data: bankAccounts, isLoading: loadingAccounts } = useBankAccounts(organizationId || '')
   const { data: projects, isLoading: loadingProjects } = useProjects(organizationId || '')
   const { data: stakeholders } = useStakeholders(formData.project_id || undefined)
+  const { data: stakeholderRateInfo } = useStakeholderRateCalculation(formData.stakeholder_id || undefined)
   const createTransaction = useCreateTransaction()
 
   // Set first bank account as default when loaded
@@ -384,7 +386,7 @@ export default function NewTransactionPage() {
                     {stakeholders?.map((stakeholder) => (
                       <SelectItem key={stakeholder.id} value={stakeholder.id}>
                         {stakeholder.name} ({stakeholder.role})
-                        {stakeholder.supplier_id ? ` - ${t('fields.stakeholder.paidViaSupplier')}` : ''}
+                        {stakeholder.rate_value_cents ? ` - R$ ${(stakeholder.rate_value_cents / 100).toFixed(2)}/${stakeholder.rate_type === 'daily' ? 'day' : stakeholder.rate_type === 'hourly' ? 'hour' : 'fixed'}` : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -392,6 +394,78 @@ export default function NewTransactionPage() {
                 <p className="text-xs text-muted-foreground">
                   {t('fields.stakeholder.help')}
                 </p>
+
+                {/* Rate Calculation Suggestion */}
+                {stakeholderRateInfo && stakeholderRateInfo.suggested_amount_cents && (
+                  <Alert className="mt-3 border-primary/50 bg-primary/5">
+                    <Calculator className="h-4 w-4" />
+                    <AlertDescription>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="font-semibold">Suggested Amount: </span>
+                            <span className="text-lg font-bold text-primary">
+                              R$ {(stakeholderRateInfo.suggested_amount_cents / 100).toFixed(2)}
+                            </span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleInputChange(
+                              'amount',
+                              (stakeholderRateInfo.suggested_amount_cents! / 100).toString()
+                            )}
+                          >
+                            Use Amount
+                          </Button>
+                        </div>
+
+                        {/* Calculation breakdown */}
+                        {stakeholderRateInfo.calculation_breakdown && (
+                          <p className="text-sm text-muted-foreground">
+                            {stakeholderRateInfo.calculation_breakdown.type === 'daily' && (
+                              <>{stakeholderRateInfo.calculation_breakdown.days} days x R$ {(stakeholderRateInfo.calculation_breakdown.rate_per_day_cents! / 100).toFixed(2)}/day</>
+                            )}
+                            {stakeholderRateInfo.calculation_breakdown.type === 'hourly' && (
+                              <>{stakeholderRateInfo.calculation_breakdown.hours} hours x R$ {(stakeholderRateInfo.calculation_breakdown.rate_per_hour_cents! / 100).toFixed(2)}/hour</>
+                            )}
+                            {stakeholderRateInfo.calculation_breakdown.type === 'fixed' && (
+                              <>Fixed amount</>
+                            )}
+                          </p>
+                        )}
+
+                        {/* Payment status */}
+                        <div className="flex items-center gap-2 pt-1 border-t border-border/50">
+                          <span className="text-sm">Payment Status:</span>
+                          <Badge
+                            variant={
+                              stakeholderRateInfo.payment_status === 'paid' ? 'default' :
+                              stakeholderRateInfo.payment_status === 'partial' ? 'secondary' :
+                              stakeholderRateInfo.payment_status === 'overpaid' ? 'destructive' :
+                              'outline'
+                            }
+                          >
+                            {stakeholderRateInfo.payment_status === 'paid' && <Check className="h-3 w-3 mr-1" />}
+                            {stakeholderRateInfo.payment_status === 'overpaid' && <AlertCircle className="h-3 w-3 mr-1" />}
+                            {stakeholderRateInfo.payment_status.charAt(0).toUpperCase() + stakeholderRateInfo.payment_status.slice(1).replace('_', ' ')}
+                          </Badge>
+                          {stakeholderRateInfo.total_paid_cents > 0 && (
+                            <span className="text-sm text-muted-foreground">
+                              (Paid: R$ {(stakeholderRateInfo.total_paid_cents / 100).toFixed(2)})
+                            </span>
+                          )}
+                          {stakeholderRateInfo.pending_amount_cents !== null && stakeholderRateInfo.pending_amount_cents > 0 && (
+                            <span className="text-sm text-muted-foreground">
+                              | Pending: R$ {(stakeholderRateInfo.pending_amount_cents / 100).toFixed(2)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
             )}
           </CardContent>

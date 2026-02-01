@@ -36,10 +36,12 @@ async def setup_test_data():
             slug="film-prod-co"
         )
         db.add(org)
+        await db.flush()
 
         # Create users with different roles
         admin_user = Profile(
             id=uuid.UUID("11111111-2222-3333-4444-555555555555"),
+            email="admin.producer@test.com",
             organization_id=org_id,
             full_name="Admin Producer",
             role="admin"
@@ -48,6 +50,7 @@ async def setup_test_data():
 
         manager_user = Profile(
             id=uuid.UUID("22222222-3333-4444-5555-666666666666"),
+            email="production.manager@test.com",
             organization_id=org_id,
             full_name="Production Manager",
             role="manager"
@@ -56,6 +59,7 @@ async def setup_test_data():
 
         crew_user = Profile(
             id=uuid.UUID("33333333-4444-5555-6666-777777777777"),
+            email="camera.operator@test.com",
             organization_id=org_id,
             full_name="Camera Operator",
             role="crew"
@@ -157,86 +161,87 @@ async def test_ai_script_analysis():
 
     async_session, org_id = await setup_test_data()
 
-    try:
-        # Test 1: Analyze script content
-        print("🎬 Test 1: Analyzing film script with AI")
+    async with async_session() as db:
+        try:
+            # Test 1: Analyze script content
+            print("🎬 Test 1: Analyzing film script with AI")
 
-        script_content = """
-        FADE IN:
+            script_content = """
+            FADE IN:
 
-        EXT. COFFEE SHOP - DAY
+            EXT. COFFEE SHOP - DAY
 
-        A bustling coffee shop on a rainy afternoon. Customers with laptops and newspapers fill the tables.
+            A bustling coffee shop on a rainy afternoon. Customers with laptops and newspapers fill the tables.
 
-        JOHN (30s, tired businessman) enters, shaking off his umbrella. He orders a coffee and sits at the window.
+            JOHN (30s, tired businessman) enters, shaking off his umbrella. He orders a coffee and sits at the window.
 
-        JOHN
-        (to himself)
-        Another day, another dollar.
+            JOHN
+            (to himself)
+            Another day, another dollar.
 
-        Suddenly, his phone BUZZES. He checks it - a text from SARAH: "Emergency meeting. Client wants changes."
+            Suddenly, his phone BUZZES. He checks it - a text from SARAH: "Emergency meeting. Client wants changes."
 
-        John sighs heavily, stares out the window at the rain.
+            John sighs heavily, stares out the window at the rain.
 
-        CUT TO:
+            CUT TO:
 
-        INT. JOHN'S OFFICE - LATER
+            INT. JOHN'S OFFICE - LATER
 
-        John at his desk, frantically working on his computer. The phone rings again.
+            John at his desk, frantically working on his computer. The phone rings again.
 
-        JOHN
-        Hello? ... Yes, I understand. I'll have the revisions ready by morning.
+            JOHN
+            Hello? ... Yes, I understand. I'll have the revisions ready by morning.
 
-        He hangs up, buries his face in his hands.
+            He hangs up, buries his face in his hands.
 
-        JOHN
-        (whispering)
-        I need a vacation.
+            JOHN
+            (whispering)
+            I need a vacation.
 
-        FADE OUT.
-        """
+            FADE OUT.
+            """
 
-        analysis_result = await ai_engine_service.analyze_script_content(
-            organization_id=org_id,
-            script_content=script_content
-        )
+            analysis_result = await ai_engine_service.analyze_script_content(
+                organization_id=org_id,
+                script_content=script_content
+            )
 
-        print("✅ Script analysis completed!")
-        print(f"   📝 Characters found: {len(analysis_result.get('characters', []))}")
-        print(f"   📍 Locations found: {len(analysis_result.get('locations', []))}")
-        print(f"   🎭 Scenes found: {len(analysis_result.get('scenes', []))}")
+            print("✅ Script analysis completed!")
+            print(f"   📝 Characters found: {len(analysis_result.get('characters', []))}")
+            print(f"   📍 Locations found: {len(analysis_result.get('locations', []))}")
+            print(f"   🎭 Scenes found: {len(analysis_result.get('scenes', []))}")
 
-        # Test 2: Generate production suggestions
-        print("\n🎯 Test 2: Generating production suggestions")
+            # Test 2: Generate production suggestions
+            print("\n🎯 Test 2: Generating production suggestions")
 
-        suggestions = await ai_engine_service.suggest_production_elements(
-            organization_id=org_id,
-            script_analysis=analysis_result,
-            project_context={"budget": "medium", "timeline": "4 weeks"}
-        )
+            suggestions = await ai_engine_service.suggest_production_elements(
+                organization_id=org_id,
+                script_analysis=analysis_result,
+                project_context={"budget": "medium", "timeline": "4 weeks"}
+            )
 
-        print("✅ Production suggestions generated!")
-        print(f"   📋 Call sheet suggestions: {len(suggestions.get('call_sheet_suggestions', []))}")
-        print(f"   📷 Equipment recommendations: {len(suggestions.get('equipment_recommendations', []))}")
+            print("✅ Production suggestions generated!")
+            print(f"   📋 Call sheet suggestions: {len(suggestions.get('call_sheet_suggestions', []))}")
+            print(f"   📷 Equipment recommendations: {len(suggestions.get('equipment_recommendations', []))}")
 
-        # Test 3: Validate content ownership
-        print("\n🔒 Test 3: Validating content ownership")
-        ownership_valid = await ai_engine_service.validate_content_ownership(
-            organization_id=org_id,
-            content_hash="mock_hash",
-            content_type="script"
-        )
+            # Test 3: Validate content ownership
+            print("\n🔒 Test 3: Validating content ownership")
+            ownership_valid = await ai_engine_service.validate_content_ownership(
+                organization_id=org_id,
+                content_hash="mock_hash",
+                content_type="script"
+            )
 
-        print(f"✅ Content ownership validation: {'PASSED' if ownership_valid else 'FAILED'}")
+            print(f"✅ Content ownership validation: {'PASSED' if ownership_valid else 'FAILED'}")
 
-        print("\n🎉 AI Script Analysis Tests Completed!")
-        print("✅ GPT-4o script breakdown working")
-        print("✅ Production suggestions generated")
-        print("✅ Content ownership validation working")
-        print("✅ JSON structured output parsing working")
+            print("\n🎉 AI Script Analysis Tests Completed!")
+            print("✅ GPT-4o script breakdown working")
+            print("✅ Production suggestions generated")
+            print("✅ Content ownership validation working")
+            print("✅ JSON structured output parsing working")
 
-    finally:
-        await async_session.close()
+        finally:
+            await db.close()
 
 
 async def test_brain_integration():
@@ -245,36 +250,36 @@ async def test_brain_integration():
 
     async_session, org_id = await setup_test_data()
 
+    # Create a proposal first (separate session)
+    async with async_session() as db:
+        from app.modules.commercial.service import proposal_service
+        from app.schemas.proposals import ProposalCreate
+        from datetime import date
+
+        proposal_data = ProposalCreate(
+            client_id=uuid.UUID("44444444-5555-6666-7777-888888888888"),
+            title="Short Film Project",
+            description="A short film about work-life balance",
+            status="sent",
+            total_amount_cents=5000000,  # R$ 50,000.00
+            valid_until=date.today()
+        )
+
+        proposal = await proposal_service.create(
+            db=db,
+            organization_id=org_id,
+            obj_in=proposal_data
+        )
+        await db.commit()
+
+        print("📋 Test 1: Simulating proposal approval notifications")
+        print(f"✅ Created proposal: {proposal.title}")
+
+    # Approve the proposal (new session to avoid nested transaction issues)
     async with async_session() as db:
         try:
-            # Simulate a proposal approval triggering notifications
-            print("📋 Test 1: Simulating proposal approval notifications")
-
-            from app.modules.commercial.service import proposal_service
             from app.schemas.proposals import ProposalApproval
 
-            # Create a proposal first
-            from app.schemas.proposals import ProposalCreate
-            from datetime import date
-
-            proposal_data = ProposalCreate(
-                client_id=uuid.UUID("44444444-5555-6666-7777-888888888888"),
-                title="Short Film Project",
-                description="A short film about work-life balance",
-                status="sent",
-                total_amount_cents=5000000,  # R$ 50,000.00
-                valid_until=date.today()
-            )
-
-            proposal = await proposal_service.create(
-                db=db,
-                organization_id=org_id,
-                obj_in=proposal_data
-            )
-
-            print(f"✅ Created proposal: {proposal.title}")
-
-            # Approve the proposal (this should trigger notifications)
             approval_data = ProposalApproval(notes="Approved for production")
             approved_proposal = await proposal_service.approve_proposal(
                 db=db,

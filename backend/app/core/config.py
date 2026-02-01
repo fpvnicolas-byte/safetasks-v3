@@ -58,6 +58,10 @@ class Settings(BaseSettings):
     AI_MAX_TOKENS: int = 4000
     AI_TEMPERATURE: float = 0.7
 
+    # Financial automation
+    FINANCIAL_AUTOMATION_ENABLED: bool = False
+    DEFAULT_INVOICE_DUE_DAYS: int = 14
+
     # ✅ CORREÇÃO AQUI: Adicionando as variáveis de Storage para parar o erro
     # Supabase
     SUPABASE_URL: Optional[str] = None

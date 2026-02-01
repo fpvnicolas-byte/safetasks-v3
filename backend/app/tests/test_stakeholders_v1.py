@@ -39,12 +39,14 @@ async def setup_test_data():
             slug="stakeholder-test"
         )
         db.add(org)
+        await db.flush()
 
         # Admin user
         admin_user = Profile(
             id=uuid.UUID("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"),
             organization_id=org_id,
             full_name="Stakeholder Admin",
+            email="stakeholder.admin@test.com",
             role="admin"
         )
         db.add(admin_user)
@@ -60,7 +62,7 @@ async def setup_test_data():
 
         # Project
         project = Project(
-            id=uuid.UUID("cccccccc-dddd-eeee-ffff-gggggggggggg"),
+            id=uuid.UUID("cccccccc-dddd-eeee-ffff-aaaaaaaaaaaa"),
             organization_id=org_id,
             client_id=client.id,
             title="Commercial Shoot Project",
@@ -70,7 +72,7 @@ async def setup_test_data():
 
         # Bank Account
         bank_account = BankAccount(
-            id=uuid.UUID("dddddddd-eeee-ffff-gggg-hhhhhhhhhhhh"),
+            id=uuid.UUID("dddddddd-eeee-ffff-aaaa-bbbbbbbbbbbb"),
             organization_id=org_id,
             name="Operations Account",
             balance_cents=5000000,  # R$ 50,000.00
@@ -89,7 +91,7 @@ async def test_supplier_management():
     print("-" * 50)
 
     async_session, org_id = await setup_test_data()
-    project_id = uuid.UUID("cccccccc-dddd-eeee-ffff-gggggggggggg")
+    project_id = uuid.UUID("cccccccc-dddd-eeee-ffff-aaaaaaaaaaaa")
 
     async with async_session() as db:
         try:
@@ -186,8 +188,8 @@ async def test_transaction_supplier_linking():
     print("-" * 50)
 
     async_session, org_id = await setup_test_data()
-    project_id = uuid.UUID("cccccccc-dddd-eeee-ffff-gggggggggggg")
-    bank_account_id = uuid.UUID("dddddddd-eeee-ffff-gggg-hhhhhhhhhhhh")
+    project_id = uuid.UUID("cccccccc-dddd-eeee-ffff-aaaaaaaaaaaa")
+    bank_account_id = uuid.UUID("dddddddd-eeee-ffff-aaaa-bbbbbbbbbbbb")
 
     async with async_session() as db:
         try:
@@ -352,38 +354,39 @@ async def test_stakeholder_overview():
 
     async_session, org_id = await setup_test_data()
 
-    try:
-        print("Generating unified stakeholder overview...")
+    async with async_session() as db:
+        try:
+            print("Generating unified stakeholder overview...")
 
-        # Get stakeholder summary
-        summary = await stakeholder_service.get_stakeholder_summary(
-            db=async_session, organization_id=org_id
-        )
+            # Get stakeholder summary
+            summary = await stakeholder_service.get_stakeholder_summary(
+                db=db, organization_id=org_id
+            )
 
-        print("✅ Stakeholder Overview Generated!")
-        print(f"   Organization: {summary.organization_id}")
-        print(f"   Clients: {summary.total_clients}")
-        print(f"   Suppliers: {summary.total_suppliers}")
-        print(f"   Crew Members: {summary.total_crew}")
-        print(f"   Active Projects: {summary.total_active_projects}")
+            print("✅ Stakeholder Overview Generated!")
+            print(f"   Organization: {summary.organization_id}")
+            print(f"   Clients: {summary.total_clients}")
+            print(f"   Suppliers: {summary.total_suppliers}")
+            print(f"   Crew Members: {summary.total_crew}")
+            print(f"   Active Projects: {summary.total_active_projects}")
 
-        print(f"\n👥 CLIENT STAKEHOLDERS ({len(summary.clients)}):")
-        for client in summary.clients[:3]:  # Show first 3
-            print(f"   {client['name']} - {client['relationship']}")
+            print(f"\n👥 CLIENT STAKEHOLDERS ({len(summary.clients)}):")
+            for client in summary.clients[:3]:  # Show first 3
+                print(f"   {client['name']} - {client['relationship']}")
 
-        print(f"\n🏢 SUPPLIER STAKEHOLDERS ({len(summary.suppliers)}):")
-        for supplier in summary.suppliers[:3]:  # Show first 3
-            spent = supplier['total_spent_cents'] / 100
-            print(f"   {supplier['name']} ({supplier['category']}) - R$ {spent:.2f} spent")
+            print(f"\n🏢 SUPPLIER STAKEHOLDERS ({len(summary.suppliers)}):")
+            for supplier in summary.suppliers[:3]:  # Show first 3
+                spent = supplier['total_spent_cents'] / 100
+                print(f"   {supplier['name']} ({supplier['category']}) - R$ {spent:.2f} spent")
 
-        print(f"\n👷 CREW STAKEHOLDERS ({len(summary.crew_members)}):")
-        for crew in summary.crew_members[:3]:  # Show first 3
-            print(f"   {crew['name']} - {crew['role']}")
+            print(f"\n👷 CREW STAKEHOLDERS ({len(summary.crew_members)}):")
+            for crew in summary.crew_members[:3]:  # Show first 3
+                print(f"   {crew['name']} - {crew['role']}")
 
-        print("\n✅ STAKEHOLDER OVERVIEW: Complete ecosystem visibility!")
+            print("\n✅ STAKEHOLDER OVERVIEW: Complete ecosystem visibility!")
 
-    finally:
-        await async_session.close()
+        finally:
+            await db.close()
 
 
 async def main():

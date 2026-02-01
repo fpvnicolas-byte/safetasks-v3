@@ -37,19 +37,21 @@ async def setup_test_data():
             slug="drone-prod"
         )
         db.add(org)
+        await db.flush()
 
         # Admin user
         admin_user = Profile(
             id=uuid.UUID("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"),
             organization_id=org_id,
             full_name="Maintenance Admin",
+            email="maintenance.admin@test.com",
             role="admin"
         )
         db.add(admin_user)
 
         # Kit (Drone Kit)
         kit = Kit(
-            id=uuid.UUID("cccccccc-dddd-eeee-ffff-gggggggggggg"),
+            id=uuid.UUID("cccccccc-dddd-eeee-ffff-aaaaaaaaaaaa"),
             organization_id=org_id,
             name="Professional Drone Kit",
             description="Complete drone cinematography setup",
@@ -60,7 +62,7 @@ async def setup_test_data():
 
         # Bank Account
         bank_account = BankAccount(
-            id=uuid.UUID("dddddddd-eeee-ffff-gggg-hhhhhhhhhhhh"),
+            id=uuid.UUID("dddddddd-eeee-ffff-aaaa-bbbbbbbbbbbb"),
             organization_id=org_id,
             name="Operations Account",
             balance_cents=1000000,  # R$ 10,000.00
@@ -79,7 +81,7 @@ async def test_kit_item_management():
     print("-" * 50)
 
     async_session, org_id = await setup_test_data()
-    kit_id = uuid.UUID("cccccccc-dddd-eeee-ffff-gggggggggggg")
+    kit_id = uuid.UUID("cccccccc-dddd-eeee-ffff-aaaaaaaaaaaa")
 
     async with async_session() as db:
         try:
@@ -139,7 +141,7 @@ async def test_kit_item_management():
             # Verify kit items
             print("\nRetrieving registered equipment...")
             all_items = await kit_item_service.get_multi(
-                db=db, organization_id=org_id, kit_id=kit_id
+                db=db, organization_id=org_id, filters={"kit_id": kit_id}
             )
 
             print(f"Found {len(all_items)} items in kit:")
@@ -199,8 +201,7 @@ async def test_usage_tracking_and_health():
                     print(f"⚠️  Health status changed to: needs_service")
 
             # Generate health report
-            print("
-Generating health report...")
+            print("\nGenerating health report...")
             health_report = await inventory_health_service.generate_health_report(
                 db=db, organization_id=org_id
             )
@@ -278,8 +279,7 @@ async def test_maintenance_lifecycle():
             )
 
             if updated_item:
-                print("
-Updated Item Status:")
+                print("\nUpdated Item Status:")
                 print(f"   Health Status: {updated_item.health_status}")
                 print(f"   Last Maintenance: {updated_item.last_maintenance_date}")
                 print(f"   Current Usage: {updated_item.current_usage_hours}h")
@@ -289,8 +289,7 @@ Updated Item Status:")
                 db=db, organization_id=org_id, kit_item_id=kit_item.id
             )
 
-            print("
-Maintenance History:")
+            print("\nMaintenance History:")
             print(f"   Total Maintenance Cost: R$ {history.total_maintenance_cost_cents / 100:.2f}")
             print(f"   Total Services: {history.maintenance_count}")
             print(f"   Last Service: {history.last_maintenance_date}")
@@ -308,41 +307,41 @@ async def test_inventory_health_alerts():
 
     async_session, org_id = await setup_test_data()
 
-    try:
-        print("Testing inventory health monitoring...")
+    async with async_session() as db:
+        try:
+            print("Testing inventory health monitoring...")
 
-        # Generate health report
-        health_report = await inventory_health_service.generate_health_report(
-            db=async_session, organization_id=org_id
-        )
+            # Generate health report
+            health_report = await inventory_health_service.generate_health_report(
+                db=db, organization_id=org_id
+            )
 
-        print("✅ Health Check Completed!")
-        print(f"   Total Items: {health_report.total_items}")
+            print("✅ Health Check Completed!")
+            print(f"   Total Items: {health_report.total_items}")
 
-        if health_report.items_needing_maintenance:
-            print(f"\n⚠️  MAINTENANCE ALERTS ({len(health_report.items_needing_maintenance)}):")
-            for alert in health_report.items_needing_maintenance[:3]:
-                print(f"   {alert['name']} - {alert['days_since_last_maintenance']} days overdue")
+            if health_report.items_needing_maintenance:
+                print(f"\n⚠️  MAINTENANCE ALERTS ({len(health_report.items_needing_maintenance)}):")
+                for alert in health_report.items_needing_maintenance[:3]:
+                    print(f"   {alert['name']} - {alert['days_since_last_maintenance']} days overdue")
 
-        if health_report.items_over_usage_limit:
-            print(f"\n🔴 USAGE LIMIT ALERTS ({len(health_report.items_over_usage_limit)}):")
-            for alert in health_report.items_over_usage_limit[:3]:
-                print(f"   {alert['name']} - {alert['usage_percentage']:.1f}% usage")
-        # Send alerts (this would normally go to admins)
-        alert_result = await inventory_health_service.check_and_send_alerts(
-            db=async_session, organization_id=org_id
-        )
+            if health_report.items_over_usage_limit:
+                print(f"\n🔴 USAGE LIMIT ALERTS ({len(health_report.items_over_usage_limit)}):")
+                for alert in health_report.items_over_usage_limit[:3]:
+                    print(f"   {alert['name']} - {alert['usage_percentage']:.1f}% usage")
+            # Send alerts (this would normally go to admins)
+            alert_result = await inventory_health_service.check_and_send_alerts(
+                db=db, organization_id=org_id
+            )
 
-        print("
-Alert System Test:")
-        print(f"   Maintenance Alerts Found: {alert_result['maintenance_alerts']}")
-        print(f"   Usage Alerts Found: {alert_result['usage_alerts']}")
-        print(f"   Alerts Sent: {alert_result['alerts_sent']}")
+            print("\nAlert System Test:")
+            print(f"   Maintenance Alerts Found: {alert_result['maintenance_alerts']}")
+            print(f"   Usage Alerts Found: {alert_result['usage_alerts']}")
+            print(f"   Alerts Sent: {alert_result['alerts_sent']}")
 
-        print("\n✅ HEALTH ALERTS: Proactive maintenance monitoring active!")
+            print("\n✅ HEALTH ALERTS: Proactive maintenance monitoring active!")
 
-    finally:
-        await async_session.close()
+        finally:
+            await db.close()
 
 
 async def test_comprehensive_lifecycle():
@@ -370,8 +369,7 @@ async def test_comprehensive_lifecycle():
             print(f"   Initial Usage: {equipment.current_usage_hours}h")
 
             # 3. Simulate production usage
-            print("
-🎬 Production Phase:")
+            print("\n🎬 Production Phase:")
             production_usage = [
                 {"hours": 45.0, "description": "Feature film shoot - Day 1"},
                 {"hours": 35.0, "description": "Commercial shoot - Day 2"},
@@ -424,8 +422,7 @@ async def test_comprehensive_lifecycle():
                 db=db, organization_id=org_id, id=equipment.id
             )
 
-            print("
-🏆 Final Equipment Status:")
+            print("\n🏆 Final Equipment Status:")
             print(f"   Health: {final_equipment.health_status}")
             print(f"   Total Usage: {final_equipment.current_usage_hours}h")
             print(f"   Last Maintenance: {final_equipment.last_maintenance_date}")
@@ -436,8 +433,7 @@ async def test_comprehensive_lifecycle():
                 db=db, organization_id=org_id, kit_item_id=equipment.id
             )
 
-            print("
-📈 Lifecycle Summary:")
+            print("\n📈 Lifecycle Summary:")
             print(f"   Total Maintenance Events: {history.maintenance_count}")
             print(f"   Total Maintenance Cost: R$ {history.total_maintenance_cost_cents / 100:.2f}")
             print(f"   Purchase Cost: R$ {final_equipment.purchase_cost_cents / 100:.0f}")

@@ -140,42 +140,62 @@ class ProjectService(BaseService[ProjectModel, ProjectCreate, ProjectUpdate]):
             options=final_options
         )
 
-    async def create(self, db, *, organization_id, obj_in):
-        """Create project with services."""
+    async def create(self, db, *, organization_id, obj_in, commit: bool = True):
+        """Create project with services. Auto-adds service values to budget."""
         # Handle service_ids
         service_ids = obj_in.service_ids
         del obj_in.service_ids
-        
+
         # Create project object manually to handle M2M
         obj_data = obj_in.model_dump()
         db_obj = self.model(**obj_data)
         db_obj.organization_id = organization_id
-        
+
         if service_ids:
             from sqlalchemy import select
             result = await db.execute(select(ServiceModel).where(ServiceModel.id.in_(service_ids)))
             services = result.scalars().all()
             db_obj.services = services
 
+            # Auto-add service values to budget
+            services_total = sum(s.value_cents for s in services)
+            db_obj.budget_total_cents = (db_obj.budget_total_cents or 0) + services_total
+
         db.add(db_obj)
-        await db.commit()
-        await db.refresh(db_obj)
+        if commit:
+            await db.commit()
+            await db.refresh(db_obj)
+        else:
+            await db.flush()
+            await db.refresh(db_obj)
         return db_obj
 
     async def update(self, db, *, organization_id, id, obj_in):
-        """Update project with services."""
+        """Update project with services. Auto-updates budget when services change."""
         # Handle service_ids
         if obj_in.service_ids is not None:
-             # Fetch services
             from sqlalchemy import select
-            result = await db.execute(select(ServiceModel).where(ServiceModel.id.in_(obj_in.service_ids)))
-            services = result.scalars().all()
-            
-            # We need to load existing project to update relationship
+
+            # Get existing project with services
             project = await self.get(db=db, organization_id=organization_id, id=id)
             if project:
+                # Calculate old services total
+                old_services_total = sum(s.value_cents for s in project.services)
+
+                # Fetch new services
+                result = await db.execute(select(ServiceModel).where(ServiceModel.id.in_(obj_in.service_ids)))
+                services = result.scalars().all()
+
+                # Calculate new services total
+                new_services_total = sum(s.value_cents for s in services)
+
+                # Update budget: remove old services value, add new services value
+                budget_delta = new_services_total - old_services_total
+                project.budget_total_cents = (project.budget_total_cents or 0) + budget_delta
+
+                # Update services relationship
                 project.services = services
-                
+
             del obj_in.service_ids
 
         return await super().update(db=db, organization_id=organization_id, id=id, obj_in=obj_in)
@@ -224,16 +244,16 @@ class ProposalService(BaseService[ProposalModel, ProposalCreate, ProposalUpdate]
         approval_data: ProposalApproval
     ) -> ProposalModel:
         """Approve proposal and automatically convert to project."""
-        # Get the proposal
-        proposal = await self.get(db=db, organization_id=organization_id, id=proposal_id)
-        if not proposal:
-            raise ValueError("Proposal not found")
-
-        if proposal.status != "sent":
-            raise ValueError("Only proposals with 'sent' status can be approved")
-
         # Use transaction context to ensure atomic operations
         async with db.begin():
+            # Get the proposal inside the transaction
+            proposal = await self.get(db=db, organization_id=organization_id, id=proposal_id)
+            if not proposal:
+                raise ValueError("Proposal not found")
+
+            if proposal.status != "sent":
+                raise ValueError("Only proposals with 'sent' status can be approved")
+
             # Update proposal status
             proposal.status = "approved"
             if approval_data.notes:
@@ -246,17 +266,28 @@ class ProposalService(BaseService[ProposalModel, ProposalCreate, ProposalUpdate]
                 title=proposal.title,
                 description=proposal.description,
                 status="pre-production",  # Default status for new projects
-                service_ids=[s.id for s in proposal.services] # Copy services from proposal
+                service_ids=[s.id for s in proposal.services]  # Copy services from proposal
             )
 
             project = await project_service.create(
                 db=db,
                 organization_id=organization_id,
-                obj_in=project_data
+                obj_in=project_data,
+                commit=False
             )
 
             # Link the project back to the proposal
             proposal.project_id = project.id
+
+            # Create invoice from approved proposal when automation is enabled
+            from app.core.config import settings
+            if settings.FINANCIAL_AUTOMATION_ENABLED:
+                from app.services.financial_advanced import invoice_service
+                await invoice_service.create_from_proposal(
+                    db=db,
+                    organization_id=organization_id,
+                    proposal=proposal
+                )
 
             # Flush changes to database before notifications
             await db.flush()

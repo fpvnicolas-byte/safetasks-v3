@@ -21,12 +21,18 @@ export function useProject(projectId: string, organizationId?: string) {
   })
 }
 
-export function useCreateProject(organizationId: string) {
+export function useCreateProject(organizationId?: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: ProjectCreate) =>
-      apiClient.post<Project>(`/api/v1/projects/?organization_id=${organizationId}`, data),
+    mutationFn: (data: ProjectCreate) => {
+      if (!organizationId) {
+        throw new Error('Missing organization_id for project creation')
+      }
+      const params = new URLSearchParams()
+      params.append('organization_id', organizationId)
+      return apiClient.post<Project>(`/api/v1/projects/?${params.toString()}`, data)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [PROJECTS_KEY, organizationId] })
     },

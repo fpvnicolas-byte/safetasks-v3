@@ -16,7 +16,12 @@ async def test_google_drive_file_auth():
     print("=" * 50)
 
     # Check if service account file exists
-    credentials_path = settings.GOOGLE_APPLICATION_CREDENTIALS
+    credentials_path = getattr(settings, "GOOGLE_APPLICATION_CREDENTIALS", None) or os.getenv(
+        "GOOGLE_APPLICATION_CREDENTIALS"
+    )
+    if not credentials_path:
+        print("⚠️  GOOGLE_APPLICATION_CREDENTIALS not set; skipping file auth validation.")
+        return True
     print(f"📁 Checking credentials file: {credentials_path}")
 
     if not os.path.exists(credentials_path):

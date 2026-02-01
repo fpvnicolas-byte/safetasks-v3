@@ -38,6 +38,7 @@ async def setup_test_data():
             slug="test-org"
         )
         db.add(org)
+        await db.flush()
 
         # Create users with different roles
         users = [
@@ -46,6 +47,7 @@ async def setup_test_data():
                 id=uuid.UUID("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"),
                 organization_id=org_id,
                 full_name="Admin User",
+                email="admin@test.com",
                 role="admin"
             ),
             # Manager user
@@ -53,20 +55,23 @@ async def setup_test_data():
                 id=uuid.UUID("bbbbbbbb-cccc-dddd-eeee-ffffffffffff"),
                 organization_id=org_id,
                 full_name="Manager User",
+                email="manager@test.com",
                 role="manager"
             ),
             # Crew user
             Profile(
-                id=uuid.UUID("cccccccc-dddd-eeee-ffff-gggggggggggg"),
+                id=uuid.UUID("cccccccc-dddd-eeee-ffff-aaaaaaaaaaaa"),
                 organization_id=org_id,
                 full_name="Crew User",
+                email="crew@test.com",
                 role="crew"
             ),
             # Viewer user
             Profile(
-                id=uuid.UUID("dddddddd-eeee-ffff-gggg-hhhhhhhhhhhh"),
+                id=uuid.UUID("dddddddd-eeee-ffff-aaaa-bbbbbbbbbbbb"),
                 organization_id=org_id,
                 full_name="Viewer User",
+                email="viewer@test.com",
                 role="viewer"
             )
         ]
@@ -76,7 +81,7 @@ async def setup_test_data():
 
         # Create a client
         client = Client(
-            id=uuid.UUID("eeeeeeee-ffff-gggg-hhhh-iiiiiiiiiiii"),
+            id=uuid.UUID("eeeeeeee-ffff-aaaa-bbbb-cccccccccccc"),
             organization_id=org_id,
             name="Test Client",
             email="client@test.com"
@@ -85,7 +90,7 @@ async def setup_test_data():
 
         # Create a bank account
         bank_account = BankAccount(
-            id=uuid.UUID("ffffffff-gggg-hhhh-iiii-jjjjjjjjjjjj"),
+            id=uuid.UUID("ffffffff-aaaa-bbbb-cccc-dddddddddddd"),
             organization_id=org_id,
             name="Test Bank Account",
             balance_cents=0,
@@ -155,8 +160,8 @@ async def test_rbac_permissions():
                 user_profiles = {
                     "admin": uuid.UUID("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"),
                     "manager": uuid.UUID("bbbbbbbb-cccc-dddd-eeee-ffffffffffff"),
-                    "crew": uuid.UUID("cccccccc-dddd-eeee-ffff-gggggggggggg"),
-                    "viewer": uuid.UUID("dddddddd-eeee-ffff-gggg-hhhhhhhhhhhh")
+                    "crew": uuid.UUID("cccccccc-dddd-eeee-ffff-aaaaaaaaaaaa"),
+                    "viewer": uuid.UUID("dddddddd-eeee-ffff-aaaa-bbbbbbbbbbbb")
                 }
 
                 user_id = user_profiles[role]
@@ -210,6 +215,7 @@ async def test_rbac_permissions():
                 id=uuid.UUID("33333333-4444-5555-6666-777777777777"),
                 organization_id=other_org_id,
                 full_name="Other Org Admin",
+                email="other.admin@test.com",
                 role="admin"
             )
             db.add(other_user)

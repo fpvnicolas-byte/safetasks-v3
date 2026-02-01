@@ -28,6 +28,7 @@ class Organization(Base):
     plan_id = Column(UUID(as_uuid=True), ForeignKey("plans.id"), nullable=True)
     billing_contact_user_id = Column(UUID(as_uuid=True), ForeignKey("profiles.id"), nullable=True)
     owner_profile_id = Column(UUID(as_uuid=True), ForeignKey("profiles.id"), nullable=True)
+    default_bank_account_id = Column(UUID(as_uuid=True), ForeignKey("bank_accounts.id"), nullable=True)
 
     # Status management
     is_active = Column(Boolean, default=True, nullable=False)

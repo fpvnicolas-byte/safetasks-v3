@@ -13,9 +13,12 @@ from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
 from app.models.organizations import Organization
 from app.models.profiles import Profile
+from app.models.clients import Client
 from app.models.projects import Project
+from app.models.bank_accounts import BankAccount
 from app.models.transactions import Transaction
 from app.models.inventory import KitItem
+from app.models.kits import Kit
 from app.models.cloud import CloudSyncStatus
 from app.services.analytics import analytics_service
 
@@ -38,23 +41,44 @@ async def setup_test_data():
             slug="epic-productions"
         )
         db.add(org)
+        await db.flush()
+
+        # Create a bank account for financial transactions
+        bank_account = BankAccount(
+            id=uuid.uuid4(),
+            organization_id=org_id,
+            name="Operating Account",
+            balance_cents=0,
+            currency="BRL"
+        )
+        db.add(bank_account)
 
         # Create admin user
         admin_user = Profile(
             id=uuid.UUID("bbbbbbbb-cccc-dddd-eeee-ffffffffffff"),
             organization_id=org_id,
             full_name="João Silva - CEO",
+            email="ceo@epic-productions.test",
             role="admin"
         )
         db.add(admin_user)
 
+        # Create a client for projects
+        client = Client(
+            id=uuid.UUID("cccccccc-dddd-eeee-ffff-aaaaaaaaaaaa"),
+            organization_id=org_id,
+            name="Enterprise Client",
+            email="billing@enterprise.test"
+        )
+        db.add(client)
+
         # Create projects with different statuses
         projects_data = [
             ("Feature Film - The Last Journey", "production", 45000000),  # R$ 450k budget
-            ("Commercial - Tech Startup", "post_production", 15000000),  # R$ 150k budget
-            ("Documentary - Amazon Rainforest", "planning", 8000000),   # R$ 80k budget
-            ("Music Video - Pop Artist", "completed", 2500000),         # R$ 25k budget
-            ("Short Film - Student Project", "pre_production", 500000), # R$ 5k budget
+            ("Commercial - Tech Startup", "post-production", 15000000),  # R$ 150k budget
+            ("Documentary - Amazon Rainforest", "pre-production", 8000000),   # R$ 80k budget
+            ("Music Video - Pop Artist", "delivered", 2500000),         # R$ 25k budget
+            ("Short Film - Student Project", "pre-production", 500000), # R$ 5k budget
         ]
 
         projects = []
@@ -62,9 +86,10 @@ async def setup_test_data():
             project = Project(
                 id=uuid.uuid4(),
                 organization_id=org_id,
+                client_id=client.id,
                 title=title,
                 status=status,
-                budget_cents=budget_cents
+                budget_total_cents=budget_cents
             )
             projects.append(project)
             db.add(project)
@@ -79,6 +104,7 @@ async def setup_test_data():
                              6500000, 7900000, 8800000, 7100000, 9300000, 7600000]
             revenue_txn = Transaction(
                 organization_id=org_id,
+                bank_account_id=bank_account.id,
                 type="income",
                 category="production_revenue",
                 amount_cents=revenue_amounts[month_offset],
@@ -95,6 +121,7 @@ async def setup_test_data():
             for i, (category, amount) in enumerate(zip(expense_categories, [expense_amounts[month_offset] // 4] * 4)):
                 expense_txn = Transaction(
                     organization_id=org_id,
+                    bank_account_id=bank_account.id,
                     type="expense",
                     category=category,
                     amount_cents=amount,
@@ -106,6 +133,7 @@ async def setup_test_data():
             # Maintenance expenses (equipment service)
             maintenance_txn = Transaction(
                 organization_id=org_id,
+                bank_account_id=bank_account.id,
                 type="expense",
                 category="maintenance",
                 amount_cents=850000,  # R$ 8,500
@@ -115,6 +143,15 @@ async def setup_test_data():
             db.add(maintenance_txn)
 
         # Create equipment inventory
+        kit = Kit(
+            id=uuid.uuid4(),
+            organization_id=org_id,
+            name="Production Gear Kit",
+            category="camera",
+            status="available"
+        )
+        db.add(kit)
+
         equipment_data = [
             ("RED Helium 8K Camera", "camera", "excellent", 120.5, 15000000),
             ("DJI Ronin RS3 Pro Gimbal", "gimbal", "good", 89.3, 800000),
@@ -129,6 +166,7 @@ async def setup_test_data():
         for name, category, health, usage_hours, cost_cents in equipment_data:
             item = KitItem(
                 organization_id=org_id,
+                kit_id=kit.id,
                 name=name,
                 category=category,
                 health_status=health,
@@ -165,122 +203,124 @@ async def test_executive_dashboard():
 
     async_session, org_id = await setup_test_data()
 
-    try:
-        print("Generating comprehensive executive dashboard...")
+    async with async_session() as db:
+        try:
+            print("Generating comprehensive executive dashboard...")
 
-        # Generate dashboard data
-        dashboard = await analytics_service.get_executive_dashboard(
-            organization_id=org_id,
-            db=async_session,
-            months_back=12
-        )
+            # Generate dashboard data
+            dashboard = await analytics_service.get_executive_dashboard(
+                organization_id=org_id,
+                db=db,
+                months_back=12
+            )
 
-        print("
-✅ DASHBOARD GENERATED SUCCESSFULLY!"        print(f"📅 Analysis Period: {dashboard['period']['start_date']} to {dashboard['period']['end_date']}")
-        print(f"🏢 Organization: Epic Productions Ltd")
+            print("\n✅ DASHBOARD GENERATED SUCCESSFULLY!")
+            print(f"📅 Analysis Period: {dashboard['period']['start_date']} to {dashboard['period']['end_date']}")
+            print(f"🏢 Organization: Epic Productions Ltd")
 
-        # Financial Overview
-        print("
-💰 FINANCIAL PERFORMANCE:"        print("-" * 40)
+            # Financial Overview
+            print("\n💰 FINANCIAL PERFORMANCE:")
+            print("-" * 40)
 
-        financial = dashboard['financial']
+            financial = dashboard['financial']
 
-        # Month-to-Date
-        mtd = financial['month_to_date']
-        print("📈 MONTH-TO-DATE (Current Month):")
-        print(f"   Revenue: R$ {mtd['revenue_brl']:,.0f} ({mtd['profit_margin']:.1f}% margin)")
-        print(f"   Expenses: R$ {mtd['expenses_brl']:,.0f}")
-        print(f"   Net Profit: R$ {mtd['net_profit_brl']:,.0f}")
+            # Month-to-Date
+            mtd = financial['month_to_date']
+            print("📈 MONTH-TO-DATE (Current Month):")
+            print(f"   Revenue: R$ {mtd['revenue_brl']:,.0f} ({mtd['profit_margin']:.1f}% margin)")
+            print(f"   Expenses: R$ {mtd['expenses_brl']:,.0f}")
+            print(f"   Net Profit: R$ {mtd['net_profit_brl']:,.0f}")
 
-        # Year-to-Date
-        ytd = financial['year_to_date']
-        print("
-📊 YEAR-TO-DATE (Full Year):"        print(f"   Revenue: R$ {ytd['revenue_brl']:,.0f} ({ytd['profit_margin']:.1f}% margin)")
-        print(f"   Expenses: R$ {ytd['expenses_brl']:,.0f}")
-        print(f"   Net Profit: R$ {ytd['net_profit_brl']:,.0f}")
-        print(f"   Cash Flow Projection: R$ {financial['cash_flow_projection_brl']:,.0f}")
+            # Year-to-Date
+            ytd = financial['year_to_date']
+            print("\n📊 YEAR-TO-DATE (Full Year):")
+            print(f"   Revenue: R$ {ytd['revenue_brl']:,.0f} ({ytd['profit_margin']:.1f}% margin)")
+            print(f"   Expenses: R$ {ytd['expenses_brl']:,.0f}")
+            print(f"   Net Profit: R$ {ytd['net_profit_brl']:,.0f}")
+            print(f"   Cash Flow Projection: R$ {financial['cash_flow_projection_brl']:,.0f}")
 
-        # Production Overview
-        print("
-🎬 PRODUCTION METRICS:"        print("-" * 40)
+            # Production Overview
+            print("\n🎬 PRODUCTION METRICS:")
+            print("-" * 40)
 
-        production = dashboard['production']
-        print(f"🎯 Active Projects: {production['active_projects']}")
-        print(f"📋 Total Projects: {production['total_projects']}")
+            production = dashboard['production']
+            print(f"🎯 Active Projects: {production['active_projects']}")
+            print(f"📋 Total Projects: {production['total_projects']}")
 
-        print("
-📊 Project Status Breakdown:"        for status, count in production['projects_by_status'].items():
-            status_icon = {
-                'planning': '📝',
-                'pre_production': '🎭',
-                'production': '🎥',
-                'post_production': '✂️',
-                'completed': '✅'
-            }.get(status, '📄')
-            print(f"   {status_icon} {status.replace('_', ' ').title()}: {count}")
+            print("\n📊 Project Status Breakdown:")
+            for status, count in production['projects_by_status'].items():
+                status_icon = {
+                    'planning': '📝',
+                    'pre_production': '🎭',
+                    'production': '🎥',
+                    'post_production': '✂️',
+                    'completed': '✅'
+                }.get(status, '📄')
+                print(f"   {status_icon} {status.replace('_', ' ').title()}: {count}")
 
-        print(f"⏰ Avg Project Duration: {production['production_efficiency']['avg_project_duration_days']} days")
-        print(f"🎯 On-Time Delivery Rate: {production['production_efficiency']['on_time_delivery_rate']:.1f}%")
+            print(f"⏰ Avg Project Duration: {production['production_efficiency']['avg_project_duration_days']} days")
+            print(f"🎯 On-Time Delivery Rate: {production['production_efficiency']['on_time_delivery_rate']:.1f}%")
 
-        # Inventory Health
-        print("
-🔧 EQUIPMENT & INVENTORY:"        print("-" * 40)
+            # Inventory Health
+            print("\n🔧 EQUIPMENT & INVENTORY:")
+            print("-" * 40)
 
-        inventory = dashboard['inventory']
-        print(f"📦 Total Equipment: {inventory['total_items']}")
-        print(f"❤️  Health Score: {inventory['inventory_health_score']:.1f}/100")
+            inventory = dashboard['inventory']
+            print(f"📦 Total Equipment: {inventory['total_items']}")
+            print(f"❤️  Health Score: {inventory['inventory_health_score']:.1f}/100")
 
-        print("
-🏥 Equipment by Health Status:"        for status, count in inventory['items_by_health'].items():
-            health_icon = {
-                'excellent': '💚',
-                'good': '💛',
-                'needs_service': '🟡',
-                'broken': '💔',
-                'retired': '⚫'
-            }.get(status, '⚪')
-            print(f"   {health_icon} {status.replace('_', ' ').title()}: {count}")
+            print("\n🏥 Equipment by Health Status:")
+            for status, count in inventory['items_by_health'].items():
+                status_key = status.value if hasattr(status, "value") else status
+                health_icon = {
+                    'excellent': '💚',
+                    'good': '💛',
+                    'needs_service': '🟡',
+                    'broken': '💔',
+                    'retired': '⚫'
+                }.get(status_key, '⚪')
+                print(f"   {health_icon} {status_key.replace('_', ' ').title()}: {count}")
 
-        print(f"🔧 Items Needing Service: {inventory['items_needing_service']}")
-        print(f"⏰ Maintenance Overdue: {inventory['maintenance_overdue']}")
-        print(f"⚙️  Equipment Utilization: {inventory['equipment_utilization_rate']:.1f}%")
-        print(f"🛠️  Maintenance Cost (YTD): R$ {inventory['maintenance_cost_brl']:,.0f}")
+            print(f"🔧 Items Needing Service: {inventory['items_needing_service']}")
+            print(f"⏰ Maintenance Overdue: {inventory['maintenance_overdue']}")
+            print(f"⚙️  Equipment Utilization: {inventory['equipment_utilization_rate']:.1f}%")
+            print(f"🛠️  Maintenance Cost (YTD): R$ {inventory['maintenance_cost_brl']:,.0f}")
 
-        # Cloud Operations
-        print("
-☁️  CLOUD SYNC & STORAGE:"        print("-" * 40)
+            # Cloud Operations
+            print("\n☁️  CLOUD SYNC & STORAGE:")
+            print("-" * 40)
 
-        cloud = dashboard['cloud']
-        print(f"🔄 Total Sync Operations: {cloud['total_sync_operations']}")
-        print(f"✅ Success Rate: {cloud['sync_success_rate']:.1f}%")
-        print(f"❌ Failed Syncs: {cloud['failed_syncs']}")
-        print(f"💾 Estimated Storage Used: {cloud['estimated_storage_used_gb']:.1f} GB")
-        print(f"📊 Recent Activity (30 days): {cloud['recent_sync_activity_30_days']} syncs")
+            cloud = dashboard['cloud']
+            print(f"🔄 Total Sync Operations: {cloud['total_sync_operations']}")
+            print(f"✅ Success Rate: {cloud['sync_success_rate']:.1f}%")
+            print(f"❌ Failed Syncs: {cloud['failed_syncs']}")
+            print(f"💾 Estimated Storage Used: {cloud['estimated_storage_used_gb']:.1f} GB")
+            print(f"📊 Recent Activity (30 days): {cloud['recent_sync_activity_30_days']} syncs")
 
-        health_status_icon = "💚" if cloud['cloud_health_status'] == "healthy" else "🟡" if cloud['cloud_health_status'] == "warning" else "💔"
-        print(f"🏥 Cloud Health Status: {health_status_icon} {cloud['cloud_health_status'].title()}")
+            health_status_icon = "💚" if cloud['cloud_health_status'] == "healthy" else "🟡" if cloud['cloud_health_status'] == "warning" else "💔"
+            print(f"🏥 Cloud Health Status: {health_status_icon} {cloud['cloud_health_status'].title()}")
 
-        # Key Insights
-        print("
-🎯 KEY BUSINESS INSIGHTS:"        print("-" * 40)
+            # Key Insights
+            print("\n🎯 KEY BUSINESS INSIGHTS:")
+            print("-" * 40)
 
-        trends = dashboard['trends']
-        for insight in trends['key_insights']:
-            print(f"💡 {insight}")
+            trends = dashboard['trends']
+            for insight in trends['key_insights']:
+                print(f"💡 {insight}")
 
-        print("
-📈 TREND ANALYSIS:"        monthly_trends = trends['monthly_financial_trends']
-        if len(monthly_trends) >= 2:
-            recent_months = monthly_trends[:3]  # Last 3 months
-            for trend in recent_months:
-                profit_icon = "📈" if trend['net_profit_cents'] > 0 else "📉"
-                print(f"   {trend['month']}: {profit_icon} R$ {trend['net_profit_cents']/100:,.0f} profit")
+            print("\n📈 TREND ANALYSIS:")
+            monthly_trends = trends['monthly_financial_trends']
+            if len(monthly_trends) >= 2:
+                recent_months = monthly_trends[:3]  # Last 3 months
+                for trend in recent_months:
+                    profit_icon = "📈" if trend['net_profit_cents'] > 0 else "📉"
+                    print(f"   {trend['month']}: {profit_icon} R$ {trend['net_profit_cents']/100:,.0f} profit")
 
-        print("
-🎉 EXECUTIVE DASHBOARD: Complete business intelligence generated!"        print("=" * 80)
+            print("\n🎉 EXECUTIVE DASHBOARD: Complete business intelligence generated!")
+            print("=" * 80)
 
-    finally:
-        await async_session.close()
+        finally:
+            await db.close()
 
 
 async def test_dashboard_endpoints():
@@ -290,35 +330,36 @@ async def test_dashboard_endpoints():
 
     async_session, org_id = await setup_test_data()
 
-    try:
-        print("Testing focused dashboard endpoints...")
+    async with async_session() as db:
+        try:
+            print("Testing focused dashboard endpoints...")
 
-        # Test Financial Dashboard
-        print("💰 Testing Financial Dashboard...")
-        financial_data = await analytics_service._get_financial_metrics(
-            org_id, datetime.now() - timedelta(days=365), datetime.now(), async_session
-        )
-        print(f"   ✅ Financial metrics: R$ {financial_data['year_to_date']['revenue_brl']:,.0f} YTD revenue")
+            # Test Financial Dashboard
+            print("💰 Testing Financial Dashboard...")
+            financial_data = await analytics_service._get_financial_metrics(
+                org_id, datetime.now() - timedelta(days=365), datetime.now(), db
+            )
+            print(f"   ✅ Financial metrics: R$ {financial_data['year_to_date']['revenue_brl']:,.0f} YTD revenue")
 
-        # Test Production Dashboard
-        print("🎬 Testing Production Dashboard...")
-        production_data = await analytics_service._get_production_metrics(org_id, async_session)
-        print(f"   ✅ Production metrics: {production_data['active_projects']} active projects")
+            # Test Production Dashboard
+            print("🎬 Testing Production Dashboard...")
+            production_data = await analytics_service._get_production_metrics(org_id, db)
+            print(f"   ✅ Production metrics: {production_data['active_projects']} active projects")
 
-        # Test Inventory Dashboard
-        print("🔧 Testing Inventory Dashboard...")
-        inventory_data = await analytics_service._get_inventory_metrics(org_id, async_session)
-        print(f"   ✅ Inventory metrics: {inventory_data['total_items']} equipment items")
+            # Test Inventory Dashboard
+            print("🔧 Testing Inventory Dashboard...")
+            inventory_data = await analytics_service._get_inventory_metrics(org_id, db)
+            print(f"   ✅ Inventory metrics: {inventory_data['total_items']} equipment items")
 
-        # Test Cloud Dashboard
-        print("☁️  Testing Cloud Dashboard...")
-        cloud_data = await analytics_service._get_cloud_metrics(org_id, async_session)
-        print(f"   ✅ Cloud metrics: {cloud_data['sync_success_rate']:.1f}% success rate")
+            # Test Cloud Dashboard
+            print("☁️  Testing Cloud Dashboard...")
+            cloud_data = await analytics_service._get_cloud_metrics(org_id, db)
+            print(f"   ✅ Cloud metrics: {cloud_data['sync_success_rate']:.1f}% success rate")
 
-        print("\n✅ ALL DASHBOARD ENDPOINTS: Working correctly!")
+            print("\n✅ ALL DASHBOARD ENDPOINTS: Working correctly!")
 
-    finally:
-        await async_session.close()
+        finally:
+            await db.close()
 
 
 

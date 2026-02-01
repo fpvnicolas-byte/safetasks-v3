@@ -37,12 +37,14 @@ async def setup_test_data():
             slug="prod-test"
         )
         db.add(org)
+        await db.flush()
 
         # Admin user
         admin_user = Profile(
             id=uuid.UUID("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"),
             organization_id=org_id,
             full_name="Production Admin",
+            email="production.admin@test.com",
             role="admin"
         )
         db.add(admin_user)
@@ -58,7 +60,7 @@ async def setup_test_data():
 
         # Project
         project = Project(
-            id=uuid.UUID("cccccccc-dddd-eeee-ffff-gggggggggggg"),
+            id=uuid.UUID("cccccccc-dddd-eeee-ffff-aaaaaaaaaaaa"),
             organization_id=org_id,
             client_id=client.id,
             title="The Coffee Shop Mystery",
@@ -77,7 +79,7 @@ async def test_manual_scene_character_creation():
     print("-" * 50)
 
     async_session, org_id = await setup_test_data()
-    project_id = uuid.UUID("cccccccc-dddd-eeee-ffff-gggggggggggg")
+    project_id = uuid.UUID("cccccccc-dddd-eeee-ffff-aaaaaaaaaaaa")
 
     async with async_session() as db:
         try:
@@ -87,13 +89,15 @@ async def test_manual_scene_character_creation():
             john_data = CharacterCreate(
                 name="JOHN",
                 description="35-year-old tired businessman, main protagonist",
-                actor_name="John Smith"
+                actor_name="John Smith",
+                project_id=project_id
             )
 
             sarah_data = CharacterCreate(
                 name="SARAH",
                 description="28-year-old assistant, supporting character",
-                actor_name="Sarah Johnson"
+                actor_name="Sarah Johnson",
+                project_id=project_id
             )
 
             john = await character_service.create(
@@ -157,7 +161,7 @@ async def test_ai_script_analysis():
     print("-" * 50)
 
     async_session, org_id = await setup_test_data()
-    project_id = uuid.UUID("cccccccc-dddd-eeee-ffff-gggggggggggg")
+    project_id = uuid.UUID("cccccccc-dddd-eeee-ffff-aaaaaaaaaaaa")
 
     try:
         # Sample script for analysis
@@ -225,22 +229,21 @@ async def test_ai_script_analysis():
         print("\nCommitting AI analysis to database...")
 
         # Commit analysis to create actual database records
-        commit_result = await production_service.commit_ai_analysis(
-            db=async_session,
-            organization_id=org_id,
-            project_id=project_id,
-            analysis_data=analysis_result
-        )
+        async with async_session() as db:
+            commit_result = await production_service.commit_ai_analysis(
+                db=db,
+                organization_id=org_id,
+                project_id=project_id,
+                analysis_data=analysis_result
+            )
 
-        print("✅ AI Analysis Committed!")
-        print(f"   👥 Characters created: {commit_result['characters_created']}")
-        print(f"   🎬 Scenes created: {commit_result['scenes_created']}")
-        print(f"   🔗 Relationships created: {commit_result['relationships_created']}")
+            print("✅ AI Analysis Committed!")
+            print(f"   👥 Characters created: {commit_result['characters_created']}")
+            print(f"   🎬 Scenes created: {commit_result['scenes_created']}")
+            print(f"   🔗 Relationships created: {commit_result['relationships_created']}")
 
     except Exception as e:
         print(f"❌ AI Analysis failed: {str(e)}")
-    finally:
-        await async_session.close()
 
 
 async def test_shooting_days_and_scheduling():
@@ -249,7 +252,7 @@ async def test_shooting_days_and_scheduling():
     print("-" * 50)
 
     async_session, org_id = await setup_test_data()
-    project_id = uuid.UUID("cccccccc-dddd-eeee-ffff-gggggggggggg")
+    project_id = uuid.UUID("cccccccc-dddd-eeee-ffff-aaaaaaaaaaaa")
 
     async with async_session() as db:
         try:
@@ -304,7 +307,7 @@ async def test_project_breakdown():
     print("-" * 50)
 
     async_session, org_id = await setup_test_data()
-    project_id = uuid.UUID("cccccccc-dddd-eeee-ffff-gggggggggggg")
+    project_id = uuid.UUID("cccccccc-dddd-eeee-ffff-aaaaaaaaaaaa")
 
     async with async_session() as db:
         try:

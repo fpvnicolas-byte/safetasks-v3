@@ -3,7 +3,8 @@ import { apiClient } from '../client'
 import {
   Stakeholder,
   StakeholderCreate,
-  StakeholderUpdate
+  StakeholderUpdate,
+  StakeholderWithRateInfo
 } from '@/types'
 
 const STAKEHOLDERS_KEY = 'stakeholders'
@@ -64,5 +65,33 @@ export function useDeleteStakeholder() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [STAKEHOLDERS_KEY] })
     },
+  })
+}
+
+/**
+ * Get stakeholder with rate calculation and payment tracking.
+ * Returns suggested amount, total paid, pending amount, and payment status.
+ */
+export function useStakeholderRateCalculation(stakeholderId: string | undefined) {
+  return useQuery({
+    queryKey: [STAKEHOLDERS_KEY, stakeholderId, 'rate-calculation'],
+    queryFn: () => apiClient.get<StakeholderWithRateInfo>(
+      `/api/v1/stakeholders/${stakeholderId}/rate-calculation`
+    ),
+    enabled: !!stakeholderId,
+  })
+}
+
+/**
+ * Get all stakeholders for a project with rate calculations.
+ * Useful for project financial summary.
+ */
+export function useProjectStakeholdersWithRates(projectId: string | undefined, activeOnly: boolean = true) {
+  return useQuery({
+    queryKey: [STAKEHOLDERS_KEY, 'project', projectId, 'with-rates', activeOnly],
+    queryFn: () => apiClient.get<StakeholderWithRateInfo[]>(
+      `/api/v1/stakeholders/project/${projectId}/with-rates?active_only=${activeOnly}`
+    ),
+    enabled: !!projectId,
   })
 }

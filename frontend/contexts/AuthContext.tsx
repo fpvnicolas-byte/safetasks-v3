@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { logger } from '@/lib/utils/logger'
@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [organizationId, setOrganizationId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
   const router = useRouter()
   const pathname = usePathname()
   const locale = useLocale()
@@ -134,12 +134,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Get initial session
     const getSession = async () => {
+      setIsLoading(true)
       const { data: { session } } = await supabase.auth.getSession()
       setUser(session?.user ?? null)
 
       // Fetch profile if user is authenticated
       if (session?.access_token) {
         await fetchProfile(session.access_token)
+      } else {
+        setProfile(null)
+        setOrganizationId(null)
       }
 
       setIsLoading(false)
@@ -152,6 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('[AuthContext] Auth State Change:', event, session?.user?.id);
+      setIsLoading(true)
       setUser(session?.user ?? null)
 
       // Fetch profile when user logs in

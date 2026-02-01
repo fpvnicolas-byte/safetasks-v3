@@ -1,7 +1,7 @@
 import { apiClient } from './client'
 import { Service, ServiceCreate, ServiceUpdate } from '@/types'
 
-const BASE_PATH = '/services'
+const BASE_PATH = '/api/v1/services'
 
 export const serviceApi = {
     getAll: async (organizationId: string) => {

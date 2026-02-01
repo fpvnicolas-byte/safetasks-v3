@@ -3,11 +3,13 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, func, and_, text
 from sqlalchemy.orm import selectinload
+from datetime import date
 
 from app.services.base import BaseService
 from app.models.bank_accounts import BankAccount
 from app.models.transactions import Transaction
 from app.models.projects import Project
+from app.models.organizations import Organization
 from app.schemas.bank_accounts import BankAccountCreate, BankAccountUpdate
 from app.schemas.transactions import TransactionCreate, TransactionUpdate
 
@@ -134,6 +136,51 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
         )
         return result.scalar_one()
 
+    async def create_income_from_invoice(
+        self,
+        db: AsyncSession,
+        *,
+        organization_id: UUID,
+        invoice
+    ) -> Transaction:
+        """Create an income transaction from a paid invoice with idempotency."""
+        existing_result = await db.execute(
+            select(Transaction).where(
+                Transaction.organization_id == organization_id,
+                Transaction.invoice_id == invoice.id
+            )
+        )
+        existing = existing_result.scalar_one_or_none()
+        if existing:
+            return existing
+
+        org_result = await db.execute(
+            select(Organization).where(Organization.id == organization_id)
+        )
+        organization = org_result.scalar_one_or_none()
+        if not organization or not organization.default_bank_account_id:
+            raise ValueError("Default bank account is not set for this organization")
+
+        transaction_date = invoice.paid_date or date.today()
+        description = f"Invoice {invoice.invoice_number} payment"
+
+        transaction_in = TransactionCreate(
+            bank_account_id=organization.default_bank_account_id,
+            category="production_revenue",
+            type="income",
+            amount_cents=invoice.total_amount_cents,
+            description=description,
+            transaction_date=transaction_date,
+            project_id=invoice.project_id,
+            invoice_id=invoice.id
+        )
+
+        return await self.create(
+            db=db,
+            organization_id=organization_id,
+            obj_in=transaction_in
+        )
+
     async def remove(
         self,
         db: AsyncSession,
@@ -206,11 +253,13 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
     ) -> Dict[str, int]:
         """Get monthly financial statistics for the organization."""
         # Calculate date range for the month
-        start_date = f"{year}-{month:02d}-01"
+        from datetime import date
+
+        start_date = date(year, month, 1)
         if month == 12:
-            end_date = f"{year + 1}-01-01"
+            end_date = date(year + 1, 1, 1)
         else:
-            end_date = f"{year}-{month + 1:02d}-01"
+            end_date = date(year, month + 1, 1)
 
         # Query for income total
         income_query = select(func.sum(Transaction.amount_cents)).where(

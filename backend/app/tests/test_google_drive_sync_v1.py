@@ -13,6 +13,7 @@ from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
 from app.models.organizations import Organization
 from app.models.profiles import Profile
+from app.models.clients import Client
 from app.models.projects import Project
 from app.services.google_drive import google_drive_service
 from app.services.cloud import cloud_sync_service
@@ -37,20 +38,31 @@ async def setup_test_data():
             slug="sync-test"
         )
         db.add(org)
+        await db.flush()
 
         # Admin user
         admin_user = Profile(
             id=uuid.UUID("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"),
             organization_id=org_id,
             full_name="Sync Admin",
+            email="sync.admin@test.com",
             role="admin"
         )
         db.add(admin_user)
 
         # Project
-        project = Project(
-            id=uuid.UUID("cccccccc-dddd-eeee-ffff-gggggggggggg"),
+        client = Client(
+            id=uuid.UUID("bbbbbbbb-cccc-dddd-eeee-ffffffffffff"),
             organization_id=org_id,
+            name="SyncTest Client",
+            email="sync.client@test.com"
+        )
+        db.add(client)
+
+        project = Project(
+            id=uuid.UUID("cccccccc-dddd-eeee-ffff-aaaaaaaaaaaa"),
+            organization_id=org_id,
+            client_id=client.id,
             title="Epic Sync Project",
             status="production"
         )
@@ -174,7 +186,7 @@ async def test_file_synchronization():
     print("-" * 50)
 
     async_session, org_id = await setup_test_data()
-    project_id = uuid.UUID("cccccccc-dddd-eeee-ffff-gggggggggggg")
+    project_id = uuid.UUID("cccccccc-dddd-eeee-ffff-aaaaaaaaaaaa")
 
     async with async_session() as db:
         try:
@@ -258,60 +270,56 @@ async def test_automation_triggers():
 
     async_session, org_id = await setup_test_data()
 
-    try:
-        print("Testing automation triggers...")
+    print("Testing automation triggers...")
 
-        # Test Proposal Approval Trigger
-        print("\n📋 TRIGGER 1: Proposal Approval Sync")
-        proposal_approval_trigger = {
-            "event": "proposal_approved",
-            "proposal_id": "proposal_123",
-            "project_id": "project_456",
-            "file_name": "Proposal_Epic_Film.pdf",
-            "auto_sync": True
-        }
+    # Test Proposal Approval Trigger
+    print("\n📋 TRIGGER 1: Proposal Approval Sync")
+    proposal_approval_trigger = {
+        "event": "proposal_approved",
+        "proposal_id": "proposal_123",
+        "project_id": "project_456",
+        "file_name": "Proposal_Epic_Film.pdf",
+        "auto_sync": True
+    }
 
-        print("✅ Proposal approved - auto-sync triggered")
-        print(f"   File: {proposal_approval_trigger['file_name']}")
-        print("   Destination: Scripts folder in Google Drive")
-        # Simulate sync operation
-        print("   Status: Synced successfully")
+    print("✅ Proposal approved - auto-sync triggered")
+    print(f"   File: {proposal_approval_trigger['file_name']}")
+    print("   Destination: Scripts folder in Google Drive")
+    # Simulate sync operation
+    print("   Status: Synced successfully")
 
-        # Test Call Sheet Finalization Trigger
-        print("\n📞 TRIGGER 2: Call Sheet Finalization Sync")
-        call_sheet_trigger = {
-            "event": "call_sheet_finalized",
-            "call_sheet_id": "call_sheet_789",
-            "project_id": "project_456",
-            "file_name": "Call_Sheet_Day1_Final.pdf",
-            "auto_sync": True
-        }
+    # Test Call Sheet Finalization Trigger
+    print("\n📞 TRIGGER 2: Call Sheet Finalization Sync")
+    call_sheet_trigger = {
+        "event": "call_sheet_finalized",
+        "call_sheet_id": "call_sheet_789",
+        "project_id": "project_456",
+        "file_name": "Call_Sheet_Day1_Final.pdf",
+        "auto_sync": True
+    }
 
-        print("✅ Call sheet finalized - auto-sync triggered")
-        print(f"   File: {call_sheet_trigger['file_name']}")
-        print("   Destination: Call Sheets folder in Google Drive")
-        # Simulate sync operation
-        print("   Status: Synced successfully")
+    print("✅ Call sheet finalized - auto-sync triggered")
+    print(f"   File: {call_sheet_trigger['file_name']}")
+    print("   Destination: Call Sheets folder in Google Drive")
+    # Simulate sync operation
+    print("   Status: Synced successfully")
 
-        # Test Manual Sync Override
-        print("\n🔧 MANUAL SYNC: Project-wide sync operation")
-        manual_sync_trigger = {
-            "event": "manual_sync_request",
-            "project_id": "project_456",
-            "modules": ["proposals", "call_sheets", "scripts", "media"],
-            "user_initiated": True
-        }
+    # Test Manual Sync Override
+    print("\n🔧 MANUAL SYNC: Project-wide sync operation")
+    manual_sync_trigger = {
+        "event": "manual_sync_request",
+        "project_id": "project_456",
+        "modules": ["proposals", "call_sheets", "scripts", "media"],
+        "user_initiated": True
+    }
 
-        print("✅ Manual sync requested by user")
-        print(f"   Modules: {', '.join(manual_sync_trigger['modules'])}")
-        print("   Status: Sync operation queued")
-        # Simulate bulk sync
-        print("   Result: 12 files synced, 0 failed")
+    print("✅ Manual sync requested by user")
+    print(f"   Modules: {', '.join(manual_sync_trigger['modules'])}")
+    print("   Status: Sync operation queued")
+    # Simulate bulk sync
+    print("   Result: 12 files synced, 0 failed")
 
-        print("\n✅ AUTOMATION TRIGGERS: All sync triggers working correctly!")
-
-    finally:
-        await async_session.close()
+    print("\n✅ AUTOMATION TRIGGERS: All sync triggers working correctly!")
 
 
 async def test_sync_monitoring_and_alerts():
@@ -321,75 +329,71 @@ async def test_sync_monitoring_and_alerts():
 
     async_session, org_id = await setup_test_data()
 
-    try:
-        print("Testing sync monitoring and alert system...")
+    print("Testing sync monitoring and alert system...")
 
-        # Mock sync status data
-        sync_status_data = {
-            "total_syncs": 15,
-            "successful_syncs": 14,
-            "failed_syncs": 1,
-            "pending_syncs": 0,
-            "recent_syncs": [
-                {
-                    "file_name": "Call_Sheet_Day2.pdf",
-                    "status": "completed",
-                    "synced_at": "2024-01-15T14:30:00Z",
-                    "module": "call_sheets"
-                },
-                {
-                    "file_name": "BTS_Footage_Day1.mp4",
-                    "status": "completed",
-                    "synced_at": "2024-01-15T14:25:00Z",
-                    "module": "media"
-                },
-                {
-                    "file_name": "Script_Revisions_v3.pdf",
-                    "status": "failed",
-                    "error": "Google Drive API quota exceeded",
-                    "module": "scripts"
-                }
-            ]
-        }
+    # Mock sync status data
+    sync_status_data = {
+        "total_syncs": 15,
+        "successful_syncs": 14,
+        "failed_syncs": 1,
+        "pending_syncs": 0,
+        "recent_syncs": [
+            {
+                "file_name": "Call_Sheet_Day2.pdf",
+                "status": "completed",
+                "synced_at": "2024-01-15T14:30:00Z",
+                "module": "call_sheets"
+            },
+            {
+                "file_name": "BTS_Footage_Day1.mp4",
+                "status": "completed",
+                "synced_at": "2024-01-15T14:25:00Z",
+                "module": "media"
+            },
+            {
+                "file_name": "Script_Revisions_v3.pdf",
+                "status": "failed",
+                "error": "Google Drive API quota exceeded",
+                "module": "scripts"
+            }
+        ]
+    }
 
-        print("📈 SYNC STATUS OVERVIEW:")
-        print(f"   Total sync operations: {sync_status_data['total_syncs']}")
-        print(f"   Success rate: {sync_status_data['successful_syncs']}/{sync_status_data['total_syncs']} ({sync_status_data['successful_syncs']/sync_status_data['total_syncs']*100:.1f}%)")
-        print(f"   Failed syncs: {sync_status_data['failed_syncs']}")
+    print("📈 SYNC STATUS OVERVIEW:")
+    print(f"   Total sync operations: {sync_status_data['total_syncs']}")
+    print(f"   Success rate: {sync_status_data['successful_syncs']}/{sync_status_data['total_syncs']} ({sync_status_data['successful_syncs']/sync_status_data['total_syncs']*100:.1f}%)")
+    print(f"   Failed syncs: {sync_status_data['failed_syncs']}")
 
-        print("\n🔍 RECENT SYNC ACTIVITY:")
-        for sync in sync_status_data["recent_syncs"]:
-            status_icon = "✅" if sync["status"] == "completed" else "❌"
-            print(f"   {status_icon} {sync['file_name']} ({sync['module']})")
-            if sync["status"] == "failed":
-                print(f"      Error: {sync['error']}")
+    print("\n🔍 RECENT SYNC ACTIVITY:")
+    for sync in sync_status_data["recent_syncs"]:
+        status_icon = "✅" if sync["status"] == "completed" else "❌"
+        print(f"   {status_icon} {sync['file_name']} ({sync['module']})")
+        if sync["status"] == "failed":
+            print(f"      Error: {sync['error']}")
 
-        # Test alert generation
-        print("\n🚨 ALERT SYSTEM TEST:")
-        alerts_generated = []
+    # Test alert generation
+    print("\n🚨 ALERT SYSTEM TEST:")
+    alerts_generated = []
 
-        if sync_status_data["failed_syncs"] > 0:
-            alerts_generated.append({
-                "type": "sync_failure",
-                "message": f"{sync_status_data['failed_syncs']} file sync(s) failed",
-                "severity": "warning"
-            })
+    if sync_status_data["failed_syncs"] > 0:
+        alerts_generated.append({
+            "type": "sync_failure",
+            "message": f"{sync_status_data['failed_syncs']} file sync(s) failed",
+            "severity": "warning"
+        })
 
-        if sync_status_data["pending_syncs"] > 5:
-            alerts_generated.append({
-                "type": "sync_queue_large",
-                "message": f"{sync_status_data['pending_syncs']} syncs pending",
-                "severity": "info"
-            })
+    if sync_status_data["pending_syncs"] > 5:
+        alerts_generated.append({
+            "type": "sync_queue_large",
+            "message": f"{sync_status_data['pending_syncs']} syncs pending",
+            "severity": "info"
+        })
 
-        for alert in alerts_generated:
-            severity_icon = "⚠️" if alert["severity"] == "warning" else "ℹ️"
-            print(f"   {severity_icon} {alert['message']}")
+    for alert in alerts_generated:
+        severity_icon = "⚠️" if alert["severity"] == "warning" else "ℹ️"
+        print(f"   {severity_icon} {alert['message']}")
 
-        print("\n✅ SYNC MONITORING & ALERTS: Complete oversight system operational!")
-
-    finally:
-        await async_session.close()
+    print("\n✅ SYNC MONITORING & ALERTS: Complete oversight system operational!")
 
 
 async def main():

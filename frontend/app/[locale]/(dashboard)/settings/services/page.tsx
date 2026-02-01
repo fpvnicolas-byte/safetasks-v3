@@ -13,8 +13,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { ErrorDialog } from '@/components/ui/error-dialog'
 import { Plus, Pencil, Trash2, Loader2, Package } from 'lucide-react'
-import { Service, ServiceCreate, ServiceUpdate } from '@/types'
+import { Service, ServiceCreate, ServiceUpdate, dollarsToCents, centsToDollars } from '@/types'
 import { useTranslations } from 'next-intl'
+import { formatCurrency } from '@/lib/utils/money'
 
 export default function ServicesPage() {
     const { organizationId } = useAuth()
@@ -31,18 +32,21 @@ export default function ServicesPage() {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         const formData = new FormData(e.currentTarget)
+        const valueDollars = parseFloat(formData.get('value') as string || '0')
 
         try {
             if (editingService) {
                 const data: ServiceUpdate = {
                     name: (formData.get('name') as string).trim(),
                     description: (formData.get('description') as string || '').trim() || undefined,
+                    value_cents: dollarsToCents(valueDollars),
                 }
                 await updateService.mutateAsync({ id: editingService.id, data })
             } else {
                 const data: ServiceCreate = {
                     name: (formData.get('name') as string).trim(),
                     description: (formData.get('description') as string || '').trim() || undefined,
+                    value_cents: dollarsToCents(valueDollars),
                 }
                 await createService.mutateAsync(data)
             }
@@ -106,6 +110,7 @@ export default function ServicesPage() {
                                 <TableRow>
                                     <TableHead>{t('table.name')}</TableHead>
                                     <TableHead>{t('table.description')}</TableHead>
+                                    <TableHead>{t('table.value')}</TableHead>
                                     <TableHead className="w-[100px]">{t('table.actions')}</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -119,6 +124,7 @@ export default function ServicesPage() {
                                             </div>
                                         </TableCell>
                                         <TableCell>{service.description || t('table.noDescription')}</TableCell>
+                                        <TableCell>{formatCurrency(service.value_cents)}</TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-2">
                                                 <Button variant="ghost" size="icon" onClick={() => openEditDialog(service)}>
@@ -159,6 +165,18 @@ export default function ServicesPage() {
                                     defaultValue={editingService?.name}
                                     placeholder={t('dialog.namePlaceholder')}
                                     required
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="value">{t('dialog.valueLabel')}</Label>
+                                <Input
+                                    id="value"
+                                    name="value"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    defaultValue={editingService ? centsToDollars(editingService.value_cents) : ''}
+                                    placeholder={t('dialog.valuePlaceholder')}
                                 />
                             </div>
                             <div className="grid gap-2">

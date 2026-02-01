@@ -25,7 +25,7 @@ import {
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { StakeholderUpdate } from '@/types'
+import { StakeholderUpdate, RateType } from '@/types'
 
 export default function EditStakeholderPage() {
   const params = useParams()
@@ -62,6 +62,9 @@ export default function EditStakeholderPage() {
     phone: '',
     notes: '',
     is_active: true,
+    rate_type: undefined,
+    rate_value_cents: undefined,
+    estimated_units: undefined,
   })
 
   useEffect(() => {
@@ -74,6 +77,9 @@ export default function EditStakeholderPage() {
         phone: stakeholder.phone || '',
         notes: stakeholder.notes || '',
         is_active: stakeholder.is_active,
+        rate_type: stakeholder.rate_type || undefined,
+        rate_value_cents: stakeholder.rate_value_cents || undefined,
+        estimated_units: stakeholder.estimated_units || undefined,
       })
     }
   }, [stakeholder])
@@ -93,7 +99,7 @@ export default function EditStakeholderPage() {
       })
       toast.success(tFeedback('actionSuccess'))
       router.push(`/${locale}/stakeholders`)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Update error:', error)
       showError(error, tFeedback('actionError', { message: 'Error Updating Stakeholder' }))
     }
@@ -205,6 +211,113 @@ export default function EditStakeholderPage() {
                 placeholder="Additional information about this stakeholder..."
                 rows={4}
               />
+            </div>
+
+            {/* Rate Configuration Section */}
+            <div className="space-y-4 rounded-lg border border-border bg-muted/50 p-4">
+              <h4 className="font-medium">Rate Configuration</h4>
+
+              <div className="space-y-2">
+                <Label htmlFor="rate_type">Rate Type</Label>
+                <Select
+                  value={formData.rate_type || '__none__'}
+                  onValueChange={(value) => setFormData({
+                    ...formData,
+                    rate_type: value === '__none__' ? undefined : value as RateType,
+                    estimated_units: undefined
+                  })}
+                >
+                  <SelectTrigger id="rate_type">
+                    <SelectValue placeholder="Select rate type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">No rate configured</SelectItem>
+                    <SelectItem value="daily">Daily Rate (R$/day)</SelectItem>
+                    <SelectItem value="hourly">Hourly Rate (R$/hour)</SelectItem>
+                    <SelectItem value="fixed">Fixed Amount (total)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {formData.rate_type && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="rate_value">
+                      {formData.rate_type === 'daily' ? 'Rate per Day (R$)' :
+                       formData.rate_type === 'hourly' ? 'Rate per Hour (R$)' :
+                       'Fixed Amount (R$)'}
+                    </Label>
+                    <Input
+                      id="rate_value"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.rate_value_cents ? (formData.rate_value_cents / 100).toFixed(2) : ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        rate_value_cents: e.target.value ? Math.round(parseFloat(e.target.value) * 100) : undefined
+                      })}
+                      placeholder="500.00"
+                    />
+                  </div>
+
+                  {formData.rate_type === 'hourly' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="estimated_hours">Estimated Hours</Label>
+                      <Input
+                        id="estimated_hours"
+                        type="number"
+                        min="0"
+                        value={formData.estimated_units || ''}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          estimated_units: e.target.value ? parseInt(e.target.value) : undefined
+                        })}
+                        placeholder="40"
+                      />
+                    </div>
+                  )}
+
+                  {formData.rate_type === 'daily' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="estimated_days">Estimated Days (optional)</Label>
+                      <Input
+                        id="estimated_days"
+                        type="number"
+                        min="0"
+                        value={formData.estimated_units || ''}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          estimated_units: e.target.value ? parseInt(e.target.value) : undefined
+                        })}
+                        placeholder="Leave empty to use shooting days count"
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        If empty, system will use the project&apos;s shooting days count
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Show calculated amount preview */}
+                  {formData.rate_value_cents && (
+                    <div className="rounded-md bg-primary/10 p-3">
+                      <p className="text-sm font-medium">
+                        {formData.rate_type === 'fixed' ? (
+                          <>Total: R$ {(formData.rate_value_cents / 100).toFixed(2)}</>
+                        ) : formData.rate_type === 'daily' && formData.estimated_units ? (
+                          <>Estimated Total: R$ {((formData.rate_value_cents * formData.estimated_units) / 100).toFixed(2)} ({formData.estimated_units} days x R$ {(formData.rate_value_cents / 100).toFixed(2)})</>
+                        ) : formData.rate_type === 'hourly' && formData.estimated_units ? (
+                          <>Estimated Total: R$ {((formData.rate_value_cents * formData.estimated_units) / 100).toFixed(2)} ({formData.estimated_units} hours x R$ {(formData.rate_value_cents / 100).toFixed(2)})</>
+                        ) : formData.rate_type === 'daily' ? (
+                          <>Rate: R$ {(formData.rate_value_cents / 100).toFixed(2)}/day (total will be calculated from shooting days)</>
+                        ) : (
+                          <>Rate: R$ {(formData.rate_value_cents / 100).toFixed(2)}/hour (enter hours to see total)</>
+                        )}
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
 
             <div className="flex items-center space-x-2">

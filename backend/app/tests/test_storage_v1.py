@@ -44,12 +44,14 @@ async def setup_test_data():
             slug="test-org-b"
         )
         db.add(org_b)
+        await db.flush()
 
         # Create Profile for Org A
         profile_a = Profile(
             id=uuid.UUID("12345678-9012-3456-7890-123456789012"),
             organization_id=org_a.id,
             full_name="Storage User",
+            email="storage.user@test.com",
             role="admin"
         )
         db.add(profile_a)
@@ -183,7 +185,7 @@ async def test_storage_flow():
         print("✅ File validation and security enforced")
 
     finally:
-        await async_session.close()
+        pass
 
 
 if __name__ == "__main__":

@@ -155,6 +155,8 @@ class StorageService:
                 "content_type": self._guess_content_type(filename)
             }
 
+        except ValueError:
+            raise
         except Exception as e:
             raise Exception(f"File upload failed: {str(e)}")
 

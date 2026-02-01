@@ -47,35 +47,37 @@ export function ErrorDialog({
                         )}
                         <AlertDialogTitle>{title}</AlertDialogTitle>
                     </div>
-                    <AlertDialogDescription className="text-left space-y-3 pt-2">
-                        <div className="text-base">{message}</div>
+                    <AlertDialogDescription asChild>
+                        <div className="text-left space-y-3 pt-2 text-muted-foreground text-sm">
+                            <div className="text-base">{message}</div>
 
-                        {isValidationError && (
-                            <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950 dark:border-amber-800 p-3 space-y-2">
-                                <p className="font-semibold text-sm text-amber-900 dark:text-amber-100">
-                                    Validation Issues:
+                            {isValidationError && (
+                                <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950 dark:border-amber-800 p-3 space-y-2">
+                                    <p className="font-semibold text-sm text-amber-900 dark:text-amber-100">
+                                        Validation Issues:
+                                    </p>
+                                    <ul className="space-y-1.5 text-sm">
+                                        {validationErrors.map((error, index) => (
+                                            <li key={index} className="flex items-start gap-2">
+                                                <span className="text-amber-600 dark:text-amber-400 mt-0.5">•</span>
+                                                <span className="text-amber-900 dark:text-amber-100">
+                                                    <span className="font-medium">
+                                                        {error.loc.slice(1).join(' → ')}:
+                                                    </span>{' '}
+                                                    {error.msg}
+                                                </span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {statusCode && !isValidationError && (
+                                <p className="text-sm text-muted-foreground">
+                                    Error code: {statusCode}
                                 </p>
-                                <ul className="space-y-1.5 text-sm">
-                                    {validationErrors.map((error, index) => (
-                                        <li key={index} className="flex items-start gap-2">
-                                            <span className="text-amber-600 dark:text-amber-400 mt-0.5">•</span>
-                                            <span className="text-amber-900 dark:text-amber-100">
-                                                <span className="font-medium">
-                                                    {error.loc.slice(1).join(' → ')}:
-                                                </span>{' '}
-                                                {error.msg}
-                                            </span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-
-                        {statusCode && !isValidationError && (
-                            <p className="text-sm text-muted-foreground">
-                                Error code: {statusCode}
-                            </p>
-                        )}
+                            )}
+                        </div>
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

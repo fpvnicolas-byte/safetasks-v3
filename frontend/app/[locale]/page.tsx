@@ -5,11 +5,13 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import {
   ArrowUpRight,
+  Briefcase,
   Boxes,
   CalendarDays,
   Clapperboard,
   Cloud,
   CreditCard,
+  Crown,
   HardDrive,
   ShieldCheck,
   Sparkles,
@@ -127,18 +129,22 @@ export default function LandingPage() {
 
   const access = [
     {
+      icon: Crown,
       title: t('access.owner.title'),
       description: t('access.owner.description'),
     },
     {
+      icon: Clapperboard,
       title: t('access.producer.title'),
       description: t('access.producer.description'),
     },
     {
+      icon: CreditCard,
       title: t('access.finance.title'),
       description: t('access.finance.description'),
     },
     {
+      icon: Briefcase,
       title: t('access.freelancer.title'),
       description: t('access.freelancer.description'),
     },
@@ -244,31 +250,49 @@ export default function LandingPage() {
               </div>
 
               <div className="relative animate-in fade-in-0 slide-in-from-bottom-6 duration-700 delay-150">
-                <div className="rounded-[28px] border border-white/10 bg-white/5 p-6 backdrop-blur">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Production Console</p>
-                      <h3 className="text-2xl font-semibold">SafeTasks Studio</h3>
+                <div className="relative min-h-[420px] overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-slate-950/80 via-slate-900/80 to-slate-950/80 p-7 shadow-[0_24px_60px_-28px_rgba(0,0,0,0.65)] ring-1 ring-white/10 backdrop-blur md:min-h-[460px]">
+                  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_80%_at_0%_0%,rgba(56,189,248,0.12),transparent_60%),radial-gradient(55%_70%_at_100%_0%,rgba(251,191,36,0.14),transparent_55%)]" />
+                  <div className="relative">
+                    <div className="flex items-start justify-between border-b border-white/10 pb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <span className="h-2.5 w-2.5 rounded-full bg-rose-400/80" />
+                          <span className="h-2.5 w-2.5 rounded-full bg-amber-300/80" />
+                          <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />
+                        </div>
+                        <div>
+                          <p className="text-[0.6rem] font-mono uppercase tracking-[0.35em] text-slate-400">
+                            {t('console.label')}
+                          </p>
+                          <h3 className="text-xl font-semibold text-slate-100">{t('console.title')}</h3>
+                        </div>
+                      </div>
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-amber-200">
+                        <ArrowUpRight className="h-5 w-5" />
+                      </div>
                     </div>
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-300/20 text-amber-200">
-                      <ArrowUpRight className="h-5 w-5" />
-                    </div>
-                  </div>
-                  <div className="mt-6 grid gap-3">
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                      <p className="text-xs uppercase text-slate-400">Active production</p>
-                      <p className="mt-2 text-lg font-semibold">Neon Atlantic</p>
-                      <p className="text-sm text-slate-300">6 shooting days, 24 crew</p>
-                    </div>
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                      <p className="text-xs uppercase text-slate-400">Upcoming approvals</p>
-                      <p className="mt-2 text-lg font-semibold">3 budgets pending</p>
-                      <p className="text-sm text-slate-300">Finance team notified</p>
-                    </div>
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                      <p className="text-xs uppercase text-slate-400">Storage + AI</p>
-                      <p className="mt-2 text-lg font-semibold">14.2 GB used</p>
-                      <p className="text-sm text-slate-300">AI credits synced</p>
+                    <div className="mt-7 grid gap-4">
+                      <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:scale-[1.01]">
+                        <p className="text-[0.65rem] font-mono uppercase tracking-[0.3em] text-slate-400">
+                          {t('console.cards.active.label')}
+                        </p>
+                        <p className="mt-2 text-lg font-semibold text-slate-100">{t('console.cards.active.title')}</p>
+                        <p className="text-sm text-slate-300">{t('console.cards.active.detail')}</p>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:scale-[1.01]">
+                        <p className="text-[0.65rem] font-mono uppercase tracking-[0.3em] text-slate-400">
+                          {t('console.cards.approvals.label')}
+                        </p>
+                        <p className="mt-2 text-lg font-semibold text-slate-100">{t('console.cards.approvals.title')}</p>
+                        <p className="text-sm text-slate-300">{t('console.cards.approvals.detail')}</p>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:scale-[1.01]">
+                        <p className="text-[0.65rem] font-mono uppercase tracking-[0.3em] text-slate-400">
+                          {t('console.cards.storage.label')}
+                        </p>
+                        <p className="mt-2 text-lg font-semibold text-slate-100">{t('console.cards.storage.title')}</p>
+                        <p className="text-sm text-slate-300">{t('console.cards.storage.detail')}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -288,7 +312,7 @@ export default function LandingPage() {
               {modules.map((module, index) => (
                 <Card
                   key={module.title}
-                  className="border-slate-200/80 bg-[#fbf7f0] shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl animate-in fade-in-0 slide-in-from-bottom-4 duration-700"
+                  className="border-slate-200/80 bg-[#fbf7f0] text-slate-900 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl animate-in fade-in-0 slide-in-from-bottom-4 duration-700"
                   style={{ animationDelay: `${index * 80}ms` }}
                 >
                   <CardContent className="space-y-4 p-6">
@@ -305,7 +329,10 @@ export default function LandingPage() {
             </div>
           </section>
 
-          <section id="workflow" className="mt-24 grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <section
+            id="workflow"
+            className="mt-24 scroll-mt-24 grid gap-10 pb-16 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:pb-20"
+          >
             <div>
               <p className="text-xs uppercase tracking-[0.35em] text-slate-500">{t('nav.workflow')}</p>
               <h2 className="mt-3 text-3xl font-semibold md:text-4xl [font-family:var(--font-landing-display)]">
@@ -313,11 +340,11 @@ export default function LandingPage() {
               </h2>
               <p className="mt-3 text-slate-600">{t('sections.workflow.subtitle')}</p>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-4 pt-22 lg:pt-26">
               {workflow.map((step, index) => (
                 <Card
                   key={step.title}
-                  className="border-slate-200/80 bg-white/80 shadow-md"
+                  className="border-slate-200/80 bg-white/80 text-slate-900 shadow-md"
                 >
                   <CardContent className="flex items-start gap-4 p-5">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-amber-200">
@@ -333,7 +360,7 @@ export default function LandingPage() {
             </div>
           </section>
 
-          <section id="access" className="mt-24 space-y-10">
+          <section id="access" className="mt-24 scroll-mt-24 space-y-10">
             <div className="max-w-2xl">
               <p className="text-xs uppercase tracking-[0.35em] text-slate-500">{t('nav.features')}</p>
               <h2 className="mt-3 text-3xl font-semibold md:text-4xl [font-family:var(--font-landing-display)]">
@@ -345,11 +372,11 @@ export default function LandingPage() {
               {access.map((role, index) => (
                 <Card
                   key={role.title}
-                  className="border-slate-200/80 bg-[#fbf7f0] shadow-md animate-in fade-in-0 slide-in-from-bottom-4 duration-700"
+                  className="border-slate-200/80 bg-[#fbf7f0] text-slate-900 shadow-md animate-in fade-in-0 slide-in-from-bottom-4 duration-700"
                   style={{ animationDelay: `${index * 80}ms` }}
                 >
                   <CardContent className="space-y-3 p-5">
-                    <UsersRound className="h-5 w-5 text-slate-900" />
+                    <role.icon className="h-5 w-5 text-slate-900" />
                     <h3 className="text-lg font-semibold">{role.title}</h3>
                     <p className="text-sm text-slate-600">{role.description}</p>
                   </CardContent>
@@ -379,7 +406,7 @@ export default function LandingPage() {
                 ))}
               </div>
             </div>
-            <Card className="border-slate-200/80 bg-white/85 shadow-lg">
+            <Card className="border-slate-200/80 bg-white/85 text-slate-900 shadow-lg">
               <CardContent className="space-y-4 p-6">
                 <div className="flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-slate-500">
                   <ShieldCheck className="h-4 w-4" />

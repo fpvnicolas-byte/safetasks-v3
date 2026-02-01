@@ -10,7 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_
 from typing import List, Optional, Dict, Any
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, date, timedelta
+from app.core.config import settings
 
 
 class TaxTableService(BaseService[TaxTable, TaxTableCreate, TaxTableUpdate]):
@@ -25,6 +26,51 @@ class InvoiceService(BaseService[Invoice, InvoiceCreate, InvoiceUpdate]):
 
     def __init__(self):
         super().__init__(Invoice)
+
+    def _generate_invoice_number(self, organization_id: UUID) -> str:
+        year = datetime.now().year
+        return f"INV-{year}-{organization_id.hex[:8].upper()}"
+
+    def _get_default_due_date(self, proposal_valid_until: Optional[date]) -> date:
+        if proposal_valid_until:
+            return proposal_valid_until
+        return date.today() + timedelta(days=settings.DEFAULT_INVOICE_DUE_DAYS)
+
+    def _build_items_from_proposal(self, proposal) -> list[InvoiceItemCreate]:
+        items: list[InvoiceItemCreate] = []
+        if getattr(proposal, "services", None):
+            for service in proposal.services:
+                unit_price = int(service.value_cents or 0)
+                if unit_price <= 0:
+                    continue
+                items.append(
+                    InvoiceItemCreate(
+                        description=service.name,
+                        quantity=1,
+                        unit_price_cents=unit_price,
+                        total_cents=unit_price,
+                        project_id=proposal.project_id,
+                        category=None
+                    )
+                )
+
+        if items:
+            return items
+
+        total_amount = int(getattr(proposal, "total_amount_cents", 0) or 0)
+        if total_amount > 0:
+            return [
+                InvoiceItemCreate(
+                    description=proposal.title,
+                    quantity=1,
+                    unit_price_cents=total_amount,
+                    total_cents=total_amount,
+                    project_id=proposal.project_id,
+                    category=None
+                )
+            ]
+
+        raise ValueError("Proposal has no billable services or total amount")
 
     async def _validate_client_ownership(self, db: AsyncSession, organization_id: UUID, client_id: UUID):
         """Validate that client belongs to the organization."""
@@ -58,12 +104,13 @@ class InvoiceService(BaseService[Invoice, InvoiceCreate, InvoiceUpdate]):
         from datetime import datetime
         year = datetime.now().year
         # In a real implementation, you'd track sequential numbers per organization
-        invoice_number = f"INV-{year}-{organization_id.hex[:8].upper()}"
+        invoice_number = self._generate_invoice_number(organization_id)
 
         # Create invoice data
         invoice_data = {
             "client_id": obj_in.client_id,
             "project_id": obj_in.project_id,
+            "proposal_id": getattr(obj_in, "proposal_id", None),
             "invoice_number": invoice_number,
             "subtotal_cents": subtotal,
             "tax_amount_cents": 0,  # Will be calculated later if needed
@@ -95,6 +142,71 @@ class InvoiceService(BaseService[Invoice, InvoiceCreate, InvoiceUpdate]):
         await db.commit()
         await db.refresh(invoice)
 
+        return invoice
+
+    async def create_from_proposal(
+        self,
+        db: AsyncSession,
+        *,
+        organization_id: UUID,
+        proposal,
+        status: InvoiceStatusEnum = InvoiceStatusEnum.sent,
+        due_date: Optional[date] = None
+    ) -> Invoice:
+        """Create a sent invoice from a proposal with idempotency."""
+        result = await db.execute(
+            select(Invoice).where(
+                Invoice.organization_id == organization_id,
+                Invoice.proposal_id == proposal.id
+            )
+        )
+        existing = result.scalar_one_or_none()
+        if existing:
+            return existing
+
+        await self._validate_client_ownership(db, organization_id, proposal.client_id)
+        if proposal.project_id:
+            await self._validate_project_ownership(db, organization_id, proposal.project_id)
+
+        items = self._build_items_from_proposal(proposal)
+        subtotal = sum(item.total_cents for item in items)
+
+        resolved_due_date = due_date or self._get_default_due_date(proposal.valid_until)
+
+        invoice_data = {
+            "client_id": proposal.client_id,
+            "project_id": proposal.project_id,
+            "proposal_id": proposal.id,
+            "invoice_number": self._generate_invoice_number(organization_id),
+            "status": status,
+            "subtotal_cents": subtotal,
+            "tax_amount_cents": 0,
+            "total_amount_cents": subtotal,
+            "currency": proposal.currency or "BRL",
+            "issue_date": date.today(),
+            "due_date": resolved_due_date,
+            "description": proposal.description,
+            "notes": None
+        }
+
+        invoice = await super().create(db=db, organization_id=organization_id, obj_in=invoice_data)
+
+        for item in items:
+            db.add(
+                InvoiceItem(
+                    organization_id=organization_id,
+                    invoice_id=invoice.id,
+                    description=item.description,
+                    quantity=item.quantity,
+                    unit_price_cents=item.unit_price_cents,
+                    total_cents=item.total_cents,
+                    project_id=item.project_id,
+                    category=item.category
+                )
+            )
+
+        await db.flush()
+        await db.refresh(invoice)
         return invoice
 
     async def add_item(

@@ -21,7 +21,7 @@ import { useTranslations } from 'next-intl'
 export default function NewProjectPage() {
   const t = useTranslations('projects')
   const router = useRouter()
-  const { organizationId } = useAuth()
+  const { organizationId, isLoading: isLoadingOrg } = useAuth()
   const { errorDialog, showError, closeError } = useErrorDialog()
   const [selectedClientId, setSelectedClientId] = useState<string>('')
   const [selectedServices, setSelectedServices] = useState<string[]>([])
@@ -29,13 +29,18 @@ export default function NewProjectPage() {
 
   const { data: clients, isLoading: clientsLoading } = useClients(organizationId || undefined)
   const { data: services, isLoading: servicesLoading } = useServices(organizationId || undefined)
-  const createProject = useCreateProject()
+  const createProject = useCreateProject(organizationId ?? undefined)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
     if (!selectedClientId) {
       showError({ message: t('form.pleaseSelectClient') }, t('form.validationError'))
+      return
+    }
+
+    if (!organizationId) {
+      showError({ message: t('errors.noOrganization') }, t('form.validationError'))
       return
     }
 
@@ -61,6 +66,22 @@ export default function NewProjectPage() {
       console.error('Create project error:', err)
       showError(err, t('form.errorCreating'))
     }
+  }
+
+  if (isLoadingOrg) {
+    return (
+      <div className="max-w-2xl mx-auto py-8 text-sm text-muted-foreground">
+        Loading organization...
+      </div>
+    )
+  }
+
+  if (!organizationId) {
+    return (
+      <div className="max-w-2xl mx-auto py-8 text-sm text-destructive">
+        {t('errors.noOrganization')}
+      </div>
+    )
   }
 
   return (
