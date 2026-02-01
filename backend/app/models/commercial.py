@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, TIMESTAMP, Boolean, func, ForeignKey, TEXT, Integer, BigInteger
+from sqlalchemy import Column, String, TIMESTAMP, Boolean, func, ForeignKey, TEXT, Integer, BigInteger, Enum, Date
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from app.core.base import Base
@@ -80,6 +80,21 @@ class Stakeholder(Base):
     rate_type = Column(String(20), nullable=True)  # 'daily', 'hourly', 'fixed'
     rate_value_cents = Column(BigInteger, nullable=True)  # Rate in cents for precision
     estimated_units = Column(Integer, nullable=True)  # Hours for hourly, days override for daily
+
+    # Booking status tracking
+    status = Column(
+        Enum(StakeholderStatusEnum),
+        default=StakeholderStatusEnum.REQUESTED,
+        nullable=False
+    )
+    status_changed_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    status_notes = Column(TEXT, nullable=True)
+
+    # Booking details
+    booking_start_date = Column(Date, nullable=True)
+    booking_end_date = Column(Date, nullable=True)
+    confirmed_rate_cents = Column(BigInteger, nullable=True)
+    confirmed_rate_type = Column(String(20), nullable=True)
 
     is_active = Column(Boolean, default=True, nullable=False)
 

@@ -20,3 +20,30 @@ class TestStakeholderStatusEnum:
     def test_enum_has_five_values(self):
         """Test enum has exactly 5 status values."""
         assert len(StakeholderStatusEnum) == 5
+
+
+class TestStakeholderModelColumns:
+    """Test Stakeholder model has booking status columns."""
+
+    def test_stakeholder_has_status_column(self):
+        """Test Stakeholder model has status column."""
+        from app.models.commercial import Stakeholder
+        assert hasattr(Stakeholder, 'status')
+
+    def test_stakeholder_has_booking_dates(self):
+        """Test Stakeholder model has booking date columns."""
+        from app.models.commercial import Stakeholder
+        assert hasattr(Stakeholder, 'booking_start_date')
+        assert hasattr(Stakeholder, 'booking_end_date')
+
+    def test_stakeholder_has_confirmed_rate(self):
+        """Test Stakeholder model has confirmed rate columns."""
+        from app.models.commercial import Stakeholder
+        assert hasattr(Stakeholder, 'confirmed_rate_cents')
+        assert hasattr(Stakeholder, 'confirmed_rate_type')
+
+    def test_stakeholder_has_status_metadata(self):
+        """Test Stakeholder model has status metadata columns."""
+        from app.models.commercial import Stakeholder
+        assert hasattr(Stakeholder, 'status_changed_at')
+        assert hasattr(Stakeholder, 'status_notes')
