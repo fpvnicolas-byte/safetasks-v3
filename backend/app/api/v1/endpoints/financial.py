@@ -13,12 +13,21 @@ from app.db.session import get_db
 from app.services.financial_advanced import (
     tax_table_service, invoice_service, financial_report_service
 )
+from app.services.financial import transaction_service
 from app.schemas.financial import (
     TaxTable, TaxTableCreate, TaxTableUpdate,
     Invoice, InvoiceCreate, InvoiceUpdate, InvoiceWithItems,
-    InvoiceItem, InvoiceItemCreate, InvoiceItemUpdate,
-    ProjectFinancialReport
+    InvoiceItem, InvoiceItemCreate, InvoiceItemUpdate, InvoiceStatus,
+    ProjectFinancialReport,
+    ProjectBudgetLineCreate,
+    ProjectBudgetLineUpdate,
+    ProjectBudgetLineResponse,
+    ProjectBudgetSummary,
+    CategoryBudgetSummary,
+    BudgetCategoryEnum,
 )
+from app.models.financial import ProjectBudgetLine
+from sqlalchemy import select, func as sql_func
 
 
 router = APIRouter()
@@ -308,18 +317,49 @@ async def update_invoice(
     Update invoice (must belong to current user's organization).
     Only admins and managers can update invoices.
     """
+    existing_invoice = await invoice_service.get(
+        db=db,
+        organization_id=organization_id,
+        id=invoice_id
+    )
+    if not existing_invoice:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invoice not found"
+        )
+
+    previous_status = existing_invoice.status
+    previous_status_value = previous_status.value if hasattr(previous_status, "value") else str(previous_status)
+
     invoice = await invoice_service.update(
         db=db,
         organization_id=organization_id,
         id=invoice_id,
         obj_in=invoice_in
     )
-
     if not invoice:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Invoice not found"
         )
+
+    from app.core.config import settings
+    if (
+        settings.FINANCIAL_AUTOMATION_ENABLED
+        and invoice_in.status == InvoiceStatus.paid
+        and previous_status_value != InvoiceStatus.paid.value
+    ):
+        try:
+            await transaction_service.create_income_from_invoice(
+                db=db,
+                organization_id=organization_id,
+                invoice=invoice
+            )
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
+            )
 
     return invoice
 
@@ -480,3 +520,245 @@ async def get_expense_summary(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to generate expense summary: {str(e)}"
         )
+
+
+# Budget Line Endpoints
+@router.get("/projects/{project_id}/budget", response_model=ProjectBudgetSummary, dependencies=[Depends(require_admin_producer_or_finance)])
+async def get_project_budget(
+    project_id: UUID,
+    organization_id: UUID = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get complete project budget with all lines and actual spending."""
+    from app.models.transactions import Transaction
+
+    # Get all budget lines for project
+    result = await db.execute(
+        select(ProjectBudgetLine)
+        .where(ProjectBudgetLine.project_id == project_id)
+        .where(ProjectBudgetLine.organization_id == organization_id)
+        .order_by(ProjectBudgetLine.sort_order, ProjectBudgetLine.created_at)
+    )
+    budget_lines = result.scalars().all()
+
+    # Get actual spending per budget line
+    actual_by_line = {}
+    if budget_lines:
+        line_ids = [line.id for line in budget_lines]
+        result = await db.execute(
+            select(
+                Transaction.budget_line_id,
+                sql_func.sum(Transaction.amount_cents).label('total')
+            )
+            .where(Transaction.budget_line_id.in_(line_ids))
+            .where(Transaction.type == 'expense')
+            .group_by(Transaction.budget_line_id)
+        )
+        for row in result:
+            actual_by_line[row.budget_line_id] = row.total or 0
+
+    # Build response with computed fields
+    lines_response = []
+    category_totals = {}
+
+    for line in budget_lines:
+        actual = actual_by_line.get(line.id, 0)
+        variance = line.estimated_amount_cents - actual
+        variance_pct = (variance / line.estimated_amount_cents * 100) if line.estimated_amount_cents > 0 else 0
+
+        lines_response.append(ProjectBudgetLineResponse(
+            id=line.id,
+            project_id=line.project_id,
+            organization_id=line.organization_id,
+            category=line.category,
+            description=line.description,
+            estimated_amount_cents=line.estimated_amount_cents,
+            stakeholder_id=line.stakeholder_id,
+            supplier_id=line.supplier_id,
+            notes=line.notes,
+            sort_order=line.sort_order,
+            created_at=line.created_at,
+            updated_at=line.updated_at,
+            actual_amount_cents=actual,
+            variance_cents=variance,
+            variance_percentage=round(variance_pct, 2)
+        ))
+
+        # Aggregate by category
+        cat = line.category.value if hasattr(line.category, 'value') else str(line.category)
+        if cat not in category_totals:
+            category_totals[cat] = {'estimated': 0, 'actual': 0}
+        category_totals[cat]['estimated'] += line.estimated_amount_cents
+        category_totals[cat]['actual'] += actual
+
+    # Build category summaries
+    by_category = []
+    for cat, totals in category_totals.items():
+        variance = totals['estimated'] - totals['actual']
+        variance_pct = (variance / totals['estimated'] * 100) if totals['estimated'] > 0 else 0
+        by_category.append(CategoryBudgetSummary(
+            category=BudgetCategoryEnum(cat),
+            estimated_cents=totals['estimated'],
+            actual_cents=totals['actual'],
+            variance_cents=variance,
+            variance_percentage=round(variance_pct, 2)
+        ))
+
+    # Calculate totals
+    total_estimated = sum(line.estimated_amount_cents for line in budget_lines)
+    total_actual = sum(actual_by_line.values())
+    total_variance = total_estimated - total_actual
+    total_variance_pct = (total_variance / total_estimated * 100) if total_estimated > 0 else 0
+
+    return ProjectBudgetSummary(
+        project_id=project_id,
+        total_estimated_cents=total_estimated,
+        total_actual_cents=total_actual,
+        total_variance_cents=total_variance,
+        variance_percentage=round(total_variance_pct, 2),
+        by_category=by_category,
+        lines=lines_response
+    )
+
+
+@router.post(
+    "/projects/{project_id}/budget-lines",
+    response_model=ProjectBudgetLineResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_finance_or_admin), Depends(require_billing_active)]
+)
+async def create_budget_line(
+    project_id: UUID,
+    budget_line_in: ProjectBudgetLineCreate,
+    organization_id: UUID = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a new budget line for a project."""
+    # Verify project exists
+    from app.models.projects import Project
+    result = await db.execute(
+        select(Project)
+        .where(Project.id == project_id)
+        .where(Project.organization_id == organization_id)
+    )
+    if not result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    budget_line = ProjectBudgetLine(
+        organization_id=organization_id,
+        project_id=project_id,
+        category=budget_line_in.category,
+        description=budget_line_in.description,
+        estimated_amount_cents=budget_line_in.estimated_amount_cents,
+        stakeholder_id=budget_line_in.stakeholder_id,
+        supplier_id=budget_line_in.supplier_id,
+        notes=budget_line_in.notes,
+        sort_order=budget_line_in.sort_order
+    )
+
+    db.add(budget_line)
+    await db.commit()
+    await db.refresh(budget_line)
+
+    return ProjectBudgetLineResponse(
+        id=budget_line.id,
+        project_id=budget_line.project_id,
+        organization_id=budget_line.organization_id,
+        category=budget_line.category,
+        description=budget_line.description,
+        estimated_amount_cents=budget_line.estimated_amount_cents,
+        stakeholder_id=budget_line.stakeholder_id,
+        supplier_id=budget_line.supplier_id,
+        notes=budget_line.notes,
+        sort_order=budget_line.sort_order,
+        created_at=budget_line.created_at,
+        updated_at=budget_line.updated_at,
+        actual_amount_cents=0,
+        variance_cents=budget_line.estimated_amount_cents,
+        variance_percentage=100.0
+    )
+
+
+@router.put(
+    "/budget-lines/{line_id}",
+    response_model=ProjectBudgetLineResponse,
+    dependencies=[Depends(require_finance_or_admin), Depends(require_billing_active)]
+)
+async def update_budget_line(
+    line_id: UUID,
+    budget_line_in: ProjectBudgetLineUpdate,
+    organization_id: UUID = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update a budget line."""
+    result = await db.execute(
+        select(ProjectBudgetLine)
+        .where(ProjectBudgetLine.id == line_id)
+        .where(ProjectBudgetLine.organization_id == organization_id)
+    )
+    budget_line = result.scalar_one_or_none()
+
+    if not budget_line:
+        raise HTTPException(status_code=404, detail="Budget line not found")
+
+    update_data = budget_line_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(budget_line, field, value)
+
+    await db.commit()
+    await db.refresh(budget_line)
+
+    # Get actual spending
+    from app.models.transactions import Transaction
+    result = await db.execute(
+        select(sql_func.sum(Transaction.amount_cents))
+        .where(Transaction.budget_line_id == line_id)
+        .where(Transaction.type == 'expense')
+    )
+    actual = result.scalar() or 0
+
+    variance = budget_line.estimated_amount_cents - actual
+    variance_pct = (variance / budget_line.estimated_amount_cents * 100) if budget_line.estimated_amount_cents > 0 else 0
+
+    return ProjectBudgetLineResponse(
+        id=budget_line.id,
+        project_id=budget_line.project_id,
+        organization_id=budget_line.organization_id,
+        category=budget_line.category,
+        description=budget_line.description,
+        estimated_amount_cents=budget_line.estimated_amount_cents,
+        stakeholder_id=budget_line.stakeholder_id,
+        supplier_id=budget_line.supplier_id,
+        notes=budget_line.notes,
+        sort_order=budget_line.sort_order,
+        created_at=budget_line.created_at,
+        updated_at=budget_line.updated_at,
+        actual_amount_cents=actual,
+        variance_cents=variance,
+        variance_percentage=round(variance_pct, 2)
+    )
+
+
+@router.delete(
+    "/budget-lines/{line_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_finance_or_admin), Depends(require_billing_active)]
+)
+async def delete_budget_line(
+    line_id: UUID,
+    organization_id: UUID = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete a budget line."""
+    result = await db.execute(
+        select(ProjectBudgetLine)
+        .where(ProjectBudgetLine.id == line_id)
+        .where(ProjectBudgetLine.organization_id == organization_id)
+    )
+    budget_line = result.scalar_one_or_none()
+
+    if not budget_line:
+        raise HTTPException(status_code=404, detail="Budget line not found")
+
+    await db.delete(budget_line)
+    await db.commit()

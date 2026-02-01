@@ -45,3 +45,27 @@ class TestTransactionBudgetLineLink:
         """Test Transaction model has budget_line_id column."""
         from app.models.transactions import Transaction
         assert hasattr(Transaction, 'budget_line_id')
+
+
+class TestBudgetLineSchemas:
+    """Test budget line schemas."""
+
+    def test_budget_line_create_schema(self):
+        """Test ProjectBudgetLineCreate schema."""
+        from app.schemas.financial import ProjectBudgetLineCreate, BudgetCategoryEnum
+        from uuid import uuid4
+
+        data = ProjectBudgetLineCreate(
+            project_id=uuid4(),
+            category=BudgetCategoryEnum.CREW,
+            description="Director of Photography",
+            estimated_amount_cents=500000
+        )
+        assert data.estimated_amount_cents == 500000
+
+    def test_budget_summary_schema(self):
+        """Test ProjectBudgetSummary schema."""
+        from app.schemas.financial import ProjectBudgetSummary
+        assert 'total_estimated_cents' in ProjectBudgetSummary.model_fields
+        assert 'total_actual_cents' in ProjectBudgetSummary.model_fields
+        assert 'by_category' in ProjectBudgetSummary.model_fields

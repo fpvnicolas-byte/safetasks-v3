@@ -34,6 +34,21 @@ class InvoiceStatus(str, Enum):
     cancelled = "cancelled"
 
 
+class BudgetCategoryEnum(str, Enum):
+    """Standard production budget categories."""
+    CREW = "crew"
+    EQUIPMENT = "equipment"
+    LOCATIONS = "locations"
+    TALENT = "talent"
+    TRANSPORTATION = "transportation"
+    CATERING = "catering"
+    POST_PRODUCTION = "post_production"
+    MUSIC_LICENSING = "music_licensing"
+    INSURANCE = "insurance"
+    CONTINGENCY = "contingency"
+    OTHER = "other"
+
+
 class TaxTableBase(BaseModel):
     """Base schema for Tax Table."""
     name: str = Field(min_length=1)
@@ -102,6 +117,7 @@ class InvoiceBase(BaseModel):
     """Base schema for Invoice."""
     client_id: UUID
     project_id: Optional[UUID] = None
+    proposal_id: Optional[UUID] = None
     invoice_number: str = Field(min_length=1)
     status: InvoiceStatus = InvoiceStatus.draft
     subtotal_cents: int = Field(ge=0)
@@ -121,6 +137,7 @@ class InvoiceCreate(BaseModel):
     """Schema for creating an Invoice."""
     client_id: UUID
     project_id: Optional[UUID] = None
+    proposal_id: Optional[UUID] = None
     items: List[InvoiceItemCreate] = Field(min_items=1)
     due_date: date
     description: Optional[str] = None
@@ -200,6 +217,70 @@ class ProjectFinancialReport(BaseModel):
     generated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# Budget Line schemas
+class ProjectBudgetLineBase(BaseModel):
+    """Base schema for budget line."""
+    category: BudgetCategoryEnum
+    description: str
+    estimated_amount_cents: int = Field(ge=0)
+    stakeholder_id: Optional[UUID] = None
+    supplier_id: Optional[UUID] = None
+    notes: Optional[str] = None
+    sort_order: int = 0
+
+
+class ProjectBudgetLineCreate(ProjectBudgetLineBase):
+    """Schema for creating a budget line."""
+    project_id: UUID
+
+
+class ProjectBudgetLineUpdate(BaseModel):
+    """Schema for updating a budget line."""
+    category: Optional[BudgetCategoryEnum] = None
+    description: Optional[str] = None
+    estimated_amount_cents: Optional[int] = Field(default=None, ge=0)
+    stakeholder_id: Optional[UUID] = None
+    supplier_id: Optional[UUID] = None
+    notes: Optional[str] = None
+    sort_order: Optional[int] = None
+
+
+class ProjectBudgetLineResponse(ProjectBudgetLineBase):
+    """Response schema for budget line with computed fields."""
+    id: UUID
+    project_id: UUID
+    organization_id: UUID
+    created_at: datetime
+    updated_at: datetime
+
+    # Computed fields (set by service)
+    actual_amount_cents: int = 0
+    variance_cents: int = 0
+    variance_percentage: float = 0.0
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CategoryBudgetSummary(BaseModel):
+    """Summary of budget vs actual for a category."""
+    category: BudgetCategoryEnum
+    estimated_cents: int
+    actual_cents: int
+    variance_cents: int
+    variance_percentage: float
+
+
+class ProjectBudgetSummary(BaseModel):
+    """Complete project budget summary."""
+    project_id: UUID
+    total_estimated_cents: int
+    total_actual_cents: int
+    total_variance_cents: int
+    variance_percentage: float
+    by_category: List[CategoryBudgetSummary]
+    lines: List[ProjectBudgetLineResponse]
 
 
 # Import at end to avoid circular imports
