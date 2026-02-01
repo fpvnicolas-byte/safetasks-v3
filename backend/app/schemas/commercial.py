@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional, List, Dict, Any
 from enum import Enum
 
@@ -11,6 +11,22 @@ class SupplierCategory(str, Enum):
     transport = "transport"
     post_production = "post_production"
     other = "other"
+
+
+class RateType(str, Enum):
+    """Rate type for stakeholder payment calculation."""
+    daily = "daily"      # R$/day - multiplied by shooting days or estimated_units
+    hourly = "hourly"    # R$/hour - multiplied by estimated_units (hours)
+    fixed = "fixed"      # Fixed total amount for the project
+
+
+class StakeholderStatusEnum(str, Enum):
+    """Booking status for stakeholder."""
+    REQUESTED = "requested"
+    CONFIRMED = "confirmed"
+    WORKING = "working"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
 
 class SupplierBase(BaseModel):
     """Base schema for Supplier."""
@@ -98,6 +114,11 @@ class StakeholderBase(BaseModel):
     notes: Optional[str] = None
     is_active: bool = True
 
+    # Rate management fields
+    rate_type: Optional[RateType] = None
+    rate_value_cents: Optional[int] = Field(default=None, ge=0, description="Rate in cents (e.g., R$ 500.00 = 50000)")
+    estimated_units: Optional[int] = Field(default=None, ge=0, description="Hours for hourly rate, days override for daily rate")
+
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -116,6 +137,23 @@ class StakeholderUpdate(BaseModel):
     notes: Optional[str] = None
     is_active: Optional[bool] = None
 
+    # Rate management fields
+    rate_type: Optional[RateType] = None
+    rate_value_cents: Optional[int] = Field(default=None, ge=0)
+    estimated_units: Optional[int] = Field(default=None, ge=0)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class StakeholderStatusUpdate(BaseModel):
+    """Schema for updating stakeholder booking status."""
+    status: StakeholderStatusEnum
+    status_notes: Optional[str] = None
+    booking_start_date: Optional[date] = None
+    booking_end_date: Optional[date] = None
+    confirmed_rate_cents: Optional[int] = Field(default=None, ge=0)
+    confirmed_rate_type: Optional[str] = None
+
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -124,3 +162,40 @@ class Stakeholder(StakeholderBase):
     organization_id: UUID
     created_at: datetime
     updated_at: datetime
+
+    # Booking status fields
+    status: StakeholderStatusEnum = StakeholderStatusEnum.REQUESTED
+    status_changed_at: Optional[datetime] = None
+    status_notes: Optional[str] = None
+    booking_start_date: Optional[date] = None
+    booking_end_date: Optional[date] = None
+    confirmed_rate_cents: Optional[int] = None
+    confirmed_rate_type: Optional[str] = None
+
+
+class RateCalculationBreakdown(BaseModel):
+    """Breakdown of how the rate was calculated."""
+    type: RateType
+    rate_per_day_cents: Optional[int] = None
+    rate_per_hour_cents: Optional[int] = None
+    fixed_amount_cents: Optional[int] = None
+    days: Optional[int] = None
+    hours: Optional[int] = None
+    source: Optional[str] = None  # 'estimated_units' or 'shooting_days'
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class StakeholderWithRateInfo(Stakeholder):
+    """Extended stakeholder response with rate calculation and payment tracking."""
+    # Rate calculation
+    shooting_days_count: int = 0
+    suggested_amount_cents: Optional[int] = None
+    calculation_breakdown: Optional[RateCalculationBreakdown] = None
+
+    # Payment tracking
+    total_paid_cents: int = 0
+    pending_amount_cents: Optional[int] = None
+    payment_status: str = "not_configured"  # 'not_configured', 'pending', 'partial', 'paid', 'overpaid'
+
+    model_config = ConfigDict(from_attributes=True)
