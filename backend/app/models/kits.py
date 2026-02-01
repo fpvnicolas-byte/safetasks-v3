@@ -20,3 +20,4 @@ class Kit(Base):
 
     # Relationships
     items = relationship("KitItem", back_populates="kit", cascade="all, delete-orphan")
+    service_links = relationship("ServiceEquipment", back_populates="kit")
