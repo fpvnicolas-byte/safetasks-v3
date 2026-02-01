@@ -20,8 +20,11 @@ from app.schemas.commercial import (
     StakeholderSummary,
     Stakeholder,
     StakeholderCreate,
-    StakeholderUpdate
+    StakeholderUpdate,
+    StakeholderWithRateInfo,
+    StakeholderStatusUpdate,
 )
+from datetime import datetime, timezone
 
 router = APIRouter()
 
@@ -147,6 +150,73 @@ async def get_stakeholder(
     return stakeholder
 
 
+@router.get(
+    "/{stakeholder_id}/rate-calculation",
+    response_model=StakeholderWithRateInfo,
+    dependencies=[Depends(require_read_only)]
+)
+async def get_stakeholder_rate_calculation(
+    stakeholder_id: UUID,
+    organization_id: UUID = Depends(get_current_organization),
+    profile=Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get stakeholder with calculated payment amount and tracking.
+
+    Returns:
+    - suggested_amount_cents: calculated from rate × units (days/hours)
+    - total_paid_cents: sum of transactions already paid
+    - pending_amount_cents: suggested - paid
+    - payment_status: not_configured, pending, partial, paid, overpaid
+    - calculation_breakdown: details of how amount was calculated
+    """
+    result = await stakeholder_crud_service.get_with_rate_calculation(
+        db=db,
+        organization_id=organization_id,
+        stakeholder_id=stakeholder_id
+    )
+
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Stakeholder not found"
+        )
+
+    await enforce_project_assignment(result.project_id, db, profile)
+
+    return result
+
+
+@router.get(
+    "/project/{project_id}/with-rates",
+    response_model=List[StakeholderWithRateInfo],
+    dependencies=[Depends(require_read_only)]
+)
+async def get_project_stakeholders_with_rates(
+    project_id: UUID,
+    active_only: bool = Query(True, description="Only return active stakeholders"),
+    organization_id: UUID = Depends(get_current_organization),
+    profile=Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get all stakeholders for a project with rate calculations and payment tracking.
+
+    Useful for project financial summary showing expected costs vs paid amounts.
+    """
+    await enforce_project_assignment(project_id, db, profile)
+
+    stakeholders = await stakeholder_crud_service.get_project_stakeholders_with_rates(
+        db=db,
+        organization_id=organization_id,
+        project_id=project_id,
+        active_only=active_only
+    )
+
+    return stakeholders
+
+
 @router.put(
     "/{stakeholder_id}",
     response_model=Stakeholder,
@@ -219,3 +289,101 @@ async def delete_stakeholder(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete stakeholder: {str(e)}"
         )
+
+
+@router.patch(
+    "/{stakeholder_id}/status",
+    response_model=Stakeholder,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+)
+async def update_stakeholder_status(
+    stakeholder_id: UUID,
+    status_update: StakeholderStatusUpdate,
+    organization_id: UUID = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Update the booking status of a stakeholder.
+
+    Status workflow: requested → confirmed → working → completed
+    Can also be set to 'cancelled' from any state.
+    """
+    stakeholder = await stakeholder_crud_service.get(
+        db=db,
+        id=stakeholder_id,
+        organization_id=organization_id
+    )
+
+    if not stakeholder:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Stakeholder not found"
+        )
+
+    # Build update data
+    update_data = {
+        "status": status_update.status.value,
+        "status_changed_at": datetime.now(timezone.utc),
+    }
+
+    if status_update.status_notes is not None:
+        update_data["status_notes"] = status_update.status_notes
+    if status_update.booking_start_date is not None:
+        update_data["booking_start_date"] = status_update.booking_start_date
+    if status_update.booking_end_date is not None:
+        update_data["booking_end_date"] = status_update.booking_end_date
+    if status_update.confirmed_rate_cents is not None:
+        update_data["confirmed_rate_cents"] = status_update.confirmed_rate_cents
+    if status_update.confirmed_rate_type is not None:
+        update_data["confirmed_rate_type"] = status_update.confirmed_rate_type
+
+    # Apply updates
+    for field, value in update_data.items():
+        setattr(stakeholder, field, value)
+
+    await db.commit()
+    await db.refresh(stakeholder)
+
+    return stakeholder
+
+
+@router.get(
+    "/project/{project_id}/by-status",
+    response_model=dict,
+    dependencies=[Depends(require_read_only)]
+)
+async def get_project_stakeholders_by_status(
+    project_id: UUID,
+    organization_id: UUID = Depends(get_current_organization),
+    profile=Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get stakeholders for a project grouped by booking status.
+
+    Returns a dict with status as keys and lists of stakeholders as values.
+    """
+    await enforce_project_assignment(project_id, db, profile)
+
+    stakeholders = await stakeholder_crud_service.get_by_project(
+        db=db,
+        organization_id=organization_id,
+        project_id=project_id,
+        active_only=True
+    )
+
+    # Group by status
+    grouped = {
+        "requested": [],
+        "confirmed": [],
+        "working": [],
+        "completed": [],
+        "cancelled": [],
+    }
+
+    for s in stakeholders:
+        status_key = s.status.value if hasattr(s.status, 'value') else str(s.status)
+        if status_key in grouped:
+            grouped[status_key].append(s)
+
+    return grouped
