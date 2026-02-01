@@ -1,8 +1,18 @@
-from sqlalchemy import Column, String, TIMESTAMP, Boolean, func, ForeignKey, TEXT
+from sqlalchemy import Column, String, TIMESTAMP, Boolean, func, ForeignKey, TEXT, Integer, BigInteger
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from app.core.base import Base
 import uuid
+import enum
+
+
+class StakeholderStatusEnum(enum.Enum):
+    """Booking status for stakeholder on a project."""
+    REQUESTED = "requested"      # Initial outreach
+    CONFIRMED = "confirmed"      # Accepted booking
+    WORKING = "working"          # Currently on project
+    COMPLETED = "completed"      # Work finished
+    CANCELLED = "cancelled"      # Booking cancelled
 
 
 class Supplier(Base):
@@ -65,6 +75,11 @@ class Stakeholder(Base):
     email = Column(String)
     phone = Column(String)
     notes = Column(TEXT)
+
+    # Rate management fields
+    rate_type = Column(String(20), nullable=True)  # 'daily', 'hourly', 'fixed'
+    rate_value_cents = Column(BigInteger, nullable=True)  # Rate in cents for precision
+    estimated_units = Column(Integer, nullable=True)  # Hours for hourly, days override for daily
 
     is_active = Column(Boolean, default=True, nullable=False)
 
