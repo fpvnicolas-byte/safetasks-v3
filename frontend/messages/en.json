@@ -1708,6 +1708,13 @@
     "empty": {
       "noStakeholders": "No stakeholders found",
       "addFirst": "Add Your First Stakeholder"
+    },
+    "status": {
+      "requested": "Requested",
+      "confirmed": "Confirmed",
+      "working": "Working",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
     }
   },
   "proposals": {
@@ -1894,6 +1901,7 @@
       "table": {
         "name": "Name",
         "description": "Description",
+        "value": "Value",
         "actions": "Actions",
         "noDescription": "-"
       },
@@ -1905,6 +1913,8 @@
         "editDescription": "Update service details.",
         "nameLabel": "Name *",
         "namePlaceholder": "e.g., Feature Film Production",
+        "valueLabel": "Value",
+        "valuePlaceholder": "0.00",
         "descriptionLabel": "Description",
         "descriptionPlaceholder": "Service description...",
         "cancel": "Cancel",
@@ -2148,6 +2158,27 @@
       "billing": "Plan limits and usage",
       "drive": "Google Drive sync",
       "ai": "AI breakdowns"
+    },
+    "console": {
+      "label": "Production Console",
+      "title": "SafeTasks Studio",
+      "cards": {
+        "active": {
+          "label": "Active production",
+          "title": "Neon Atlantic",
+          "detail": "6 shooting days, 24 crew"
+        },
+        "approvals": {
+          "label": "Upcoming approvals",
+          "title": "3 budgets pending",
+          "detail": "Finance team notified"
+        },
+        "storage": {
+          "label": "Storage + AI",
+          "title": "14.2 GB used",
+          "detail": "AI credits synced"
+        }
+      }
     },
     "sections": {
       "modules": {

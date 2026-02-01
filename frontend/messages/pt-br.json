@@ -1708,6 +1708,13 @@
     "empty": {
       "noStakeholders": "Nenhuma parte interessada encontrada",
       "addFirst": "Adicione Sua Primeira Parte Interessada"
+    },
+    "status": {
+      "requested": "Solicitado",
+      "confirmed": "Confirmado",
+      "working": "Trabalhando",
+      "completed": "Concluído",
+      "cancelled": "Cancelado"
     }
   },
   "proposals": {
@@ -1894,6 +1901,7 @@
       "table": {
         "name": "Nome",
         "description": "Descrição",
+        "value": "Valor",
         "actions": "Ações",
         "noDescription": "-"
       },
@@ -1905,6 +1913,8 @@
         "editDescription": "Atualize os detalhes do serviço.",
         "nameLabel": "Nome *",
         "namePlaceholder": "ex: Produção de Longa-Metragem",
+        "valueLabel": "Valor",
+        "valuePlaceholder": "0.00",
         "descriptionLabel": "Descrição",
         "descriptionPlaceholder": "Descrição do serviço...",
         "cancel": "Cancelar",
@@ -2148,6 +2158,27 @@
       "billing": "Limites do plano e uso",
       "drive": "Sincronização Google Drive",
       "ai": "Breakdowns com IA"
+    },
+    "console": {
+      "label": "Console de Produção",
+      "title": "SafeTasks Studio",
+      "cards": {
+        "active": {
+          "label": "Produção ativa",
+          "title": "Neon Atlantic",
+          "detail": "6 diárias de filmagem, 24 pessoas na equipe"
+        },
+        "approvals": {
+          "label": "Aprovações pendentes",
+          "title": "3 orçamentos pendentes",
+          "detail": "Equipe financeira notificada"
+        },
+        "storage": {
+          "label": "Armazenamento + IA",
+          "title": "14,2 GB usados",
+          "detail": "Créditos de IA sincronizados"
+        }
+      }
     },
     "sections": {
       "modules": {
