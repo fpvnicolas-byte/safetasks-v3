@@ -50,6 +50,7 @@ class Project(Base):
     # Relationships to financial entities
     invoices = relationship("Invoice", back_populates="project", cascade="all, delete-orphan")
     transactions = relationship("Transaction", back_populates="project")
+    budget_lines = relationship("ProjectBudgetLine", back_populates="project", cascade="all, delete-orphan")
 
     # Many-to-Many relationship with Service
     services = relationship("Service", secondary="project_services", backref="projects")

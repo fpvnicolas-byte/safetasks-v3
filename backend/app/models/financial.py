@@ -25,6 +25,21 @@ class InvoiceStatusEnum(enum.Enum):
     cancelled = "cancelled"
 
 
+class BudgetCategoryEnum(enum.Enum):
+    """Standard production budget categories."""
+    CREW = "crew"
+    EQUIPMENT = "equipment"
+    LOCATIONS = "locations"
+    TALENT = "talent"
+    TRANSPORTATION = "transportation"
+    CATERING = "catering"
+    POST_PRODUCTION = "post_production"
+    MUSIC_LICENSING = "music_licensing"
+    INSURANCE = "insurance"
+    CONTINGENCY = "contingency"
+    OTHER = "other"
+
+
 class TaxTable(Base):
     """
     Tax configuration table for Brazilian tax compliance.
@@ -70,6 +85,7 @@ class Invoice(Base):
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
     client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id"), nullable=False)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=True)
+    proposal_id = Column(UUID(as_uuid=True), ForeignKey("proposals.id"), nullable=True)
 
     invoice_number = Column(String, nullable=False)  # Auto-generated: INV-{year}-{sequential}
     status = Column(Enum(InvoiceStatusEnum), nullable=False, default=InvoiceStatusEnum.draft)
@@ -100,6 +116,7 @@ class Invoice(Base):
     # Relationships
     client = relationship("Client", back_populates="invoices")
     project = relationship("Project", back_populates="invoices")
+    proposal = relationship("Proposal")
     items = relationship("InvoiceItem", back_populates="invoice", cascade="all, delete-orphan")
 
     __table_args__ = (
@@ -137,6 +154,44 @@ class InvoiceItem(Base):
 
     # Relationships
     invoice = relationship("Invoice", back_populates="items")
+
+    __table_args__ = (
+        {'schema': None}
+    )
+
+
+class ProjectBudgetLine(Base):
+    """Individual budget line item within a project."""
+    __tablename__ = "project_budget_lines"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False)
+
+    # Budget line details
+    category = Column(Enum(BudgetCategoryEnum), nullable=False)
+    description = Column(String, nullable=False)
+
+    # Amounts (in cents)
+    estimated_amount_cents = Column(BIGINT, nullable=False, default=0)
+
+    # Optional links
+    stakeholder_id = Column(UUID(as_uuid=True), ForeignKey("stakeholders.id"), nullable=True)
+    supplier_id = Column(UUID(as_uuid=True), ForeignKey("suppliers.id"), nullable=True)
+
+    # Metadata
+    notes = Column(TEXT, nullable=True)
+    sort_order = Column(BIGINT, nullable=False, default=0)
+
+    # Timestamps
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relationships
+    project = relationship("Project", back_populates="budget_lines")
+    stakeholder = relationship("Stakeholder")
+    supplier = relationship("Supplier")
+    transactions = relationship("Transaction", back_populates="budget_line")
 
     __table_args__ = (
         {'schema': None}
