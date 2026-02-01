@@ -1,3 +1,4 @@
+from sqlalchemy import update, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from app.services.base import BaseService
@@ -144,7 +145,13 @@ class ProjectService(BaseService[ProjectModel, ProjectCreate, ProjectUpdate]):
         """Create project with services. Auto-adds service values to budget."""
         # Handle service_ids
         service_ids = obj_in.service_ids
+        # Handle proposal_id
+        proposal_id = getattr(obj_in, "proposal_id", None)
+        
+        # Remove service_ids and proposal_id from obj_in if they are not in the model
         del obj_in.service_ids
+        if hasattr(obj_in, "proposal_id"):
+            del obj_in.proposal_id
 
         # Create project object manually to handle M2M
         obj_data = obj_in.model_dump()
@@ -162,6 +169,19 @@ class ProjectService(BaseService[ProjectModel, ProjectCreate, ProjectUpdate]):
             db_obj.budget_total_cents = (db_obj.budget_total_cents or 0) + services_total
 
         db.add(db_obj)
+        
+        # Link to proposal if provided
+        if proposal_id:
+            from sqlalchemy import select
+            from app.models.proposals import Proposal as ProposalModel
+            result = await db.execute(select(ProposalModel).where(ProposalModel.id == proposal_id, ProposalModel.organization_id == organization_id))
+            proposal = result.scalar_one_or_none()
+            if proposal:
+                # Ensure the project is flushed/committed to have an ID
+                await db.flush()
+                proposal.project_id = db_obj.id
+                proposal.status = "approved"
+
         if commit:
             await db.commit()
             await db.refresh(db_obj)
@@ -208,12 +228,15 @@ class ProposalService(BaseService[ProposalModel, ProposalCreate, ProposalUpdate]
         super().__init__(ProposalModel)
 
     async def get(self, db: AsyncSession, *, organization_id: UUID, id: UUID) -> ProposalModel | None:
-        """Get proposal with services loaded."""
+        """Get proposal with services and client loaded."""
         return await super().get(
             db=db, 
             organization_id=organization_id, 
             id=id, 
-            options=[selectinload(ProposalModel.services)]
+            options=[
+                selectinload(ProposalModel.services),
+                selectinload(ProposalModel.client)
+            ]
         )
 
     async def get_multi(
@@ -225,14 +248,17 @@ class ProposalService(BaseService[ProposalModel, ProposalCreate, ProposalUpdate]
         limit: int = 100, 
         filters=None
     ) -> list[ProposalModel]:
-        """Get multiple proposals with services loaded."""
+        """Get multiple proposals with services and client loaded."""
         return await super().get_multi(
             db=db, 
             organization_id=organization_id, 
             skip=skip, 
             limit=limit, 
             filters=filters, 
-            options=[selectinload(ProposalModel.services)]
+            options=[
+                selectinload(ProposalModel.services),
+                selectinload(ProposalModel.client)
+            ]
         )
 
     async def approve_proposal(
@@ -245,7 +271,7 @@ class ProposalService(BaseService[ProposalModel, ProposalCreate, ProposalUpdate]
     ) -> ProposalModel:
         """Approve proposal and automatically convert to project."""
         # Use transaction context to ensure atomic operations
-        async with db.begin():
+        async with db.begin_nested():
             # Get the proposal inside the transaction
             proposal = await self.get(db=db, organization_id=organization_id, id=proposal_id)
             if not proposal:
@@ -266,6 +292,8 @@ class ProposalService(BaseService[ProposalModel, ProposalCreate, ProposalUpdate]
                 title=proposal.title,
                 description=proposal.description,
                 status="pre-production",  # Default status for new projects
+                start_date=proposal.start_date, # Copy dates
+                end_date=proposal.end_date,
                 service_ids=[s.id for s in proposal.services]  # Copy services from proposal
             )
 
@@ -360,47 +388,113 @@ class ProposalService(BaseService[ProposalModel, ProposalCreate, ProposalUpdate]
         # Validate client ownership
         await self._validate_client_ownership(db, organization_id, obj_in.client_id)
 
+        # Prepare create data explicitly excluding service_ids
+        create_data = obj_in.model_dump(exclude={"service_ids"})
+        create_data["organization_id"] = organization_id
+        
+        # Create proposal object manually
+        db_obj = self.model(**create_data)
+        
         # Handle service_ids
-        service_ids = obj_in.service_ids
-        del obj_in.service_ids
-        
-        # Create proposal object manually to handle M2M
-        obj_data = obj_in.model_dump()
-        db_obj = self.model(**obj_data)
-        db_obj.organization_id = organization_id
-        
-        if service_ids:
-            # Fetch services
+        if obj_in.service_ids:
             from sqlalchemy import select
-            result = await db.execute(select(ServiceModel).where(ServiceModel.id.in_(service_ids)))
+            result = await db.execute(select(ServiceModel).where(ServiceModel.id.in_(obj_in.service_ids)))
             services = result.scalars().all()
             db_obj.services = services
+        else:
+            services = []
+            
+        # Auto-calculate total amount
+        base_amount = obj_in.base_amount_cents or 0
+        services_total = sum(s.value_cents for s in services)
+        db_obj.base_amount_cents = base_amount
+        db_obj.total_amount_cents = base_amount + services_total
 
         db.add(db_obj)
         await db.commit()
         await db.refresh(db_obj)
-        return db_obj
+        
+        # Reload with relationships to avoid MissingGreenlet during Pydantic serialization
+        return await self.get(db, organization_id=organization_id, id=db_obj.id)
 
     async def update(self, db, *, organization_id, id, obj_in):
         """Update proposal with client validation if client_id is changing."""
         if obj_in.client_id is not None:
             await self._validate_client_ownership(db, organization_id, obj_in.client_id)
 
-        # Handle service_ids
+        # Prepare update data explicitly excluding service_ids
+        update_data = obj_in.model_dump(exclude_unset=True, exclude={"service_ids"})
+        
+        # Handle service_ids relationship update
+        # Need to recalculate total if services OR base_amount changes
+        should_recalculate = False
+        services = []
+        
         if obj_in.service_ids is not None:
-             # Fetch services
+             # Fetch new services
             from sqlalchemy import select
             result = await db.execute(select(ServiceModel).where(ServiceModel.id.in_(obj_in.service_ids)))
             services = result.scalars().all()
+            should_recalculate = True
             
-            # We need to load existing proposal to update relationship
+            # Load existing proposal to update relationship
             proposal = await self.get(db=db, organization_id=organization_id, id=id)
             if proposal:
                 proposal.services = services
-                
-            del obj_in.service_ids
-
-        return await super().update(db=db, organization_id=organization_id, id=id, obj_in=obj_in)
+        
+        if obj_in.base_amount_cents is not None:
+            should_recalculate = True
+            
+        if should_recalculate:
+            # If we didn't load services yet (only base_amount changed), we need to fetch them
+            if obj_in.service_ids is None:
+                proposal = await self.get(db=db, organization_id=organization_id, id=id)
+                services = proposal.services if proposal else []
+            
+            # Use new base amount if provided, otherwise existing
+            # Note: We need to be careful with update_data vs db_obj here
+            # Since we are doing a manual update query later, we should update update_data
+            
+            base_amount = obj_in.base_amount_cents if obj_in.base_amount_cents is not None else (
+                (await self.get(db=db, organization_id=organization_id, id=id)).base_amount_cents or 0
+            ) 
+            services_total = sum(s.value_cents for s in services)
+            
+            update_data["total_amount_cents"] = base_amount + services_total
+        
+        # Perform the standard update with filtered data
+        # We manually call super implementation logic here to avoid passing invalid columns
+        query = (
+            update(self.model)
+            .where(
+                and_(
+                    self.model.id == id,
+                    self.model.organization_id == organization_id
+                )
+            )
+            .values(**update_data)
+        )
+        await db.execute(query)
+        
+        # Return the updated object
+        return await self.get(db, organization_id=organization_id, id=id)
+        
+    async def remove(self, db: AsyncSession, *, organization_id: UUID, id: UUID) -> ProposalModel | None:
+        """Delete proposal."""
+        # Fetch the proposal fully loaded BEFORE deleting it
+        # This is critical because returning a deleted object with unloaded relationships
+        # causes serialization errors (MissingGreenlet)
+        proposal = await self.get(db=db, organization_id=organization_id, id=id)
+        if not proposal:
+            return None
+            
+        # Clear relationships first to avoid ForeignKeyViolationError
+        proposal.services = []
+        await db.flush()
+            
+        await super().remove(db=db, organization_id=organization_id, id=id)
+        
+        return proposal
 
 
 # Service instances

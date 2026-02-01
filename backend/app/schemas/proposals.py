@@ -5,6 +5,7 @@ from typing import Optional, Literal, List
 from decimal import Decimal
 
 from app.schemas.services import Service
+from app.schemas.clients import Client
 
 
 class ProposalBase(BaseModel):
@@ -15,16 +16,19 @@ class ProposalBase(BaseModel):
     description: Optional[str] = None
     status: Literal["draft", "sent", "approved", "rejected", "expired"] = "draft"
     valid_until: Optional[date] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
     total_amount_cents: Optional[int] = None
     currency: str = "BRL"
     terms_conditions: Optional[str] = None
+    proposal_metadata: Optional[dict] = Field(default_factory=dict)
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
 
 
 class ProposalCreate(ProposalBase):
     """Schema for creating a Proposal."""
-    """Schema for creating a Proposal."""
+    base_amount_cents: Optional[int] = 0
     service_ids: Optional[List[UUID]] = None
 
 
@@ -36,12 +40,14 @@ class ProposalUpdate(BaseModel):
     description: Optional[str] = None
     status: Optional[Literal["draft", "sent", "approved", "rejected", "expired"]] = None
     valid_until: Optional[date] = None
-    total_amount_cents: Optional[int] = None
-    currency: Optional[str] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    base_amount_cents: Optional[int] = None
     total_amount_cents: Optional[int] = None
     currency: Optional[str] = None
     terms_conditions: Optional[str] = None
     service_ids: Optional[List[UUID]] = None
+    proposal_metadata: Optional[dict] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -51,10 +57,9 @@ class Proposal(ProposalBase):
     id: UUID
     organization_id: UUID
     created_at: datetime
-    organization_id: UUID
-    created_at: datetime
     updated_at: datetime
     services: List[Service] = []
+    client: Optional[Client] = None
 
 
 class ProposalWithClient(Proposal):

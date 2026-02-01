@@ -41,6 +41,13 @@ export default function ProposalDetailPage() {
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false)
   const [uploadedFiles, setUploadedFiles] = useState<FileUploadResponse[]>([])
 
+  const {
+    open: deleteOpen,
+    onOpenChange: setDeleteOpen,
+    askConfirmation: confirmDelete,
+    closeConfirmation: cancelDelete
+  } = useConfirmDelete()
+
   // Initialize uploadedFiles with existing proposal files on component mount
   useEffect(() => {
     if (proposalFiles.length > 0) {
@@ -82,13 +89,6 @@ export default function ProposalDetailPage() {
       </Alert>
     )
   }
-
-  const {
-    open: deleteOpen,
-    onOpenChange: setDeleteOpen,
-    askConfirmation: confirmDelete,
-    closeConfirmation: cancelDelete
-  } = useConfirmDelete()
 
   const handleDelete = async () => {
     try {
@@ -142,6 +142,12 @@ export default function ProposalDetailPage() {
             <h1 className="text-3xl font-bold font-display">{proposal.title}</h1>
             <p className="text-muted-foreground">
               Created {new Date(proposal.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+              {proposal.client && (
+                <>
+                  {' • '}
+                  <span className="font-medium text-foreground">{proposal.client.name}</span>
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -195,13 +201,23 @@ export default function ProposalDetailPage() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Badge variant={getStatusVariant(proposal.status)} className="text-base px-3 py-1">
           {proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
         </Badge>
         {proposal.valid_until && (
           <Badge variant="outline" className="text-base px-3 py-1">
             Valid until: {new Date(proposal.valid_until).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+          </Badge>
+        )}
+        {proposal.start_date && (
+          <Badge variant="secondary" className="text-base px-3 py-1">
+            Est. Start: {new Date(proposal.start_date).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })}
+          </Badge>
+        )}
+        {proposal.end_date && (
+          <Badge variant="secondary" className="text-base px-3 py-1">
+            Est. End: {new Date(proposal.end_date).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })}
           </Badge>
         )}
       </div>
@@ -238,16 +254,76 @@ export default function ProposalDetailPage() {
             <CardHeader>
               <CardTitle>Financials</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <div className="text-sm font-medium text-muted-foreground">Total Amount</div>
-                <div className="text-2xl font-bold mt-1">
-                  {proposal.total_amount_cents !== null ? formatCurrency(proposal.total_amount_cents, proposal.currency) : 'N/A'}
+            <CardContent className="p-0">
+              <div className="p-4 space-y-4">
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">Total Investment</div>
+                  <div className="text-3xl font-black text-primary tracking-tighter">
+                    {proposal.total_amount_cents !== null ? formatCurrency(proposal.total_amount_cents, proposal.currency) : 'N/A'}
+                  </div>
                 </div>
               </div>
-              <div>
-                <div className="text-sm font-medium text-muted-foreground">Currency</div>
-                <div className="text-base mt-1">{proposal.currency}</div>
+
+              <div className="border-t border-muted/30">
+                <div className="px-4 py-3 bg-muted/5 flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Detailed Breakdown</span>
+                  <Badge variant="outline" className="text-[10px] font-mono uppercase tracking-tighter bg-background/50">
+                    {proposal.currency}
+                  </Badge>
+                </div>
+
+                <div className="divide-y divide-muted/20">
+                  {/* Predefined Services Section */}
+                  {proposal.services && proposal.services.length > 0 && (
+                    <div className="px-4 py-3 space-y-2">
+                      <span className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-wider">Services</span>
+                      <div className="space-y-1.5">
+                        {proposal.services.map((service) => (
+                          <div key={service.id} className="flex justify-between items-center text-sm">
+                            <span className="text-foreground/80 font-medium">{service.name}</span>
+                            <span className="text-muted-foreground font-mono">{formatCurrency(service.value_cents, proposal.currency)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Custom Line Items Section */}
+                  {proposal.proposal_metadata?.line_items && proposal.proposal_metadata.line_items.length > 0 && (
+                    <div className="px-4 py-3 space-y-2">
+                      <span className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-wider">Additional Items</span>
+                      <div className="space-y-1.5">
+                        {proposal.proposal_metadata.line_items.map((item) => (
+                          <div key={item.id} className="flex justify-between items-center text-sm">
+                            <span className="text-foreground/80 font-medium">{item.description || 'Unnamed Item'}</span>
+                            <span className="text-muted-foreground font-mono">{formatCurrency(item.value_cents, proposal.currency)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Base Fee / Manual Adjustment */}
+                  {proposal.base_amount_cents ? (
+                    <div className="px-4 py-3 flex justify-between items-center bg-muted/10">
+                      <span className="text-xs font-semibold text-secondary-foreground italic">Manual Adjustment</span>
+                      <span className="text-sm font-mono font-bold text-secondary-foreground">
+                        {formatCurrency(proposal.base_amount_cents, proposal.currency)}
+                      </span>
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="p-4 bg-primary/[0.03] flex justify-between items-center border-t border-primary/20">
+                  <span className="text-sm font-bold text-primary">Final Proposal Total</span>
+                  <span className="text-lg font-black text-primary font-mono tracking-tighter">
+                    {proposal.total_amount_cents !== null ? formatCurrency(proposal.total_amount_cents, proposal.currency) : 'N/A'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-4 text-[10px] text-muted-foreground/60 border-t border-muted/20 bg-muted/5">
+                Currency: <span className="font-bold text-muted-foreground/80">{proposal.currency}</span> • Prices are based on current rates and valid until {proposal.valid_until ? new Date(proposal.valid_until).toLocaleDateString() : 'N/A'}
               </div>
             </CardContent>
           </Card>
@@ -264,6 +340,26 @@ export default function ProposalDetailPage() {
               </CardContent>
             </Card>
           )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Services</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {proposal.services && proposal.services.length > 0 ? (
+                <ul className="list-disc list-inside space-y-1 text-sm text-foreground">
+                  {proposal.services.map(service => (
+                    <li key={service.id}>
+                      <span className="font-medium">{service.name}</span>
+                      {service.description && <span className="text-muted-foreground"> - {service.description}</span>}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">No services selected.</p>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
 

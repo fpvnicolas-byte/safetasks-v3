@@ -48,7 +48,9 @@
       "success": "Sucesso",
       "error": "Erro",
       "confirmDelete": "Tem certeza que deseja excluir este item?",
+      "confirmDeleteTitle": "Confirmar Exclusão",
       "confirmAction": "Tem certeza que deseja realizar esta ação?",
+      "confirmActionTitle": "Confirmar Ação",
       "actionSuccess": "Ação concluída com sucesso",
       "actionError": "Falha na ação: {message}",
       "selectProject": "Por favor, selecione um projeto primeiro",
@@ -229,7 +231,7 @@
     "inventory": "Inventário",
     "kits": "Kits",
     "items": "Itens",
-    "stakeholders": "Partes Interessadas",
+    "stakeholders": "Equipe",
     "suppliers": "Fornecedores",
     "proposals": "Propostas",
     "storage": "Armazenamento",
@@ -381,6 +383,12 @@
         "callSheetsDescription": "Envie ordens do dia, cronogramas e documentos de produção",
         "mediaFiles": "Arquivos de Mídia",
         "mediaDescription": "Envie imagens, vídeos e outros recursos de mídia"
+      },
+      "team": {
+        "title": "Equipe",
+        "description": "Gerencie stakeholders e membros da equipe do projeto",
+        "addMember": "Adicionar Membro",
+        "empty": "Nenhum membro da equipe encontrado para este projeto"
       }
     }
   },
@@ -526,8 +534,18 @@
       },
       "card": {
         "call": "Chamada:",
-        "wrap": "Encerramento:"
+        "onSet": "No Set:",
+        "lunch": "Almoço:",
+        "wrap": "Encerramento:",
+        "safety": "Segurança e Logística",
+        "parking": "Estacionamento:",
+        "hospital": "Hospital:"
       }
+    },
+    "statusLabels": {
+      "draft": "Rascunho",
+      "confirmed": "Confirmado",
+      "completed": "Concluído"
     },
     "detail": {
       "loading": "Carregando dia de filmagem...",
@@ -553,6 +571,41 @@
       "assignError": "Erro: {message}",
       "noScenes": "Nenhuma cena encontrada para este projeto.",
       "createScene": "Criar uma cena"
+    },
+    "form": {
+      "scheduleTitle": "Agendar Novo Dia de Filmagem",
+      "scheduleDescription": "Adicione detalhes do dia de filmagem ao seu cronograma de produção",
+      "selectProject": "Selecione um projeto para agendar um dia de filmagem:",
+      "loadingProjects": "Carregando projetos...",
+      "chooseProject": "Escolha um projeto",
+      "noProjectsCreateFirst": "Nenhum projeto encontrado. Crie um projeto primeiro.",
+      "createProject": "Criar Projeto",
+      "scheduleDetails": "Detalhes do Cronograma",
+      "shootingDate": "Data de Filmagem *",
+      "generalCallTime": "Horário Geral de Chamada *",
+      "generalCallTimeHelp": "Horário geral de chamada da equipe (Ordem do Dia)",
+      "shootingCall": "Início da Filmagem (No Set)",
+      "shootingCallHelp": "Quando a filmagem realmente começa",
+      "lunchTime": "Horário de Almoço",
+      "estimatedWrap": "Previsão de Término",
+      "locationSection": "Localização",
+      "locationName": "Nome do Local *",
+      "locationNamePlaceholder": "p.ex., Estúdio A, Parque Central",
+      "address": "Endereço",
+      "addressPlaceholder": "Endereço completo para navegação",
+      "parkingInfo": "Informações de Estacionamento",
+      "parkingInfoPlaceholder": "Instruções de estacionamento para equipe/veículos...",
+      "safetyLogistics": "Segurança e Logística",
+      "nearestHospital": "Hospital Mais Próximo",
+      "nearestHospitalPlaceholder": "Nome, endereço e telefone do pronto-socorro...",
+      "weatherForecast": "Previsão do Tempo",
+      "weatherForecastPlaceholder": "p.ex., Ensolarado, 25°C",
+      "notesSection": "Notas",
+      "generalNotes": "Notas Gerais",
+      "generalNotesPlaceholder": "Notas diárias, requisitos especiais...",
+      "creating": "Criando...",
+      "scheduleAction": "Agendar Dia de Filmagem",
+      "errorCreating": "Erro ao Criar Dia de Filmagem"
     }
   },
   "scenes": {
@@ -622,6 +675,7 @@
       "minutes": "minutos",
       "description": "Descrição",
       "notFound": "Cena não encontrada",
+      "deleteConfirmTitle": "Excluir Cena?",
       "deleteConfirm": "Tem certeza que deseja excluir esta cena?"
     },
     "edit": {
@@ -760,6 +814,7 @@
         "view": "Visualizar",
         "edit": "Editar",
         "deleteConfirm": "Tem certeza que deseja excluir a fatura #{number}? Esta ação não pode ser desfeita.",
+        "deleteConfirmTitle": "Excluir Fatura?",
         "deleteError": "Falha ao excluir fatura. Por favor, tente novamente."
       }
     },
@@ -1023,6 +1078,7 @@
           "created": "Criado em: {date}"
         },
         "deleteConfirm": "Tem certeza de que deseja excluir a conta bancária \"{name}\"? Esta ação não pode ser desfeita.",
+        "deleteConfirmTitle": "Excluir Conta Bancária?",
         "deleteError": "Falha ao excluir conta bancária: {message}"
       },
       "bankAccountsNew": {
@@ -1160,6 +1216,7 @@
           "statusCounts": "{active} ativas • {inactive} inativas"
         },
         "deleteConfirm": "Tem certeza de que deseja excluir a tabela de impostos \"{name}\"? Esta ação não pode ser desfeita.",
+        "deleteConfirmTitle": "Excluir Tabela de Impostos?",
         "deleteError": "Falha ao excluir tabela de impostos: {message}"
       },
       "taxTablesNew": {
@@ -1606,6 +1663,7 @@
     },
     "delete": {
       "confirm": "Tem certeza que deseja excluir o cliente \"{name}\"? Esta ação não pode ser desfeita.",
+      "confirmTitle": "Excluir Cliente?",
       "error": "Falha ao excluir cliente: {message}"
     }
   },
@@ -1662,19 +1720,20 @@
     },
     "delete": {
       "confirm": "Tem certeza de que deseja excluir \"{name}\"? Esta ação não pode ser desfeita.",
+      "confirmTitle": "Excluir Fornecedor?",
       "error": "Falha ao excluir fornecedor: {message}"
     },
     "noSuppliers": "Nenhum fornecedor encontrado"
   },
   "stakeholders": {
-    "title": "Partes Interessadas",
+    "title": "Equipe",
     "description": "Gerencie membros da equipe e colaboradores do projeto",
     "loading": "Carregando...",
     "error": "Erro: Nenhuma organização encontrada. Entre em contato com o suporte.",
-    "addStakeholder": "Adicionar Parte Interessada",
-    "newStakeholder": "Nova Parte Interessada",
-    "createStakeholder": "Criar Parte Interessada",
-    "editStakeholder": "Editar Parte Interessada",
+    "addStakeholder": "Adicionar Membro",
+    "newStakeholder": "Novo Membro",
+    "createStakeholder": "Criar Membro",
+    "editStakeholder": "Editar Membro",
     "name": "Nome",
     "role": "Função",
     "company": "Empresa",
@@ -1686,17 +1745,18 @@
     "advisor": "Consultor",
     "filters": {
       "title": "Filtros",
-      "description": "Filtre partes interessadas por projeto ou pesquise por nome",
+      "description": "Filtre membros da equipe por projeto ou pesquise por nome",
       "allProjects": "Todos os Projetos",
       "searchPlaceholder": "Pesquisar por nome ou função..."
     },
     "table": {
       "title": "Membros da Equipe",
-      "count": "{count} parte(s) interessada(s) encontrada(s)",
-      "loading": "Carregando partes interessadas...",
+      "count": "{count} membro(s) encontrado(s)",
+      "loading": "Carregando equipe...",
       "headers": {
         "name": "Nome",
         "role": "Função",
+        "status": "Status",
         "project": "Projeto",
         "email": "E-mail",
         "phone": "Telefone",
@@ -1706,8 +1766,8 @@
       "unknownProject": "Projeto Desconhecido"
     },
     "empty": {
-      "noStakeholders": "Nenhuma parte interessada encontrada",
-      "addFirst": "Adicione Sua Primeira Parte Interessada"
+      "noStakeholders": "Nenhum membro encontrado",
+      "addFirst": "Adicione Seu Primeiro Membro"
     },
     "status": {
       "requested": "Solicitado",

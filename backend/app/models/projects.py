@@ -43,14 +43,14 @@ class Project(Base):
     call_sheets = relationship("CallSheet", back_populates="project", cascade="all, delete-orphan")
 
     # Relationships to production entities
-    scenes = relationship("Scene", back_populates="project", cascade="all, delete-orphan")
-    characters = relationship("Character", back_populates="project", cascade="all, delete-orphan")
-    shooting_days = relationship("ShootingDay", back_populates="project", cascade="all, delete-orphan")
+    scenes = relationship("Scene", back_populates="project", cascade="all, delete-orphan", passive_deletes=True)
+    characters = relationship("Character", back_populates="project", cascade="all, delete-orphan", passive_deletes=True)
+    shooting_days = relationship("ShootingDay", back_populates="project", cascade="all, delete-orphan", passive_deletes=True)
 
     # Relationships to financial entities
-    invoices = relationship("Invoice", back_populates="project", cascade="all, delete-orphan")
-    transactions = relationship("Transaction", back_populates="project")
-    budget_lines = relationship("ProjectBudgetLine", back_populates="project", cascade="all, delete-orphan")
+    invoices = relationship("Invoice", back_populates="project", cascade="all, delete-orphan", passive_deletes=True)
+    transactions = relationship("Transaction", back_populates="project", passive_deletes=True)
+    budget_lines = relationship("ProjectBudgetLine", back_populates="project", cascade="all, delete-orphan", passive_deletes=True)
 
     # Many-to-Many relationship with Service
     services = relationship("Service", secondary="project_services", backref="projects")

@@ -13,6 +13,7 @@ import Link from 'next/link'
 import { formatCurrency } from '@/lib/utils/money'
 import { InvoiceWithItems, InvoiceStatus } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 
 const statusVariant: Record<InvoiceStatus, 'secondary' | 'info' | 'success' | 'destructive' | 'outline'> = {
   draft: 'secondary',
@@ -295,10 +296,6 @@ function InvoiceCard({ invoice, t, tCommon, locale }: InvoiceCardProps) {
   const isOverdue = invoice.status !== 'paid' && dueDate < new Date()
 
   async function handleDelete() {
-    if (!confirm(t('invoicesTab.invoice.deleteConfirm', { number: invoice.invoice_number }))) {
-      return
-    }
-
     setIsDeleting(true)
     try {
       await deleteInvoice.mutateAsync(invoice.id)
@@ -310,78 +307,90 @@ function InvoiceCard({ invoice, t, tCommon, locale }: InvoiceCardProps) {
     }
   }
 
-  return (
-    <Card className={`hover:shadow-md transition-shadow ${isOverdue ? 'border-destructive/30' : ''}`}>
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div>
-            <CardTitle className="text-lg">
-              {t('invoicesTab.invoice.invoiceNumber', { number: invoice.invoice_number })}
-            </CardTitle>
-            <CardDescription>
-              {t('invoicesTab.invoice.issued')} {issueDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} • {t('invoicesTab.invoice.due')} {dueDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-              {isOverdue && (
-                <span className="text-destructive font-medium ml-2">
-                  {t('invoicesTab.invoice.overdue')}
-                </span>
-              )}
-            </CardDescription>
-          </div>
-          <Badge variant={statusVariant[invoice.status]}>
-            {t(`status.${invoice.status}`)}
-          </Badge>
-        </div>
-      </CardHeader>
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <div>
-            <div className="font-medium text-muted-foreground">{t('invoicesTab.invoice.client')}</div>
-            <div>{invoice.client?.name || t('invoicesTab.invoice.noClient')}</div>
+  return (
+    <>
+      <ConfirmDeleteDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleDelete}
+        loading={isDeleting}
+        title={t('invoicesTab.invoice.deleteConfirmTitle', { number: invoice.invoice_number })}
+        description={t('invoicesTab.invoice.deleteConfirm', { number: invoice.invoice_number })}
+      />
+      <Card className={`hover:shadow-md transition-shadow ${isOverdue ? 'border-destructive/30' : ''}`}>
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle className="text-lg">
+                {t('invoicesTab.invoice.invoiceNumber', { number: invoice.invoice_number })}
+              </CardTitle>
+              <CardDescription>
+                {t('invoicesTab.invoice.issued')} {issueDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} • {t('invoicesTab.invoice.due')} {dueDate.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                {isOverdue && (
+                  <span className="text-destructive font-medium ml-2">
+                    {t('invoicesTab.invoice.overdue')}
+                  </span>
+                )}
+              </CardDescription>
+            </div>
+            <Badge variant={statusVariant[invoice.status]}>
+              {t(`status.${invoice.status}`)}
+            </Badge>
           </div>
-          <div>
-            <div className="font-medium text-muted-foreground">{t('invoicesTab.invoice.project')}</div>
-            <div>{invoice.project?.title || t('invoicesTab.invoice.noProject')}</div>
-          </div>
-          <div>
-            <div className="font-medium text-muted-foreground">{t('amount')}</div>
-            <div className="text-lg font-bold">
-              {formatCurrency(invoice.total_amount_cents)}
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div>
+              <div className="font-medium text-muted-foreground">{t('invoicesTab.invoice.client')}</div>
+              <div>{invoice.client?.name || t('invoicesTab.invoice.noClient')}</div>
+            </div>
+            <div>
+              <div className="font-medium text-muted-foreground">{t('invoicesTab.invoice.project')}</div>
+              <div>{invoice.project?.title || t('invoicesTab.invoice.noProject')}</div>
+            </div>
+            <div>
+              <div className="font-medium text-muted-foreground">{t('amount')}</div>
+              <div className="text-lg font-bold">
+                {formatCurrency(invoice.total_amount_cents)}
+              </div>
             </div>
           </div>
-        </div>
 
-        {invoice.notes && (
-          <div className="text-sm">
-            <div className="font-medium text-muted-foreground">{t('invoicesTab.invoice.notes')}</div>
-            <div className="mt-1">{invoice.notes}</div>
+          {invoice.notes && (
+            <div className="text-sm">
+              <div className="font-medium text-muted-foreground">{t('invoicesTab.invoice.notes')}</div>
+              <div className="mt-1">{invoice.notes}</div>
+            </div>
+          )}
+
+          <div className="flex gap-2 pt-2">
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/financials/invoices/${invoice.id}`}>
+                <Eye className="mr-2 h-3 w-3" />
+                {t('invoicesTab.invoice.view')}
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/financials/invoices/${invoice.id}/edit`}>
+                <Edit className="mr-2 h-3 w-3" />
+                {t('invoicesTab.invoice.edit')}
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+              onClick={() => setIsDeleteDialogOpen(true)}
+              disabled={isDeleting}
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
           </div>
-        )}
-
-        <div className="flex gap-2 pt-2">
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/financials/invoices/${invoice.id}`}>
-              <Eye className="mr-2 h-3 w-3" />
-              {t('invoicesTab.invoice.view')}
-            </Link>
-          </Button>
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/financials/invoices/${invoice.id}/edit`}>
-              <Edit className="mr-2 h-3 w-3" />
-              {t('invoicesTab.invoice.edit')}
-            </Link>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-            onClick={handleDelete}
-            disabled={isDeleting}
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </>
   )
 }

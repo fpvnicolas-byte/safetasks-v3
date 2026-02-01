@@ -14,6 +14,7 @@ import {
   useUpdateGoogleDrive,
   useRemoveGoogleDrive,
 } from '@/lib/api/hooks'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import {
   Cloud,
   CheckCircle2,
@@ -73,12 +74,11 @@ export default function GoogleDriveSettingsPage() {
     })
   }
 
-  const handleRemove = async () => {
-    if (!confirm(t('dangerZone.removeConfirm'))) {
-      return
-    }
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
+  const handleRemove = async () => {
     await removeDrive.mutateAsync()
+    setIsDeleteDialogOpen(false)
   }
 
   if (isLoading) {
@@ -91,6 +91,14 @@ export default function GoogleDriveSettingsPage() {
 
   return (
     <div className="container max-w-4xl py-8 space-y-6">
+      <ConfirmDeleteDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleRemove}
+        loading={removeDrive.isPending}
+        title={t('dangerZone.removeButton')}
+        description={t('dangerZone.removeConfirm')}
+      />
       <div className="rounded-xl border bg-card/60 px-6 py-5">
         <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
           Settings / Integrations
@@ -333,7 +341,7 @@ export default function GoogleDriveSettingsPage() {
           <CardContent>
             <Button
               variant="destructive"
-              onClick={handleRemove}
+              onClick={() => setIsDeleteDialogOpen(true)}
               disabled={removeDrive.isPending}
             >
               <Trash2 className="mr-2 h-4 w-4" />

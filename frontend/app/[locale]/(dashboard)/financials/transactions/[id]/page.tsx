@@ -12,6 +12,7 @@ import { ArrowLeft, Trash2, Receipt, Calendar, Wallet, FolderOpen, ArrowUpCircle
 import Link from 'next/link'
 import { formatCurrency, getCategoryDisplayName, TransactionCategory } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 
 export default function TransactionViewPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
@@ -31,6 +32,8 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
   const deleteTransaction = useDeleteTransaction()
   const [isDeleting, setIsDeleting] = useState(false)
 
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+
   const handleDelete = async () => {
     if (!transaction) return
 
@@ -38,15 +41,6 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
       alert(t('errors.organizationMissing'))
       return
     }
-
-    const confirmed = confirm(
-      t('deleteConfirm', {
-        direction: transaction.type === 'income' ? t('balance.decrease') : t('balance.increase'),
-        amount: formatCurrency(transaction.amount_cents, transaction.bank_account?.currency || 'BRL')
-      })
-    )
-
-    if (!confirmed) return
 
     setIsDeleting(true)
     try {
@@ -92,6 +86,17 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
 
   return (
     <div className="space-y-8">
+      <ConfirmDeleteDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleDelete}
+        loading={isDeleting}
+        title={t('actions.delete')}
+        description={t('deleteConfirm', {
+          direction: transaction?.type === 'income' ? t('balance.decrease') : t('balance.increase'),
+          amount: transaction ? formatCurrency(transaction.amount_cents, transaction.bank_account?.currency || 'BRL') : ''
+        })}
+      />
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" asChild>
@@ -103,7 +108,7 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
         </div>
         <Button
           variant="destructive"
-          onClick={handleDelete}
+          onClick={() => setIsDeleteDialogOpen(true)}
           disabled={isDeleting}
         >
           <Trash2 className="mr-2 h-4 w-4" />

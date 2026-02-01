@@ -12,6 +12,7 @@ import { Plus, Search, Edit, Trash2, Film, Clock, MapPin, Eye } from 'lucide-rea
 import Link from 'next/link'
 import { Scene } from '@/types'
 import { useTranslations } from 'next-intl'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 
 const locationVariant: Record<string, 'info' | 'success'> = {
   internal: 'info',
@@ -49,16 +50,21 @@ function ScenesContent() {
     return matchesLocation && matchesTimeOfDay && matchesSearch
   }) || []
 
-  const handleDeleteScene = async (sceneId: string, sceneNumber: string) => {
-    if (!confirm(t('list.deleteConfirm', { number: sceneNumber }))) {
-      return
-    }
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string, number: string } | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
+  const handleDeleteScene = async () => {
+    if (!deleteTarget) return
+
+    setIsDeleting(true)
     try {
-      await deleteScene.mutateAsync(sceneId)
+      await deleteScene.mutateAsync(deleteTarget.id)
+      setDeleteTarget(null)
     } catch (err: unknown) {
       const error = err as Error
       alert(t('list.deleteError', { message: error.message }))
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -90,6 +96,14 @@ function ScenesContent() {
 
   return (
     <div className="space-y-8">
+      <ConfirmDeleteDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        onConfirm={handleDeleteScene}
+        loading={isDeleting}
+        title={t('list.deleteConfirm', { number: deleteTarget?.number || '' })}
+        description={t('list.deleteConfirm', { number: deleteTarget?.number || '' })}
+      />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
@@ -181,7 +195,7 @@ function ScenesContent() {
             <SceneCard
               key={scene.id}
               scene={scene}
-              onDelete={() => handleDeleteScene(scene.id, scene.scene_number.toString())}
+              onDelete={() => setDeleteTarget({ id: scene.id, number: scene.scene_number.toString() })}
               t={t}
             />
           ))}

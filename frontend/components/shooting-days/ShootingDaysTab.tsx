@@ -6,11 +6,11 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Calendar, Edit, Trash2, Clock, MapPin, Eye } from 'lucide-react'
+import { Plus, Calendar, Edit, Trash2, Clock, MapPin, Eye, ShieldAlert } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { useLocale } from 'next-intl'
-import { convertTimeToFormFormat, ShootingDay } from '@/types'
+import { convertTimeToFormFormat, ShootingDay, ShootingDayStatus } from '@/types'
 
 interface ShootingDaysTabProps {
   projectId: string
@@ -127,6 +127,11 @@ function ShootingDayCard({ shootingDay, onDelete, isDeleting, t, tCommon, locale
     month: 'short',
     day: 'numeric'
   })
+  const statusVariant: Record<ShootingDayStatus, 'secondary' | 'info' | 'success'> = {
+    draft: 'secondary',
+    confirmed: 'info',
+    completed: 'success',
+  }
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -136,9 +141,14 @@ function ShootingDayCard({ shootingDay, onDelete, isDeleting, t, tCommon, locale
             <CardTitle className="text-lg">{formattedDate}</CardTitle>
             <CardDescription>{shootingDay.location_name}</CardDescription>
           </div>
-          <Badge variant="outline">
-            {new Date(shootingDay.date).getFullYear()}
-          </Badge>
+          <div className="flex flex-col items-end gap-2">
+            <Badge variant={statusVariant[shootingDay.status]}>
+              {t(`statusLabels.${shootingDay.status}`)}
+            </Badge>
+            <Badge variant="outline">
+              {new Date(shootingDay.date).getFullYear()}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
 
@@ -150,6 +160,20 @@ function ShootingDayCard({ shootingDay, onDelete, isDeleting, t, tCommon, locale
             <span className="text-muted-foreground">{t('tab.card.call')}</span>
             <span>{convertTimeToFormFormat(shootingDay.call_time)}</span>
           </div>
+          {shootingDay.on_set && (
+            <div className="flex items-center gap-1">
+              <Clock className="h-3 w-3 text-muted-foreground" />
+              <span className="text-muted-foreground">{t('tab.card.onSet')}</span>
+              <span>{convertTimeToFormFormat(shootingDay.on_set)}</span>
+            </div>
+          )}
+          {shootingDay.lunch_time && (
+            <div className="flex items-center gap-1">
+              <Clock className="h-3 w-3 text-muted-foreground" />
+              <span className="text-muted-foreground">{t('tab.card.lunch')}</span>
+              <span>{convertTimeToFormFormat(shootingDay.lunch_time)}</span>
+            </div>
+          )}
           {shootingDay.wrap_time && (
             <div className="flex items-center gap-1">
               <Clock className="h-3 w-3 text-muted-foreground" />
@@ -172,6 +196,28 @@ function ShootingDayCard({ shootingDay, onDelete, isDeleting, t, tCommon, locale
           <p className="text-sm text-muted-foreground line-clamp-2 italic">
             {shootingDay.notes}
           </p>
+        )}
+
+        {/* Safety & Logistics */}
+        {(shootingDay.parking_info || shootingDay.hospital_info) && (
+          <div className="rounded-md border border-dashed border-muted-foreground/30 p-3 text-sm space-y-2">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <ShieldAlert className="h-3.5 w-3.5" />
+              {t('tab.card.safety')}
+            </div>
+            {shootingDay.parking_info && (
+              <div>
+                <span className="font-medium">{t('tab.card.parking')}</span>{' '}
+                <span className="text-muted-foreground">{shootingDay.parking_info}</span>
+              </div>
+            )}
+            {shootingDay.hospital_info && (
+              <div>
+                <span className="font-medium">{t('tab.card.hospital')}</span>{' '}
+                <span className="text-muted-foreground">{shootingDay.hospital_info}</span>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Actions */}

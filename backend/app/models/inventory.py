@@ -6,7 +6,7 @@ import uuid
 import enum
 
 
-class MaintenanceTypeEnum(enum.Enum):
+class MaintenanceTypeEnum(str, enum.Enum):
     preventive = "preventive"
     corrective = "corrective"
     calibration = "calibration"
@@ -14,7 +14,7 @@ class MaintenanceTypeEnum(enum.Enum):
     upgrade = "upgrade"
 
 
-class HealthStatusEnum(enum.Enum):
+class HealthStatusEnum(str, enum.Enum):
     excellent = "excellent"
     good = "good"
     needs_service = "needs_service"
@@ -36,7 +36,7 @@ class KitItem(Base):
     # Maintenance tracking
     current_usage_hours = Column(Float, default=0.0)
     last_maintenance_date = Column(Date, nullable=True)
-    health_status = Column(Enum(HealthStatusEnum), default=HealthStatusEnum.excellent)
+    health_status = Column(Enum(HealthStatusEnum, values_callable=lambda x: [e.value for e in x]), default=HealthStatusEnum.excellent)
 
     # Equipment details
     serial_number = Column(String, nullable=True)
@@ -68,7 +68,7 @@ class MaintenanceLog(Base):
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
     kit_item_id = Column(UUID(as_uuid=True), ForeignKey("kit_items.id"), nullable=False)
 
-    maintenance_type = Column(Enum(MaintenanceTypeEnum), nullable=False)
+    maintenance_type = Column(Enum(MaintenanceTypeEnum, values_callable=lambda x: [e.value for e in x]), nullable=False)
     description = Column(TEXT, nullable=False)
     technician_name = Column(String, nullable=True)
 
@@ -81,8 +81,8 @@ class MaintenanceLog(Base):
     duration_hours = Column(Float, nullable=True)  # How long the maintenance took
 
     # Before/after status
-    health_before = Column(Enum(HealthStatusEnum), nullable=True)
-    health_after = Column(Enum(HealthStatusEnum), nullable=True)
+    health_before = Column(Enum(HealthStatusEnum, values_callable=lambda x: [e.value for e in x]), nullable=True)
+    health_after = Column(Enum(HealthStatusEnum, values_callable=lambda x: [e.value for e in x]), nullable=True)
 
     # Usage reset (for preventive maintenance)
     usage_hours_reset = Column(Float, default=0.0)  # Reset usage counter after maintenance

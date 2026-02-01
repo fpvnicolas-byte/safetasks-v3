@@ -129,3 +129,51 @@ async def notify_stakeholder_status_change(
             "status": new_status
         }
     )
+
+
+async def notify_expense_created(
+    db: AsyncSession,
+    organization_id: UUID,
+    stakeholder_name: str,
+    project_title: str,
+    amount_cents: int
+):
+    """Notify admins when an automatic expense is created for a team member."""
+    amount_formatted = f"R$ {amount_cents / 100:,.2f}"
+
+    await notify_organization_admins(
+        db=db,
+        organization_id=organization_id,
+        title="Expense Created",
+        message=f"Automatic expense created: {stakeholder_name} on {project_title} - {amount_formatted}",
+        type="info",
+        metadata={
+            "stakeholder_name": stakeholder_name,
+            "project_title": project_title,
+            "amount_cents": amount_cents
+        }
+    )
+
+
+async def notify_income_created(
+    db: AsyncSession,
+    organization_id: UUID,
+    invoice_number: str,
+    client_name: str,
+    amount_cents: int
+):
+    """Notify admins when an automatic income is created from invoice payment."""
+    amount_formatted = f"R$ {amount_cents / 100:,.2f}"
+
+    await notify_organization_admins(
+        db=db,
+        organization_id=organization_id,
+        title="Income Created",
+        message=f"Invoice {invoice_number} paid by {client_name} - {amount_formatted} added to balance",
+        type="success",
+        metadata={
+            "invoice_number": invoice_number,
+            "client_name": client_name,
+            "amount_cents": amount_cents
+        }
+    )

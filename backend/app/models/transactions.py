@@ -11,8 +11,8 @@ class Transaction(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
     bank_account_id = Column(UUID(as_uuid=True), ForeignKey("bank_accounts.id"), nullable=False)
-    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=True)
-    invoice_id = Column(UUID(as_uuid=True), ForeignKey("invoices.id"), nullable=True)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=True)
+    invoice_id = Column(UUID(as_uuid=True), ForeignKey("invoices.id", ondelete="CASCADE"), nullable=True)
     supplier_id = Column(UUID(as_uuid=True), ForeignKey("suppliers.id"), nullable=True)  # Link to who we paid/received from
     stakeholder_id = Column(UUID(as_uuid=True), ForeignKey("stakeholders.id"), nullable=True)  # Link to specific team member
     budget_line_id = Column(UUID(as_uuid=True), ForeignKey("project_budget_lines.id"), nullable=True)  # Link to budget line

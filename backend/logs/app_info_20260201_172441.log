@@ -1,0 +1,4 @@
+2026-02-01 17:24:41 [INFO] app: Logging configuration initialized
+2026-02-01 17:25:35 [INFO] app.services.analytics: MTD Financial Metrics for org 4384a92c-df41-444b-b34d-6c80e7820486: Revenue: 0, Expenses: 0, Date range: 2026-02-01 to 2026-02-01
+2026-02-01 17:25:35 [INFO] app.services.analytics: YTD Financial Metrics for org 4384a92c-df41-444b-b34d-6c80e7820486: Revenue: 125000, Expenses: 5E+4, Date range: 2026-01-01 to 2026-02-01
+2026-02-01 17:26:29 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"

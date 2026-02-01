@@ -133,6 +133,9 @@ class InvoiceBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+
+
+
 class InvoiceCreate(BaseModel):
     """Schema for creating an Invoice."""
     client_id: UUID

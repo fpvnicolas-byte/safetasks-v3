@@ -123,7 +123,7 @@ export default function ProposalsPage() {
               <label className="text-sm font-medium">{t('filter.results')}</label>
               <div className="flex items-center justify-center h-10 px-3 py-2 bg-muted rounded-md">
                 <span className="text-sm font-medium">
-                  {filteredProposals.length} {filteredProposals.length !== 1 ? t('filter.proposalCount_other', { count: filteredProposals.length }) : t('filter.proposalCount', { count: 1 })}
+                  {filteredProposals.length !== 1 ? t('filter.proposalCount_other', { count: filteredProposals.length }) : t('filter.proposalCount', { count: 1 })}
                 </span>
               </div>
             </div>
@@ -225,6 +225,8 @@ function ProposalCard({ proposal, onDelete, t, locale }: ProposalCardProps) {
           <div className="flex-1 mr-2">
             <CardTitle className="text-lg line-clamp-1">{proposal.title}</CardTitle>
             <CardDescription className="line-clamp-1">
+              <span className="font-medium text-foreground">{proposal.client?.name}</span>
+              <span className="mx-1">•</span>
               {t('card.created')} {new Date(proposal.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
             </CardDescription>
           </div>

@@ -1,10 +1,9 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { useProject, useDeleteProject } from '@/lib/api/hooks'
+import { useProject, useDeleteProject, useProjectStats } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { useFiles } from '@/lib/api/hooks/useFiles'
-import { CallSheetsTab } from '@/components/call-sheets/CallSheetsTab'
 import { ShootingDaysTab } from '@/components/shooting-days/ShootingDaysTab'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -14,7 +13,6 @@ import { Edit, Trash2, FileText, DollarSign, Film, FolderOpen, Users, Calendar }
 import { LocaleLink } from '@/components/LocaleLink'
 import { formatCurrency } from '@/lib/utils/money'
 import { useState, useEffect } from 'react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { DetailPageSkeleton } from '@/components/LoadingSkeletons'
 import { FileUploadZone, FileList } from '@/components/storage'
 import { FileUploadResponse } from '@/types'
@@ -23,6 +21,8 @@ import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
 import { ErrorDialog } from '@/components/ui/error-dialog'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
+import { BudgetSummaryCard } from '@/components/financials/BudgetSummaryCard'
+import { TeamTab } from '@/components/projects/TeamTab'
 
 export default function ProjectDetailPage() {
   const t = useTranslations('projects')
@@ -34,6 +34,7 @@ export default function ProjectDetailPage() {
   const projectId = params.id as string
 
   const { data: project, isLoading, error } = useProject(projectId, organizationId || undefined)
+  const { data: stats } = useProjectStats(projectId)
   const deleteProject = useDeleteProject(projectId, organizationId || '')
 
   const { open: deleteOpen, onOpenChange: setDeleteOpen, askConfirmation: confirmDelete, closeConfirmation: cancelDelete } = useConfirmDelete()
@@ -207,16 +208,7 @@ export default function ProjectDetailPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('details.tabs.callSheets')}</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">{t('details.totalCreated')}</p>
-          </CardContent>
-        </Card>
+
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -224,7 +216,7 @@ export default function ProjectDetailPage() {
             <Film className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{stats?.scenes_count || 0}</div>
             <p className="text-xs text-muted-foreground">{t('details.inScript')}</p>
           </CardContent>
         </Card>
@@ -234,8 +226,8 @@ export default function ProjectDetailPage() {
       <Tabs defaultValue="details">
         <TabsList>
           <TabsTrigger value="details">{t('details.tabs.details')}</TabsTrigger>
-          <TabsTrigger value="call-sheets">{t('details.tabs.callSheets')}</TabsTrigger>
           <TabsTrigger value="shooting-days">{t('details.tabs.shootingDays')}</TabsTrigger>
+          <TabsTrigger value="team">{t('details.team.title')}</TabsTrigger>
           <TabsTrigger value="financials">{t('details.tabs.financials')}</TabsTrigger>
           <TabsTrigger value="production">{t('details.tabs.production')}</TabsTrigger>
           <TabsTrigger value="files">{t('details.tabs.files')}</TabsTrigger>
@@ -290,36 +282,12 @@ export default function ProjectDetailPage() {
           <ShootingDaysTab projectId={projectId} />
         </TabsContent>
 
-        <TabsContent value="call-sheets">
-          <CallSheetsTab projectId={projectId} />
+        <TabsContent value="team">
+          <TeamTab projectId={projectId} />
         </TabsContent>
 
         <TabsContent value="financials">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('details.financials.budgetBreakdown')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">{t('details.financials.totalBudget')}</span>
-                  <span className="text-lg font-bold">
-                    {formatCurrency(project.budget_total_cents)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">{t('details.financials.spent')}</span>
-                  <span className="text-lg font-bold">$0.00</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">{t('details.financials.remaining')}</span>
-                  <span className="text-lg font-bold text-success">
-                    {formatCurrency(project.budget_total_cents)}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <BudgetSummaryCard projectId={projectId} />
         </TabsContent>
 
         <TabsContent value="production">
@@ -418,20 +386,20 @@ export default function ProjectDetailPage() {
               <CardContent>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                   <div className="text-center p-4 border rounded-lg">
-                    <div className="text-2xl font-bold">0</div>
+                    <div className="text-2xl font-bold">{stats?.scenes_count || 0}</div>
                     <div className="text-sm text-muted-foreground">{t('details.production.scenesCreated')}</div>
                   </div>
                   <div className="text-center p-4 border rounded-lg">
-                    <div className="text-2xl font-bold">0</div>
+                    <div className="text-2xl font-bold">{stats?.characters_count || 0}</div>
                     <div className="text-sm text-muted-foreground">{t('details.production.charactersDefined')}</div>
                   </div>
                   <div className="text-center p-4 border rounded-lg">
-                    <div className="text-2xl font-bold">0</div>
+                    <div className="text-2xl font-bold">{stats?.shooting_days_count || 0}</div>
                     <div className="text-sm text-muted-foreground">{t('details.production.shootingDaysCount')}</div>
                   </div>
                   <div className="text-center p-4 border rounded-lg">
-                    <div className="text-2xl font-bold">0</div>
-                    <div className="text-sm text-muted-foreground">{t('details.production.callSheetsCount')}</div>
+                    <div className="text-2xl font-bold">{stats?.team_count || 0}</div>
+                    <div className="text-sm text-muted-foreground">{t('details.team.title')}</div>
                   </div>
                 </div>
                 <div className="mt-4 text-sm text-muted-foreground">

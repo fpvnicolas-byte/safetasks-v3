@@ -10,10 +10,13 @@ class ShootingDay(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
-    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
 
     date = Column(Date, nullable=False)
+    status = Column(String, default="draft")  # draft, confirmed, completed
     call_time = Column(Time, nullable=False)
+    on_set = Column(Time, nullable=True)
+    lunch_time = Column(Time, nullable=True)
     wrap_time = Column(Time, nullable=True)
 
     # Location information (can be free text or reference to a location table)
@@ -23,6 +26,8 @@ class ShootingDay(Base):
     # Weather and notes
     weather_forecast = Column(TEXT, nullable=True)
     notes = Column(TEXT, nullable=True)
+    parking_info = Column(TEXT, nullable=True)
+    hospital_info = Column(TEXT, nullable=True)
 
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())

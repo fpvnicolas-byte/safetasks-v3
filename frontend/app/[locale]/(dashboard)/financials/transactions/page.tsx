@@ -11,6 +11,7 @@ import { Plus, Search, Eye, Trash2, ArrowUpCircle, ArrowDownCircle, Receipt, Tre
 import Link from 'next/link'
 import { formatCurrency, TransactionType, TransactionCategory } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 
 export default function TransactionsPage() {
   const { organizationId } = useAuth()
@@ -82,19 +83,24 @@ export default function TransactionsPage() {
 
   const netBalance = totalIncome - totalExpense
 
-  const handleDeleteTransaction = async (transactionId: string, description: string) => {
-    if (!confirm(tCommon('confirmAction'))) { // Ideally customize this message to include description if needed, or stick to generic
-      return
-    }
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string, description: string } | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
+  const handleDeleteTransaction = async () => {
+    if (!deleteTarget) return
+
+    setIsDeleting(true)
     try {
       await deleteTransaction.mutateAsync({
         organizationId: organizationId || '',
-        transactionId: transactionId
+        transactionId: deleteTarget.id
       })
+      setDeleteTarget(null)
     } catch (err: unknown) {
       const error = err as Error
       alert(tCommon('actionError', { message: error.message }))
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -122,6 +128,14 @@ export default function TransactionsPage() {
 
   return (
     <div className="space-y-8">
+      <ConfirmDeleteDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        onConfirm={handleDeleteTransaction}
+        loading={isDeleting}
+        title={tCommon('confirmActionTitle')}
+        description={deleteTarget?.description ? `${tCommon('confirmAction')} (${deleteTarget.description})` : tCommon('confirmAction')}
+      />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
@@ -373,7 +387,7 @@ export default function TransactionsPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDeleteTransaction(transaction.id, transaction.description || '')}
+                        onClick={() => setDeleteTarget({ id: transaction.id, description: transaction.description || '' })}
                         className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />

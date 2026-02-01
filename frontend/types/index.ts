@@ -70,6 +70,15 @@ export interface ProjectWithClient extends Project {
   client: Client // Client relationship when loaded
 }
 
+export interface ProjectStats {
+  scenes_count: number
+  characters_count: number
+  shooting_days_count: number
+  confirmed_shooting_days_count: number
+  team_count: number
+}
+
+
 // ============================================================================
 // CLIENT TYPES
 // ============================================================================
@@ -433,17 +442,24 @@ export interface CharacterWithScenes extends Character {
   scenes: Scene[]
 }
 
+export type ShootingDayStatus = 'draft' | 'confirmed' | 'completed'
+
 export interface ShootingDay {
   id: UUID
   organization_id: UUID
   project_id: UUID
   date: ISODate // Backend field name (YYYY-MM-DD)
+  status: ShootingDayStatus
   call_time: TimeString // Backend field name (HH:MM:SS)
+  on_set: TimeString | null
+  lunch_time: TimeString | null
   wrap_time: TimeString | null // Backend field name (HH:MM:SS)
   location_name: string // Required, min_length=1
   location_address: string | null
   weather_forecast: string | null
   notes: string | null
+  parking_info: string | null
+  hospital_info: string | null
   created_at: ISODateTime
   updated_at: ISODateTime
   project?: {
@@ -562,6 +578,9 @@ export function getSupplierCategoryDisplayName(category: SupplierCategory): stri
 // Rate type for stakeholder payment calculation
 export type RateType = 'daily' | 'hourly' | 'fixed'
 
+// Booking status for stakeholder workflow
+export type StakeholderStatus = 'requested' | 'confirmed' | 'working' | 'completed' | 'cancelled'
+
 export interface Stakeholder {
   id: UUID
   organization_id: UUID
@@ -577,6 +596,14 @@ export interface Stakeholder {
   rate_type: RateType | null
   rate_value_cents: number | null
   estimated_units: number | null  // hours for hourly, days override for daily
+  // Booking status fields
+  status: StakeholderStatus
+  status_changed_at: ISODateTime | null
+  status_notes: string | null
+  booking_start_date: ISODate | null
+  booking_end_date: ISODate | null
+  confirmed_rate_cents: number | null
+  confirmed_rate_type: string | null
   created_at: ISODateTime
   updated_at: ISODateTime
 }
@@ -640,6 +667,17 @@ export interface StakeholderWithRateInfo extends Stakeholder {
 
 export type ProposalStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired'
 
+export interface ProposalLineItem {
+  id: string
+  description: string
+  value_cents: number
+}
+
+export interface ProposalMetadata {
+  line_items?: ProposalLineItem[]
+  [key: string]: any
+}
+
 export interface Proposal {
   id: UUID
   organization_id: UUID
@@ -649,9 +687,13 @@ export interface Proposal {
   description: string | null
   status: ProposalStatus
   valid_until: ISODate | null
+  start_date: ISODate | null
+  end_date: ISODate | null
   total_amount_cents: number | null
+  base_amount_cents: number | null // Manual portion
   currency: string
   terms_conditions: string | null
+  proposal_metadata: ProposalMetadata | null
   created_at: ISODateTime
   updated_at: ISODateTime
   // Relationships (if loaded)
@@ -662,26 +704,37 @@ export interface Proposal {
 
 export interface ProposalCreate {
   client_id: UUID
+  project_id?: UUID
   title: string
   description?: string
   status?: ProposalStatus
   valid_until?: ISODate
-  total_amount_cents?: number
+  start_date?: ISODate
+  end_date?: ISODate
+  total_amount_cents?: number // Calculated
+  base_amount_cents?: number // Manual
   currency?: string
 
   terms_conditions?: string
   service_ids?: UUID[]
+  proposal_metadata?: ProposalMetadata
 }
 
 export interface ProposalUpdate {
   client_id?: UUID
+  project_id?: UUID
   title?: string
   description?: string
   status?: ProposalStatus
   valid_until?: ISODate
+  start_date?: ISODate
+  end_date?: ISODate
   total_amount_cents?: number
+  base_amount_cents?: number
   currency?: string
   terms_conditions?: string
+  service_ids?: UUID[]
+  proposal_metadata?: ProposalMetadata
 }
 
 export interface ProposalApproval {
@@ -836,9 +889,9 @@ export interface ProjectCreate {
   status?: ProjectStatus
   budget_total_cents?: number
   start_date?: ISODate
-
   end_date?: ISODate
   service_ids?: UUID[]
+  proposal_id?: UUID
 }
 
 export interface ProjectUpdate {
@@ -850,6 +903,7 @@ export interface ProjectUpdate {
   start_date?: ISODate | null
   end_date?: ISODate | null
   service_ids?: UUID[]
+  proposal_id?: UUID
 }
 
 // ============================================================================
@@ -998,33 +1052,48 @@ export interface CharacterUpdate {
  */
 export interface ShootingDayFormData {
   date: string // Will be converted to ISO date
+  status?: ShootingDayStatus
   call_time: string // HTML time input HH:MM → convert to HH:MM:SS
+  on_set?: string
+  lunch_time?: string
   wrap_time?: string // HTML time input HH:MM → convert to HH:MM:SS
   location_name: string
   location_address?: string
   weather_forecast?: string
   notes?: string
+  parking_info?: string
+  hospital_info?: string
 }
 
 export interface ShootingDayCreate {
   project_id: UUID // Required by backend service
   date: ISODate
+  status?: ShootingDayStatus
   call_time: TimeString
+  on_set?: TimeString
+  lunch_time?: TimeString
   wrap_time?: TimeString
   location_name: string
   location_address?: string
   weather_forecast?: string
   notes?: string
+  parking_info?: string
+  hospital_info?: string
 }
 
 export interface ShootingDayUpdate {
   date?: ISODate
+  status?: ShootingDayStatus
   call_time?: TimeString
+  on_set?: TimeString
+  lunch_time?: TimeString
   wrap_time?: TimeString
   location_name?: string
   location_address?: string
   weather_forecast?: string
   notes?: string
+  parking_info?: string
+  hospital_info?: string
 }
 
 // Invoice creation types (already working correctly)

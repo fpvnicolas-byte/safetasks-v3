@@ -17,6 +17,12 @@ class InternalExternal(str, Enum):
     external = "external"
 
 
+class ShootingDayStatus(str, Enum):
+    draft = "draft"
+    confirmed = "confirmed"
+    completed = "completed"
+
+
 class SceneBase(BaseModel):
     """Base schema for Scene."""
     scene_number: int = Field(..., gt=0)
@@ -114,12 +120,17 @@ class SceneCharacterCreate(BaseModel):
 class ShootingDayBase(BaseModel):
     """Base schema for Shooting Day."""
     date: date
+    status: ShootingDayStatus = ShootingDayStatus.draft
     call_time: time
+    on_set: Optional[time] = None
+    lunch_time: Optional[time] = None
     wrap_time: Optional[time] = None
     location_name: str = Field(..., min_length=1)
     location_address: Optional[str] = None
     weather_forecast: Optional[str] = None
     notes: Optional[str] = None
+    parking_info: Optional[str] = None
+    hospital_info: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -132,12 +143,17 @@ class ShootingDayCreate(ShootingDayBase):
 class ShootingDayUpdate(BaseModel):
     """Schema for updating a Shooting Day."""
     date: Optional[date] = None
+    status: Optional[ShootingDayStatus] = None
     call_time: Optional[time] = None
+    on_set: Optional[time] = None
+    lunch_time: Optional[time] = None
     wrap_time: Optional[time] = None
     location_name: Optional[str] = Field(None, min_length=1)
     location_address: Optional[str] = None
     weather_forecast: Optional[str] = None
     notes: Optional[str] = None
+    parking_info: Optional[str] = None
+    hospital_info: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

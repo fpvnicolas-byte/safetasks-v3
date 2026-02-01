@@ -6,7 +6,7 @@ import uuid
 import enum
 
 
-class StakeholderStatusEnum(enum.Enum):
+class StakeholderStatusEnum(str, enum.Enum):
     """Booking status for stakeholder on a project."""
     REQUESTED = "requested"      # Initial outreach
     CONFIRMED = "confirmed"      # Accepted booking
@@ -83,7 +83,7 @@ class Stakeholder(Base):
 
     # Booking status tracking
     status = Column(
-        Enum(StakeholderStatusEnum),
+        Enum(StakeholderStatusEnum, values_callable=lambda x: [e.value for e in x]),
         default=StakeholderStatusEnum.REQUESTED,
         nullable=False
     )

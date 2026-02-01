@@ -6,14 +6,14 @@ import uuid
 import enum
 
 
-class DayNightEnum(enum.Enum):
+class DayNightEnum(str, enum.Enum):
     day = "day"
     night = "night"
     dawn = "dawn"
     dusk = "dusk"
 
 
-class InternalExternalEnum(enum.Enum):
+class InternalExternalEnum(str, enum.Enum):
     internal = "internal"
     external = "external"
 
@@ -23,13 +23,13 @@ class Scene(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
-    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
 
     scene_number = Column(Integer, nullable=False)
     heading = Column(String, nullable=False)  # e.g., "INT. COFFEE SHOP - DAY"
     description = Column(TEXT, nullable=False)
-    day_night = Column(Enum(DayNightEnum), nullable=False)
-    internal_external = Column(Enum(InternalExternalEnum), nullable=False)
+    day_night = Column(Enum(DayNightEnum, values_callable=lambda x: [e.value for e in x]), nullable=False)
+    internal_external = Column(Enum(InternalExternalEnum, values_callable=lambda x: [e.value for e in x]), nullable=False)
     estimated_time_minutes = Column(Integer, nullable=False)  # Estimated shooting time in minutes
 
     # Optional shooting day assignment
@@ -53,7 +53,7 @@ class Character(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
-    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
 
     name = Column(String, nullable=False)
     description = Column(TEXT, nullable=False)
@@ -78,8 +78,8 @@ class SceneCharacter(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
 
-    scene_id = Column(UUID(as_uuid=True), ForeignKey("scenes.id"), nullable=False)
-    character_id = Column(UUID(as_uuid=True), ForeignKey("characters.id"), nullable=False)
+    scene_id = Column(UUID(as_uuid=True), ForeignKey("scenes.id", ondelete="CASCADE"), nullable=False)
+    character_id = Column(UUID(as_uuid=True), ForeignKey("characters.id", ondelete="CASCADE"), nullable=False)
 
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
 

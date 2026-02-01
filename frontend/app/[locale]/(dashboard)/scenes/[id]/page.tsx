@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { useScene, useDeleteScene } from '@/lib/api/hooks'
@@ -9,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Pencil, Trash2, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { DetailPageSkeleton } from '@/components/LoadingSkeletons'
 
 export default function SceneDetailPage() {
@@ -34,14 +36,16 @@ export default function SceneDetailPage() {
     )
   }
 
-  const handleDelete = async () => {
-    if (!confirm(t('deleteConfirm'))) return
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
+  const handleDelete = async () => {
     try {
       await deleteScene.mutateAsync(sceneId)
       router.push(`/${locale}/scenes`)
     } catch (err) {
       console.error('Failed to delete scene:', err)
+    } finally {
+      setIsDeleteDialogOpen(false)
     }
   }
 
@@ -54,6 +58,14 @@ export default function SceneDetailPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <ConfirmDeleteDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleDelete}
+        loading={deleteScene.isPending}
+        title={t('deleteConfirmTitle')}
+        description={t('deleteConfirm')}
+      />
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
@@ -71,7 +83,7 @@ export default function SceneDetailPage() {
               {tCommon('edit')}
             </Link>
           </Button>
-          <Button variant="destructive" onClick={handleDelete}>
+          <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)} disabled={deleteScene.isPending}>
             <Trash2 className="mr-2 h-4 w-4" />
             {tCommon('delete')}
           </Button>

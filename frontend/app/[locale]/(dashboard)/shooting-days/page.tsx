@@ -159,7 +159,7 @@ function ShootingDaysContent() {
         onOpenChange={setDeleteOpen}
         onConfirm={handleDeleteShootingDay}
         title={t('list.deleteTitle')}
-        description={additionalData ? t('list.deleteDescription', { date: new Date(additionalData).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) }) : t('list.deleteConfirmGeneric')}
+        description={additionalData ? t('list.deleteDescription', { date: new Date(additionalData as string).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) }) : t('list.deleteConfirmGeneric')}
         loading={deleteShootingDay.isPending}
       />
     </div>

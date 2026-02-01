@@ -12,6 +12,7 @@ import { Plus, Search, Edit, Trash2, Briefcase, Eye, Phone, Mail } from 'lucide-
 import Link from 'next/link'
 import { SupplierWithTransactions, SupplierCategory, getSupplierCategoryDisplayName, formatCurrency } from '@/types'
 import { useTranslations } from 'next-intl'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 
 export default function SuppliersPage() {
   const { organizationId } = useAuth()
@@ -37,21 +38,34 @@ export default function SuppliersPage() {
     return matchesSearch
   }) || []
 
-  const handleDeleteSupplier = async (supplierId: string, supplierName: string) => {
-    if (!confirm(t('delete.confirm', { name: supplierName }))) {
-      return
-    }
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string, name: string } | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
+  const handleDeleteSupplier = async () => {
+    if (!deleteTarget) return
+
+    setIsDeleting(true)
     try {
-      await deleteSupplier.mutateAsync(supplierId)
+      await deleteSupplier.mutateAsync(deleteTarget.id)
+      setDeleteTarget(null)
     } catch (err: unknown) {
       const error = err as Error
       alert(t('delete.error', { message: error.message }))
+    } finally {
+      setIsDeleting(false)
     }
   }
 
   return (
     <div className="space-y-8">
+      <ConfirmDeleteDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        onConfirm={handleDeleteSupplier}
+        loading={isDeleting}
+        title={t('delete.confirmTitle')}
+        description={t('delete.confirm', { name: deleteTarget?.name || '' })}
+      />
       <div className="rounded-xl border bg-card/60 px-6 py-5">
         <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
           Procurement / Vendors
@@ -151,7 +165,7 @@ export default function SuppliersPage() {
             <SupplierCard
               key={supplier.id}
               supplier={supplier}
-              onDelete={() => handleDeleteSupplier(supplier.id, supplier.name)}
+              onDelete={() => setDeleteTarget({ id: supplier.id, name: supplier.name })}
               t={t}
             />
           ))}

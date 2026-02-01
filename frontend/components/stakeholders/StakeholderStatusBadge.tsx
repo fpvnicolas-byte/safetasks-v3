@@ -2,8 +2,7 @@
 
 import { Badge } from '@/components/ui/badge'
 import { useTranslations } from 'next-intl'
-
-export type StakeholderStatus = 'requested' | 'confirmed' | 'working' | 'completed' | 'cancelled'
+import type { StakeholderStatus } from '@/types'
 
 interface StakeholderStatusBadgeProps {
   status: StakeholderStatus

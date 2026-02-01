@@ -1,7 +1,9 @@
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func
 from typing import List, Optional
+import logging
 
 from app.api.deps import (
     get_current_organization,
@@ -16,6 +18,11 @@ from app.api.deps import (
 )
 from app.db.session import get_db
 from app.services.commercial import stakeholder_service, stakeholder_crud_service
+from app.services.financial import transaction_service
+from app.services.notification_triggers import notify_expense_created
+from app.core.config import settings
+from app.models.scheduling import ShootingDay
+from app.models.projects import Project
 from app.schemas.commercial import (
     StakeholderSummary,
     Stakeholder,
@@ -25,6 +32,8 @@ from app.schemas.commercial import (
     StakeholderStatusUpdate,
 )
 from datetime import datetime, timezone
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -244,7 +253,8 @@ async def update_stakeholder(
     try:
         updated_stakeholder = await stakeholder_crud_service.update(
             db=db,
-            db_obj=stakeholder,
+            organization_id=organization_id,
+            id=stakeholder_id,
             obj_in=stakeholder_in
         )
         return updated_stakeholder
@@ -343,6 +353,56 @@ async def update_stakeholder_status(
 
     await db.commit()
     await db.refresh(stakeholder)
+
+    # Trigger automatic expense creation when status becomes "confirmed"
+    if (
+        status_update.status.value == "confirmed"
+        and settings.FINANCIAL_AUTOMATION_ENABLED
+        and (stakeholder.confirmed_rate_cents or stakeholder.rate_value_cents)
+    ):
+        try:
+            # Get shooting days count for the project (for daily rate calculation)
+            shooting_days_result = await db.execute(
+                select(func.count(ShootingDay.id)).where(
+                    ShootingDay.project_id == stakeholder.project_id
+                )
+            )
+            shooting_days_count = shooting_days_result.scalar() or 0
+
+            # Create expense transaction
+            transaction = await transaction_service.create_expense_from_stakeholder(
+                db=db,
+                organization_id=organization_id,
+                stakeholder=stakeholder,
+                shooting_days_count=shooting_days_count
+            )
+
+            # Get project title for notification
+            project_result = await db.execute(
+                select(Project).where(Project.id == stakeholder.project_id)
+            )
+            project = project_result.scalar_one_or_none()
+            project_title = project.title if project else "Unknown Project"
+
+            # Send notification about expense creation
+            await notify_expense_created(
+                db=db,
+                organization_id=organization_id,
+                stakeholder_name=stakeholder.name,
+                project_title=project_title,
+                amount_cents=transaction.amount_cents
+            )
+
+            await db.commit()
+            logger.info(
+                f"Auto-created expense for stakeholder {stakeholder.id}: "
+                f"R$ {transaction.amount_cents / 100:.2f}"
+            )
+        except ValueError as e:
+            # Log but don't fail - expense creation is best-effort
+            logger.warning(f"Could not create expense for stakeholder {stakeholder.id}: {e}")
+        except Exception as e:
+            logger.error(f"Error creating expense for stakeholder {stakeholder.id}: {e}")
 
     return stakeholder
 

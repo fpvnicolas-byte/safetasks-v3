@@ -48,7 +48,9 @@
       "success": "Success",
       "error": "Error",
       "confirmDelete": "Are you sure you want to delete this item?",
+      "confirmDeleteTitle": "Confirm Deletion",
       "confirmAction": "Are you sure you want to perform this action?",
+      "confirmActionTitle": "Confirm Action",
       "actionSuccess": "Action completed successfully",
       "actionError": "Action failed: {message}",
       "selectProject": "Please select a project first",
@@ -381,6 +383,12 @@
         "callSheetsDescription": "Upload call sheets, schedules, and production documents",
         "mediaFiles": "Media Files",
         "mediaDescription": "Upload images, videos, and other media assets"
+      },
+      "team": {
+        "title": "Team",
+        "description": "Manage project stakeholders and team members",
+        "addMember": "Add Member",
+        "empty": "No team members found for this project"
       }
     }
   },
@@ -526,8 +534,18 @@
       },
       "card": {
         "call": "Call:",
-        "wrap": "Wrap:"
+        "onSet": "On Set:",
+        "lunch": "Lunch:",
+        "wrap": "Wrap:",
+        "safety": "Safety & Logistics",
+        "parking": "Parking:",
+        "hospital": "Hospital:"
       }
+    },
+    "statusLabels": {
+      "draft": "Draft",
+      "confirmed": "Confirmed",
+      "completed": "Completed"
     },
     "detail": {
       "loading": "Loading shooting day...",
@@ -553,6 +571,41 @@
       "assignError": "Error: {message}",
       "noScenes": "No scenes found for this project.",
       "createScene": "Create a scene"
+    },
+    "form": {
+      "scheduleTitle": "Schedule New Shooting Day",
+      "scheduleDescription": "Add shooting day details for your production schedule",
+      "selectProject": "Select a project to schedule a shooting day:",
+      "loadingProjects": "Loading projects...",
+      "chooseProject": "Choose a project",
+      "noProjectsCreateFirst": "No projects found. Create a project first.",
+      "createProject": "Create Project",
+      "scheduleDetails": "Schedule Details",
+      "shootingDate": "Shooting Date *",
+      "generalCallTime": "General Call Time *",
+      "generalCallTimeHelp": "General crew call time (Call Sheet)",
+      "shootingCall": "Shooting Call (On Set)",
+      "shootingCallHelp": "When shooting actually begins",
+      "lunchTime": "Lunch Time",
+      "estimatedWrap": "Estimated Wrap",
+      "locationSection": "Location",
+      "locationName": "Location Name *",
+      "locationNamePlaceholder": "e.g., Studio A, Central Park",
+      "address": "Address",
+      "addressPlaceholder": "Full address for navigation",
+      "parkingInfo": "Parking Information",
+      "parkingInfoPlaceholder": "Parking instructions for crew/trucks...",
+      "safetyLogistics": "Safety & Logistics",
+      "nearestHospital": "Nearest Hospital",
+      "nearestHospitalPlaceholder": "Name, address and phone of nearest ER...",
+      "weatherForecast": "Weather Forecast",
+      "weatherForecastPlaceholder": "e.g., Sunny, 75°F",
+      "notesSection": "Notes",
+      "generalNotes": "General Notes",
+      "generalNotesPlaceholder": "Daily notes, special requirements...",
+      "creating": "Creating...",
+      "scheduleAction": "Schedule Shooting Day",
+      "errorCreating": "Error Creating Shooting Day"
     }
   },
   "scenes": {
@@ -622,6 +675,7 @@
       "minutes": "minutes",
       "description": "Description",
       "notFound": "Scene not found",
+      "deleteConfirmTitle": "Delete Scene?",
       "deleteConfirm": "Are you sure you want to delete this scene?"
     },
     "edit": {
@@ -760,6 +814,7 @@
         "view": "View",
         "edit": "Edit",
         "deleteConfirm": "Are you sure you want to delete invoice #{number}? This action cannot be undone.",
+        "deleteConfirmTitle": "Delete Invoice?",
         "deleteError": "Failed to delete invoice. Please try again."
       }
     },
@@ -1023,6 +1078,7 @@
           "created": "Created: {date}"
         },
         "deleteConfirm": "Are you sure you want to delete bank account \"{name}\"? This action cannot be undone.",
+        "deleteConfirmTitle": "Delete Bank Account?",
         "deleteError": "Failed to delete bank account: {message}"
       },
       "bankAccountsNew": {
@@ -1160,6 +1216,7 @@
           "statusCounts": "{active} active • {inactive} inactive"
         },
         "deleteConfirm": "Are you sure you want to delete tax table \"{name}\"? This action cannot be undone.",
+        "deleteConfirmTitle": "Delete Tax Table?",
         "deleteError": "Failed to delete tax table: {message}"
       },
       "taxTablesNew": {
@@ -1606,6 +1663,7 @@
     },
     "delete": {
       "confirm": "Are you sure you want to delete client \"{name}\"? This action cannot be undone.",
+      "confirmTitle": "Delete Client?",
       "error": "Failed to delete client: {message}"
     }
   },
@@ -1662,6 +1720,7 @@
     },
     "delete": {
       "confirm": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+      "confirmTitle": "Delete Supplier?",
       "error": "Failed to delete supplier: {message}"
     },
     "noSuppliers": "No suppliers found"
@@ -1697,6 +1756,7 @@
       "headers": {
         "name": "Name",
         "role": "Role",
+        "status": "Status",
         "project": "Project",
         "email": "Email",
         "phone": "Phone",

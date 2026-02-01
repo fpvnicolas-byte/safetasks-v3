@@ -27,6 +27,8 @@ import Link from 'next/link'
 import { useDeleteStakeholder } from '@/lib/api/hooks/useStakeholders'
 import { toast } from 'sonner'
 import { useLocale, useTranslations } from 'next-intl'
+import { StakeholderStatusBadge } from '@/components/stakeholders/StakeholderStatusBadge'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 
 export default function StakeholdersPage() {
   const { organizationId, isLoading: isLoadingOrg } = useAuth()
@@ -48,15 +50,22 @@ export default function StakeholdersPage() {
     stakeholder.role.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(tFeedback('confirmDelete'))) return
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string, name: string } | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+
+    setIsDeleting(true)
     try {
-      await deleteStakeholder.mutateAsync(id)
+      await deleteStakeholder.mutateAsync(deleteTarget.id)
       toast.success(tFeedback('actionSuccess'))
+      setDeleteTarget(null)
     } catch (error: any) {
       toast.error(tFeedback('actionError', { message: 'Failed to delete stakeholder' }))
       console.error('Delete error:', error)
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -83,6 +92,14 @@ export default function StakeholdersPage() {
 
   return (
     <div className="space-y-8">
+      <ConfirmDeleteDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        loading={isDeleting}
+        title={tFeedback('confirmDeleteTitle')}
+        description={deleteTarget?.name ? `${tFeedback('confirmDelete')} (${deleteTarget.name})` : tFeedback('confirmDelete')}
+      />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
@@ -106,12 +123,15 @@ export default function StakeholdersPage() {
         <CardContent className="space-y-4">
           <div className="flex gap-4 flex-col sm:flex-row">
             <div className="flex-1">
-              <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+              <Select
+                value={selectedProjectId || '__all__'}
+                onValueChange={(value) => setSelectedProjectId(value === '__all__' ? '' : value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder={t('filters.allProjects')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{t('filters.allProjects')}</SelectItem>
+                  <SelectItem value="__all__">{t('filters.allProjects')}</SelectItem>
                   {projects?.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.title}
@@ -151,6 +171,7 @@ export default function StakeholdersPage() {
                 <TableRow>
                   <TableHead>{t('table.headers.name')}</TableHead>
                   <TableHead>{t('table.headers.role')}</TableHead>
+                  <TableHead>{t('table.headers.status')}</TableHead>
                   <TableHead>{t('table.headers.project')}</TableHead>
                   <TableHead>{t('table.headers.email')}</TableHead>
                   <TableHead>{t('table.headers.phone')}</TableHead>
@@ -162,6 +183,9 @@ export default function StakeholdersPage() {
                   <TableRow key={stakeholder.id}>
                     <TableCell className="font-medium">{stakeholder.name}</TableCell>
                     <TableCell>{stakeholder.role}</TableCell>
+                    <TableCell>
+                      <StakeholderStatusBadge status={stakeholder.status || 'requested'} />
+                    </TableCell>
                     <TableCell>
                       <Link
                         href={`/projects/${stakeholder.project_id}`}
@@ -187,8 +211,8 @@ export default function StakeholdersPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDelete(stakeholder.id, stakeholder.name)}
-                          disabled={deleteStakeholder.isPending}
+                          onClick={() => setDeleteTarget({ id: stakeholder.id, name: stakeholder.name })}
+                          disabled={isDeleting}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>

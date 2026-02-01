@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Plus, Search, Edit, Trash2, Eye, Users, Mail, Phone, FileText } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 
 export default function ClientsPage() {
   const { organizationId } = useAuth()
@@ -33,16 +34,21 @@ export default function ClientsPage() {
     )
   }) || []
 
-  const handleDeleteClient = async (clientId: string, clientName: string) => {
-    if (!confirm(t('delete.confirm', { name: clientName }))) {
-      return
-    }
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string, name: string } | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
+  const handleDeleteClient = async () => {
+    if (!deleteTarget) return
+
+    setIsDeleting(true)
     try {
-      await deleteClient.mutateAsync(clientId)
+      await deleteClient.mutateAsync(deleteTarget.id)
+      setDeleteTarget(null)
     } catch (err: unknown) {
       const error = err as Error
       alert(t('delete.error', { message: error.message }))
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -70,6 +76,14 @@ export default function ClientsPage() {
 
   return (
     <div className="space-y-8">
+      <ConfirmDeleteDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        onConfirm={handleDeleteClient}
+        loading={isDeleting}
+        title={t('delete.confirmTitle')}
+        description={t('delete.confirm', { name: deleteTarget?.name || '' })}
+      />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
@@ -194,7 +208,7 @@ export default function ClientsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleDeleteClient(client.id, client.name)}
+                    onClick={() => setDeleteTarget({ id: client.id, name: client.name })}
                     className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />

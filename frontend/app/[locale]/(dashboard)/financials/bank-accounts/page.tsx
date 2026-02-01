@@ -11,6 +11,7 @@ import { Plus, Search, Edit, Trash2, Wallet, TrendingUp, DollarSign } from 'luci
 import Link from 'next/link'
 import { formatCurrency } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 
 export default function BankAccountsPage() {
   const { organizationId } = useAuth()
@@ -43,19 +44,24 @@ export default function BankAccountsPage() {
     return acc
   }, {} as Record<string, number>)
 
-  const handleDeleteAccount = async (accountId: string, accountName: string) => {
-    if (!confirm(t('deleteConfirm', { name: accountName }))) {
-      return
-    }
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string, name: string } | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
+  const handleDeleteAccount = async () => {
+    if (!deleteTarget) return
+
+    setIsDeleting(true)
     try {
       await deleteBankAccount.mutateAsync({
         organizationId: organizationId || '',
-        accountId: accountId
+        accountId: deleteTarget.id
       })
+      setDeleteTarget(null)
     } catch (err: unknown) {
       const error = err as Error
       alert(t('deleteError', { message: error.message }))
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -83,6 +89,14 @@ export default function BankAccountsPage() {
 
   return (
     <div className="space-y-8">
+      <ConfirmDeleteDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        onConfirm={handleDeleteAccount}
+        loading={isDeleting}
+        title={t('deleteConfirmTitle', { name: deleteTarget?.name || '' })}
+        description={t('deleteConfirm', { name: deleteTarget?.name || '' })}
+      />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
@@ -192,7 +206,7 @@ export default function BankAccountsPage() {
                 <div className="space-y-4">
                   {/* Balance Display */}
                   <div className="flex items-baseline gap-2">
-                      <TrendingUp className={`h-5 w-5 ${account.balance_cents >= 0 ? 'text-success' : 'text-destructive'}`} />
+                    <TrendingUp className={`h-5 w-5 ${account.balance_cents >= 0 ? 'text-success' : 'text-destructive'}`} />
                     <div>
                       <p className="text-xs text-muted-foreground">{t('list.currentBalance')}</p>
                       <p className={`text-2xl font-bold ${account.balance_cents >= 0 ? 'text-success' : 'text-destructive'}`}>
@@ -217,7 +231,7 @@ export default function BankAccountsPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleDeleteAccount(account.id, account.name)}
+                      onClick={() => setDeleteTarget({ id: account.id, name: account.name })}
                       className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />

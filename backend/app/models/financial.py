@@ -6,7 +6,7 @@ import uuid
 import enum
 
 
-class TaxTypeEnum(enum.Enum):
+class TaxTypeEnum(str, enum.Enum):
     iss = "iss"          # Service Tax (Brazil)
     irrf = "irrf"        # Income Tax Withholding
     pis = "pis"          # Social Contribution Tax
@@ -17,7 +17,7 @@ class TaxTypeEnum(enum.Enum):
     other = "other"
 
 
-class InvoiceStatusEnum(enum.Enum):
+class InvoiceStatusEnum(str, enum.Enum):
     draft = "draft"
     sent = "sent"
     paid = "paid"
@@ -25,7 +25,7 @@ class InvoiceStatusEnum(enum.Enum):
     cancelled = "cancelled"
 
 
-class BudgetCategoryEnum(enum.Enum):
+class BudgetCategoryEnum(str, enum.Enum):
     """Standard production budget categories."""
     CREW = "crew"
     EQUIPMENT = "equipment"
@@ -52,7 +52,7 @@ class TaxTable(Base):
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
 
     name = Column(String, nullable=False)  # e.g., "ISS 5%", "IRRF 1.5%"
-    tax_type = Column(Enum(TaxTypeEnum), nullable=False)
+    tax_type = Column(Enum(TaxTypeEnum, values_callable=lambda x: [e.value for e in x]), nullable=False)
     rate_percentage = Column(DECIMAL(5, 2), nullable=False)  # e.g., 5.00 for 5%
     description = Column(TEXT, nullable=True)
 
@@ -84,11 +84,11 @@ class Invoice(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
     client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id"), nullable=False)
-    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=True)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=True)
     proposal_id = Column(UUID(as_uuid=True), ForeignKey("proposals.id"), nullable=True)
 
     invoice_number = Column(String, nullable=False)  # Auto-generated: INV-{year}-{sequential}
-    status = Column(Enum(InvoiceStatusEnum), nullable=False, default=InvoiceStatusEnum.draft)
+    status = Column(Enum(InvoiceStatusEnum, values_callable=lambda x: [e.value for e in x]), nullable=False, default=InvoiceStatusEnum.draft)
 
     # Financial amounts (in cents)
     subtotal_cents = Column(BIGINT, nullable=False)  # Before taxes
@@ -117,7 +117,7 @@ class Invoice(Base):
     client = relationship("Client", back_populates="invoices")
     project = relationship("Project", back_populates="invoices")
     proposal = relationship("Proposal")
-    items = relationship("InvoiceItem", back_populates="invoice", cascade="all, delete-orphan")
+    items = relationship("InvoiceItem", back_populates="invoice", cascade="all, delete-orphan", passive_deletes=True)
 
     __table_args__ = (
         {'schema': None}
@@ -134,7 +134,7 @@ class InvoiceItem(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
-    invoice_id = Column(UUID(as_uuid=True), ForeignKey("invoices.id"), nullable=False)
+    invoice_id = Column(UUID(as_uuid=True), ForeignKey("invoices.id", ondelete="CASCADE"), nullable=False)
 
     description = Column(String, nullable=False)
     quantity = Column(DECIMAL(10, 2), nullable=False, default=1)
@@ -166,10 +166,10 @@ class ProjectBudgetLine(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
-    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
 
     # Budget line details
-    category = Column(Enum(BudgetCategoryEnum), nullable=False)
+    category = Column(Enum(BudgetCategoryEnum, values_callable=lambda x: [e.value for e in x]), nullable=False)
     description = Column(String, nullable=False)
 
     # Amounts (in cents)

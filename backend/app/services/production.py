@@ -175,7 +175,7 @@ class ProductionService:
         scene_character_links = []
 
         # Use database transaction for atomicity
-        async with db.begin():
+        async with db.begin_nested():
             # Create characters first
             characters_data = analysis_data.get("characters", [])
             for char_data in characters_data:
@@ -241,7 +241,8 @@ class ProductionService:
 
                 created_scenes.append(scene)
 
-            await db.commit()
+            # Relationships are flushed but not committed yet (managed by nested context or caller)
+            pass
 
         return {
             "characters_created": len(created_characters),

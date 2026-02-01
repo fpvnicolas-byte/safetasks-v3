@@ -24,12 +24,13 @@ const navigation = [
   { key: 'ai', href: '/ai', icon: Sparkles },
   { key: 'projects', href: '/projects', icon: FolderOpen },
   { key: 'proposals', href: '/proposals', icon: FileText },
-  { key: 'callSheets', href: '/call-sheets', icon: FileText },
+
   { key: 'financials', href: '/financials', icon: DollarSign },
   { key: 'shootingDays', href: '/shooting-days', icon: Calendar },
   { key: 'production', href: '/production', icon: Film },
   { key: 'inventory', href: '/inventory/items', icon: Box },
   { key: 'clients', href: '/clients', icon: Users },
+  { key: 'stakeholders', href: '/stakeholders', icon: Users },
   { key: 'suppliers', href: '/suppliers', icon: Briefcase },
   { key: 'settings', href: '/settings', icon: Settings },
 ]

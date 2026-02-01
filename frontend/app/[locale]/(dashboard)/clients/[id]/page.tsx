@@ -8,19 +8,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Edit, Trash2, Mail, Phone, FileText, Calendar, Building } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
+import { useState } from 'react'
 
 export default function ClientViewPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const router = useRouter()
+  const t = useTranslations('clients')
   const { data: client, isLoading, error } = useClient(resolvedParams.id)
   const deleteClient = useDeleteClient()
 
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+
   const handleDelete = async () => {
     if (!client) return
-
-    if (!confirm(`Are you sure you want to delete client "${client.name}"? This action cannot be undone.`)) {
-      return
-    }
 
     try {
       await deleteClient.mutateAsync(client.id)
@@ -28,6 +30,8 @@ export default function ClientViewPage({ params }: { params: Promise<{ id: strin
     } catch (err: unknown) {
       const error = err as Error
       alert(`Failed to delete client: ${error.message}`)
+    } finally {
+      setIsDeleteDialogOpen(false)
     }
   }
 
@@ -63,6 +67,14 @@ export default function ClientViewPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="space-y-8">
+      <ConfirmDeleteDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleDelete}
+        loading={deleteClient.isPending}
+        title={t('delete.confirmTitle')}
+        description={t('delete.confirm', { name: client.name })}
+      />
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="sm" asChild>
           <Link href="/clients">
@@ -96,7 +108,7 @@ export default function ClientViewPage({ params }: { params: Promise<{ id: strin
           </Button>
           <Button
             variant="destructive"
-            onClick={handleDelete}
+            onClick={() => setIsDeleteDialogOpen(true)}
             disabled={deleteClient.isPending}
           >
             <Trash2 className="mr-2 h-4 w-4" />

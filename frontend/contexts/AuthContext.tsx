@@ -34,8 +34,8 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   organizationId: null,
   isLoading: true,
-  refreshProfile: async () => {},
-  signOut: async () => {},
+  refreshProfile: async () => { },
+  signOut: async () => { },
 })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -135,15 +135,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get initial session
     const getSession = async () => {
       setIsLoading(true)
-      const { data: { session } } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
+      const { data: { session }, error } = await supabase.auth.getSession()
 
-      // Fetch profile if user is authenticated
-      if (session?.access_token) {
-        await fetchProfile(session.access_token)
+      // CRITICAL: If no session from getSession (which checks local storage often), 
+      // try to force a refresh from the server/cookie.
+      if (!session) {
+        logger.info('[AuthContext] No initial session found, attempting refreshSession to check cookies...')
+        const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession()
+
+        if (refreshedSession) {
+          logger.info('[AuthContext] Session recovered via refreshSession', { userId: refreshedSession.user.id })
+          setUser(refreshedSession.user)
+          await fetchProfile(refreshedSession.access_token)
+        } else {
+          logger.info('[AuthContext] No session after refresh attempt', { error: refreshError?.message })
+          setProfile(null)
+          setOrganizationId(null)
+          setUser(null)
+        }
       } else {
-        setProfile(null)
-        setOrganizationId(null)
+        setUser(session.user)
+        // Fetch profile if user is authenticated
+        await fetchProfile(session.access_token)
       }
 
       setIsLoading(false)
@@ -155,20 +168,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('[AuthContext] Auth State Change:', event, session?.user?.id);
-      setIsLoading(true)
-      setUser(session?.user ?? null)
+      logger.info(`[AuthContext] Auth State Change: ${event}`, { userId: session?.user?.id })
 
-      // Fetch profile when user logs in
-      if (session?.access_token) {
-        await fetchProfile(session.access_token)
-      } else {
-        // Clear profile when user logs out
+      if (event === 'SIGNED_OUT' || (event === 'PkceGrantFailed' as any)) { // Casting to any as PkceGrantFailed might not be in the type def yet depending on version
+        // Handle explicit sign out or failure
+        setUser(null)
         setProfile(null)
         setOrganizationId(null)
+        setIsLoading(false)
+        return
       }
 
-      setIsLoading(false)
+      // reliable session presence check
+      if (session?.user) {
+        setUser(session.user)
+
+        // Optimize: Only fetch profile if not already loaded or if user changed
+        if (!profile || profile.id !== session.user.id) {
+          setIsLoading(true) // Only set loading if we need to fetch
+          await fetchProfile(session.access_token)
+          setIsLoading(false)
+        }
+      } else if (!session && event !== 'INITIAL_SESSION') {
+        // If no session and not initial load (which usually has session or null, handled by getSession above), 
+        // we might want to clear but be careful about transient states. 
+        // However, onAuthStateChange is usually authoritative.
+        // If we are strictly missing session and it's not a refresh, we clear.
+        if (user) {
+          logger.warn('[AuthContext] Session lost without explicit signout', { event })
+          setUser(null)
+          setProfile(null)
+          setOrganizationId(null)
+        }
+      }
+
+      // Ensure loading is false after processing
+      // Note: we don't want to flicker isLoading on every token refresh
+      if (event === 'INITIAL_SESSION') {
+        setIsLoading(false)
+      }
     })
 
     return () => subscription.unsubscribe()

@@ -16,6 +16,7 @@ class TransactionBase(BaseModel):
     invoice_id: Optional[UUID] = None
     supplier_id: Optional[UUID] = None  # ADDED: Link to supplier/vendor
     stakeholder_id: Optional[UUID] = None  # ADDED: Link to specific team member
+    budget_line_id: Optional[UUID] = None  # ADDED: Link to budget line for actuals tracking
 
     @field_validator('category')
     @classmethod
@@ -56,6 +57,7 @@ class TransactionUpdate(BaseModel):
     invoice_id: Optional[UUID] = None
     supplier_id: Optional[UUID] = None  # ADDED: Link to supplier/vendor
     stakeholder_id: Optional[UUID] = None  # ADDED: Link to specific team member
+    budget_line_id: Optional[UUID] = None  # ADDED: Link to budget line for actuals tracking
 
     @field_validator('category')
     @classmethod

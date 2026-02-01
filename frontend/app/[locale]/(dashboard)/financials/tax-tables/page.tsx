@@ -11,6 +11,7 @@ import { Plus, Search, Edit, Trash2, FileText } from 'lucide-react'
 import Link from 'next/link'
 import { getTaxTypeDisplayName } from '@/types'
 import { useTranslations } from 'next-intl'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 
 export default function TaxTablesPage() {
   const { organizationId } = useAuth()
@@ -34,16 +35,21 @@ export default function TaxTablesPage() {
     )
   }) || []
 
-  const handleDeleteTaxTable = async (taxTableId: string, taxTableName: string) => {
-    if (!confirm(t('deleteConfirm', { name: taxTableName }))) {
-      return
-    }
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string, name: string } | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
+  const handleDeleteTaxTable = async () => {
+    if (!deleteTarget) return
+
+    setIsDeleting(true)
     try {
-      await deleteTaxTable.mutateAsync(taxTableId)
+      await deleteTaxTable.mutateAsync(deleteTarget.id)
+      setDeleteTarget(null)
     } catch (err: unknown) {
       const error = err as Error
       alert(t('deleteError', { message: error.message }))
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -71,6 +77,15 @@ export default function TaxTablesPage() {
 
   return (
     <div className="space-y-8">
+      <ConfirmDeleteDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        onConfirm={handleDeleteTaxTable}
+        loading={isDeleting}
+        title={t('deleteConfirmTitle', { name: deleteTarget?.name || '' })}
+        description={t('deleteConfirm', { name: deleteTarget?.name || '' })}
+      />
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
@@ -192,7 +207,7 @@ export default function TaxTablesPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleDeleteTaxTable(taxTable.id, taxTable.name)}
+                    onClick={() => setDeleteTarget({ id: taxTable.id, name: taxTable.name })}
                     className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />

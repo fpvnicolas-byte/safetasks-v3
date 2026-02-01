@@ -33,7 +33,7 @@ from app.models.scheduling import ShootingDay as ShootingDayModel
 from app.models.transactions import Transaction as TransactionModel
 from app.modules.commercial.service import project_service, client_service
 from app.services.entitlements import ensure_resource_limit, increment_usage_count
-from app.schemas.projects import Project, ProjectCreate, ProjectUpdate, ProjectWithClient
+from app.schemas.projects import Project, ProjectCreate, ProjectUpdate, ProjectWithClient, ProjectStats
 
 router = APIRouter()
 
@@ -317,3 +317,76 @@ async def delete_project(
         ) from exc
 
     return project
+
+
+@router.get(
+    "/{project_id}/stats",
+    response_model=ProjectStats,
+    dependencies=[Depends(require_read_only)]
+)
+async def get_project_stats(
+    project_id: UUID,
+    organization_id: UUID = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db),
+) -> ProjectStats:
+    """
+    Get statistics for a project (scenes, characters, shooting days, etc.).
+    """
+    from sqlalchemy import func
+    from app.schemas.projects import ProjectStats
+    
+    # Check if project exists and belongs to organization
+    validation = await db.execute(
+        select(ProjectModel.id)
+        .where(ProjectModel.id == project_id)
+        .where(ProjectModel.organization_id == organization_id)
+    )
+    if not validation.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Project not found"
+        )
+
+    # 1. Scenes Count
+    scenes_result = await db.execute(
+        select(func.count(SceneModel.id))
+        .where(SceneModel.project_id == project_id)
+    )
+    scenes_count = scenes_result.scalar() or 0
+
+    # 2. Characters Count
+    chars_result = await db.execute(
+        select(func.count(CharacterModel.id))
+        .where(CharacterModel.project_id == project_id)
+    )
+    chars_count = chars_result.scalar() or 0
+
+    # 3. Shooting Days (Total)
+    days_result = await db.execute(
+        select(func.count(ShootingDayModel.id))
+        .where(ShootingDayModel.project_id == project_id)
+    )
+    days_count = days_result.scalar() or 0
+
+    # 4. Confirmed Shooting Days
+    confirmed_days_result = await db.execute(
+        select(func.count(ShootingDayModel.id))
+        .where(ShootingDayModel.project_id == project_id)
+        .where(ShootingDayModel.status == 'confirmed')
+    )
+    confirmed_days_count = confirmed_days_result.scalar() or 0
+
+    # 5. Team Count (Stakeholders)
+    team_result = await db.execute(
+        select(func.count(StakeholderModel.id))
+        .where(StakeholderModel.project_id == project_id)
+    )
+    team_count = team_result.scalar() or 0
+
+    return ProjectStats(
+        scenes_count=scenes_count,
+        characters_count=chars_count,
+        shooting_days_count=days_count,
+        confirmed_shooting_days_count=confirmed_days_count,
+        team_count=team_count
+    )

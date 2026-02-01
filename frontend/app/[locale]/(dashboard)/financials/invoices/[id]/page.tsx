@@ -20,6 +20,7 @@ import { useState } from 'react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { InvoiceStatus } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 
 const statusVariant: Record<InvoiceStatus, 'secondary' | 'info' | 'success' | 'destructive' | 'outline'> = {
   draft: 'secondary',
@@ -42,11 +43,9 @@ export default function InvoiceDetailPage() {
   const deleteInvoice = useDeleteInvoice(organizationId || undefined)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
-  async function handleDelete() {
-    if (!confirm(t('deleteConfirm'))) {
-      return
-    }
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
+  async function handleDelete() {
     try {
       await deleteInvoice.mutateAsync(invoiceId)
       router.push('/financials?tab=invoices')
@@ -80,6 +79,14 @@ export default function InvoiceDetailPage() {
 
   return (
     <div className="space-y-8">
+      <ConfirmDeleteDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleDelete}
+        loading={deleteInvoice.isPending}
+        title={t('actions.delete')}
+        description={t('deleteConfirm')}
+      />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -110,7 +117,7 @@ export default function InvoiceDetailPage() {
           </Button>
           <Button
             variant="destructive"
-            onClick={handleDelete}
+            onClick={() => setIsDeleteDialogOpen(true)}
             disabled={deleteInvoice.isPending}
           >
             <Trash2 className="mr-2 h-4 w-4" />

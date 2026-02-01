@@ -14,6 +14,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Switch } from '@/components/ui/switch'
 import { useLocale, useTranslations } from 'next-intl'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 
 export default function EditTaxTablePage() {
   const router = useRouter()
@@ -71,12 +72,10 @@ export default function EditTaxTablePage() {
     }
   }
 
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+
   async function handleDelete() {
     if (!taxTable) return
-
-    if (!confirm(t('deleteConfirm', { name: taxTable.name }))) {
-      return
-    }
 
     try {
       await deleteTaxTable.mutateAsync(taxTableId)
@@ -84,11 +83,21 @@ export default function EditTaxTablePage() {
     } catch (err: unknown) {
       const error = err as Error
       setError(error.message || t('errors.deleteFailed'))
+    } finally {
+      setIsDeleteDialogOpen(false)
     }
   }
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
+      <ConfirmDeleteDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleDelete}
+        loading={deleteTaxTable.isPending}
+        title={t('deleteConfirmTitle')}
+        description={t('deleteConfirm', { name: taxTable.name })}
+      />
       <div>
         <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
         <p className="text-muted-foreground">
@@ -194,7 +203,8 @@ export default function EditTaxTablePage() {
             <Button
               type="button"
               variant="destructive"
-              onClick={handleDelete}
+              onClick={() => setIsDeleteDialogOpen(true)}
+              disabled={deleteTaxTable.isPending}
             >
               {t('actions.delete')}
             </Button>

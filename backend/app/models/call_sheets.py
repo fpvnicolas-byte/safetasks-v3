@@ -15,7 +15,7 @@ class CallSheet(Base):
     # Core Fields
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
-    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     shooting_day = Column(DATE, nullable=False)
     status = Column(String, default="draft")  # draft, confirmed, completed
 

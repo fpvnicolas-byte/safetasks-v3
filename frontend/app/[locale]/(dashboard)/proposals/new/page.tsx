@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useCreateProposal, useClients, useServices } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
-import { ProposalCreate, ProposalStatus } from '@/types'
+import { ProposalCreate, ProposalStatus, ProposalLineItem, formatCurrency } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,6 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { ErrorDialog } from '@/components/ui/error-dialog'
+import { FinancialLinesPanel } from '../_components/FinancialLinesPanel'
 import { dollarsToCents } from '@/types'
 
 export default function NewProposalPage() {
@@ -23,6 +24,8 @@ export default function NewProposalPage() {
   const { errorDialog, showError, closeError } = useErrorDialog()
   const [selectedClientId, setSelectedClientId] = useState<string>('')
   const [selectedServices, setSelectedServices] = useState<string[]>([])
+  const [lineItems, setLineItems] = useState<ProposalLineItem[]>([])
+  const [currency, setCurrency] = useState('BRL')
   const [status, setStatus] = useState<ProposalStatus>('draft')
 
   const { data: clients, isLoading: clientsLoading } = useClients(organizationId || undefined)
@@ -40,7 +43,7 @@ export default function NewProposalPage() {
     const formData = new FormData(e.currentTarget)
 
     try {
-      const amountDollars = parseFloat(formData.get('total_amount') as string || '0')
+      const baseAmountDollars = parseFloat(formData.get('base_amount') as string || '0')
 
       const data: ProposalCreate = {
         client_id: selectedClientId,
@@ -48,10 +51,16 @@ export default function NewProposalPage() {
         description: (formData.get('description') as string || '').trim() || undefined,
         status: status,
         valid_until: (formData.get('valid_until') as string) || undefined,
-        total_amount_cents: amountDollars ? dollarsToCents(amountDollars) : undefined,
-        currency: (formData.get('currency') as string) || 'BRL',
+        start_date: (formData.get('start_date') as string) || undefined,
+        end_date: (formData.get('end_date') as string) || undefined,
+        // Send base amount, backend calculates total
+        base_amount_cents: baseAmountDollars ? dollarsToCents(baseAmountDollars) : 0,
+        currency: currency,
         terms_conditions: (formData.get('terms_conditions') as string || '').trim() || undefined,
         service_ids: selectedServices.length > 0 ? selectedServices : undefined,
+        proposal_metadata: {
+          line_items: lineItems
+        }
       }
 
       await createProposal.mutateAsync(data)
@@ -113,7 +122,7 @@ export default function NewProposalPage() {
                 />
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
                   <Select value={status} onValueChange={(value) => setStatus(value as ProposalStatus)}>
@@ -128,7 +137,27 @@ export default function NewProposalPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="valid_until">Valid Until</Label>
+                  <Label htmlFor="start_date">Est. Start Date</Label>
+                  <Input
+                    id="start_date"
+                    name="start_date"
+                    type="date"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="end_date">Est. End Date</Label>
+                  <Input
+                    id="end_date"
+                    name="end_date"
+                    type="date"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="valid_until">Proposal Valid Until</Label>
                   <Input
                     id="valid_until"
                     name="valid_until"
@@ -199,23 +228,16 @@ export default function NewProposalPage() {
 
             {/* Financials */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Financial Details</h3>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="total_amount">Total Amount</Label>
-                  <Input
-                    id="total_amount"
-                    name="total_amount"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="currency">Currency</Label>
-                  <Select name="currency" defaultValue="BRL">
-                    <SelectTrigger>
+              <div className="flex items-center justify-between gap-4 mb-2">
+                <h3 className="text-lg font-bold tracking-tight text-foreground">Financial Details</h3>
+                <div className="flex items-center gap-2 min-w-[120px]">
+                  <Label htmlFor="currency" className="text-xs font-bold uppercase text-muted-foreground">Currency</Label>
+                  <Select
+                    name="currency"
+                    value={currency}
+                    onValueChange={setCurrency}
+                  >
+                    <SelectTrigger className="h-8 text-xs font-bold">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -226,10 +248,90 @@ export default function NewProposalPage() {
                   </Select>
                 </div>
               </div>
+
+              <div className="grid gap-6 md:grid-cols-1">
+                <div className="space-y-6">
+                  <FinancialLinesPanel
+                    items={lineItems}
+                    onChange={setLineItems}
+                    currency={currency}
+                  />
+
+                  <div className="space-y-3 pt-4 border-t border-muted/50">
+                    <Label htmlFor="base_amount" className="text-sm font-bold text-foreground">Additional Raw Amount (Manual Offset)</Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-bold">{currency === 'USD' ? '$' : currency === 'EUR' ? '€' : 'R$'}</span>
+                      <Input
+                        id="base_amount"
+                        name="base_amount"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        className="h-11 pl-10 text-base font-bold bg-muted/20"
+                      />
+                    </div>
+                    <p className="text-[11px] text-muted-foreground leading-tight">
+                      Additional manual adjustment to the total beyond services and line items.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dynamic Calculation Preview */}
+              <div className="rounded-xl border border-primary/20 bg-primary/[0.02] overflow-hidden shadow-sm">
+                <div className="px-4 py-2.5 bg-primary/5 border-b border-primary/10">
+                  <span className="text-[10px] uppercase font-bold text-primary tracking-widest cursor-default">Investment Summary</span>
+                </div>
+
+                <div className="p-4 space-y-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <div className="flex flex-col">
+                      <span className="text-muted-foreground font-medium">Services</span>
+                      <span className="text-[10px] text-muted-foreground/60 leading-none">Predefined rates</span>
+                    </div>
+                    <span className="font-mono text-foreground font-semibold">
+                      {formatCurrency(
+                        (services?.filter(s => selectedServices.includes(s.id))
+                          .reduce((sum, s) => sum + (s.value_cents || 0), 0) || 0),
+                        currency
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center text-sm">
+                    <div className="flex flex-col">
+                      <span className="text-muted-foreground font-medium">Line Items</span>
+                      <span className="text-[10px] text-muted-foreground/60 leading-none">Custom additions</span>
+                    </div>
+                    <span className="font-mono text-info font-semibold">
+                      {formatCurrency(
+                        lineItems.reduce((sum, item) => sum + (item.value_cents || 0), 0),
+                        currency
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center border-t border-primary/10 pt-3 mt-1">
+                    <span className="text-sm font-bold text-primary">Estimated Total</span>
+                    <div className="flex flex-col items-end">
+                      <span className="text-xl font-black text-primary font-mono tracking-tighter">
+                        {formatCurrency(
+                          ((services?.filter(s => selectedServices.includes(s.id))
+                            .reduce((sum, s) => sum + (s.value_cents || 0), 0) || 0) +
+                            lineItems.reduce((sum, item) => sum + (item.value_cents || 0), 0)),
+                          currency
+                        )}
+                      </span>
+                      <span className="text-[9px] uppercase font-bold text-muted-foreground/40 leading-none">{currency}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Terms */}
-            <div className="space-y-2">
+            <div className="space-y-2 mt-6">
               <Label htmlFor="terms_conditions">Terms & Conditions</Label>
               <Textarea
                 id="terms_conditions"

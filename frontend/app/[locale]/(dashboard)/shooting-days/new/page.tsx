@@ -15,10 +15,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ErrorDialog } from '@/components/ui/error-dialog'
+import { useTranslations } from 'next-intl'
 
 export const dynamic = 'force-dynamic'
 
 function NewShootingDayForm() {
+  const t = useTranslations('shootingDays.form')
+  const commonT = useTranslations('common')
   const router = useRouter()
   const searchParams = useSearchParams()
   const { organizationId } = useAuth()
@@ -42,10 +45,14 @@ function NewShootingDayForm() {
     try {
       const data: ShootingDayFormData = {
         date: formData.get('date') as string,
-        call_time: formData.get('call_time') as string, // HTML time input (HH:MM)
+        call_time: formData.get('call_time') as string,
+        on_set: (formData.get('on_set') as string || '') || undefined,
+        lunch_time: (formData.get('lunch_time') as string || '') || undefined,
         wrap_time: (formData.get('wrap_time') as string || '') || undefined,
         location_name: (formData.get('location_name') as string).trim(),
         location_address: (formData.get('location_address') as string || '').trim() || undefined,
+        parking_info: (formData.get('parking_info') as string || '').trim() || undefined,
+        hospital_info: (formData.get('hospital_info') as string || '').trim() || undefined,
         weather_forecast: (formData.get('weather_forecast') as string || '').trim() || undefined,
         notes: (formData.get('notes') as string || '').trim() || undefined,
       }
@@ -53,7 +60,7 @@ function NewShootingDayForm() {
       await createShootingDay.mutateAsync(data)
       router.push(`/projects/${selectedProjectId}?tab=shooting-days`)
     } catch (err: any) {
-      showError(err, 'Error Creating Shooting Day')
+      showError(err, t('errorCreating'))
     }
   }
 
@@ -62,8 +69,8 @@ function NewShootingDayForm() {
       <Card>
         <form onSubmit={handleSubmit}>
           <CardHeader>
-            <CardTitle>Schedule New Shooting Day</CardTitle>
-            <CardDescription>Add shooting day details for your production schedule</CardDescription>
+            <CardTitle>{t('scheduleTitle')}</CardTitle>
+            <CardDescription>{t('scheduleDescription')}</CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-6">
@@ -73,13 +80,13 @@ function NewShootingDayForm() {
               <Alert>
                 <AlertDescription>
                   <div className="space-y-3">
-                    <p className="font-medium">Select a project to schedule a shooting day:</p>
+                    <p className="font-medium">{t('selectProject')}</p>
                     {projectsLoading ? (
-                      <p className="text-sm">Loading projects...</p>
+                      <p className="text-sm">{t('loadingProjects')}</p>
                     ) : projects && projects.length > 0 ? (
                       <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Choose a project" />
+                          <SelectValue placeholder={t('chooseProject')} />
                         </SelectTrigger>
                         <SelectContent>
                           {projects.map((project) => (
@@ -91,9 +98,9 @@ function NewShootingDayForm() {
                       </Select>
                     ) : (
                       <div className="space-y-2">
-                        <p className="text-sm">No projects found. Create a project first.</p>
+                        <p className="text-sm">{t('noProjectsCreateFirst')}</p>
                         <Button asChild size="sm">
-                          <Link href="/projects/new">Create Project</Link>
+                          <Link href="/projects/new">{t('createProject')}</Link>
                         </Button>
                       </div>
                     )}
@@ -102,23 +109,13 @@ function NewShootingDayForm() {
               </Alert>
             )}
 
-            {/* Basic Information */}
+            {/* Schedule Details */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Basic Information</h3>
+              <h3 className="text-lg font-semibold">{t('scheduleDetails')}</h3>
 
               <div className="grid gap-4 md:grid-cols-2">
-                {/* Show selected project name */}
-                {selectedProjectId && projects && (
-                  <div className="space-y-2 md:col-span-2">
-                    <Label>Project</Label>
-                    <div className="p-2 bg-muted rounded-md text-sm">
-                      {projects.find(p => p.id === selectedProjectId)?.title || 'Unknown Project'}
-                    </div>
-                  </div>
-                )}
-
                 <div className="space-y-2">
-                  <Label htmlFor="date">Shooting Date *</Label>
+                  <Label htmlFor="date">{t('shootingDate')}</Label>
                   <Input
                     id="date"
                     name="date"
@@ -128,7 +125,7 @@ function NewShootingDayForm() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="call_time">Call Time *</Label>
+                  <Label htmlFor="call_time">{t('generalCallTime')}</Label>
                   <Input
                     id="call_time"
                     name="call_time"
@@ -136,73 +133,109 @@ function NewShootingDayForm() {
                     required
                   />
                   <p className="text-xs text-muted-foreground">
-                    When the crew should arrive on set
+                    {t('generalCallTimeHelp')}
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="wrap_time">Estimated Wrap Time</Label>
+                  <Label htmlFor="on_set">{t('shootingCall')}</Label>
+                  <Input
+                    id="on_set"
+                    name="on_set"
+                    type="time"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t('shootingCallHelp')}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="lunch_time">{t('lunchTime')}</Label>
+                  <Input
+                    id="lunch_time"
+                    name="lunch_time"
+                    type="time"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="wrap_time">{t('estimatedWrap')}</Label>
                   <Input
                     id="wrap_time"
                     name="wrap_time"
                     type="time"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Expected end time (optional)
-                  </p>
                 </div>
               </div>
             </div>
 
             {/* Location */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Location Details</h3>
+              <h3 className="text-lg font-semibold">{t('locationSection')}</h3>
 
               <div className="space-y-2">
-                <Label htmlFor="location_name">Location Name *</Label>
+                <Label htmlFor="location_name">{t('locationName')}</Label>
                 <Input
                   id="location_name"
                   name="location_name"
-                  placeholder="e.g., Studio A, Central Park, Downtown Office"
+                  placeholder={t('locationNamePlaceholder')}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="location_address">Location Address</Label>
+                <Label htmlFor="location_address">{t('address')}</Label>
                 <Input
                   id="location_address"
                   name="location_address"
-                  placeholder="123 Film Street, Los Angeles, CA 90001"
+                  placeholder={t('addressPlaceholder')}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Full address for crew navigation
-                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="parking_info">{t('parkingInfo')}</Label>
+                <Textarea
+                  id="parking_info"
+                  name="parking_info"
+                  placeholder={t('parkingInfoPlaceholder')}
+                  rows={2}
+                />
               </div>
             </div>
 
-            {/* Weather & Notes */}
+            {/* Safety & Logistics */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Additional Information</h3>
+              <h3 className="text-lg font-semibold">{t('safetyLogistics')}</h3>
 
               <div className="space-y-2">
-                <Label htmlFor="weather_forecast">Weather Forecast</Label>
-                <Input
-                  id="weather_forecast"
-                  name="weather_forecast"
-                  placeholder="e.g., Sunny, 75°F, 10% chance of rain"
+                <Label htmlFor="hospital_info">{t('nearestHospital')}</Label>
+                <Textarea
+                  id="hospital_info"
+                  name="hospital_info"
+                  placeholder={t('nearestHospitalPlaceholder')}
+                  rows={2}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Weather conditions for outdoor shoots
-                </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes">Production Notes</Label>
+                <Label htmlFor="weather_forecast">{t('weatherForecast')}</Label>
+                <Input
+                  id="weather_forecast"
+                  name="weather_forecast"
+                  placeholder={t('weatherForecastPlaceholder')}
+                />
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">{t('notesSection')}</h3>
+              <div className="space-y-2">
+                <Label htmlFor="notes">{t('generalNotes')}</Label>
                 <Textarea
                   id="notes"
                   name="notes"
-                  placeholder="Special instructions, equipment needed, safety considerations..."
+                  placeholder={t('generalNotesPlaceholder')}
                   rows={4}
                 />
               </div>
@@ -215,13 +248,13 @@ function NewShootingDayForm() {
               variant="outline"
               onClick={() => router.back()}
             >
-              Cancel
+              {commonT('cancel')}
             </Button>
             <Button
               type="submit"
               disabled={createShootingDay.isPending || !selectedProjectId}
             >
-              {createShootingDay.isPending ? 'Creating...' : 'Schedule Shooting Day'}
+              {createShootingDay.isPending ? t('creating') : t('scheduleAction')}
             </Button>
           </CardFooter>
         </form>

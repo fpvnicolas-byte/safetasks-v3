@@ -26,6 +26,7 @@ import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { StakeholderUpdate, RateType } from '@/types'
+import { StakeholderStatusBadge } from '@/components/stakeholders/StakeholderStatusBadge'
 
 export default function EditStakeholderPage() {
   const params = useParams()
@@ -122,7 +123,10 @@ export default function EditStakeholderPage() {
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight font-display">Edit Stakeholder</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold tracking-tight font-display">Edit Stakeholder</h1>
+            <StakeholderStatusBadge status={stakeholder.status || 'requested'} />
+          </div>
           <p className="text-muted-foreground">Update stakeholder information</p>
         </div>
       </div>

@@ -12,7 +12,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Pencil, Trash2, ArrowLeft, Briefcase, Mail, Phone, MapPin, FileText, DollarSign } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { getSupplierCategoryDisplayName, formatCurrency } from '@/types'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 
 export default function SupplierDetailPage() {
   const params = useParams()
@@ -20,6 +22,7 @@ export default function SupplierDetailPage() {
   const searchParams = useSearchParams()
   const { organizationId } = useAuth()
   const supplierId = params.id as string
+  const t = useTranslations('suppliers')
 
   // Get dates from URL parameters
   const urlDateFrom = searchParams.get('date_from') || ''
@@ -90,19 +93,29 @@ export default function SupplierDetailPage() {
     )
   }
 
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this supplier?')) return
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
+  const handleDelete = async () => {
     try {
       await deleteSupplier.mutateAsync(supplierId)
       router.push('/suppliers')
     } catch (err) {
       console.error('Failed to delete supplier:', err)
+    } finally {
+      setIsDeleteDialogOpen(false)
     }
   }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <ConfirmDeleteDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleDelete}
+        loading={deleteSupplier.isPending}
+        title={t('delete.confirmTitle')}
+        description={t('delete.confirm', { name: supplier.name })}
+      />
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
@@ -120,7 +133,7 @@ export default function SupplierDetailPage() {
               Edit
             </Link>
           </Button>
-          <Button variant="destructive" onClick={handleDelete}>
+          <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)} disabled={deleteSupplier.isPending}>
             <Trash2 className="mr-2 h-4 w-4" />
             Delete
           </Button>

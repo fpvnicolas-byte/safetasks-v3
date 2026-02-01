@@ -1,0 +1,9 @@
+2026-02-01 14:44:53 [INFO] app: Logging configuration initialized
+2026-02-01 14:48:56 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-01 14:49:25 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-01 14:55:11 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-01 14:55:39 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-01 14:55:39 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-01 14:55:40 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-01 14:56:52 [ERROR] app.api.deps: Missing credentials. URL: http://127.0.0.1:8000/api/v1/proposals/
+2026-02-01 14:56:52 [WARNING] app.api.deps: No Authorization header found.

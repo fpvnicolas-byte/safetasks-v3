@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { ErrorDialog } from '@/components/ui/error-dialog'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { Plus, Pencil, Trash2, Loader2, Package } from 'lucide-react'
 import { Service, ServiceCreate, ServiceUpdate, dollarsToCents, centsToDollars } from '@/types'
 import { useTranslations } from 'next-intl'
@@ -57,12 +58,19 @@ export default function ServicesPage() {
         }
     }
 
-    const handleDelete = async (id: string) => {
-        if (!confirm(t('delete.confirm'))) return
+    const [deleteTarget, setDeleteTarget] = useState<{ id: string, name: string } | null>(null)
+    const [isDeleting, setIsDeleting] = useState(false)
+
+    const handleDelete = async () => {
+        if (!deleteTarget) return
+        setIsDeleting(true)
         try {
-            await deleteService.mutateAsync(id)
+            await deleteService.mutateAsync(deleteTarget.id)
+            setDeleteTarget(null)
         } catch (err: any) {
             showError(err, t('delete.error'))
+        } finally {
+            setIsDeleting(false)
         }
     }
 
@@ -78,6 +86,14 @@ export default function ServicesPage() {
 
     return (
         <div className="space-y-8">
+            <ConfirmDeleteDialog
+                open={!!deleteTarget}
+                onOpenChange={(open) => !open && setDeleteTarget(null)}
+                onConfirm={handleDelete}
+                loading={isDeleting}
+                title={t('delete.confirm')}
+                description={deleteTarget?.name ? `${t('delete.confirm')} (${deleteTarget.name})` : t('delete.confirm')}
+            />
             <div className="rounded-xl border bg-card/60 px-6 py-5">
                 <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                     Settings / Services
@@ -130,7 +146,7 @@ export default function ServicesPage() {
                                                 <Button variant="ghost" size="icon" onClick={() => openEditDialog(service)}>
                                                     <Pencil className="h-4 w-4" />
                                                 </Button>
-                                                <Button variant="ghost" size="icon" onClick={() => handleDelete(service.id)}>
+                                                <Button variant="ghost" size="icon" onClick={() => setDeleteTarget({ id: service.id, name: service.name })}>
                                                     <Trash2 className="h-4 w-4 text-destructive" />
                                                 </Button>
                                             </div>

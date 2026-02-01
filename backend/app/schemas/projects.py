@@ -21,6 +21,7 @@ class ProjectBase(BaseModel):
 class ProjectCreate(ProjectBase):
     """Schema for creating a Project."""
     service_ids: Optional[List[UUID]] = None
+    proposal_id: Optional[UUID] = None
 
 
 class ProjectUpdate(BaseModel):
@@ -31,9 +32,9 @@ class ProjectUpdate(BaseModel):
     status: Optional[Literal["draft", "pre-production", "production", "post-production", "delivered", "archived"]] = None
     budget_total_cents: Optional[int] = Field(None, ge=0)
     start_date: Optional[date] = None
-    start_date: Optional[date] = None
     end_date: Optional[date] = None
     service_ids: Optional[List[UUID]] = None
+    proposal_id: Optional[UUID] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -59,3 +60,15 @@ class ProjectWithClient(Project):
 
 # Forward reference for circular imports
 from app.schemas.clients import Client
+
+
+class ProjectStats(BaseModel):
+    """Schema for project statistics."""
+    scenes_count: int = 0
+    characters_count: int = 0
+    shooting_days_count: int = 0
+    confirmed_shooting_days_count: int = 0
+    team_count: int = 0
+    
+    model_config = ConfigDict(from_attributes=True)
+

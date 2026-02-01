@@ -15,7 +15,10 @@ class Proposal(Base):
     description = Column(TEXT)
     status = Column(String, default="draft")  # draft, sent, approved, rejected, expired
     valid_until = Column(DATE)
+    start_date = Column(DATE)
+    end_date = Column(DATE)
     total_amount_cents = Column(BIGINT)
+    base_amount_cents = Column(BIGINT, nullable=True)  # Manual portion of the budget
     currency = Column(String, default="BRL")
     terms_conditions = Column(TEXT)
     
@@ -27,6 +30,9 @@ class Proposal(Base):
 
     # Many-to-Many relationship with Service
     services = relationship("Service", secondary="proposal_services", backref="proposals")
+
+    # Relationships
+    client = relationship("Client", backref="proposals")
 
 
 from sqlalchemy import Table

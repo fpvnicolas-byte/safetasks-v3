@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useCreateStakeholder } from '@/lib/api/hooks/useStakeholders'
 import { useProjects } from '@/lib/api/hooks'
 import { useSuppliers } from '@/lib/api/hooks/useSuppliers'
@@ -40,8 +40,11 @@ export default function NewStakeholderPage() {
 
   const [enablePayments, setEnablePayments] = useState(false)
 
+  const searchParams = useSearchParams()
+  const initialProjectId = searchParams.get('project_id') || ''
+
   const [formData, setFormData] = useState<StakeholderCreate>({
-    project_id: '',
+    project_id: initialProjectId,
     name: '',
     role: '',
     email: '',
@@ -182,7 +185,22 @@ export default function NewStakeholderPage() {
                     <Label htmlFor="supplier_id">Link to Supplier (Optional)</Label>
                     <Select
                       value={formData.supplier_id || '__auto_create__'}
-                      onValueChange={(value) => setFormData({ ...formData, supplier_id: value === '__auto_create__' ? undefined : value })}
+                      onValueChange={(value) => {
+                        if (value === '__auto_create__') {
+                          setFormData({ ...formData, supplier_id: undefined })
+                        } else {
+                          // Auto-fill data from selected supplier
+                          const selectedSupplier = suppliers?.find(s => s.id === value)
+                          setFormData({
+                            ...formData,
+                            supplier_id: value,
+                            // Auto-fill fields if they exist on the supplier
+                            name: selectedSupplier?.name || formData.name,
+                            email: selectedSupplier?.email || formData.email,
+                            phone: selectedSupplier?.phone || formData.phone,
+                          })
+                        }
+                      }}
                     >
                       <SelectTrigger id="supplier_id">
                         <SelectValue placeholder="Select existing supplier or leave blank to auto-create" />
@@ -235,8 +253,8 @@ export default function NewStakeholderPage() {
                         <div className="space-y-2">
                           <Label htmlFor="rate_value">
                             {formData.rate_type === 'daily' ? 'Rate per Day (R$)' :
-                             formData.rate_type === 'hourly' ? 'Rate per Hour (R$)' :
-                             'Fixed Amount (R$)'}
+                              formData.rate_type === 'hourly' ? 'Rate per Hour (R$)' :
+                                'Fixed Amount (R$)'}
                           </Label>
                           <Input
                             id="rate_value"

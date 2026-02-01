@@ -9,6 +9,7 @@ from app.api.deps import get_current_organization, get_current_profile, require_
 from app.db.session import get_db
 from app.modules.commercial.service import organization_service
 from app.schemas.organizations import Organization, OrganizationCreate, OrganizationUpdate
+from app.schemas.bank_accounts import BankAccountCreate
 from app.models.organizations import Organization as OrganizationModel
 from app.models.profiles import Profile
 from app.services.billing import setup_trial_for_organization
@@ -175,6 +176,16 @@ async def create_organization_onboarding(
         organization=organization,
         user_email=profile.email
     )
+
+    # Create default bank account for the organization
+    default_account = await bank_account_service.create(
+        db=db,
+        organization_id=organization.id,
+        obj_in=BankAccountCreate(name="Conta Principal", currency="BRL")
+    )
+    organization.default_bank_account_id = default_account.id
+    db.add(organization)
+    await db.flush()
 
     profile.organization_id = organization.id
     profile.role_v2 = "owner"

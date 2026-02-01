@@ -52,12 +52,17 @@ export function useCreateShootingDay(projectId: string, organizationId: string) 
       const backendData: ShootingDayCreate = {
         project_id: projectId,
         date: data.date, // ISO date string
+        status: data.status,
         call_time: convertTimeToBackendFormat(data.call_time), // HH:MM:SS
+        on_set: data.on_set ? convertTimeToBackendFormat(data.on_set) : undefined,
+        lunch_time: data.lunch_time ? convertTimeToBackendFormat(data.lunch_time) : undefined,
         wrap_time: data.wrap_time ? convertTimeToBackendFormat(data.wrap_time) : undefined, // HH:MM:SS
         location_name: data.location_name,
         location_address: data.location_address,
         weather_forecast: data.weather_forecast,
         notes: data.notes,
+        parking_info: data.parking_info,
+        hospital_info: data.hospital_info,
       }
 
       return apiClient.post<ShootingDay>('/api/v1/shooting-days/', backendData)
@@ -81,12 +86,17 @@ export function useUpdateShootingDay(shootingDayId: string, organizationId: stri
       const backendData: ShootingDayUpdate = {}
 
       if (data.date) backendData.date = data.date
+      if (data.status !== undefined) backendData.status = data.status
       if (data.call_time) backendData.call_time = convertTimeToBackendFormat(data.call_time)
+      if (data.on_set !== undefined) backendData.on_set = data.on_set ? convertTimeToBackendFormat(data.on_set) : undefined
+      if (data.lunch_time !== undefined) backendData.lunch_time = data.lunch_time ? convertTimeToBackendFormat(data.lunch_time) : undefined
       if (data.wrap_time !== undefined) backendData.wrap_time = data.wrap_time ? convertTimeToBackendFormat(data.wrap_time) : undefined
       if (data.location_name !== undefined) backendData.location_name = data.location_name
       if (data.location_address !== undefined) backendData.location_address = data.location_address
       if (data.weather_forecast !== undefined) backendData.weather_forecast = data.weather_forecast
       if (data.notes !== undefined) backendData.notes = data.notes
+      if (data.parking_info !== undefined) backendData.parking_info = data.parking_info
+      if (data.hospital_info !== undefined) backendData.hospital_info = data.hospital_info
 
       return apiClient.put<ShootingDay>(`/api/v1/shooting-days/${shootingDayId}`, backendData)
     },

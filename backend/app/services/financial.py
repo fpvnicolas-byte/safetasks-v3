@@ -10,6 +10,7 @@ from app.models.bank_accounts import BankAccount
 from app.models.transactions import Transaction
 from app.models.projects import Project
 from app.models.organizations import Organization
+from app.models.financial import ProjectBudgetLine, BudgetCategoryEnum
 from app.schemas.bank_accounts import BankAccountCreate, BankAccountUpdate
 from app.schemas.transactions import TransactionCreate, TransactionUpdate
 
@@ -181,6 +182,130 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
             obj_in=transaction_in
         )
 
+    async def create_expense_from_stakeholder(
+        self,
+        db: AsyncSession,
+        *,
+        organization_id: UUID,
+        stakeholder,
+        shooting_days_count: int = 0
+    ) -> Transaction:
+        """
+        Create an expense transaction from a confirmed stakeholder with idempotency.
+
+        Calculates amount based on:
+        - rate_type: 'daily', 'hourly', or 'fixed'
+        - rate_value_cents: the rate per unit
+        - estimated_units: hours for hourly, days override for daily
+        - shooting_days_count: fallback for daily rate if no estimated_units
+
+        Uses confirmed_rate_cents/confirmed_rate_type if set, otherwise falls back
+        to rate_value_cents/rate_type.
+        """
+        # Idempotency check - don't create duplicate expense for same stakeholder
+        existing_result = await db.execute(
+            select(Transaction).where(
+                Transaction.organization_id == organization_id,
+                Transaction.stakeholder_id == stakeholder.id
+            )
+        )
+        existing = existing_result.scalar_one_or_none()
+        if existing:
+            return existing
+
+        # Get organization default bank account
+        org_result = await db.execute(
+            select(Organization).where(Organization.id == organization_id)
+        )
+        organization = org_result.scalar_one_or_none()
+        if not organization or not organization.default_bank_account_id:
+            raise ValueError("Default bank account is not set for this organization")
+
+        # Determine rate to use (confirmed rate takes precedence)
+        rate_type = stakeholder.confirmed_rate_type or stakeholder.rate_type
+        rate_value = stakeholder.confirmed_rate_cents or stakeholder.rate_value_cents
+
+        if not rate_type or not rate_value:
+            raise ValueError("Stakeholder has no rate configured")
+
+        # Calculate amount based on rate type
+        if rate_type == "fixed":
+            amount_cents = rate_value
+        elif rate_type == "daily":
+            # Use estimated_units if set, otherwise use shooting_days_count
+            days = stakeholder.estimated_units or shooting_days_count or 1
+            amount_cents = rate_value * days
+        elif rate_type == "hourly":
+            # Use estimated_units for hours
+            hours = stakeholder.estimated_units or 8  # Default to 8 hours if not set
+            amount_cents = rate_value * hours
+        else:
+            raise ValueError(f"Unknown rate type: {rate_type}")
+
+        description = f"Crew hire: {stakeholder.name} ({stakeholder.role})"
+
+        # Try to find a matching budget line
+        budget_line_id = None
+        
+        # 1. Direct link: Check if a budget line already points to this stakeholder
+        bl_query = select(ProjectBudgetLine.id).where(
+            and_(
+                ProjectBudgetLine.project_id == stakeholder.project_id,
+                ProjectBudgetLine.stakeholder_id == stakeholder.id
+            )
+        )
+        bl_result = await db.execute(bl_query)
+        budget_line_id = bl_result.scalar_one_or_none()
+
+        # 2. Fallback: Find a generic budget line for the role/category
+        if not budget_line_id:
+            # Map role/context to budget category
+            category_map = {
+                'Cast': BudgetCategoryEnum.TALENT,
+                'Actor': BudgetCategoryEnum.TALENT,
+                'Extra': BudgetCategoryEnum.TALENT,
+                'Crew': BudgetCategoryEnum.CREW,
+                'Director': BudgetCategoryEnum.CREW,
+                'Producer': BudgetCategoryEnum.CREW,
+                'DOP': BudgetCategoryEnum.CREW,
+                'Camera': BudgetCategoryEnum.CREW,
+                # Add more mappings as needed
+            }
+            # Default to CREW if generic role, or use a "Catch-all" if creating new budget handling
+            target_category = category_map.get(stakeholder.role) or (
+                BudgetCategoryEnum.CREW if "Crew" in (stakeholder.role or "") else None
+            )
+
+            if target_category:
+                 # Find first budget line in this category (or you might want to create one?)
+                 # For now, let's link to the first specific line if exists, or general "Crew" line
+                bl_query_cat = select(ProjectBudgetLine.id).where(
+                    and_(
+                        ProjectBudgetLine.project_id == stakeholder.project_id,
+                        ProjectBudgetLine.category == target_category
+                    )
+                ).limit(1)
+                bl_result_cat = await db.execute(bl_query_cat)
+                budget_line_id = bl_result_cat.scalar_one_or_none()
+
+        transaction_in = TransactionCreate(
+            bank_account_id=organization.default_bank_account_id,
+            category="crew_hire",
+            type="expense",
+            amount_cents=amount_cents,
+            description=description,
+            transaction_date=date.today(),
+            project_id=stakeholder.project_id,
+            stakeholder_id=stakeholder.id,
+            budget_line_id=budget_line_id
+        )
+
+        return await self.create(
+            db=db,
+            organization_id=organization_id,
+            obj_in=transaction_in
+        )
+
     async def remove(
         self,
         db: AsyncSession,
@@ -327,20 +452,30 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
             )
         )
 
+        # Query for expenses linked to active projects (for accurate remaining budget)
+        active_project_expenses_query = select(func.sum(Transaction.amount_cents)).join(Project).where(
+            and_(
+                Transaction.organization_id == organization_id,
+                Transaction.type == "expense",
+                Project.is_active == True
+            )
+        )
+
         income_result = await db.execute(income_query)
         expense_result = await db.execute(expense_query)
         budget_result = await db.execute(budget_query)
+        active_project_expenses_result = await db.execute(active_project_expenses_query)
 
         total_income = income_result.scalar() or 0
         total_expense = expense_result.scalar() or 0
         total_budget = budget_result.scalar() or 0
+        active_project_expenses = active_project_expenses_result.scalar() or 0
 
         # Net income is Income - Expense
         net_income = total_income - total_expense
 
-        # Remaining budget is Total Budget - Total Expense
-        # This assumes all expenses are budget-consuming
-        remaining_budget = total_budget - total_expense
+        # Remaining budget is Active Projects Budget - Active Projects Expenses
+        remaining_budget = total_budget - active_project_expenses
 
         return {
             "total_income_cents": total_income,
