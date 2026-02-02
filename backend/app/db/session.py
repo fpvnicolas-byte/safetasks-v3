@@ -2,8 +2,24 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
 
-# Cria o motor assíncrono usando a URL do config (postgresql+asyncpg)
-engine = create_async_engine(settings.SQLALCHEMY_DATABASE_URI, future=True, echo=True)
+# Create async engine with robust pooling settings to prevent connection drops
+# Adjusted to handle potential network latency or cloud DB limits
+engine = create_async_engine(
+    settings.SQLALCHEMY_DATABASE_URI,
+    future=True,
+    echo=settings.LOG_LEVEL == "DEBUG",
+    pool_pre_ping=True,
+    pool_size=5,  # Reduced pool size to prevent overloading
+    max_overflow=10,
+    pool_recycle=600,  # Recycle every 10 minutes
+    connect_args={
+        "timeout": 60,  # Increase connection timeout to 60s
+        "server_settings": {
+            "jit": "off",  # Disable JIT to improve query planning stability
+            "application_name": "safetasks-v3"
+        }
+    }
+)
 
 # Cria a fábrica de sessões (Essa é a variável que o script estava procurando com o nome errado)
 SessionLocal = sessionmaker(
