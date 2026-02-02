@@ -21,7 +21,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    version="3.0.4",
+    version="3.0.5",
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     description="""
     Safe Tasks V3 - Professional Video Production Management Platform
