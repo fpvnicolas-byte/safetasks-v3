@@ -13,12 +13,16 @@ phases:
   pre_build:
     commands:
       - echo Running tests...
-      - cd backend
+      - pwd
+      - ls -la
+      - cd backend || (echo "backend folder not found!" && exit 1)
       - python -m pytest tests/
   
   build:
     commands:
       - echo Building Docker image...
+      - pwd
+      - ls -la
       - cd backend
       - docker build -t safetasks-backend .
 
