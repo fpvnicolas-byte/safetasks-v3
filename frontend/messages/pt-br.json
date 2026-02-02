@@ -1837,15 +1837,19 @@
     "noBudgetLines": "Nenhuma linha de orçamento definida.",
     "categories": {
       "crew": "Equipe",
+      "crew_hire": "Contratação de Equipe",
       "equipment": "Equipamento",
+      "equipment_rental": "Locação de Equipamento",
       "locations": "Locações",
       "talent": "Talento",
       "transportation": "Transporte",
+      "logistics": "Logística",
       "catering": "Alimentação",
       "post_production": "Pós-Produção",
       "music_licensing": "Licenciamento Musical",
       "insurance": "Seguro",
       "contingency": "Contingência",
+      "maintenance": "Manutenção",
       "other": "Outros"
     }
   },

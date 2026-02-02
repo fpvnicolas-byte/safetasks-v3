@@ -53,6 +53,13 @@ app = FastAPI(
     },
 )
 
+# Add logging middleware 
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    print(f"DEBUG_PATH_CHECK: {request.method} {request.url.path}", flush=True)
+    response = await call_next(request)
+    return response
+
 # Add rate limiting middleware
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)

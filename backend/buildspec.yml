@@ -1,0 +1,28 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.12
+    commands:
+      - echo Installing dependencies...
+      - cd backend
+      - pip install -r requirements.txt
+      - pip install pytest
+  
+  pre_build:
+    commands:
+      - echo Running tests...
+      - cd backend
+      - python -m pytest tests/
+  
+  build:
+    commands:
+      - echo Building Docker image...
+      - cd backend
+      - docker build -t safetasks-backend .
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: backend
