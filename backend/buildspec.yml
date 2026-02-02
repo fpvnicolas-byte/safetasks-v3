@@ -6,24 +6,17 @@ phases:
       python: 3.12
     commands:
       - echo Installing dependencies...
-      - cd backend
       - pip install -r requirements.txt
       - pip install pytest
   
   pre_build:
     commands:
       - echo Running tests...
-      - pwd
-      - ls -la
-      - cd backend || (echo "backend folder not found!" && exit 1)
       - python -m pytest tests/
   
   build:
     commands:
       - echo Building Docker image...
-      - pwd
-      - ls -la
-      - cd backend
       - docker build -t safetasks-backend .
 
 artifacts:
