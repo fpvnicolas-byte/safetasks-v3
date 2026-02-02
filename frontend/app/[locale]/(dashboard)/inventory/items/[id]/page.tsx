@@ -30,6 +30,13 @@ export default function InventoryItemDetailPage() {
   const t = useTranslations('inventory.items')
   const tCommon = useTranslations('common.feedback')
 
+  const {
+    open: deleteOpen,
+    onOpenChange: setDeleteOpen,
+    askConfirmation: confirmDelete,
+    closeConfirmation: cancelDelete
+  } = useConfirmDelete()
+
   if (isLoading) {
     return <div className="p-8 text-center text-muted-foreground">{t('loading')}</div>
   }
@@ -49,12 +56,7 @@ export default function InventoryItemDetailPage() {
     )
   }
 
-  const {
-    open: deleteOpen,
-    onOpenChange: setDeleteOpen,
-    askConfirmation: confirmDelete,
-    closeConfirmation: cancelDelete
-  } = useConfirmDelete()
+
 
   const handleDelete = async () => {
     try {

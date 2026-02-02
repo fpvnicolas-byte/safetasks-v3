@@ -59,21 +59,24 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
 
 # Set up CORS for production security
-# In production, only allow your frontend domain
 allowed_origins = [
-    "http://localhost:3000",  # Next.js development
-    "http://127.0.0.1:3000", # Next.js development
-    "https://your-frontend-domain.com",  # Replace with your actual frontend domain
+    # Production - Vercel
+    "https://safetasks.vercel.app",
+    "https://safetasks-v3.vercel.app",
+    # Local development
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
 ]
 
-# For development, allow common development origins
+# For development, allow additional origins
 if settings.ENVIRONMENT == "development":
     allowed_origins.extend([
-        "http://localhost:3001",
-        "http://127.0.0.1:3001",
         "http://localhost:5173",  # Vite
         "http://127.0.0.1:5173",  # Vite
         "http://192.168.15.3:3000",
+        "http://192.168.15.11:3000",
     ])
 
 app.add_middleware(

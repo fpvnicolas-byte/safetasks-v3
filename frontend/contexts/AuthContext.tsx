@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState, useRef, useCallback } from 'react'
 import { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { logger } from '@/lib/utils/logger'
@@ -48,7 +48,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const locale = useLocale()
 
-  const fetchProfile = async (token: string) => {
+  // Use refs to track current state for async callbacks (avoids stale closures)
+  const profileRef = useRef<Profile | null>(null)
+  const isSigningOutRef = useRef(false)
+
+  const fetchProfile = useCallback(async (token: string) => {
+    // Don't fetch if we're signing out
+    if (isSigningOutRef.current) {
+      return
+    }
+
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/profiles/me`, {
         headers: {
@@ -56,9 +65,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       })
 
+      // Double-check we haven't started signing out while fetching
+      if (isSigningOutRef.current) {
+        return
+      }
+
       if (response.ok) {
         const profileData = await response.json()
         setProfile(profileData)
+        profileRef.current = profileData
         setOrganizationId(profileData.organization_id)
 
         if (!profileData.organization_id) {
@@ -75,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       logger.error('Error fetching profile', error)
     }
-  }
+  }, [pathname, locale, router])
 
   const refreshProfile = async () => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -119,47 +134,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
   }
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
+    // Set signing out flag to prevent race conditions
+    isSigningOutRef.current = true
+
     try {
-      await supabase.auth.signOut({ scope: 'local' })
-    } finally {
-      clearSupabaseStorage()
+      // Clear state first to update UI immediately
       setProfile(null)
+      profileRef.current = null
       setOrganizationId(null)
       setUser(null)
+      setIsLoading(false)
+
+      // Then sign out from Supabase
+      await supabase.auth.signOut({ scope: 'local' })
+    } catch (error) {
+      logger.error('Error during sign out', error)
+    } finally {
+      clearSupabaseStorage()
+      // Navigate after everything is cleared
       router.push(`/${locale}/auth/login`)
+      // Reset flag after a delay to allow navigation to complete
+      setTimeout(() => {
+        isSigningOutRef.current = false
+      }, 1000)
     }
-  }
+  }, [supabase, locale, router])
 
   useEffect(() => {
     // Get initial session
     const getSession = async () => {
+      // Don't run if signing out
+      if (isSigningOutRef.current) return
+
       setIsLoading(true)
       const { data: { session }, error } = await supabase.auth.getSession()
 
-      // CRITICAL: If no session from getSession (which checks local storage often), 
+      // CRITICAL: If no session from getSession (which checks local storage often),
       // try to force a refresh from the server/cookie.
       if (!session) {
         logger.info('[AuthContext] No initial session found, attempting refreshSession to check cookies...')
         const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession()
 
-        if (refreshedSession) {
+        if (refreshedSession && !isSigningOutRef.current) {
           logger.info('[AuthContext] Session recovered via refreshSession', { userId: refreshedSession.user.id })
           setUser(refreshedSession.user)
           await fetchProfile(refreshedSession.access_token)
-        } else {
+        } else if (!isSigningOutRef.current) {
           logger.info('[AuthContext] No session after refresh attempt', { error: refreshError?.message })
           setProfile(null)
+          profileRef.current = null
           setOrganizationId(null)
           setUser(null)
         }
-      } else {
+      } else if (!isSigningOutRef.current) {
         setUser(session.user)
         // Fetch profile if user is authenticated
         await fetchProfile(session.access_token)
       }
 
-      setIsLoading(false)
+      if (!isSigningOutRef.current) {
+        setIsLoading(false)
+      }
     }
 
     getSession()
@@ -168,12 +204,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // Skip processing if we're signing out
+      if (isSigningOutRef.current) {
+        logger.info(`[AuthContext] Ignoring auth event during sign out: ${event}`)
+        return
+      }
+
       logger.info(`[AuthContext] Auth State Change: ${event}`, { userId: session?.user?.id })
 
-      if (event === 'SIGNED_OUT' || (event === 'PkceGrantFailed' as any)) { // Casting to any as PkceGrantFailed might not be in the type def yet depending on version
+      if (event === 'SIGNED_OUT' || (event === 'PkceGrantFailed' as any)) {
         // Handle explicit sign out or failure
         setUser(null)
         setProfile(null)
+        profileRef.current = null
         setOrganizationId(null)
         setIsLoading(false)
         return
@@ -183,34 +226,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         setUser(session.user)
 
-        // Optimize: Only fetch profile if not already loaded or if user changed
-        if (!profile || profile.id !== session.user.id) {
-          setIsLoading(true) // Only set loading if we need to fetch
+        // Use ref to check current profile state (avoids stale closure)
+        const currentProfile = profileRef.current
+        if (!currentProfile || currentProfile.id !== session.user.id) {
+          setIsLoading(true)
           await fetchProfile(session.access_token)
-          setIsLoading(false)
+          // Only set loading false if we haven't started signing out
+          if (!isSigningOutRef.current) {
+            setIsLoading(false)
+          }
         }
       } else if (!session && event !== 'INITIAL_SESSION') {
-        // If no session and not initial load (which usually has session or null, handled by getSession above), 
-        // we might want to clear but be careful about transient states. 
-        // However, onAuthStateChange is usually authoritative.
-        // If we are strictly missing session and it's not a refresh, we clear.
-        if (user) {
-          logger.warn('[AuthContext] Session lost without explicit signout', { event })
-          setUser(null)
-          setProfile(null)
-          setOrganizationId(null)
-        }
+        // If no session and not initial load, clear state
+        logger.warn('[AuthContext] Session lost without explicit signout', { event })
+        setUser(null)
+        setProfile(null)
+        profileRef.current = null
+        setOrganizationId(null)
       }
 
       // Ensure loading is false after processing
-      // Note: we don't want to flicker isLoading on every token refresh
-      if (event === 'INITIAL_SESSION') {
+      if (event === 'INITIAL_SESSION' && !isSigningOutRef.current) {
         setIsLoading(false)
       }
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase])
+  }, [supabase, fetchProfile])
 
   return (
     <AuthContext.Provider value={{ user, profile, organizationId, isLoading, refreshProfile, signOut }}>
