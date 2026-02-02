@@ -109,6 +109,12 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
 
         # Create the transaction
         transaction_data = obj_in.dict()
+        
+        # Auto-approve income: if it's income, mark as paid immediately
+        # Income transactions (like receipts) are usually recorded after they happen
+        if obj_in.type == "income" and transaction_data.get("payment_status") == "pending":
+            transaction_data["payment_status"] = "paid"
+            
         db_transaction = self.model(**transaction_data)
         db_transaction.organization_id = organization_id
         db.add(db_transaction)
@@ -363,6 +369,9 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
         query = query.options(
             selectinload(Transaction.bank_account),
             selectinload(Transaction.project).selectinload(Project.services)
+        ).order_by(
+            Transaction.transaction_date.desc(),
+            Transaction.created_at.desc()
         ).offset(skip).limit(limit)
 
         result = await db.execute(query)

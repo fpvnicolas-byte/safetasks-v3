@@ -1,7 +1,7 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { useInvoice, useDeleteInvoice } from '@/lib/api/hooks'
+import { useInvoice, useDeleteInvoice, useUpdateInvoice } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -27,7 +27,7 @@ const statusVariant: Record<InvoiceStatus, 'secondary' | 'info' | 'success' | 'd
   sent: 'info',
   paid: 'success',
   overdue: 'destructive',
-  canceled: 'outline',
+  cancelled: 'outline',
 }
 
 export default function InvoiceDetailPage() {
@@ -345,7 +345,7 @@ export default function InvoiceDetailPage() {
                 </Tooltip>
               </TooltipProvider>
               {invoice.status !== 'paid' && (
-                <PaymentDialog invoiceId={invoiceId} invoiceTotal={total} />
+                <PaymentDialog invoiceId={invoiceId} invoiceTotal={total} organizationId={organizationId || undefined} />
               )}
             </CardContent>
           </Card>
@@ -359,9 +359,10 @@ export default function InvoiceDetailPage() {
 interface PaymentDialogProps {
   invoiceId: string
   invoiceTotal: number
+  organizationId?: string
 }
 
-function PaymentDialog({ invoiceId, invoiceTotal }: PaymentDialogProps) {
+function PaymentDialog({ invoiceId, invoiceTotal, organizationId }: PaymentDialogProps) {
   const [open, setOpen] = useState(false)
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0])
   const [paymentMethod, setPaymentMethod] = useState('')
@@ -370,32 +371,30 @@ function PaymentDialog({ invoiceId, invoiceTotal }: PaymentDialogProps) {
   const [isProcessing, setIsProcessing] = useState(false)
   const t = useTranslations('financials.pages.invoiceDetail')
   const tCommon = useTranslations('common')
+  const updateInvoice = useUpdateInvoice(organizationId)
 
-  // TODO: Implement payment tracking - for now just show dialog
   const handleMarkAsPaid = async () => {
     setIsProcessing(true)
     try {
-      // Here you would call an API to mark the invoice as paid
-      // For now, we'll just show the dialog functionality
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call
-
-      // In a real implementation, you'd call something like:
-      // await updateInvoice.mutateAsync({
-      //   invoiceId,
-      //   data: {
-      //     status: 'paid',
-      //     paid_date: paymentDate,
-      //     payment_method: paymentMethod,
-      //     payment_reference: reference,
-      //     payment_notes: notes
-      //   }
-      // })
+      await updateInvoice.mutateAsync({
+        invoiceId,
+        data: {
+          status: 'paid' as any,
+          paid_date: paymentDate, // Input type="date" value is already YYYY-MM-DD
+          payment_method: paymentMethod,
+          payment_reference: reference,
+          payment_notes: notes
+        }
+      })
 
       setOpen(false)
-      // Refresh the page to show updated status
-      window.location.reload()
-    } catch (error) {
-      console.error('Error marking invoice as paid:', error)
+      // No need to reload, React Query handles cache invalidation on success
+    } catch (error: any) {
+      console.error('Error marking invoice as paid:', JSON.stringify(error, null, 2))
+      if (error.response?.data) {
+        console.error('Server response:', error.response.data)
+      }
+      alert(`Failed to mark invoice as paid: ${error.message || 'Unknown error'}`)
     } finally {
       setIsProcessing(false)
     }

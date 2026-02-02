@@ -30,6 +30,8 @@ export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'cancelled
 export interface Organization {
   id: UUID
   name: string
+  tax_id: string | null
+  default_bank_account_id: UUID | null
   plan: OrganizationPlan
   subscription_status: SubscriptionStatus
   is_active: boolean
@@ -162,7 +164,7 @@ export interface CallSheetWithProject extends CallSheet {
 // FINANCIAL TYPES
 // ============================================================================
 
-export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'canceled'
+export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled'
 export type ExpenseCategory = 'pre_production' | 'production' | 'post_production' | 'marketing' | 'other'
 
 export interface InvoiceItem {
@@ -191,6 +193,9 @@ export interface Invoice {
   currency: string
   description: string | null
   notes: string | null
+  payment_method: string | null
+  payment_reference: string | null
+  payment_notes: string | null
   created_at: ISODateTime
   updated_at: ISODateTime
 }
@@ -245,6 +250,7 @@ export function centsToDollars(cents: number): number {
 // ============================================================================
 
 export type TransactionType = 'income' | 'expense'
+export type TransactionPaymentStatus = 'pending' | 'approved' | 'paid' | 'rejected'
 
 export type TransactionCategory =
   | 'crew_hire'
@@ -268,6 +274,10 @@ export interface Transaction {
   description: string | null
   transaction_date: ISODate // YYYY-MM-DD
   created_at: ISODateTime
+  payment_status: TransactionPaymentStatus
+  approved_by?: UUID | null
+  approved_at?: ISODateTime | null
+  rejection_reason?: string | null
 }
 
 export interface TransactionWithRelations extends Transaction {
@@ -285,6 +295,7 @@ export interface TransactionCreate {
   project_id?: UUID
   supplier_id?: UUID
   stakeholder_id?: UUID
+  payment_status?: TransactionPaymentStatus
 }
 
 export interface TransactionUpdate {
@@ -297,6 +308,8 @@ export interface TransactionUpdate {
   project_id?: UUID
   supplier_id?: UUID
   stakeholder_id?: UUID
+  payment_status?: TransactionPaymentStatus
+  rejection_reason?: string
 }
 
 export interface TransactionOverviewStats {
@@ -930,6 +943,22 @@ export interface ServiceUpdate {
   name?: string
   description?: string
   value_cents?: number
+}
+
+export interface ServiceEquipmentCreate {
+  kit_id: UUID
+  is_primary: boolean
+  notes?: string
+}
+
+export interface ServiceEquipmentResponse {
+  id: UUID
+  service_id: UUID
+  kit_id: UUID
+  kit_name: string | null
+  is_primary: boolean
+  notes: string | null
+  created_at: ISODateTime
 }
 
 /**

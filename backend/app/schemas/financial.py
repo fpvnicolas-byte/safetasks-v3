@@ -129,6 +129,9 @@ class InvoiceBase(BaseModel):
     paid_date: Optional[date] = None
     description: Optional[str] = None
     notes: Optional[str] = None
+    payment_method: Optional[str] = None
+    payment_reference: Optional[str] = None
+    payment_notes: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -161,6 +164,9 @@ class InvoiceUpdate(BaseModel):
     paid_date: Optional[date] = None
     description: Optional[str] = None
     notes: Optional[str] = None
+    payment_method: Optional[str] = None
+    payment_reference: Optional[str] = None
+    payment_notes: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

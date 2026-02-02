@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { serviceApi } from '../services'
-import { ServiceCreate, ServiceUpdate } from '@/types'
+import { ServiceCreate, ServiceUpdate, ServiceEquipmentCreate } from '@/types'
 
 export function useServices(organizationId?: string) {
     const queryClient = useQueryClient()
@@ -48,6 +48,34 @@ export function useDeleteService(organizationId?: string) {
         mutationFn: (id: string) => serviceApi.delete(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['services', organizationId] })
+        },
+    })
+}
+
+export function useServiceEquipment(serviceId?: string) {
+    return useQuery({
+        queryKey: ['service-equipment', serviceId],
+        queryFn: () => serviceApi.getEquipment(serviceId!),
+        enabled: !!serviceId,
+    })
+}
+
+export function useLinkServiceEquipment(serviceId: string) {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: (data: ServiceEquipmentCreate) => serviceApi.linkEquipment(serviceId, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['service-equipment', serviceId] })
+        },
+    })
+}
+
+export function useUnlinkServiceEquipment(serviceId: string) {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: (kitId: string) => serviceApi.unlinkEquipment(serviceId, kitId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['service-equipment', serviceId] })
         },
     })
 }

@@ -39,6 +39,20 @@ export function useTransactions(filters: TransactionFilters = {}) {
   })
 }
 
+
+export function usePendingTransactions(organizationId?: string, limit: number = 20) {
+  return useQuery({
+    queryKey: [TRANSACTIONS_KEY, 'pending', organizationId],
+    queryFn: () => {
+      const params = new URLSearchParams()
+      if (organizationId) params.append('organization_id', organizationId)
+      params.append('limit', limit.toString())
+      return apiClient.get<TransactionWithRelations[]>(`/api/v1/transactions/pending?${params.toString()}`)
+    },
+    enabled: !!organizationId,
+  })
+}
+
 export function useTransaction(transactionId: string) {
   return useQuery({
     queryKey: [TRANSACTIONS_KEY, transactionId],
@@ -107,5 +121,64 @@ export function useOverviewStats(organizationId?: string) {
       return apiClient.get<TransactionOverviewStats>(`/api/v1/transactions/stats/overview?${params.toString()}`)
     },
     enabled: !!organizationId,
+  })
+}
+
+export function useApproveTransaction() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ organizationId, transactionId }: { organizationId: string; transactionId: string }) => {
+      const params = new URLSearchParams()
+      params.append('organization_id', organizationId)
+      return apiClient.patch<TransactionWithRelations>(`/api/v1/transactions/${transactionId}/approve?${params.toString()}`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [TRANSACTIONS_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['bank-accounts'] })
+      queryClient.invalidateQueries({ queryKey: ['analytics'] })
+    },
+  })
+}
+
+export function useRejectTransaction() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      organizationId,
+      transactionId,
+      reason
+    }: {
+      organizationId: string;
+      transactionId: string;
+      reason: string
+    }) => {
+      const params = new URLSearchParams()
+      params.append('organization_id', organizationId)
+      return apiClient.patch<TransactionWithRelations>(
+        `/api/v1/transactions/${transactionId}/reject?${params.toString()}`,
+        { decision: 'reject', rejection_reason: reason }
+      )
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [TRANSACTIONS_KEY] })
+    },
+  })
+}
+
+export function useMarkTransactionPaid() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ organizationId, transactionId }: { organizationId: string; transactionId: string }) => {
+      const params = new URLSearchParams()
+      params.append('organization_id', organizationId)
+      return apiClient.patch<TransactionWithRelations>(`/api/v1/transactions/${transactionId}/mark-paid?${params.toString()}`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [TRANSACTIONS_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['bank-accounts'] })
+    },
   })
 }

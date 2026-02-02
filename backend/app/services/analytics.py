@@ -85,7 +85,7 @@ class AnalyticsService:
         current_month_start = today.replace(day=1)
         current_month_end = today  # Include today's transactions
 
-        # Revenue and expenses for current month
+        # Revenue and expenses for current month (entire month)
         monthly_query = select(
             func.sum(
                 case(
@@ -102,8 +102,8 @@ class AnalyticsService:
         ).where(
             and_(
                 Transaction.organization_id == organization_id,
-                Transaction.transaction_date >= current_month_start,
-                Transaction.transaction_date <= current_month_end
+                extract('year', Transaction.transaction_date) == today.year,
+                extract('month', Transaction.transaction_date) == today.month
             )
         )
 
@@ -117,12 +117,10 @@ class AnalyticsService:
         logger.info(
             f"MTD Financial Metrics for org {organization_id}: "
             f"Revenue: {revenue_mtd}, Expenses: {expenses_mtd}, "
-            f"Date range: {current_month_start} to {current_month_end}"
+            f"Month: {today.month}/{today.year}"
         )
 
-        # Year-to-date calculations (from January 1st to today, inclusive)
-        year_start = today.replace(month=1, day=1)
-
+        # Year-to-date calculations (entire current year)
         ytd_query = select(
             func.sum(
                 case(
@@ -139,8 +137,7 @@ class AnalyticsService:
         ).where(
             and_(
                 Transaction.organization_id == organization_id,
-                Transaction.transaction_date >= year_start,
-                Transaction.transaction_date <= today
+                extract('year', Transaction.transaction_date) == today.year
             )
         )
 
@@ -154,7 +151,7 @@ class AnalyticsService:
         logger.info(
             f"YTD Financial Metrics for org {organization_id}: "
             f"Revenue: {revenue_ytd}, Expenses: {expenses_ytd}, "
-            f"Date range: {year_start} to {today}"
+            f"Year: {today.year}"
         )
 
         # Cash flow projection (simple - can be enhanced with more complex logic)

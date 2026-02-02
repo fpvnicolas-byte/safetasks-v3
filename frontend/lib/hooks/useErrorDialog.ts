@@ -23,9 +23,16 @@ export function useErrorDialog() {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const showError = (error: any, defaultTitle = 'Error') => {
+        let title = defaultTitle
+        if (error.statusCode === 422) {
+            title = 'Validation Error'
+        } else if (error.statusCode === 400) {
+            title = 'Configuration Required'
+        }
+
         setErrorDialog({
             open: true,
-            title: error.statusCode === 422 ? 'Validation Error' : defaultTitle,
+            title,
             message: error.message || 'An unexpected error occurred. Please try again.',
             validationErrors: error.details && Array.isArray(error.details) ? error.details : undefined,
             statusCode: error.statusCode,

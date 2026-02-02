@@ -13,10 +13,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { ErrorDialog } from '@/components/ui/error-dialog'
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
-import { Plus, Pencil, Trash2, Loader2, Package } from 'lucide-react'
+import { Plus, Pencil, Trash2, Loader2, Package, Link as LinkIcon } from 'lucide-react'
 import { Service, ServiceCreate, ServiceUpdate, dollarsToCents, centsToDollars } from '@/types'
 import { useTranslations } from 'next-intl'
 import { formatCurrency } from '@/lib/utils/money'
+import { ServiceEquipmentDialog } from './ServiceEquipmentDialog'
 
 export default function ServicesPage() {
     const { organizationId } = useAuth()
@@ -24,6 +25,7 @@ export default function ServicesPage() {
     const { errorDialog, showError, closeError } = useErrorDialog()
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [editingService, setEditingService] = useState<Service | null>(null)
+    const [equipmentDialogService, setEquipmentDialogService] = useState<Service | null>(null)
 
     const { data: services, isLoading } = useServices(organizationId || undefined)
     const createService = useCreateService(organizationId || undefined)
@@ -143,6 +145,14 @@ export default function ServicesPage() {
                                         <TableCell>{formatCurrency(service.value_cents)}</TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => setEquipmentDialogService(service)}
+                                                    title={t('table.manageEquipment') || "Manage Equipment"}
+                                                >
+                                                    <LinkIcon className="h-4 w-4 text-blue-500" />
+                                                </Button>
                                                 <Button variant="ghost" size="icon" onClick={() => openEditDialog(service)}>
                                                     <Pencil className="h-4 w-4" />
                                                 </Button>
@@ -159,9 +169,10 @@ export default function ServicesPage() {
                         <div className="text-center py-8 text-muted-foreground">
                             {t('empty')}
                         </div>
-                    )}
-                </CardContent>
-            </Card>
+                    )
+                    }
+                </CardContent >
+            </Card >
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent>
@@ -232,6 +243,12 @@ export default function ServicesPage() {
                 validationErrors={errorDialog.validationErrors}
                 statusCode={errorDialog.statusCode}
             />
-        </div>
+
+            <ServiceEquipmentDialog
+                service={equipmentDialogService}
+                open={!!equipmentDialogService}
+                onOpenChange={(open) => !open && setEquipmentDialogService(null)}
+            />
+        </div >
     )
 }

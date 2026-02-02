@@ -22,6 +22,12 @@ class Transaction(Base):
     description = Column(String)
     transaction_date = Column(DATE, server_default=func.current_date())
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    
+    # Approval Workflow
+    payment_status = Column(String, default="pending", nullable=False)  # pending, approved, paid, rejected
+    approved_by = Column(UUID(as_uuid=True), ForeignKey("profiles.id"), nullable=True)
+    approved_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    rejection_reason = Column(String, nullable=True)
 
     # Relationships
     bank_account = relationship("BankAccount", back_populates="transactions")
@@ -35,4 +41,5 @@ class Transaction(Base):
     __table_args__ = (
         CheckConstraint("type IN ('income', 'expense')"),
         CheckConstraint("category IN ('crew_hire', 'equipment_rental', 'logistics', 'post_production', 'other', 'production_revenue', 'maintenance')"),
+        CheckConstraint("payment_status IN ('pending', 'approved', 'paid', 'rejected')"),
     )

@@ -423,20 +423,35 @@ async def estimate_budget(
         await ensure_ai_credits(db, organization, credits_to_add=1)
         await increment_ai_usage(db, organization.id, credits_added=1)
 
-        # For now, return mock budget estimation
+        # Generate real budget estimation
+        result = await ai_engine_service.estimate_project_budget(
+            organization_id=organization_id,
+            script_content=request.script_content,
+            estimation_type=request.estimation_type,
+            project_context={"project_id": str(request.project_id)}
+        )
+        
+        # Log successful usage
+        await ai_usage_log_service.log_request(
+            db=db,
+            organization_id=organization_id,
+            project_id=request.project_id,
+            request_type="budget_estimation",
+            endpoint="/api/v1/ai/budget-estimation",
+            token_count=len(request.script_content.split()) * 2,
+            cost_cents=int(len(request.script_content.split()) * 0.0005),
+            success=True
+        )
+
+        # Merge with base response
         return {
-            "message": "Budget estimation endpoint working",
+            "message": "Budget estimation generated successfully",
             "project_id": str(request.project_id),
             "estimation_type": request.estimation_type,
-            "estimated_budget_cents": 5000000,  # $50,000
-            "breakdown": [
-                {"category": "crew_hire", "estimated_amount_cents": 2000000},
-                {"category": "equipment_rental", "estimated_amount_cents": 1500000},
-                {"category": "logistics", "estimated_amount_cents": 1000000},
-                {"category": "post_production", "estimated_amount_cents": 500000}
-            ],
-            "risk_factors": ["Weather delays", "Location permits"],
-            "recommendations": ["Book equipment early", "Plan for weather contingencies"]
+            "estimated_budget_cents": result.get("estimated_budget_cents", 0),
+            "breakdown": result.get("breakdown", []),
+            "risk_factors": result.get("risk_factors", []),
+            "recommendations": result.get("recommendations", [])
         }
     except Exception as e:
         raise HTTPException(
@@ -469,16 +484,50 @@ async def generate_call_sheet_suggestions(
         await ensure_ai_credits(db, organization, credits_to_add=1)
         await increment_ai_usage(db, organization.id, credits_added=1)
 
-        # For now, return mock call sheet suggestions
+        # Generate real call sheet suggestions
+        
+        # Determine source data for suggestions
+        analysis_data = {}
+        
+        # 1. If script content is provided in request, analyze it on the fly
+        if request.script_content and len(request.script_content.strip()) > 0:
+            analysis_result = await ai_engine_service.analyze_script_content(
+                organization_id=organization_id,
+                script_content=request.script_content,
+                project_id=request.project_id
+            )
+            analysis_data = analysis_result
+        else:
+            # 2. Fallback: look for existing analysis in DB
+            query = select(ScriptAnalysis).where(
+                ScriptAnalysis.project_id == request.project_id
+            ).order_by(ScriptAnalysis.created_at.desc()).limit(1)
+            result = await db.execute(query)
+            latest_analysis = result.scalar_one_or_none()
+            
+            if latest_analysis and latest_analysis.analysis_result:
+                analysis_data = latest_analysis.analysis_result
+
+        # Generate suggestions based on the analysis data (new or existing)
+        suggestions = await ai_engine_service.suggest_production_elements(
+            organization_id=organization_id,
+            script_analysis=analysis_data,
+            project_context={"project_id": str(request.project_id)}
+        )
+
+        call_sheet_data = suggestions.get("call_sheet_suggestions", [])
+        
         return {
-            "message": "Call sheet suggestions endpoint working",
+            "message": "Call sheet suggestions generated",
             "project_id": str(request.project_id),
             "suggestion_type": request.suggestion_type,
-            "day": 1,
-            "suggested_scenes": [1, 2, 3],
-            "crew_needed": ["Director", "DP", "Sound"],
-            "equipment_needed": ["Camera A", "Lights", "Audio"],
-            "estimated_duration": "8 hours"
+            "suggestions": call_sheet_data,
+            # Flatten the first suggestion details for immediate display if needed
+            "day": call_sheet_data[0].get("day") if call_sheet_data else 1,
+            "suggested_scenes": call_sheet_data[0].get("suggested_scenes") if call_sheet_data else [],
+            "crew_needed": call_sheet_data[0].get("crew_needed") if call_sheet_data else [],
+            "equipment_needed": call_sheet_data[0].get("equipment_needed") if call_sheet_data else [],
+            "estimated_duration": call_sheet_data[0].get("estimated_duration") if call_sheet_data else "N/A"
         }
     except Exception as e:
         raise HTTPException(

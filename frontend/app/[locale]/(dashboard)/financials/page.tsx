@@ -14,13 +14,14 @@ import { formatCurrency } from '@/lib/utils/money'
 import { InvoiceWithItems, InvoiceStatus } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
+import { ExpenseApprovalDashboard } from '@/components/financials/ExpenseApprovalDashboard'
 
 const statusVariant: Record<InvoiceStatus, 'secondary' | 'info' | 'success' | 'destructive' | 'outline'> = {
   draft: 'secondary',
   sent: 'info',
   paid: 'success',
   overdue: 'destructive',
-  canceled: 'outline',
+  cancelled: 'outline',
 }
 
 export default function FinancialsPage() {
@@ -62,6 +63,7 @@ export default function FinancialsPage() {
       <Tabs defaultValue="overview">
         <TabsList>
           <TabsTrigger value="overview">{t('overview.tab')}</TabsTrigger>
+          <TabsTrigger value="approvals">{t('approvals.title')}</TabsTrigger>
           <TabsTrigger value="invoices">{t('invoicesTab.tab')}</TabsTrigger>
           <TabsTrigger value="bank-accounts">{t('bankAccountsTab.tab')}</TabsTrigger>
           <TabsTrigger value="transactions">{t('transactionsTab.tab')}</TabsTrigger>
@@ -99,6 +101,10 @@ export default function FinancialsPage() {
           </div>
         </TabsContent>
 
+        <TabsContent value="approvals" className="space-y-4">
+          <ExpenseApprovalDashboard />
+        </TabsContent>
+
         <TabsContent value="invoices" className="space-y-6">
           {/* Filters */}
           <div className="flex items-center gap-4">
@@ -114,7 +120,7 @@ export default function FinancialsPage() {
                   <SelectItem value="sent">{t('invoicesTab.sent')}</SelectItem>
                   <SelectItem value="paid">{t('paid')}</SelectItem>
                   <SelectItem value="overdue">{t('invoicesTab.overdue')}</SelectItem>
-                  <SelectItem value="canceled">{t('invoicesTab.canceled')}</SelectItem>
+                  <SelectItem value="cancelled">{t('invoicesTab.cancelled')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

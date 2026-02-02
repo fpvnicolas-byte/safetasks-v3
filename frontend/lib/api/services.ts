@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import { Service, ServiceCreate, ServiceUpdate } from '@/types'
+import { Service, ServiceCreate, ServiceUpdate, ServiceEquipmentCreate, ServiceEquipmentResponse } from '@/types'
 
 const BASE_PATH = '/api/v1/services'
 
@@ -22,5 +22,17 @@ export const serviceApi = {
 
     delete: async (id: string) => {
         return apiClient.delete<Service>(`${BASE_PATH}/${id}`)
+    },
+
+    getEquipment: async (serviceId: string) => {
+        return apiClient.get<ServiceEquipmentResponse[]>(`${BASE_PATH}/${serviceId}/equipment`)
+    },
+
+    linkEquipment: async (serviceId: string, data: ServiceEquipmentCreate) => {
+        return apiClient.post<ServiceEquipmentResponse>(`${BASE_PATH}/${serviceId}/equipment`, data)
+    },
+
+    unlinkEquipment: async (serviceId: string, kitId: string) => {
+        return apiClient.delete(`${BASE_PATH}/${serviceId}/equipment/${kitId}`)
     },
 }

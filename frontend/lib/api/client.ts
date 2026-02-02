@@ -162,6 +162,11 @@ class ApiClient {
           console.warn('API Client - 401 Unauthorized. NOT redirecting to avoid loop.');
           // window.location.href = '/auth/login'
           error.message = 'Unauthorized - Please refresh or log in again.'
+        } else if (response.status === 400) {
+          // Bad Request - use the detail message from the backend
+          error.message = typeof errorDetail === 'string'
+            ? errorDetail
+            : 'Bad request - please check your input'
         } else if (response.status === 403) {
           console.error('API Client - 403 Forbidden - Detail:', errorDetail)
           error.message = typeof errorDetail === 'string'

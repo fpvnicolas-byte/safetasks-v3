@@ -21,7 +21,7 @@ import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
 import { ErrorDialog } from '@/components/ui/error-dialog'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
-import { BudgetSummaryCard } from '@/components/financials/BudgetSummaryCard'
+import { ProjectFinancialsTab } from '@/components/projects/ProjectFinancialsTab'
 import { TeamTab } from '@/components/projects/TeamTab'
 
 export default function ProjectDetailPage() {
@@ -287,7 +287,7 @@ export default function ProjectDetailPage() {
         </TabsContent>
 
         <TabsContent value="financials">
-          <BudgetSummaryCard projectId={projectId} />
+          <ProjectFinancialsTab projectId={projectId} />
         </TabsContent>
 
         <TabsContent value="production">

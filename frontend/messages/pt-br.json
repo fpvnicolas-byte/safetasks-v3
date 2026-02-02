@@ -353,7 +353,36 @@
         "budgetBreakdown": "Detalhamento do Orçamento",
         "totalBudget": "Orçamento Total",
         "spent": "Gasto",
-        "remaining": "Restante"
+        "remaining": "Restante",
+        "totalIncome": "Receita Total",
+        "totalExpenses": "Despesas Totais",
+        "netBalance": "Saldo Líquido",
+        "budgetDescription": "Acompanhe gastos estimados vs realizados",
+        "transactions": "Transações",
+        "transactionsDescription": "Transações recentes do projeto",
+        "addTransaction": "Nova Transação",
+        "addFirstTransaction": "Adicionar Primeira Transação",
+        "noTransactions": "Nenhuma transação para este projeto ainda",
+        "viewAllTransactions": "Ver Todas as Transações",
+        "filterAll": "Todas",
+        "filterExpenses": "Despesas",
+        "filterIncome": "Receitas",
+        "viewDetails": "Ver Detalhes",
+        "quickAdd": {
+          "button": "Nova Despesa",
+          "title": "Adicionar Despesa",
+          "description": "Adicione uma nova despesa a este projeto",
+          "amount": "Valor",
+          "category": "Categoria",
+          "descriptionLabel": "Descrição (opcional)",
+          "descriptionPlaceholder": "Para que é esta despesa?",
+          "submit": "Adicionar Despesa",
+          "success": "Despesa adicionada com sucesso",
+          "error": "Falha ao adicionar despesa",
+          "invalidAmount": "Por favor, insira um valor válido",
+          "noBankAccount": "Nenhuma conta bancária configurada",
+          "noBankAccountWarning": "Nenhuma conta bancária padrão configurada. Por favor, configure uma conta bancária em Configurações primeiro."
+        }
       },
       "production": {
         "scenes": "Cenas",
@@ -793,7 +822,7 @@
       "draft": "Rascunho",
       "sent": "Enviado",
       "overdue": "Vencido",
-      "canceled": "Cancelado",
+      "cancelled": "Cancelado",
       "loading": "Carregando faturas...",
       "error": "Erro ao carregar faturas: {message}",
       "noInvoicesFound": "Nenhuma Fatura Encontrada",
@@ -1404,7 +1433,6 @@
           "sent": "Enviada",
           "paid": "Paga",
           "overdue": "Em atraso",
-          "canceled": "Cancelada",
           "cancelled": "Cancelada"
         },
         "dates": {
@@ -1529,6 +1557,29 @@
           "saveItems": "Falha ao salvar itens",
           "updateInvoice": "Falha ao atualizar fatura"
         }
+      }
+    },
+    "approvals": {
+      "title": "Aprovações",
+      "pending": "Pendentes",
+      "approved": "Aprovados",
+      "rejected": "Rejeitados",
+      "paid": "Pago",
+      "pendingCount": "{count} Pendentes",
+      "pendingAmount": "Total Pendente",
+      "filters": "Filtros",
+      "approve": "Aprovar",
+      "reject": "Rejeitar",
+      "markPaid": "Marcar como Pago",
+      "notes": "Notas",
+      "rejectionReason": "Motivo da Rejeição",
+      "rejectionReasonPlaceholder": "Descreva por que esta despesa foi rejeitada...",
+      "rejectConfirm": "Rejeitar Despesa",
+      "approveConfirm": "Aprovar Despesa",
+      "dialogTitle": "Detalhes da Despesa",
+      "expenseInfo": "Informações da Despesa",
+      "warnings": {
+        "rejectionReasonRequired": "Motivo da rejeição é obrigatório"
       }
     }
   },
@@ -1847,6 +1898,56 @@
     "delete": {
       "title": "Excluir Proposta?",
       "description": "Tem certeza que deseja excluir esta proposta? Esta ação não pode ser desfeita."
+    },
+    "detail": {
+      "loading": "Carregando proposta...",
+      "notFound": "Proposta não encontrada",
+      "created": "Criado em",
+      "approveProposal": "Aprovar Proposta",
+      "edit": "Editar",
+      "delete": "Excluir",
+      "approveDialog": {
+        "title": "Aprovar Proposta",
+        "description": "Isso marcará a proposta como aprovada e criará automaticamente um novo projeto.",
+        "notesLabel": "Notas de Aprovação (Opcional)",
+        "notesPlaceholder": "Notas sobre a aprovação...",
+        "cancel": "Cancelar",
+        "confirming": "Aprovando...",
+        "confirm": "Confirmar Aprovação"
+      },
+      "badges": {
+        "validUntil": "Válido até:",
+        "estStart": "Início Est.:",
+        "estEnd": "Fim Est.:"
+      },
+      "approvedAlert": {
+        "title": "Proposta Aprovada",
+        "description": "Esta proposta foi aprovada e convertida em um projeto.",
+        "viewProject": "Ver Projeto"
+      },
+      "descriptionCard": {
+        "title": "Descrição",
+        "empty": "Nenhuma descrição fornecida."
+      },
+      "financials": {
+        "title": "Financeiro",
+        "totalInvestment": "Investimento Total",
+        "detailedBreakdown": "Detalhamento",
+        "services": "Serviços",
+        "additionalItems": "Itens Adicionais",
+        "unnamedItem": "Item sem nome",
+        "manualAdjustment": "Ajuste Manual",
+        "finalTotal": "Total Final da Proposta",
+        "currencyNote": "Moeda:",
+        "validityNote": "Preços baseados nas taxas atuais e válidos até"
+      },
+      "termsConditions": {
+        "title": "Termos e Condições"
+      },
+      "attachments": {
+        "title": "Anexos",
+        "description": "Envie documentos, contratos ou outros arquivos relacionados a esta proposta"
+      }
     }
   },
   "production": {
@@ -1944,6 +2045,10 @@
         "taxId": "CNPJ / ID Fiscal",
         "taxIdPlaceholder": "12-3456789",
         "taxIdHelp": "Opcional: Número de identificação fiscal da sua organização",
+        "principalBankAccount": "Conta Bancária Principal",
+        "selectBankAccount": "Selecionar Conta Bancária",
+        "noDefaultAccount": "Nenhuma Conta Padrão",
+        "principalBankAccountHelp": "Esta conta será pré-selecionada para novas transações financeiras",
         "created": "Criado em",
         "createdUnknown": "Desconhecido"
       }

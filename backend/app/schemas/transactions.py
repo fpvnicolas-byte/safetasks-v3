@@ -2,6 +2,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from uuid import UUID
 from datetime import datetime, date
 from typing import Optional, Literal
+from enum import Enum
 
 
 class TransactionBase(BaseModel):
@@ -17,6 +18,7 @@ class TransactionBase(BaseModel):
     supplier_id: Optional[UUID] = None  # ADDED: Link to supplier/vendor
     stakeholder_id: Optional[UUID] = None  # ADDED: Link to specific team member
     budget_line_id: Optional[UUID] = None  # ADDED: Link to budget line for actuals tracking
+    payment_status: str = "pending"
 
     @field_validator('category')
     @classmethod
@@ -34,6 +36,17 @@ class TransactionBase(BaseModel):
         if v not in allowed_categories:
             raise ValueError(
                 f"Category must be one of: {', '.join(allowed_categories)}. Got: {v}"
+            )
+        return v
+
+    @field_validator('payment_status')
+    @classmethod
+    def validate_payment_status(cls, v: str) -> str:
+        """Validate payment_status against allowed values."""
+        allowed_statuses = ['pending', 'approved', 'paid', 'rejected']
+        if v not in allowed_statuses:
+            raise ValueError(
+                f"Payment status must be one of: {', '.join(allowed_statuses)}. Got: {v}"
             )
         return v
 
@@ -58,6 +71,8 @@ class TransactionUpdate(BaseModel):
     supplier_id: Optional[UUID] = None  # ADDED: Link to supplier/vendor
     stakeholder_id: Optional[UUID] = None  # ADDED: Link to specific team member
     budget_line_id: Optional[UUID] = None  # ADDED: Link to budget line for actuals tracking
+    payment_status: Optional[str] = None
+    rejection_reason: Optional[str] = None
 
     @field_validator('category')
     @classmethod
@@ -88,6 +103,9 @@ class Transaction(TransactionBase):
     id: UUID
     organization_id: UUID
     created_at: datetime
+    approved_by: Optional[UUID] = None
+    approved_at: Optional[datetime] = None
+    rejection_reason: Optional[str] = None
 
 
 class TransactionWithRelations(Transaction):
@@ -96,6 +114,20 @@ class TransactionWithRelations(Transaction):
     project: Optional["Project"] = Field(None)
 
     model_config = ConfigDict(from_attributes=True)
+
+
+
+class TransactionApproval(BaseModel):
+    """Schema for approving/rejecting a transaction."""
+    decision: Literal["approve", "reject"]
+    rejection_reason: Optional[str] = None
+
+    @field_validator('rejection_reason')
+    @classmethod
+    def validate_rejection_reason(cls, v: Optional[str], info) -> Optional[str]:
+        if info.data.get('decision') == 'reject' and not v:
+            raise ValueError("Rejection reason is required when rejecting")
+        return v
 
 
 class TransactionOverviewStats(BaseModel):

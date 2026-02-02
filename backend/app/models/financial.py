@@ -106,6 +106,11 @@ class Invoice(Base):
     description = Column(TEXT, nullable=True)
     notes = Column(TEXT, nullable=True)
 
+    # Payment details
+    payment_method = Column(String, nullable=True)
+    payment_reference = Column(String, nullable=True)
+    payment_notes = Column(TEXT, nullable=True)
+
     # Status management
     is_active = Column(Boolean, default=True, nullable=False)
 

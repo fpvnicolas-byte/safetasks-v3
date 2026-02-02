@@ -353,7 +353,36 @@
         "budgetBreakdown": "Budget Breakdown",
         "totalBudget": "Total Budget",
         "spent": "Spent",
-        "remaining": "Remaining"
+        "remaining": "Remaining",
+        "totalIncome": "Total Income",
+        "totalExpenses": "Total Expenses",
+        "netBalance": "Net Balance",
+        "budgetDescription": "Track estimated vs actual spending",
+        "transactions": "Transactions",
+        "transactionsDescription": "Recent project transactions",
+        "addTransaction": "Add Transaction",
+        "addFirstTransaction": "Add First Transaction",
+        "noTransactions": "No transactions for this project yet",
+        "viewAllTransactions": "View All Transactions",
+        "filterAll": "All",
+        "filterExpenses": "Expenses",
+        "filterIncome": "Income",
+        "viewDetails": "View Details",
+        "quickAdd": {
+          "button": "Add Expense",
+          "title": "Quick Add Expense",
+          "description": "Add a new expense to this project",
+          "amount": "Amount",
+          "category": "Category",
+          "descriptionLabel": "Description (optional)",
+          "descriptionPlaceholder": "What is this expense for?",
+          "submit": "Add Expense",
+          "success": "Expense added successfully",
+          "error": "Failed to add expense",
+          "invalidAmount": "Please enter a valid amount",
+          "noBankAccount": "No bank account configured",
+          "noBankAccountWarning": "No default bank account configured. Please set up a bank account in Settings first."
+        }
       },
       "production": {
         "scenes": "Scenes",
@@ -793,7 +822,7 @@
       "draft": "Draft",
       "sent": "Sent",
       "overdue": "Overdue",
-      "canceled": "Canceled",
+      "cancelled": "Cancelled",
       "loading": "Loading invoices...",
       "error": "Error loading invoices: {message}",
       "noInvoicesFound": "No Invoices Found",
@@ -1404,7 +1433,6 @@
           "sent": "Sent",
           "paid": "Paid",
           "overdue": "Overdue",
-          "canceled": "Canceled",
           "cancelled": "Cancelled"
         },
         "dates": {
@@ -1529,6 +1557,29 @@
           "saveItems": "Failed to save items",
           "updateInvoice": "Failed to update invoice"
         }
+      }
+    },
+    "approvals": {
+      "title": "Approvals",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "paid": "Paid",
+      "pendingCount": "{count} Pending",
+      "pendingAmount": "Total Pending",
+      "filters": "Filters",
+      "approve": "Approve",
+      "reject": "Reject",
+      "markPaid": "Mark Paid",
+      "notes": "Notes",
+      "rejectionReason": "Rejection Reason",
+      "rejectionReasonPlaceholder": "Describe why this expense was rejected...",
+      "rejectConfirm": "Reject Expense",
+      "approveConfirm": "Approve Expense",
+      "dialogTitle": "Expense Details",
+      "expenseInfo": "Expense Information",
+      "warnings": {
+        "rejectionReasonRequired": "Rejection reason is required"
       }
     }
   },
@@ -1847,6 +1898,56 @@
     "delete": {
       "title": "Delete Proposal?",
       "description": "Are you sure you want to delete this proposal? This action cannot be undone."
+    },
+    "detail": {
+      "loading": "Loading proposal...",
+      "notFound": "Proposal not found",
+      "created": "Created",
+      "approveProposal": "Approve Proposal",
+      "edit": "Edit",
+      "delete": "Delete",
+      "approveDialog": {
+        "title": "Approve Proposal",
+        "description": "This will mark the proposal as approved and automatically create a new project.",
+        "notesLabel": "Approval Notes (Optional)",
+        "notesPlaceholder": "Any notes about the approval...",
+        "cancel": "Cancel",
+        "confirming": "Approving...",
+        "confirm": "Confirm Approval"
+      },
+      "badges": {
+        "validUntil": "Valid until:",
+        "estStart": "Est. Start:",
+        "estEnd": "Est. End:"
+      },
+      "approvedAlert": {
+        "title": "Proposal Approved",
+        "description": "This proposal has been approved and converted into a project.",
+        "viewProject": "View Project"
+      },
+      "descriptionCard": {
+        "title": "Description",
+        "empty": "No description provided."
+      },
+      "financials": {
+        "title": "Financials",
+        "totalInvestment": "Total Investment",
+        "detailedBreakdown": "Detailed Breakdown",
+        "services": "Services",
+        "additionalItems": "Additional Items",
+        "unnamedItem": "Unnamed Item",
+        "manualAdjustment": "Manual Adjustment",
+        "finalTotal": "Final Proposal Total",
+        "currencyNote": "Currency:",
+        "validityNote": "Prices are based on current rates and valid until"
+      },
+      "termsConditions": {
+        "title": "Terms & Conditions"
+      },
+      "attachments": {
+        "title": "Attachments",
+        "description": "Upload documents, contracts, or other files related to this proposal"
+      }
     }
   },
   "production": {
@@ -1944,6 +2045,10 @@
         "taxId": "CNPJ / Tax ID",
         "taxIdPlaceholder": "12-3456789",
         "taxIdHelp": "Optional: Your organization's tax identification number",
+        "principalBankAccount": "Principal Bank Account",
+        "selectBankAccount": "Select Bank Account",
+        "noDefaultAccount": "No Default Account",
+        "principalBankAccountHelp": "This account will be pre-selected for new financial transactions",
         "created": "Created",
         "createdUnknown": "Unknown"
       }

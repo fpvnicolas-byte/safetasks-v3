@@ -615,6 +615,198 @@ Return a JSON object with:
 Focus on actionable suggestions that help production planning and logistics.
 """
 
+    async def estimate_project_budget(
+        self,
+        *,
+        organization_id: UUID,
+        script_content: str,
+        estimation_type: str = "detailed",
+        project_context: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Estimate project budget based on script content.
+        
+        PRODUCTION MONITORING:
+        - Input validation and auditing
+        - Performance tracking
+        - Error recovery and logging
+        - Response quality validation
+        """
+        start_time = time.time()
+        request_id = hashlib.md5(f"{organization_id}_budget_{start_time}".encode()).hexdigest()[:16]
+        
+        # Service availability check
+        if not self.is_active or not self.model:
+            logger.error(
+                "AI service unavailable for budget estimation",
+                extra={
+                    "request_id": request_id,
+                    "organization_id": str(organization_id),
+                    "service_status": "inactive",
+                    "error_type": "service_unavailable",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            )
+            return {
+                "error": "AI Service unavailable",
+                "request_id": request_id,
+                "processing_time_ms": int((time.time() - start_time) * 1000)
+            }
+
+        try:
+            # Input validation
+            if not script_content or not script_content.strip():
+                raise ValueError("Script content is empty")
+
+            # Content metrics for monitoring
+            content_metrics = {
+                "content_length": len(script_content),
+                "estimation_type": estimation_type,
+                "project_context_provided": bool(project_context)
+            }
+            
+            # Create prompt with monitoring
+            prompt_start_time = time.time()
+            prompt = self._build_budget_estimation_prompt(script_content, estimation_type, project_context)
+            prompt_build_time = time.time() - prompt_start_time
+            
+            logger.debug(
+                "Budget estimation prompt generated",
+                extra={
+                    "request_id": request_id,
+                    "prompt_length": len(prompt),
+                    "prompt_build_time_ms": int(prompt_build_time * 1000),
+                    "content_metrics": content_metrics
+                }
+            )
+
+            # Call Gemini API with monitoring
+            api_start_time = time.time()
+            response = await self.model.generate_content_async(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.2,
+                    max_output_tokens=2000,
+                    response_mime_type="application/json"
+                )
+            )
+            
+            api_response_time = time.time() - api_start_time
+            
+            # Parse response with validation
+            result_text = response.text
+            parse_start_time = time.time()
+            estimation = json.loads(result_text)
+            parse_time = time.time() - parse_start_time
+
+            # Validate response structure
+            required_keys = ['estimated_budget_cents', 'breakdown', 'risk_factors', 'recommendations']
+            missing_keys = [key for key in required_keys if key not in estimation]
+            
+            if missing_keys:
+                logger.warning(
+                    "Budget estimation response missing required keys",
+                    extra={
+                        "request_id": request_id,
+                        "missing_keys": missing_keys,
+                        "available_keys": list(estimation.keys()),
+                        "organization_id": str(organization_id)
+                    }
+                )
+                # Ensure breakdown is a list if missing
+                if 'breakdown' not in estimation:
+                    estimation['breakdown'] = []
+
+            # Add comprehensive metadata
+            processing_time = time.time() - start_time
+            
+            estimation["metadata"] = {
+                "organization_id": str(organization_id),
+                "model_used": "gemini-2.0-flash",
+                "request_id": request_id,
+                "processing_times": {
+                    "total_ms": int(processing_time * 1000),
+                    "prompt_build_ms": int(prompt_build_time * 1000),
+                    "api_response_ms": int(api_response_time * 1000),
+                    "parsing_ms": int(parse_time * 1000)
+                },
+                "timestamp": datetime.utcnow().isoformat()
+            }
+
+            # Success logging
+            logger.info(
+                "AI budget estimation generated successfully",
+                extra={
+                    "request_id": request_id,
+                    "organization_id": str(organization_id),
+                    "processing_time_ms": int(processing_time * 1000),
+                    "estimated_total": estimation.get('estimated_budget_cents'),
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            )
+            
+            return estimation
+
+        except Exception as e:
+            self._error_count += 1
+            logger.error(
+                "AI budget estimation failed",
+                extra={
+                    "request_id": request_id,
+                    "organization_id": str(organization_id),
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "processing_time_ms": int((time.time() - start_time) * 1000),
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            )
+            return {
+                "error": f"Budget estimation failed: {str(e)}",
+                "request_id": request_id,
+                "processing_time_ms": int((time.time() - start_time) * 1000)
+            }
+
+    def _build_budget_estimation_prompt(self, script_content: str, estimation_type: str, project_context: Optional[Dict[str, Any]]) -> str:
+        """Build the prompt for budget estimation."""
+        context_str = ""
+        if project_context:
+            context_str = f"Project Context: {json.dumps(project_context)}"
+
+        detail_level = "Provide a high-level estimate."
+        if estimation_type == "detailed":
+            detail_level = "Provide a detailed line-item breakdown."
+
+        return f"""
+        Estimate the production budget for this script. {detail_level}
+        
+        Script Content (excerpt):
+        {script_content[:15000]}
+
+        {context_str}
+
+        Return a JSON object with:
+        {{
+            "estimated_budget_cents": 5000000,
+            "currency": "USD",
+            "breakdown": [
+                {{
+                    "category": "Cast",
+                    "estimated_amount_cents": 1500000,
+                    "notes": "Based on 3 main characters"
+                }},
+                {{
+                    "category": "Crew",
+                    "estimated_amount_cents": 2000000,
+                    "notes": "15 shoot days estimate"
+                }}
+            ],
+            "risk_factors": ["High stunt costs", "Location fees"],
+            "recommendations": ["Consolidate locations to save money"]
+        }}
+        
+        Provide realistic market rates for a standard independent production.
+        """
+
     async def validate_content_ownership(
         self,
         *,

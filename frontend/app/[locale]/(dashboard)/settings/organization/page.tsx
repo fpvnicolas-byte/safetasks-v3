@@ -6,32 +6,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ArrowLeft, Building2 } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { ArrowLeft, Building2, Wallet } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/api/client'
 import { useLocale, useTranslations } from 'next-intl'
-
-interface Organization {
-  id: string
-  name: string
-  tax_id: string | null
-  created_at: string
-}
+import { Organization, formatCurrency } from '@/types'
+import { useBankAccounts } from '@/lib/api/hooks'
 
 export default function OrganizationSettingsPage() {
   const { organizationId } = useAuth()
   const locale = useLocale()
   const t = useTranslations('settings.organizationPage')
-  const tCommon = useTranslations('common.feedback')
+  const tCommon = useTranslations('common')
   const tSettings = useTranslations('settings')
+
   const [organization, setOrganization] = useState<Organization | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     tax_id: '',
+    default_bank_account_id: 'none',
   })
+
+  const { data: bankAccounts } = useBankAccounts(organizationId || undefined)
 
   useEffect(() => {
     if (organizationId) {
@@ -47,10 +47,11 @@ export default function OrganizationSettingsPage() {
       setFormData({
         name: data.name || '',
         tax_id: data.tax_id || '',
+        default_bank_account_id: data.default_bank_account_id || 'none',
       })
     } catch (error) {
       console.error('Failed to load organization:', error)
-      toast.error(tCommon('actionError', { message: 'Failed to load organization details' }))
+      toast.error(tCommon('feedback.actionError', { message: 'Failed to load organization details' }))
     } finally {
       setIsLoading(false)
     }
@@ -66,12 +67,13 @@ export default function OrganizationSettingsPage() {
       await apiClient.put(`/api/v1/organizations/${organization.id}`, {
         name: formData.name,
         tax_id: formData.tax_id || null,
+        default_bank_account_id: formData.default_bank_account_id === 'none' ? null : formData.default_bank_account_id,
       })
-      toast.success(tCommon('actionSuccess'))
+      toast.success(tCommon('feedback.actionSuccess'))
       await loadOrganization()
     } catch (error) {
       console.error('Failed to update organization:', error)
-      toast.error(tCommon('actionError', { message: 'Failed to update organization' }))
+      toast.error(tCommon('feedback.actionError', { message: 'Failed to update organization' }))
     } finally {
       setIsSaving(false)
     }
@@ -146,6 +148,35 @@ export default function OrganizationSettingsPage() {
               />
               <p className="text-xs text-muted-foreground">
                 {t('fields.taxIdHelp')}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="default_bank_account">{t('fields.principalBankAccount')}</Label>
+              <Select
+                value={formData.default_bank_account_id}
+                onValueChange={(value) => setFormData({ ...formData, default_bank_account_id: value })}
+              >
+                <SelectTrigger id="default_bank_account">
+                  <SelectValue placeholder={t('fields.selectBankAccount')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">{t('fields.noDefaultAccount')}</SelectItem>
+                  {bankAccounts?.map((account) => (
+                    <SelectItem key={account.id} value={account.id}>
+                      <div className="flex items-center gap-2">
+                        <Wallet className="h-4 w-4 text-muted-foreground" />
+                        <span>{account.name}</span>
+                        <span className="text-muted-foreground text-xs">
+                          ({formatCurrency(account.balance_cents, account.currency)})
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {t('fields.principalBankAccountHelp')}
               </p>
             </div>
 

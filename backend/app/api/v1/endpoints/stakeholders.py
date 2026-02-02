@@ -23,6 +23,7 @@ from app.services.notification_triggers import notify_expense_created
 from app.core.config import settings
 from app.models.scheduling import ShootingDay
 from app.models.projects import Project
+from app.models.organizations import Organization
 from app.schemas.commercial import (
     StakeholderSummary,
     Stakeholder,
@@ -119,15 +120,93 @@ async def create_stakeholder(
     profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ):
-    """Create a new stakeholder for a project."""
+    """Create a new stakeholder for a project.
+
+    If the stakeholder has a rate configured and FINANCIAL_AUTOMATION_ENABLED is True,
+    an expense transaction will be automatically created for the project.
+
+    Requires a default bank account to be configured if the stakeholder has a rate.
+    """
+    # Pre-check: If stakeholder has a rate, ensure default bank account exists
+    has_rate = (
+        stakeholder_in.rate_value_cents is not None
+        and stakeholder_in.rate_value_cents > 0
+    )
+
+    if has_rate and settings.FINANCIAL_AUTOMATION_ENABLED:
+        org_result = await db.execute(
+            select(Organization).where(Organization.id == organization_id)
+        )
+        organization = org_result.scalar_one_or_none()
+
+        if not organization or not organization.default_bank_account_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot add team member with rate: no default bank account configured. "
+                       "Please set up a default bank account in Settings > Organization first."
+            )
+
     try:
         stakeholder = await stakeholder_crud_service.create(
             db=db,
             obj_in=stakeholder_in,
             organization_id=organization_id
         )
+
+        # Automatically create expense transaction if stakeholder has a rate
+        if has_rate and settings.FINANCIAL_AUTOMATION_ENABLED:
+            # Get shooting days count for daily rate calculation
+            shooting_days_count = 0
+            if stakeholder.project_id:
+                sd_result = await db.execute(
+                    select(func.count(ShootingDay.id)).where(
+                        ShootingDay.project_id == stakeholder.project_id
+                    )
+                )
+                shooting_days_count = sd_result.scalar() or 0
+
+            try:
+                # Create expense transaction
+                expense = await transaction_service.create_expense_from_stakeholder(
+                    db=db,
+                    organization_id=organization_id,
+                    stakeholder=stakeholder,
+                    shooting_days_count=shooting_days_count
+                )
+
+                # Send notification about expense creation
+                if expense and stakeholder.project_id:
+                    project_result = await db.execute(
+                        select(Project).where(Project.id == stakeholder.project_id)
+                    )
+                    project = project_result.scalar_one_or_none()
+                    if project:
+                        await notify_expense_created(
+                            db=db,
+                            organization_id=organization_id,
+                            stakeholder_name=stakeholder.name,
+                            project_name=project.title,
+                            amount_cents=expense.amount_cents
+                        )
+
+                logger.info(
+                    f"Auto-created expense for stakeholder {stakeholder.id}: "
+                    f"{expense.amount_cents} cents"
+                )
+            except ValueError as ve:
+                # Configuration issue (missing bank account, no rate configured, etc.)
+                # Rollback the stakeholder creation by raising an error
+                await db.rollback()
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=str(ve)
+                )
+
         return stakeholder
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"Failed to create stakeholder: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create stakeholder: {str(e)}"

@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { FileUploadZone, FileList } from '@/components/storage'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
 import { ErrorDialog } from '@/components/ui/error-dialog'
@@ -27,6 +27,7 @@ export default function ProposalDetailPage() {
   const router = useRouter()
   const { organizationId } = useAuth()
   const locale = useLocale()
+  const t = useTranslations('proposals')
   const proposalId = params.id as string
 
   const { data: proposal, isLoading, error } = useProposal(proposalId)
@@ -79,13 +80,13 @@ export default function ProposalDetailPage() {
   }
 
   if (isLoading) {
-    return <div>Loading proposal...</div>
+    return <div>{t('detail.loading')}</div>
   }
 
   if (error || !proposal) {
     return (
       <Alert variant="destructive">
-        <AlertDescription>Proposal not found</AlertDescription>
+        <AlertDescription>{t('detail.notFound')}</AlertDescription>
       </Alert>
     )
   }
@@ -141,7 +142,7 @@ export default function ProposalDetailPage() {
           <div>
             <h1 className="text-3xl font-bold font-display">{proposal.title}</h1>
             <p className="text-muted-foreground">
-              Created {new Date(proposal.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+              {t('detail.created')} {new Date(proposal.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
               {proposal.client && (
                 <>
                   {' • '}
@@ -157,31 +158,31 @@ export default function ProposalDetailPage() {
               <DialogTrigger asChild>
                 <Button variant="default">
                   <CheckCircle className="mr-2 h-4 w-4" />
-                  Approve Proposal
+                  {t('detail.approveProposal')}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Approve Proposal</DialogTitle>
+                  <DialogTitle>{t('detail.approveDialog.title')}</DialogTitle>
                   <DialogDescription>
-                    This will mark the proposal as approved and automatically create a new project.
+                    {t('detail.approveDialog.description')}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="notes">Approval Notes (Optional)</Label>
+                    <Label htmlFor="notes">{t('detail.approveDialog.notesLabel')}</Label>
                     <Textarea
                       id="notes"
                       value={approvalNotes}
                       onChange={(e) => setApprovalNotes(e.target.value)}
-                      placeholder="Any notes about the approval..."
+                      placeholder={t('detail.approveDialog.notesPlaceholder')}
                     />
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsApproveDialogOpen(false)}>Cancel</Button>
+                  <Button variant="outline" onClick={() => setIsApproveDialogOpen(false)}>{t('detail.approveDialog.cancel')}</Button>
                   <Button onClick={handleApprove} disabled={approveProposal.isPending}>
-                    {approveProposal.isPending ? 'Approving...' : 'Confirm Approval'}
+                    {approveProposal.isPending ? t('detail.approveDialog.confirming') : t('detail.approveDialog.confirm')}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -191,33 +192,33 @@ export default function ProposalDetailPage() {
           <Button asChild variant="outline">
             <Link href={`/proposals/${proposalId}/edit`}>
               <Pencil className="mr-2 h-4 w-4" />
-              Edit
+              {t('detail.edit')}
             </Link>
           </Button>
           <Button variant="destructive" onClick={requestDelete}>
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete
+            {t('detail.delete')}
           </Button>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant={getStatusVariant(proposal.status)} className="text-base px-3 py-1">
-          {proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
+          {t(proposal.status)}
         </Badge>
         {proposal.valid_until && (
           <Badge variant="outline" className="text-base px-3 py-1">
-            Valid until: {new Date(proposal.valid_until).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+            {t('detail.badges.validUntil')} {new Date(proposal.valid_until).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
           </Badge>
         )}
         {proposal.start_date && (
           <Badge variant="secondary" className="text-base px-3 py-1">
-            Est. Start: {new Date(proposal.start_date).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })}
+            {t('detail.badges.estStart')} {new Date(proposal.start_date).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })}
           </Badge>
         )}
         {proposal.end_date && (
           <Badge variant="secondary" className="text-base px-3 py-1">
-            Est. End: {new Date(proposal.end_date).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })}
+            {t('detail.badges.estEnd')} {new Date(proposal.end_date).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })}
           </Badge>
         )}
       </div>
@@ -225,12 +226,12 @@ export default function ProposalDetailPage() {
       {proposal.status === 'approved' && proposal.project_id && (
         <Alert className="border-success/30 bg-success/10 text-success">
           <CheckCircle className="h-4 w-4 text-success" />
-          <AlertTitle>Proposal Approved</AlertTitle>
+          <AlertTitle>{t('detail.approvedAlert.title')}</AlertTitle>
           <AlertDescription className="mt-2">
-            This proposal has been approved and converted into a project.
+            {t('detail.approvedAlert.description')}
             <Button asChild variant="link" className="p-0 h-auto ml-2 text-success font-semibold">
               <Link href={`/projects/${proposal.project_id}`}>
-                View Project <ExternalLink className="ml-1 h-3 w-3 inline" />
+                {t('detail.approvedAlert.viewProject')} <ExternalLink className="ml-1 h-3 w-3 inline" />
               </Link>
             </Button>
           </AlertDescription>
@@ -240,11 +241,11 @@ export default function ProposalDetailPage() {
       <div className="grid gap-6 md:grid-cols-3">
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle>Description</CardTitle>
+            <CardTitle>{t('detail.descriptionCard.title')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-base whitespace-pre-wrap">
-              {proposal.description || 'No description provided.'}
+              {proposal.description || t('detail.descriptionCard.empty')}
             </div>
           </CardContent>
         </Card>
@@ -252,12 +253,12 @@ export default function ProposalDetailPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Financials</CardTitle>
+              <CardTitle>{t('detail.financials.title')}</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="p-4 space-y-4">
                 <div>
-                  <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">Total Investment</div>
+                  <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">{t('detail.financials.totalInvestment')}</div>
                   <div className="text-3xl font-black text-primary tracking-tighter">
                     {proposal.total_amount_cents !== null ? formatCurrency(proposal.total_amount_cents, proposal.currency) : 'N/A'}
                   </div>
@@ -266,7 +267,7 @@ export default function ProposalDetailPage() {
 
               <div className="border-t border-muted/30">
                 <div className="px-4 py-3 bg-muted/5 flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Detailed Breakdown</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t('detail.financials.detailedBreakdown')}</span>
                   <Badge variant="outline" className="text-[10px] font-mono uppercase tracking-tighter bg-background/50">
                     {proposal.currency}
                   </Badge>
@@ -276,12 +277,17 @@ export default function ProposalDetailPage() {
                   {/* Predefined Services Section */}
                   {proposal.services && proposal.services.length > 0 && (
                     <div className="px-4 py-3 space-y-2">
-                      <span className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-wider">Services</span>
-                      <div className="space-y-1.5">
+                      <span className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-wider">{t('detail.financials.services')}</span>
+                      <div className="space-y-3">
                         {proposal.services.map((service) => (
-                          <div key={service.id} className="flex justify-between items-center text-sm">
-                            <span className="text-foreground/80 font-medium">{service.name}</span>
-                            <span className="text-muted-foreground font-mono">{formatCurrency(service.value_cents, proposal.currency)}</span>
+                          <div key={service.id} className="space-y-0.5">
+                            <div className="flex justify-between items-start text-sm">
+                              <span className="text-foreground/80 font-medium">{service.name}</span>
+                              <span className="text-muted-foreground font-mono ml-4 shrink-0">{formatCurrency(service.value_cents, proposal.currency)}</span>
+                            </div>
+                            {service.description && (
+                              <p className="text-xs text-muted-foreground/70 pr-16">{service.description}</p>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -291,12 +297,14 @@ export default function ProposalDetailPage() {
                   {/* Custom Line Items Section */}
                   {proposal.proposal_metadata?.line_items && proposal.proposal_metadata.line_items.length > 0 && (
                     <div className="px-4 py-3 space-y-2">
-                      <span className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-wider">Additional Items</span>
-                      <div className="space-y-1.5">
+                      <span className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-wider">{t('detail.financials.additionalItems')}</span>
+                      <div className="space-y-3">
                         {proposal.proposal_metadata.line_items.map((item) => (
-                          <div key={item.id} className="flex justify-between items-center text-sm">
-                            <span className="text-foreground/80 font-medium">{item.description || 'Unnamed Item'}</span>
-                            <span className="text-muted-foreground font-mono">{formatCurrency(item.value_cents, proposal.currency)}</span>
+                          <div key={item.id} className="space-y-0.5">
+                            <div className="flex justify-between items-start text-sm">
+                              <span className="text-foreground/80 font-medium">{item.description || t('detail.financials.unnamedItem')}</span>
+                              <span className="text-muted-foreground font-mono ml-4 shrink-0">{formatCurrency(item.value_cents, proposal.currency)}</span>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -306,7 +314,7 @@ export default function ProposalDetailPage() {
                   {/* Base Fee / Manual Adjustment */}
                   {proposal.base_amount_cents ? (
                     <div className="px-4 py-3 flex justify-between items-center bg-muted/10">
-                      <span className="text-xs font-semibold text-secondary-foreground italic">Manual Adjustment</span>
+                      <span className="text-xs font-semibold text-secondary-foreground italic">{t('detail.financials.manualAdjustment')}</span>
                       <span className="text-sm font-mono font-bold text-secondary-foreground">
                         {formatCurrency(proposal.base_amount_cents, proposal.currency)}
                       </span>
@@ -315,7 +323,7 @@ export default function ProposalDetailPage() {
                 </div>
 
                 <div className="p-4 bg-primary/[0.03] flex justify-between items-center border-t border-primary/20">
-                  <span className="text-sm font-bold text-primary">Final Proposal Total</span>
+                  <span className="text-sm font-bold text-primary">{t('detail.financials.finalTotal')}</span>
                   <span className="text-lg font-black text-primary font-mono tracking-tighter">
                     {proposal.total_amount_cents !== null ? formatCurrency(proposal.total_amount_cents, proposal.currency) : 'N/A'}
                   </span>
@@ -323,7 +331,7 @@ export default function ProposalDetailPage() {
               </div>
 
               <div className="p-4 text-[10px] text-muted-foreground/60 border-t border-muted/20 bg-muted/5">
-                Currency: <span className="font-bold text-muted-foreground/80">{proposal.currency}</span> • Prices are based on current rates and valid until {proposal.valid_until ? new Date(proposal.valid_until).toLocaleDateString() : 'N/A'}
+                {t('detail.financials.currencyNote')} <span className="font-bold text-muted-foreground/80">{proposal.currency}</span> • {t('detail.financials.validityNote')} {proposal.valid_until ? new Date(proposal.valid_until).toLocaleDateString(locale) : 'N/A'}
               </div>
             </CardContent>
           </Card>
@@ -331,7 +339,7 @@ export default function ProposalDetailPage() {
           {proposal.terms_conditions && (
             <Card>
               <CardHeader>
-                <CardTitle>Terms & Conditions</CardTitle>
+                <CardTitle>{t('detail.termsConditions.title')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-sm whitespace-pre-wrap text-muted-foreground">
@@ -341,25 +349,6 @@ export default function ProposalDetailPage() {
             </Card>
           )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Services</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {proposal.services && proposal.services.length > 0 ? (
-                <ul className="list-disc list-inside space-y-1 text-sm text-foreground">
-                  {proposal.services.map(service => (
-                    <li key={service.id}>
-                      <span className="font-medium">{service.name}</span>
-                      {service.description && <span className="text-muted-foreground"> - {service.description}</span>}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-muted-foreground">No services selected.</p>
-              )}
-            </CardContent>
-          </Card>
         </div>
       </div>
 
@@ -367,10 +356,10 @@ export default function ProposalDetailPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Paperclip className="h-5 w-5 text-muted-foreground" />
-            <CardTitle>Attachments</CardTitle>
+            <CardTitle>{t('detail.attachments.title')}</CardTitle>
           </div>
           <CardDescription>
-            Upload documents, contracts, or other files related to this proposal
+            {t('detail.attachments.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -401,8 +390,8 @@ export default function ProposalDetailPage() {
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         onConfirm={handleDelete}
-        title="Delete Proposal?"
-        description="Are you sure you want to delete this proposal? This action cannot be undone."
+        title={t('delete.title')}
+        description={t('delete.description')}
         loading={deleteProposal.isPending}
       />
 
