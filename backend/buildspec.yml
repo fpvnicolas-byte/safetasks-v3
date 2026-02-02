@@ -6,20 +6,20 @@ phases:
       python: 3.12
     commands:
       - echo Installing dependencies...
-      - cd backend
+      - "[ -d backend ] && cd backend || echo 'Already in backend or root?'"
       - pip install -r requirements.txt
       - pip install pytest
   
   pre_build:
     commands:
       - echo Running tests...
-      - cd backend
+      - "[ -d backend ] && cd backend || echo 'Already in backend or root?'"
       - python -m pytest tests/
   
   build:
     commands:
       - echo Building Docker image...
-      - cd backend
+      - "[ -d backend ] && cd backend || echo 'Already in backend or root?'"
       - docker build -t safetasks-backend .
 
 artifacts:
