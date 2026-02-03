@@ -20,6 +20,16 @@ class Settings(BaseSettings):
     # CORS
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
 
+    @validator("API_V1_STR", pre=True)
+    def validate_api_v1_str(cls, v: str) -> str:
+        if v:
+            # Strip quotes which might differ between local .env and AWS S3 .env injection
+            cleaned = v.strip('"').strip("'")
+            if not cleaned.startswith("/"):
+                return f"/{cleaned}"
+            return cleaned
+        return v
+
     @validator("BACKEND_CORS_ORIGINS", pre=True)
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
         if isinstance(v, str) and not v.startswith("["):
