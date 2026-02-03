@@ -1,8 +1,14 @@
 from typing import List, Union, Optional, Dict, Any
+import socket
 from pydantic import AnyHttpUrl, validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
+    # DEBUG: Prove config is loading
+    print("----------------------------------------------------------------")
+    print("LOADING CONFIG.PY - SETTINGS INITIALIZATION")
+    print("----------------------------------------------------------------")
+
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "Safe Tasks V3"
     FRONTEND_URL: AnyHttpUrl = "http://localhost:3000"
@@ -57,9 +63,19 @@ class Settings(BaseSettings):
         server = values.get("POSTGRES_SERVER")
         port = values.get("POSTGRES_PORT")
         db = values.get("POSTGRES_DB")
+
+        try:
+            print(f"DEBUG: Attempting to resolve host: {server}")
+            full_addr = socket.gethostbyname(server)
+            print(f"DEBUG: SUCCESS - Resolved {server} to IPv4: {full_addr}")
+            server = full_addr
+        except Exception as e:
+            print(f"CRITICAL ERROR: Could not resolve hostname {server}: {e}")
+            # Fallback: Don't crash, let it try the original (though it will likely fail with Errno 99)
         
-        # Mantendo a correção do AsyncPG
-        return f"postgresql+asyncpg://{user}:{password}@{server}:{port}/{db}"
+        uri = f"postgresql+asyncpg://{user}:{password}@{server}:{port}/{db}"
+        print(f"DEBUG: Final Database URI (masked): postgresql+asyncpg://{user}:***@{server}:{port}/{db}")
+        return uri
 
     # Auth
     SECRET_KEY: str = "YOUR_SECRET_KEY_HERE"
