@@ -1,0 +1,35 @@
+version: 0.2
+
+env:
+  variables:
+    REPOSITORY_URI: 523234425956.dkr.ecr.sa-east-1.amazonaws.com/safetasks-backend
+    AWS_DEFAULT_REGION: sa-east-1
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.12
+    commands:
+      - echo Installing dependencies...
+      - "[ -d backend ] && cd backend || echo 'Already in backend or root?'"
+      - pip install -r requirements.txt
+      - pip install pytest
+  
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $REPOSITORY_URI
+      - echo Running tests...
+      - "[ -d backend ] && cd backend || echo 'Already in backend or root?'"
+      - python -m pytest tests/
+  
+  build:
+    commands:
+      - echo Building Docker image...
+      - "[ -d backend ] && cd backend || echo 'Already in backend or root?'"
+      - docker build -t $REPOSITORY_URI:latest .
+  
+  post_build:
+    commands:
+      - echo Pushing the Docker image...
+      - docker push $REPOSITORY_URI:latest
