@@ -58,4 +58,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
 EXPOSE 8000
 
 # Run the application
-CMD ["sh", "-c", "echo '--- DEBUG INFO ---' && ls -R /app && echo 'PYTHONPATH:' && python -c 'import sys; print(sys.path)' && echo '--- END DEBUG ---' && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]

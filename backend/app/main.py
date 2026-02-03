@@ -19,10 +19,17 @@ logger = logging.getLogger(__name__)
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
 
+# ROBUSTNESS FIX: Clean API_V1_STR to handle AWS S3 injection (quotes) and ensure format
+api_v1_str = settings.API_V1_STR
+if api_v1_str:
+    api_v1_str = api_v1_str.strip('"').strip("'")
+    if not api_v1_str.startswith("/"):
+        api_v1_str = f"/{api_v1_str}"
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version="3.0.6",
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    openapi_url=f"{api_v1_str}/openapi.json",
     description="""
     Safe Tasks V3 - Professional Video Production Management Platform
 
@@ -103,7 +110,7 @@ app.add_middleware(
 )
 
 # Include API routers
-app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(api_router, prefix=api_v1_str)
 
 
 @app.get("/health")
