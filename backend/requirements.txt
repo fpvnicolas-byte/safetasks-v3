@@ -81,3 +81,7 @@ uvloop==0.22.1
 watchfiles==1.1.1
 websockets==15.0.1
 wrapt==2.0.1
+
+# PDF Generation
+Jinja2>=3.1.0
+WeasyPrint>=60.0

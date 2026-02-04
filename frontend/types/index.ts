@@ -703,7 +703,7 @@ export interface Proposal {
   start_date: ISODate | null
   end_date: ISODate | null
   total_amount_cents: number | null
-  base_amount_cents: number | null // Manual portion
+  base_amount_cents: number | null // Discount stored as negative cents
   currency: string
   terms_conditions: string | null
   proposal_metadata: ProposalMetadata | null
@@ -725,7 +725,7 @@ export interface ProposalCreate {
   start_date?: ISODate
   end_date?: ISODate
   total_amount_cents?: number // Calculated
-  base_amount_cents?: number // Manual
+  base_amount_cents?: number // Discount stored as negative cents
   currency?: string
 
   terms_conditions?: string

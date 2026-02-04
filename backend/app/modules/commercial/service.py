@@ -227,6 +227,26 @@ class ProposalService(BaseService[ProposalModel, ProposalCreate, ProposalUpdate]
     def __init__(self):
         super().__init__(ProposalModel)
 
+    @staticmethod
+    def _sum_line_items(proposal_metadata: dict | None) -> int:
+        if not proposal_metadata:
+            return 0
+        line_items = proposal_metadata.get("line_items") if isinstance(proposal_metadata, dict) else None
+        if not line_items:
+            return 0
+
+        total = 0
+        for item in line_items:
+            if isinstance(item, dict):
+                value = item.get("value_cents", 0)
+            else:
+                value = getattr(item, "value_cents", 0)
+            try:
+                total += int(value or 0)
+            except (TypeError, ValueError):
+                continue
+        return total
+
     async def get(self, db: AsyncSession, *, organization_id: UUID, id: UUID) -> ProposalModel | None:
         """Get proposal with services and client loaded."""
         return await super().get(
@@ -404,11 +424,14 @@ class ProposalService(BaseService[ProposalModel, ProposalCreate, ProposalUpdate]
         else:
             services = []
             
-        # Auto-calculate total amount
+        # Auto-calculate total amount (base_amount_cents is negative for discounts)
         base_amount = obj_in.base_amount_cents or 0
         services_total = sum(s.value_cents for s in services)
+        line_items_total = self._sum_line_items(obj_in.proposal_metadata)
+        if base_amount < -(services_total + line_items_total):
+            raise ValueError("Discount cannot exceed subtotal (services + line items)")
         db_obj.base_amount_cents = base_amount
-        db_obj.total_amount_cents = base_amount + services_total
+        db_obj.total_amount_cents = base_amount + services_total + line_items_total
 
         db.add(db_obj)
         await db.commit()
@@ -429,6 +452,7 @@ class ProposalService(BaseService[ProposalModel, ProposalCreate, ProposalUpdate]
         # Need to recalculate total if services OR base_amount changes
         should_recalculate = False
         services = []
+        proposal = None
         
         if obj_in.service_ids is not None:
              # Fetch new services
@@ -444,11 +468,16 @@ class ProposalService(BaseService[ProposalModel, ProposalCreate, ProposalUpdate]
         
         if obj_in.base_amount_cents is not None:
             should_recalculate = True
+
+        if obj_in.proposal_metadata is not None and isinstance(obj_in.proposal_metadata, dict) and "line_items" in obj_in.proposal_metadata:
+            should_recalculate = True
             
         if should_recalculate:
             # If we didn't load services yet (only base_amount changed), we need to fetch them
-            if obj_in.service_ids is None:
+            if proposal is None:
                 proposal = await self.get(db=db, organization_id=organization_id, id=id)
+
+            if obj_in.service_ids is None:
                 services = proposal.services if proposal else []
             
             # Use new base amount if provided, otherwise existing
@@ -456,11 +485,18 @@ class ProposalService(BaseService[ProposalModel, ProposalCreate, ProposalUpdate]
             # Since we are doing a manual update query later, we should update update_data
             
             base_amount = obj_in.base_amount_cents if obj_in.base_amount_cents is not None else (
-                (await self.get(db=db, organization_id=organization_id, id=id)).base_amount_cents or 0
-            ) 
+                proposal.base_amount_cents if proposal else 0
+            )
             services_total = sum(s.value_cents for s in services)
-            
-            update_data["total_amount_cents"] = base_amount + services_total
+            if obj_in.proposal_metadata is not None and isinstance(obj_in.proposal_metadata, dict) and "line_items" in obj_in.proposal_metadata:
+                line_items_total = self._sum_line_items(obj_in.proposal_metadata)
+            else:
+                line_items_total = self._sum_line_items(proposal.proposal_metadata if proposal else None)
+
+            if base_amount < -(services_total + line_items_total):
+                raise ValueError("Discount cannot exceed subtotal (services + line items)")
+
+            update_data["total_amount_cents"] = base_amount + services_total + line_items_total
         
         # Perform the standard update with filtered data
         # We manually call super implementation logic here to avoid passing invalid columns

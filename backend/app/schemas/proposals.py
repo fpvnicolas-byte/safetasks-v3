@@ -19,6 +19,7 @@ class ProposalBase(BaseModel):
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     total_amount_cents: Optional[int] = None
+    base_amount_cents: Optional[int] = None  # Discount stored as negative cents
     currency: str = "BRL"
     terms_conditions: Optional[str] = None
     proposal_metadata: Optional[dict] = Field(default_factory=dict)

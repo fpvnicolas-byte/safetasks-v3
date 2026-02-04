@@ -1937,6 +1937,7 @@
         "additionalItems": "Additional Items",
         "unnamedItem": "Unnamed Item",
         "manualAdjustment": "Manual Adjustment",
+        "discount": "Discount",
         "finalTotal": "Final Proposal Total",
         "currencyNote": "Currency:",
         "validityNote": "Prices are based on current rates and valid until"
@@ -1948,6 +1949,15 @@
         "title": "Attachments",
         "description": "Upload documents, contracts, or other files related to this proposal"
       }
+    },
+    "pdf": {
+      "generate": "Generate PDF",
+      "regenerate": "Regenerate PDF",
+      "download": "Download PDF",
+      "generated": "PDF generated successfully",
+      "exists": "PDF already exists",
+      "generateFailed": "Failed to generate PDF",
+      "downloadFailed": "Failed to download PDF"
     }
   },
   "production": {

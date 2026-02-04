@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="{{ locale | default('pt-BR') }}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proposta #{{ proposal.id | string | truncate(8, True, '') }} - {{ proposal.title }}</title>
+    <link rel="stylesheet" href="proposal.css">
+</head>
+
+<body>
+    <div class="proposal-document">
+        <!-- Header with Logo and Organization Info -->
+        <header class="proposal-header">
+            <div class="logo-section">
+                {% if logo_url %}
+                <img src="{{ logo_url }}" alt="{{ organization.name }}" class="organization-logo">
+                {% endif %}
+            </div>
+            <div class="organization-info">
+                <h1 class="organization-name">{{ organization.name }}</h1>
+                {% if organization.email %}
+                <p class="contact-item">{{ organization.email }}</p>
+                {% endif %}
+                {% if organization.phone %}
+                <p class="contact-item">{{ organization.phone }}</p>
+                {% endif %}
+            </div>
+        </header>
+
+        <!-- Proposal Title and Meta -->
+        <section class="proposal-meta">
+            <h2 class="proposal-title">{{ proposal.title }}</h2>
+            <div class="meta-grid">
+                <div class="meta-item">
+                    <span class="meta-label">Proposta Nº</span>
+                    <span class="meta-value">{{ proposal.id | string | truncate(8, True, '') | upper }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Data de Emissão</span>
+                    <span class="meta-value">{{ proposal.created_at.strftime('%d/%m/%Y') }}</span>
+                </div>
+                {% if proposal.valid_until %}
+                <div class="meta-item">
+                    <span class="meta-label">Válido Até</span>
+                    <span class="meta-value">{{ proposal.valid_until.strftime('%d/%m/%Y') }}</span>
+                </div>
+                {% endif %}
+                <div class="meta-item">
+                    <span class="meta-label">Status</span>
+                    <span class="meta-value status-{{ proposal.status }}">{{ proposal.status | title }}</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Client Information -->
+        <section class="client-section">
+            <h3 class="section-title">Cliente</h3>
+            <div class="client-info">
+                <p class="client-name">{{ client.name }}</p>
+                {% if client.company_name %}
+                <p class="client-company">{{ client.company_name }}</p>
+                {% endif %}
+                {% if client.email %}
+                <p class="client-contact">{{ client.email }}</p>
+                {% endif %}
+                {% if client.phone %}
+                <p class="client-contact">{{ client.phone }}</p>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- Project Dates (if applicable) -->
+        {% if proposal.start_date or proposal.end_date %}
+        <section class="dates-section">
+            <h3 class="section-title">Período do Projeto</h3>
+            <div class="dates-grid">
+                {% if proposal.start_date %}
+                <div class="date-item">
+                    <span class="date-label">Início</span>
+                    <span class="date-value">{{ proposal.start_date.strftime('%d/%m/%Y') }}</span>
+                </div>
+                {% endif %}
+                {% if proposal.end_date %}
+                <div class="date-item">
+                    <span class="date-label">Término</span>
+                    <span class="date-value">{{ proposal.end_date.strftime('%d/%m/%Y') }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Description -->
+        {% if proposal.description %}
+        <section class="description-section">
+            <h3 class="section-title">Descrição</h3>
+            <div class="description-content">
+                {{ proposal.description }}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Services Table -->
+        {% if services and services | length > 0 %}
+        <section class="services-section">
+            <h3 class="section-title">Serviços</h3>
+            <table class="services-table">
+                <thead>
+                    <tr>
+                        <th class="col-service">Serviço</th>
+                        <th class="col-description">Descrição</th>
+                        <th class="col-price">Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for service in services %}
+                    <tr>
+                        <td class="service-name">{{ service.name }}</td>
+                        <td class="service-description">{{ service.description or '-' }}</td>
+                        <td class="service-price">{{ service.value_cents | format_currency(proposal.currency) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
+
+        <!-- Custom Line Items (from metadata) -->
+        {% if line_items and line_items | length > 0 %}
+        <section class="line-items-section">
+            <h3 class="section-title">Itens Adicionais</h3>
+            <table class="line-items-table">
+                <thead>
+                    <tr>
+                        <th class="col-item">Item</th>
+                        <th class="col-total">Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in line_items %}
+                    <tr>
+                        <td class="item-name">{{ item.description or item.name or 'Item' }}</td>
+                        <td class="item-total">{{ item.value_cents | format_currency(proposal.currency) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
+
+        <!-- Totals Section -->
+        <section class="totals-section">
+            <div class="totals-box">
+                {% if proposal.base_amount_cents and proposal.base_amount_cents != proposal.total_amount_cents %}
+                <div class="total-row subtotal">
+                    <span class="total-label">Subtotal</span>
+                    <span class="total-value">{{ proposal.base_amount_cents | format_currency(proposal.currency)
+                        }}</span>
+                </div>
+                <div class="total-row discount">
+                    <span class="total-label">Desconto</span>
+                    <span class="total-value discount-value">- {{ (proposal.base_amount_cents -
+                        proposal.total_amount_cents) | format_currency(proposal.currency) }}</span>
+                </div>
+                {% endif %}
+                <div class="total-row grand-total">
+                    <span class="total-label">Total</span>
+                    <span class="total-value">{{ proposal.total_amount_cents | format_currency(proposal.currency)
+                        }}</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Terms and Conditions -->
+        {% if proposal.terms_conditions %}
+        <section class="terms-section">
+            <h3 class="section-title">Termos e Condições</h3>
+            <div class="terms-content">
+                {{ proposal.terms_conditions }}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Footer -->
+        <footer class="proposal-footer">
+            <div class="footer-content">
+                <p class="generated-info">Documento gerado em {{ generated_at[:10] }}</p>
+                <p class="page-number">Página <span class="page"></span> de <span class="topage"></span></p>
+            </div>
+        </footer>
+    </div>
+</body>
+
+</html>

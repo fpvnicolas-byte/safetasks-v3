@@ -108,6 +108,11 @@ class Settings(BaseSettings):
     STRIPE_PUBLISHABLE_KEY: Optional[str] = None
     STRIPE_WEBHOOK_SECRET: Optional[str] = None
 
+    # WhatsApp (Evolution API) - Optional, for future integration
+    WHATSAPP_API_URL: Optional[str] = None
+    WHATSAPP_API_KEY: Optional[str] = None
+    WHATSAPP_INSTANCE_NAME: Optional[str] = None
+
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=True,

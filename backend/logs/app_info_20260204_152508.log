@@ -1,0 +1,10 @@
+2026-02-04 15:25:08 [INFO] app: Logging configuration initialized
+2026-02-04 15:28:06 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-04 15:28:07 [WARNING] weasyprint: Ignored `print-color-adjust: exact` at 383:9, unknown property.
+2026-02-04 15:28:07 [WARNING] weasyprint: Ignored `print-color-adjust: exact` at 390:9, unknown property.
+2026-02-04 15:28:07 [WARNING] weasyprint: Ignored `print-color-adjust: exact` at 383:9, unknown property.
+2026-02-04 15:28:07 [WARNING] weasyprint: Ignored `print-color-adjust: exact` at 390:9, unknown property.
+2026-02-04 15:28:07 [INFO] app.services.proposal_pdf: Generated PDF for proposal b52c705f-d8a3-4d90-a4b2-72c69556c95b (36919 bytes)
+2026-02-04 15:28:08 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/production-files/4384a92c-df41-444b-b34d-6c80e7820486/proposals/proposal_b52c705f-d8a3-4d90-a4b2-72c69556c95b_28fa23b9.pdf "HTTP/2 200 OK"
+2026-02-04 15:28:08 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/sign/production-files/4384a92c-df41-444b-b34d-6c80e7820486/proposals/proposal_b52c705f-d8a3-4d90-a4b2-72c69556c95b_28fa23b9.pdf "HTTP/2 200 OK"
+2026-02-04 15:28:08 [INFO] app.services.proposal_pdf: Stored PDF for proposal b52c705f-d8a3-4d90-a4b2-72c69556c95b at 4384a92c-df41-444b-b34d-6c80e7820486/proposals/proposal_b52c705f-d8a3-4d90-a4b2-72c69556c95b_28fa23b9.pdf (version 1)

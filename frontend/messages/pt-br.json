@@ -1941,6 +1941,7 @@
         "additionalItems": "Itens Adicionais",
         "unnamedItem": "Item sem nome",
         "manualAdjustment": "Ajuste Manual",
+        "discount": "Desconto",
         "finalTotal": "Total Final da Proposta",
         "currencyNote": "Moeda:",
         "validityNote": "Preços baseados nas taxas atuais e válidos até"
@@ -1952,6 +1953,15 @@
         "title": "Anexos",
         "description": "Envie documentos, contratos ou outros arquivos relacionados a esta proposta"
       }
+    },
+    "pdf": {
+      "generate": "Gerar PDF",
+      "regenerate": "Regenerar PDF",
+      "download": "Baixar PDF",
+      "generated": "PDF gerado com sucesso",
+      "exists": "PDF já existe",
+      "generateFailed": "Falha ao gerar PDF",
+      "downloadFailed": "Falha ao baixar PDF"
     }
   },
   "production": {

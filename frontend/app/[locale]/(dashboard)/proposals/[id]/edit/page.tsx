@@ -31,6 +31,7 @@ export default function EditProposalPage() {
   const [selectedServices, setSelectedServices] = useState<string[]>([])
   const [lineItems, setLineItems] = useState<ProposalLineItem[]>([])
   const [currency, setCurrency] = useState('BRL')
+  const [discountInput, setDiscountInput] = useState('')
 
   // Initialize selected services when proposal data loads
   useEffect(() => {
@@ -43,9 +44,16 @@ export default function EditProposalPage() {
     if (proposal?.currency) {
       setCurrency(proposal.currency)
     }
+    if (proposal?.base_amount_cents !== null && proposal?.base_amount_cents !== undefined) {
+      const discountValue = Math.abs(proposal.base_amount_cents || 0)
+      setDiscountInput(discountValue ? centsToDollars(discountValue).toString() : '')
+    }
   }, [proposal])
 
   const totalLineItemsCents = lineItems.reduce((sum, item) => sum + (item.value_cents || 0), 0)
+  const servicesTotalCents = (services?.filter(s => selectedServices.includes(s.id))
+    .reduce((sum, s) => sum + (s.value_cents || 0), 0) || 0)
+  const discountCents = dollarsToCents(parseFloat(discountInput) || 0)
 
   if (isLoading) {
     return <div>Loading proposal...</div>
@@ -61,8 +69,6 @@ export default function EditProposalPage() {
     const formData = new FormData(e.currentTarget)
 
     try {
-      const baseAmountDollars = parseFloat(formData.get('base_amount') as string || '0')
-
       const data: ProposalUpdate = {
         title: (formData.get('title') as string).trim(),
         description: (formData.get('description') as string || '').trim() || undefined,
@@ -71,7 +77,7 @@ export default function EditProposalPage() {
         start_date: (formData.get('start_date') as string) || undefined,
         end_date: (formData.get('end_date') as string) || undefined,
         // Send base amount, backend calculates total
-        base_amount_cents: baseAmountDollars ? dollarsToCents(baseAmountDollars) : 0,
+        base_amount_cents: discountCents ? -discountCents : 0,
         currency: currency,
         terms_conditions: (formData.get('terms_conditions') as string || '').trim() || undefined,
         service_ids: selectedServices.length > 0 ? selectedServices : undefined,
@@ -264,22 +270,23 @@ export default function EditProposalPage() {
                   />
 
                   <div className="space-y-3 pt-4 border-t border-muted/50">
-                    <Label htmlFor="base_amount" className="text-sm font-bold text-foreground">Additional Raw Amount (Manual Offset)</Label>
+                    <Label htmlFor="discount_amount" className="text-sm font-bold text-foreground">Discount</Label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-bold">{currency === 'USD' ? '$' : currency === 'EUR' ? '€' : 'R$'}</span>
                       <Input
-                        id="base_amount"
-                        name="base_amount"
+                        id="discount_amount"
+                        name="discount_amount"
                         type="number"
                         step="0.01"
                         min="0"
                         placeholder="0.00"
                         className="h-11 pl-10 text-base font-bold bg-muted/20"
-                        defaultValue={proposal.base_amount_cents ? centsToDollars(proposal.base_amount_cents) : ''}
+                        value={discountInput}
+                        onChange={(e) => setDiscountInput(e.target.value)}
                       />
                     </div>
                     <p className="text-[11px] text-muted-foreground leading-tight">
-                      Additional manual adjustment to the total beyond services and line items.
+                      Subtracts from the total. Set to 0 to remove.
                     </p>
                   </div>
                 </div>
@@ -298,11 +305,7 @@ export default function EditProposalPage() {
                       <span className="text-[10px] text-muted-foreground/60 leading-none">Predefined rates</span>
                     </div>
                     <span className="font-mono text-foreground font-semibold">
-                      {formatCurrency(
-                        (services?.filter(s => selectedServices.includes(s.id))
-                          .reduce((sum, s) => sum + (s.value_cents || 0), 0) || 0),
-                        currency
-                      )}
+                      {formatCurrency(servicesTotalCents, currency)}
                     </span>
                   </div>
 
@@ -316,14 +319,14 @@ export default function EditProposalPage() {
                     </span>
                   </div>
 
-                  {proposal.base_amount_cents ? (
+                  {discountCents > 0 ? (
                     <div className="flex justify-between items-center text-sm italic">
                       <div className="flex flex-col">
-                        <span className="text-muted-foreground font-medium">Manual Offset</span>
+                        <span className="text-muted-foreground font-medium">Discount</span>
                         <span className="text-[10px] text-muted-foreground/60 leading-none">Adjustment</span>
                       </div>
                       <span className="font-mono text-secondary-foreground font-semibold">
-                        {formatCurrency(proposal.base_amount_cents, currency)}
+                        {formatCurrency(-discountCents, currency)}
                       </span>
                     </div>
                   ) : null}
@@ -333,10 +336,7 @@ export default function EditProposalPage() {
                     <div className="flex flex-col items-end">
                       <span className="text-xl font-black text-primary font-mono tracking-tighter">
                         {formatCurrency(
-                          ((services?.filter(s => selectedServices.includes(s.id))
-                            .reduce((sum, s) => sum + (s.value_cents || 0), 0) || 0) +
-                            totalLineItemsCents +
-                            (proposal.base_amount_cents || 0)),
+                          (servicesTotalCents + totalLineItemsCents - discountCents),
                           currency
                         )}
                       </span>
@@ -363,9 +363,9 @@ export default function EditProposalPage() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.back()}
+              asChild
             >
-              Cancel
+              <Link href={`/proposals/${proposalId}`}>Cancel</Link>
             </Button>
             <Button
               type="submit"

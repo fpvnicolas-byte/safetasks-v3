@@ -226,3 +226,234 @@ async def approve_proposal(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
+
+
+# =============================================================================
+# PDF Generation Endpoints
+# =============================================================================
+
+@router.post(
+    "/{proposal_id}/pdf",
+    response_model=dict,
+    dependencies=[Depends(require_owner_admin_or_producer)]
+)
+async def generate_proposal_pdf(
+    proposal_id: UUID,
+    regenerate: bool = Query(False, description="Force regeneration even if PDF exists"),
+    profile=Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Generate PDF for proposal and store in storage.
+    Returns PDF metadata including signed URL for download.
+    """
+    from app.services.proposal_pdf import proposal_pdf_service
+    from app.modules.commercial.service import organization_service
+    
+    organization_id = profile.organization_id
+    
+    # Get proposal with client and services
+    proposal = await proposal_service.get(
+        db=db,
+        organization_id=organization_id,
+        id=proposal_id
+    )
+    
+    if not proposal:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Proposal not found"
+        )
+    
+    # Check if PDF already exists and regenerate is not requested
+    if not regenerate:
+        existing_url = await proposal_pdf_service.get_existing_pdf_url(proposal)
+        if existing_url:
+            pdf_info = (proposal.proposal_metadata or {}).get("pdf", {})
+            return {
+                "status": "exists",
+                "signed_url": existing_url,
+                "pdf_path": pdf_info.get("path"),
+                "version": pdf_info.get("version"),
+                "generated_at": pdf_info.get("generated_at")
+            }
+    
+    # Get organization for header/logo
+    organization = await organization_service.get(
+        db=db,
+        organization_id=organization_id,
+        id=organization_id
+    )
+    
+    if not organization:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organization not found"
+        )
+    
+    try:
+        # Generate and store PDF
+        result = await proposal_pdf_service.generate_and_store(
+            db=db,
+            proposal=proposal,
+            organization=organization,
+            client=proposal.client,
+            services=list(proposal.services) if proposal.services else []
+        )
+        
+        await db.commit()
+        
+        return {
+            "status": "generated",
+            "signed_url": result["signed_url"],
+            "pdf_path": result["pdf_path"],
+            "version": result["version"],
+            "size_bytes": result["size_bytes"]
+        }
+    except RuntimeError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"PDF generation failed: {str(e)}"
+        )
+
+
+@router.get(
+    "/{proposal_id}/pdf",
+    dependencies=[Depends(require_read_only)]
+)
+async def get_proposal_pdf(
+    proposal_id: UUID,
+    download: bool = Query(False, description="Return PDF bytes directly for download"),
+    profile=Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get PDF access for proposal.
+    If download=true, returns PDF bytes with Content-Disposition for direct download.
+    Otherwise returns signed URL for accessing the PDF.
+    """
+    from fastapi.responses import Response
+    from app.services.proposal_pdf import proposal_pdf_service
+    from app.services.storage import storage_service
+    
+    organization_id = profile.organization_id
+    
+    # Get proposal
+    proposal = await proposal_service.get(
+        db=db,
+        organization_id=organization_id,
+        id=proposal_id
+    )
+    
+    if not proposal:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Proposal not found"
+        )
+    
+    # Check if PDF exists
+    metadata = proposal.proposal_metadata or {}
+    pdf_info = metadata.get("pdf")
+    
+    if not pdf_info or not pdf_info.get("path"):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="PDF not generated yet. Use POST to generate."
+        )
+    
+    if download:
+        # For direct download, we need to fetch the PDF bytes
+        # This is useful for mobile apps or direct save
+        try:
+            signed_url = await storage_service.generate_signed_url(
+                bucket=pdf_info["bucket"],
+                file_path=pdf_info["path"],
+                expires_in=60  # Short expiry for redirect
+            )
+            # Return redirect or signed URL
+            return {
+                "status": "redirect",
+                "download_url": signed_url,
+                "filename": f"proposal_{proposal_id}.pdf"
+            }
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to get download URL: {str(e)}"
+            )
+    else:
+        # Return signed URL for viewing
+        signed_url = await proposal_pdf_service.get_existing_pdf_url(proposal)
+        if not signed_url:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to generate signed URL"
+            )
+        
+        return {
+            "status": "ok",
+            "signed_url": signed_url,
+            "pdf_path": pdf_info["path"],
+            "version": pdf_info.get("version"),
+            "generated_at": pdf_info.get("generated_at")
+        }
+
+
+@router.get(
+    "/{proposal_id}/pdf/preview",
+    dependencies=[Depends(require_read_only)]
+)
+async def preview_proposal_pdf(
+    proposal_id: UUID,
+    profile=Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Render proposal as HTML for preview.
+    Useful for template development and quick preview without generating PDF.
+    """
+    from fastapi.responses import HTMLResponse
+    from app.services.proposal_pdf import proposal_pdf_service
+    from app.modules.commercial.service import organization_service
+    
+    organization_id = profile.organization_id
+    
+    # Get proposal with client and services
+    proposal = await proposal_service.get(
+        db=db,
+        organization_id=organization_id,
+        id=proposal_id
+    )
+    
+    if not proposal:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Proposal not found"
+        )
+    
+    # Get organization
+    organization = await organization_service.get(
+        db=db,
+        organization_id=organization_id,
+        id=organization_id
+    )
+    
+    try:
+        html_content = await proposal_pdf_service.render_html(
+            proposal=proposal,
+            organization=organization,
+            client=proposal.client,
+            services=list(proposal.services) if proposal.services else []
+        )
+        
+        return HTMLResponse(content=html_content)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"HTML rendering failed: {str(e)}"
+        )

@@ -18,7 +18,7 @@ class Proposal(Base):
     start_date = Column(DATE)
     end_date = Column(DATE)
     total_amount_cents = Column(BIGINT)
-    base_amount_cents = Column(BIGINT, nullable=True)  # Manual portion of the budget
+    base_amount_cents = Column(BIGINT, nullable=True)  # Discount stored as negative cents
     currency = Column(String, default="BRL")
     terms_conditions = Column(TEXT)
     

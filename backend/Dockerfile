@@ -24,9 +24,15 @@ RUN pip install --upgrade pip && \
 # Production stage
 FROM public.ecr.aws/docker/library/python:3.12-slim
 
-# Install runtime dependencies
+# Install runtime dependencies (including WeasyPrint requirements for PDF generation)
 RUN apt-get update && apt-get install -y \
     curl \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libgdk-pixbuf2.0-0 \
+    libffi-dev \
+    shared-mime-info \
+    fonts-liberation \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 

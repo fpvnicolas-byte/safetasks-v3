@@ -8,10 +8,11 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Pencil, Trash2, ArrowLeft, CheckCircle, FileText, Calendar, DollarSign, ExternalLink, Paperclip } from 'lucide-react'
+import { Pencil, Trash2, ArrowLeft, CheckCircle, FileText, Calendar, DollarSign, ExternalLink, Paperclip, Download, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency, ProposalStatus, FileUploadResponse } from '@/types'
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -41,6 +42,11 @@ export default function ProposalDetailPage() {
   const [approvalNotes, setApprovalNotes] = useState('')
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false)
   const [uploadedFiles, setUploadedFiles] = useState<FileUploadResponse[]>([])
+
+  // PDF Generation State
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+  const [pdfVersion, setPdfVersion] = useState<number | null>(null)
 
   const {
     open: deleteOpen,
@@ -77,6 +83,109 @@ export default function ProposalDetailPage() {
 
   const handleFileDeleted = (filePath: string) => {
     setUploadedFiles((prev) => prev.filter((f) => f.file_path !== filePath))
+  }
+
+  // Check for existing PDF when proposal loads
+  useEffect(() => {
+    if (proposal?.proposal_metadata?.pdf) {
+      const pdfInfo = proposal.proposal_metadata.pdf
+      setPdfVersion(pdfInfo.version || null)
+      // We'll fetch the signed URL when user clicks download
+    }
+  }, [proposal])
+
+  // PDF Generation Handler
+  const handleGeneratePdf = async (regenerate = false) => {
+    setIsGeneratingPdf(true)
+    try {
+      // Get JWT token from Supabase (same pattern as useStorage hooks)
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+      const { data: { session }, error: authError } = await supabase.auth.getSession()
+
+      if (authError || !session) {
+        throw new Error('Not authenticated')
+      }
+
+      const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/proposals/${proposalId}/pdf?regenerate=${regenerate}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+        }
+      )
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.detail || 'Failed to generate PDF')
+      }
+
+      const data = await response.json()
+      setPdfUrl(data.signed_url)
+      setPdfVersion(data.version || null)
+
+      if (data.status === 'exists' && !regenerate) {
+        toast.success(t('pdf.exists'))
+      } else {
+        toast.success(t('pdf.generated'))
+      }
+    } catch (error) {
+      console.error('PDF generation failed:', error)
+
+      // Better error handling for different failure modes
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        console.error('Network error - Backend may not be running or CORS issue')
+        toast.error('Cannot connect to server. Please check if backend is running.')
+      } else if (error instanceof Error && error.message === 'Not authenticated') {
+        toast.error('Please log in again to generate PDF.')
+      } else {
+        toast.error(error instanceof Error ? error.message : t('pdf.generateFailed'))
+      }
+    } finally {
+      setIsGeneratingPdf(false)
+    }
+  }
+
+  // Get PDF Download URL
+  const handleDownloadPdf = async () => {
+    try {
+      // Get JWT token from Supabase
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+      const { data: { session }, error: authError } = await supabase.auth.getSession()
+
+      if (authError || !session) {
+        throw new Error('Not authenticated')
+      }
+
+      const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/proposals/${proposalId}/pdf?download=true`,
+        {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to get PDF URL')
+      }
+
+      const data = await response.json()
+      if (data.download_url) {
+        window.open(data.download_url, '_blank')
+      } else if (data.signed_url) {
+        window.open(data.signed_url, '_blank')
+      }
+    } catch (error) {
+      console.error('PDF download failed:', error)
+      toast.error(t('pdf.downloadFailed'))
+    }
   }
 
   if (isLoading) {
@@ -136,8 +245,10 @@ export default function ProposalDetailPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4" />
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/proposals">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
           </Button>
           <div>
             <h1 className="text-3xl font-bold font-display">{proposal.title}</h1>
@@ -199,6 +310,27 @@ export default function ProposalDetailPage() {
             <Trash2 className="mr-2 h-4 w-4" />
             {t('detail.delete')}
           </Button>
+
+          {/* PDF Generation Buttons */}
+          <Button
+            variant="outline"
+            onClick={() => handleGeneratePdf(pdfVersion !== null)}
+            disabled={isGeneratingPdf}
+          >
+            {isGeneratingPdf ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <FileText className="mr-2 h-4 w-4" />
+            )}
+            {pdfVersion ? t('pdf.regenerate') : t('pdf.generate')}
+          </Button>
+
+          {(pdfUrl || proposal.proposal_metadata?.pdf?.path) && (
+            <Button variant="secondary" onClick={handleDownloadPdf}>
+              <Download className="mr-2 h-4 w-4" />
+              {t('pdf.download')}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -314,7 +446,11 @@ export default function ProposalDetailPage() {
                   {/* Base Fee / Manual Adjustment */}
                   {proposal.base_amount_cents ? (
                     <div className="px-4 py-3 flex justify-between items-center bg-muted/10">
-                      <span className="text-xs font-semibold text-secondary-foreground italic">{t('detail.financials.manualAdjustment')}</span>
+                      <span className="text-xs font-semibold text-secondary-foreground italic">
+                        {proposal.base_amount_cents < 0
+                          ? t('detail.financials.discount')
+                          : t('detail.financials.manualAdjustment')}
+                      </span>
                       <span className="text-sm font-mono font-bold text-secondary-foreground">
                         {formatCurrency(proposal.base_amount_cents, proposal.currency)}
                       </span>
