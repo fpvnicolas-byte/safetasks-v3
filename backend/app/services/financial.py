@@ -3,7 +3,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, func, and_, text
 from sqlalchemy.orm import selectinload
-from datetime import date
+from datetime import date, datetime, timezone
 
 from app.services.base import BaseService
 from app.models.bank_accounts import BankAccount
@@ -114,9 +114,10 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
             db, organization_id, obj_in.bank_account_id
         )
 
+        project = None
         # Validate that project (if provided) belongs to the organization
         if obj_in.project_id:
-            await self._validate_project_ownership(db, organization_id, obj_in.project_id)
+            project = await self._validate_project_ownership(db, organization_id, obj_in.project_id)
 
         # Validate that supplier (if provided) belongs to the organization
         if hasattr(obj_in, 'supplier_id') and obj_in.supplier_id:
@@ -214,6 +215,28 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
 
                 if candidate_budget_line_id:
                     transaction_data["budget_line_id"] = candidate_budget_line_id
+
+        # Budget-approved projects: auto-approve expenses within remaining budget
+        if obj_in.type == "expense":
+            project_id = transaction_data.get("project_id")
+            if project_id and transaction_data.get("payment_status") == "pending":
+                if not project or project.id != project_id:
+                    project = await self._validate_project_ownership(db, organization_id, project_id)
+
+                if getattr(project, "budget_status", None) == "approved" and getattr(project, "budget_total_cents", 0) > 0:
+                    approved_spend_result = await db.execute(
+                        select(func.coalesce(func.sum(Transaction.amount_cents), 0))
+                        .where(Transaction.organization_id == organization_id)
+                        .where(Transaction.project_id == project_id)
+                        .where(Transaction.type == "expense")
+                        .where(Transaction.payment_status.in_(("approved", "paid")))
+                    )
+                    approved_spend_cents = approved_spend_result.scalar() or 0
+                    remaining_cents = (project.budget_total_cents or 0) - approved_spend_cents
+
+                    if remaining_cents >= obj_in.amount_cents:
+                        transaction_data["payment_status"] = "approved"
+                        transaction_data["approved_at"] = datetime.now(timezone.utc)
         
         # Auto-approve income: if it's income, mark as paid immediately
         # Income transactions (like receipts) are usually recorded after they happen
