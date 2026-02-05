@@ -1,6 +1,9 @@
 import logging
-from fastapi import FastAPI, Request, HTTPException
+from typing import List
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -64,7 +67,11 @@ app = FastAPI(
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     print(f"DEBUG_PATH_CHECK: {request.method} {request.url.path}", flush=True)
-    response = await call_next(request)
+    try:
+        response = await call_next(request)
+    except Exception:
+        logger.exception("Unhandled exception on %s %s", request.method, request.url.path)
+        response = JSONResponse(status_code=500, content={"detail": "Internal server error"})
     return response
 
 # Add rate limiting middleware
@@ -72,43 +79,65 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
 
-# Set up CORS for production security
-allowed_origins = [
-    # Production - Vercel
-    "https://safetasks.vercel.app",
-    # Local development
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:3001",
-    "http://127.0.0.1:3001",
-    # Production
-    "https://safetasks.vercel.app", 
-]
+def _normalize_origin(origin: str) -> str:
+    return origin.strip().strip('"').strip("'").rstrip("/")
 
-# For development, allow additional origins
-if settings.ENVIRONMENT == "development":
-    allowed_origins.extend([
-        "http://localhost:5173",  # Vite
-        "http://127.0.0.1:5173",  # Vite
-        "http://192.168.15.3:3000",
-        "http://192.168.15.11:3000",
-    ])
+
+def _build_allowed_origins() -> List[str]:
+    origins: List[str] = []
+
+    def add_origin(value: str) -> None:
+        cleaned = _normalize_origin(value)
+        if cleaned and cleaned not in origins:
+            origins.append(cleaned)
+
+    add_origin(str(settings.FRONTEND_URL))
+
+    for configured_origin in settings.BACKEND_CORS_ORIGINS:
+        add_origin(str(configured_origin))
+
+    for default_origin in [
+        "https://safetasks.vercel.app",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+    ]:
+        add_origin(default_origin)
+
+    if settings.ENVIRONMENT == "development":
+        for dev_origin in [
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://192.168.15.3:3000",
+            "http://192.168.15.11:3000",
+        ]:
+            add_origin(dev_origin)
+
+    return origins
+
+
+allowed_origins = _build_allowed_origins()
+logger.info(
+    "CORS configured for %d origin(s) in %s environment",
+    len(allowed_origins),
+    settings.ENVIRONMENT,
+)
+logger.info("CORS origins: %s", ", ".join(allowed_origins))
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allow_headers=[
-        "Authorization",
-        "Content-Type",
-        "Accept",
-        "Origin",
-        "X-Requested-With",
-        "X-CSRF-Token",
-        "Access-Control-Allow-Origin",
-    ],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled exception on %s %s", request.method, request.url.path)
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 # Include API routers
 app.include_router(api_router, prefix=api_v1_str)
@@ -207,4 +236,3 @@ async def notifications_websocket(
         logger.error(f"WebSocket error: {e}")
     finally:
         notification_ws_manager.disconnect(websocket, org_id, user_id)
-
