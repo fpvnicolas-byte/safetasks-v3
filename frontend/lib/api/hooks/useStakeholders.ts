@@ -67,8 +67,9 @@ export function useDeleteStakeholder() {
       queryClient.invalidateQueries({ queryKey: [STAKEHOLDERS_KEY] })
       // Invalidate transactions so the expense is removed from history and budget recalculated
       queryClient.invalidateQueries({ queryKey: ['transactions'] })
-      // Invalidate project budget as well
-      queryClient.invalidateQueries({ queryKey: ['project-budget'] })
+      // Invalidate budget + financial summary as well
+      queryClient.invalidateQueries({ queryKey: ['budget'] })
+      queryClient.invalidateQueries({ queryKey: ['project_financial_summary'] })
     },
   })
 }

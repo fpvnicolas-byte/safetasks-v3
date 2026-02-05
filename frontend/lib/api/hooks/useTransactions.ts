@@ -69,11 +69,20 @@ export function useCreateTransaction() {
       params.append('organization_id', organizationId)
       return apiClient.post<TransactionWithRelations>(`/api/v1/transactions/?${params.toString()}`, transaction)
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       // Invalidate transactions, bank accounts, and analytics/dashboard data
       queryClient.invalidateQueries({ queryKey: [TRANSACTIONS_KEY] })
       queryClient.invalidateQueries({ queryKey: ['bank-accounts'] })
       queryClient.invalidateQueries({ queryKey: ['analytics'] })
+
+      const projectId = variables.transaction.project_id
+      if (projectId) {
+        queryClient.invalidateQueries({ queryKey: ['budget', projectId] })
+        queryClient.invalidateQueries({ queryKey: ['project_financial_summary', projectId] })
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['budget'] })
+        queryClient.invalidateQueries({ queryKey: ['project_financial_summary'] })
+      }
     },
   })
 }
@@ -92,6 +101,8 @@ export function useDeleteTransaction() {
       queryClient.invalidateQueries({ queryKey: [TRANSACTIONS_KEY] })
       queryClient.invalidateQueries({ queryKey: ['bank-accounts'] })
       queryClient.invalidateQueries({ queryKey: ['analytics'] })
+      queryClient.invalidateQueries({ queryKey: ['budget'] })
+      queryClient.invalidateQueries({ queryKey: ['project_financial_summary'] })
     },
   })
 }
@@ -140,7 +151,8 @@ export function useApproveTransaction() {
       queryClient.invalidateQueries({ queryKey: ['analytics'] })
       queryClient.invalidateQueries({ queryKey: ['pending-budgets'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
-      queryClient.invalidateQueries({ queryKey: ['project-budget'] })
+      queryClient.invalidateQueries({ queryKey: ['budget'] })
+      queryClient.invalidateQueries({ queryKey: ['project_financial_summary'] })
     },
   })
 }
@@ -172,7 +184,8 @@ export function useRejectTransaction() {
       queryClient.invalidateQueries({ queryKey: ['analytics'] })
       queryClient.invalidateQueries({ queryKey: ['pending-budgets'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
-      queryClient.invalidateQueries({ queryKey: ['project-budget'] })
+      queryClient.invalidateQueries({ queryKey: ['budget'] })
+      queryClient.invalidateQueries({ queryKey: ['project_financial_summary'] })
     },
   })
 }
@@ -193,7 +206,8 @@ export function useMarkTransactionPaid() {
       queryClient.invalidateQueries({ queryKey: ['analytics'] })
       queryClient.invalidateQueries({ queryKey: ['pending-budgets'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
-      queryClient.invalidateQueries({ queryKey: ['project-budget'] })
+      queryClient.invalidateQueries({ queryKey: ['budget'] })
+      queryClient.invalidateQueries({ queryKey: ['project_financial_summary'] })
     },
   })
 }

@@ -129,6 +129,91 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
 
         # Create the transaction
         transaction_data = obj_in.dict()
+
+        # Auto-link expense transactions to a budget line when possible
+        if obj_in.type == "expense":
+            budget_line_id = transaction_data.get("budget_line_id")
+
+            # If budget_line_id is explicitly provided, validate it belongs to the organization (+ project when set)
+            if budget_line_id:
+                result = await db.execute(
+                    select(ProjectBudgetLine)
+                    .where(ProjectBudgetLine.id == budget_line_id)
+                    .where(ProjectBudgetLine.organization_id == organization_id)
+                )
+                budget_line = result.scalar_one_or_none()
+                if not budget_line:
+                    raise ValueError("Budget line not found")
+                if obj_in.project_id and budget_line.project_id != obj_in.project_id:
+                    raise ValueError("Budget line does not belong to the selected project")
+
+                # If project_id wasn't set, infer it from the budget line for consistency
+                if not obj_in.project_id:
+                    transaction_data["project_id"] = budget_line.project_id
+            # Otherwise, try to auto-assign based on stakeholder/supplier/category when project_id is available
+            elif obj_in.project_id:
+                candidate_budget_line_id = None
+
+                # 1) Stakeholder-linked budget line
+                if getattr(obj_in, "stakeholder_id", None):
+                    result = await db.execute(
+                        select(ProjectBudgetLine.id)
+                        .where(
+                            and_(
+                                ProjectBudgetLine.organization_id == organization_id,
+                                ProjectBudgetLine.project_id == obj_in.project_id,
+                                ProjectBudgetLine.stakeholder_id == obj_in.stakeholder_id,
+                            )
+                        )
+                        .order_by(ProjectBudgetLine.sort_order, ProjectBudgetLine.created_at)
+                        .limit(1)
+                    )
+                    candidate_budget_line_id = result.scalar_one_or_none()
+
+                # 2) Supplier-linked budget line
+                if not candidate_budget_line_id and getattr(obj_in, "supplier_id", None):
+                    result = await db.execute(
+                        select(ProjectBudgetLine.id)
+                        .where(
+                            and_(
+                                ProjectBudgetLine.organization_id == organization_id,
+                                ProjectBudgetLine.project_id == obj_in.project_id,
+                                ProjectBudgetLine.supplier_id == obj_in.supplier_id,
+                            )
+                        )
+                        .order_by(ProjectBudgetLine.sort_order, ProjectBudgetLine.created_at)
+                        .limit(1)
+                    )
+                    candidate_budget_line_id = result.scalar_one_or_none()
+
+                # 3) Category-based fallback
+                if not candidate_budget_line_id:
+                    transaction_category_to_budget_category = {
+                        "crew_hire": BudgetCategoryEnum.CREW,
+                        "equipment_rental": BudgetCategoryEnum.EQUIPMENT,
+                        "logistics": BudgetCategoryEnum.TRANSPORTATION,
+                        "post_production": BudgetCategoryEnum.POST_PRODUCTION,
+                        "maintenance": BudgetCategoryEnum.EQUIPMENT,
+                        "other": BudgetCategoryEnum.OTHER,
+                    }
+                    target_category = transaction_category_to_budget_category.get(obj_in.category)
+                    if target_category:
+                        result = await db.execute(
+                            select(ProjectBudgetLine.id)
+                            .where(
+                                and_(
+                                    ProjectBudgetLine.organization_id == organization_id,
+                                    ProjectBudgetLine.project_id == obj_in.project_id,
+                                    ProjectBudgetLine.category == target_category,
+                                )
+                            )
+                            .order_by(ProjectBudgetLine.sort_order, ProjectBudgetLine.created_at)
+                            .limit(1)
+                        )
+                        candidate_budget_line_id = result.scalar_one_or_none()
+
+                if candidate_budget_line_id:
+                    transaction_data["budget_line_id"] = candidate_budget_line_id
         
         # Auto-approve income: if it's income, mark as paid immediately
         # Income transactions (like receipts) are usually recorded after they happen

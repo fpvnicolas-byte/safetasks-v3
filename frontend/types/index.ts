@@ -296,8 +296,10 @@ export interface Transaction {
   organization_id: UUID
   bank_account_id: UUID
   project_id: UUID | null
+  invoice_id: UUID | null
   supplier_id: UUID | null
   stakeholder_id: UUID | null
+  budget_line_id: UUID | null
   category: TransactionCategory
   type: TransactionType
   amount_cents: number // Integer (cents), must be positive
@@ -323,8 +325,10 @@ export interface TransactionCreate {
   description?: string
   transaction_date: ISODate
   project_id?: UUID
+  invoice_id?: UUID
   supplier_id?: UUID
   stakeholder_id?: UUID
+  budget_line_id?: UUID
   payment_status?: TransactionPaymentStatus
 }
 
@@ -336,8 +340,10 @@ export interface TransactionUpdate {
   description?: string
   transaction_date?: ISODate
   project_id?: UUID
+  invoice_id?: UUID
   supplier_id?: UUID
   stakeholder_id?: UUID
+  budget_line_id?: UUID
   payment_status?: TransactionPaymentStatus
   rejection_reason?: string
 }

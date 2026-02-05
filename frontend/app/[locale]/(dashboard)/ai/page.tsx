@@ -106,7 +106,10 @@ export default function AiFeaturesPage() {
   const loadUsage = async () => {
     try {
       setIsUsageLoading(true)
-      const data = await apiClient.get('/api/v1/billing/usage')
+      const data = await apiClient.get<{
+        usage?: { ai_credits?: number }
+        limits?: { ai_credits?: number | null }
+      }>('/api/v1/billing/usage')
       setUsageData({
         usage: { ai_credits: data.usage?.ai_credits ?? 0 },
         limits: { ai_credits: data.limits?.ai_credits ?? null },

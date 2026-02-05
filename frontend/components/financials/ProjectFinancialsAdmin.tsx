@@ -201,7 +201,7 @@ export function ProjectFinancialsAdmin({ projectId, project, isAdmin = false }: 
   })
   const [rejectionReason, setRejectionReason] = useState('')
 
-  const { data: budget, isLoading: budgetLoading } = useProjectBudget(projectId)
+  const { data: budget, isLoading: budgetLoading, error: budgetError } = useProjectBudget(projectId)
   const { data: transactions, isLoading: transactionsLoading } = useTransactions({
     organizationId: organizationId || undefined,
     project_id: projectId,
@@ -314,10 +314,12 @@ export function ProjectFinancialsAdmin({ projectId, project, isAdmin = false }: 
   const totalExpenses = transactions?.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount_cents, 0) || 0
   const netBalance = totalIncome - totalExpenses
 
-  // Budget progress
-  const percentSpent = budget && budget.total_estimated_cents > 0
-    ? (budget.total_actual_cents / budget.total_estimated_cents) * 100
-    : 0
+  const estimatedBudgetCents = budget?.total_estimated_cents && budget.total_estimated_cents > 0
+    ? budget.total_estimated_cents
+    : (project?.budget_total_cents || 0)
+  const actualSpentCents = totalExpenses
+  const budgetVarianceCents = estimatedBudgetCents - actualSpentCents
+  const percentSpent = estimatedBudgetCents > 0 ? (actualSpentCents / estimatedBudgetCents) * 100 : 0
 
   // Get budget status from project
   const budgetStatus = project?.budget_status || 'draft'
@@ -634,13 +636,19 @@ export function ProjectFinancialsAdmin({ projectId, project, isAdmin = false }: 
             <CardDescription>{t('budgetDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {budget ? (
+            {budgetError && (
+              <p className="text-sm text-destructive">
+                {tCommon('error')}: {budgetError instanceof Error ? budgetError.message : String(budgetError)}
+              </p>
+            )}
+
+            {estimatedBudgetCents > 0 ? (
               <>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="font-medium">{tBudget('total')}</span>
                     <span className={percentSpent >= 100 ? 'text-red-600 font-bold' : ''}>
-                      {formatCurrency(budget.total_actual_cents)} / {formatCurrency(budget.total_estimated_cents)}
+                      {formatCurrency(actualSpentCents)} / {formatCurrency(estimatedBudgetCents)}
                     </span>
                   </div>
                   <Progress
@@ -650,15 +658,15 @@ export function ProjectFinancialsAdmin({ projectId, project, isAdmin = false }: 
                   />
                   <p className="text-xs text-muted-foreground">
                     {percentSpent.toFixed(1)}% {tBudget('spent')}
-                    {budget.total_variance_cents < 0 && (
+                    {budgetVarianceCents < 0 && (
                       <span className="text-red-600 ml-2">
-                        ({formatCurrency(Math.abs(budget.total_variance_cents))} {tBudget('overBudget')})
+                        ({formatCurrency(Math.abs(budgetVarianceCents))} {tBudget('overBudget')})
                       </span>
                     )}
                   </p>
                 </div>
 
-                {budget.by_category.length > 0 && (
+                {budget && budget.by_category.length > 0 && (
                   <div className="space-y-3">
                     <h4 className="text-sm font-medium">{tBudget('byCategory')}</h4>
                     {budget.by_category.map((cat) => (

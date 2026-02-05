@@ -532,6 +532,15 @@ async def get_project_budget(
     """Get complete project budget with all lines and actual spending."""
     from app.models.transactions import Transaction
 
+    transaction_category_to_budget_category = {
+        "crew_hire": BudgetCategoryEnum.CREW,
+        "equipment_rental": BudgetCategoryEnum.EQUIPMENT,
+        "logistics": BudgetCategoryEnum.TRANSPORTATION,
+        "post_production": BudgetCategoryEnum.POST_PRODUCTION,
+        "maintenance": BudgetCategoryEnum.EQUIPMENT,
+        "other": BudgetCategoryEnum.OTHER,
+    }
+
     # Get all budget lines for project
     result = await db.execute(
         select(ProjectBudgetLine)
@@ -550,12 +559,33 @@ async def get_project_budget(
                 Transaction.budget_line_id,
                 sql_func.sum(Transaction.amount_cents).label('total')
             )
+            .where(Transaction.organization_id == organization_id)
             .where(Transaction.budget_line_id.in_(line_ids))
             .where(Transaction.type == 'expense')
             .group_by(Transaction.budget_line_id)
         )
         for row in result:
             actual_by_line[row.budget_line_id] = row.total or 0
+
+    # Include project expenses not linked to a budget line (fallback mapping by category)
+    unassigned_actual_by_category: dict[str, int] = {}
+    result = await db.execute(
+        select(
+            Transaction.category,
+            sql_func.sum(Transaction.amount_cents).label("total"),
+        )
+        .where(Transaction.organization_id == organization_id)
+        .where(Transaction.project_id == project_id)
+        .where(Transaction.type == "expense")
+        .where(Transaction.budget_line_id.is_(None))
+        .group_by(Transaction.category)
+    )
+    for row in result:
+        mapped = transaction_category_to_budget_category.get(row.category)
+        if not mapped:
+            continue
+        key = mapped.value
+        unassigned_actual_by_category[key] = unassigned_actual_by_category.get(key, 0) + (row.total or 0)
 
     # Build response with computed fields
     lines_response = []
@@ -591,6 +621,12 @@ async def get_project_budget(
         category_totals[cat]['estimated'] += line.estimated_amount_cents
         category_totals[cat]['actual'] += actual
 
+    # Merge unassigned actuals into category totals
+    for cat, actual in unassigned_actual_by_category.items():
+        if cat not in category_totals:
+            category_totals[cat] = {"estimated": 0, "actual": 0}
+        category_totals[cat]["actual"] += actual
+
     # Build category summaries
     by_category = []
     for cat, totals in category_totals.items():
@@ -606,7 +642,7 @@ async def get_project_budget(
 
     # Calculate totals
     total_estimated = sum(line.estimated_amount_cents for line in budget_lines)
-    total_actual = sum(actual_by_line.values())
+    total_actual = sum(totals["actual"] for totals in category_totals.values())
     total_variance = total_estimated - total_actual
     total_variance_pct = (total_variance / total_estimated * 100) if total_estimated > 0 else 0
 

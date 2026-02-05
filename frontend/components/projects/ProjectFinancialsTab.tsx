@@ -78,6 +78,7 @@ function BudgetStatusBadge({ status }: { status: BudgetStatus }) {
     pending_approval: { icon: Clock, className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' },
     approved: { icon: CheckCircle2, className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
     rejected: { icon: XCircle, className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
+    increment_pending: { icon: Clock, className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' },
   }
 
   const { icon: Icon, className } = config[status] || config.draft
@@ -200,7 +201,7 @@ export function ProjectFinancialsTab({ projectId, project, isAdmin = false }: Pr
   })
   const [rejectionReason, setRejectionReason] = useState('')
 
-  const { data: budget, isLoading: budgetLoading } = useProjectBudget(projectId)
+  const { data: budget, isLoading: budgetLoading, error: budgetError } = useProjectBudget(projectId)
   const { data: transactions, isLoading: transactionsLoading } = useTransactions({
     organizationId: organizationId || undefined,
     project_id: projectId,
@@ -313,10 +314,12 @@ export function ProjectFinancialsTab({ projectId, project, isAdmin = false }: Pr
   const totalExpenses = transactions?.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount_cents, 0) || 0
   const netBalance = totalIncome - totalExpenses
 
-  // Budget progress
-  const percentSpent = budget && budget.total_estimated_cents > 0
-    ? (budget.total_actual_cents / budget.total_estimated_cents) * 100
-    : 0
+  const estimatedBudgetCents = budget?.total_estimated_cents && budget.total_estimated_cents > 0
+    ? budget.total_estimated_cents
+    : (project?.budget_total_cents || 0)
+  const actualSpentCents = totalExpenses
+  const budgetVarianceCents = estimatedBudgetCents - actualSpentCents
+  const percentSpent = estimatedBudgetCents > 0 ? (actualSpentCents / estimatedBudgetCents) * 100 : 0
 
   // Get budget status from project
   const budgetStatus = project?.budget_status || 'draft'
@@ -616,13 +619,19 @@ export function ProjectFinancialsTab({ projectId, project, isAdmin = false }: Pr
             <CardDescription>{t('budgetDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {budget ? (
+            {budgetError && (
+              <p className="text-sm text-destructive">
+                {tCommon('error')}: {budgetError instanceof Error ? budgetError.message : String(budgetError)}
+              </p>
+            )}
+
+            {estimatedBudgetCents > 0 ? (
               <>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="font-medium">{tBudget('total')}</span>
                     <span className={percentSpent >= 100 ? 'text-red-600 font-bold' : ''}>
-                      {formatCurrency(budget.total_actual_cents)} / {formatCurrency(budget.total_estimated_cents)}
+                      {formatCurrency(actualSpentCents)} / {formatCurrency(estimatedBudgetCents)}
                     </span>
                   </div>
                   <Progress
@@ -632,15 +641,15 @@ export function ProjectFinancialsTab({ projectId, project, isAdmin = false }: Pr
                   />
                   <p className="text-xs text-muted-foreground">
                     {percentSpent.toFixed(1)}% {tBudget('spent')}
-                    {budget.total_variance_cents < 0 && (
+                    {budgetVarianceCents < 0 && (
                       <span className="text-red-600 ml-2">
-                        ({formatCurrency(Math.abs(budget.total_variance_cents))} {tBudget('overBudget')})
+                        ({formatCurrency(Math.abs(budgetVarianceCents))} {tBudget('overBudget')})
                       </span>
                     )}
                   </p>
                 </div>
 
-                {budget.by_category.length > 0 && (
+                {budget && budget.by_category.length > 0 && (
                   <div className="space-y-3">
                     <h4 className="text-sm font-medium">{tBudget('byCategory')}</h4>
                     {budget.by_category.map((cat) => (
