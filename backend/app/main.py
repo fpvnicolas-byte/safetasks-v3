@@ -76,7 +76,6 @@ app.add_middleware(SlowAPIMiddleware)
 allowed_origins = [
     # Production - Vercel
     "https://safetasks.vercel.app",
-    "https://safetasks-v3.vercel.app",
     # Local development
     "http://localhost:3000",
     "http://127.0.0.1:3000",
@@ -84,7 +83,6 @@ allowed_origins = [
     "http://127.0.0.1:3001",
     # Production
     "https://safetasks.vercel.app",
-    "https://safetasks-frontend.vercel.app", # Just in case default domain differs
 ]
 
 # For development, allow additional origins
