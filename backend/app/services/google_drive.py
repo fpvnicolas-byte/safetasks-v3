@@ -42,8 +42,9 @@ class GoogleDriveService:
 
         # Validate service account file exists
         import os
-        if not os.path.exists(settings.GOOGLE_APPLICATION_CREDENTIALS):
-            raise ValueError(f"Google Drive service account file not found: {settings.GOOGLE_APPLICATION_CREDENTIALS}")
+        # Note: We now check credentials later to support env vars
+        # if not os.path.exists(settings.GOOGLE_APPLICATION_CREDENTIALS):
+        #     raise ValueError(f"Google Drive service account file not found: {settings.GOOGLE_APPLICATION_CREDENTIALS}")
 
         # Check if organization has Google Drive configured (for folder management)
         credentials_query = select(GoogleDriveCredentials).where(
@@ -64,14 +65,31 @@ class GoogleDriveService:
             await db.commit()
             await db.refresh(creds_record)
 
-        # Initialize service account credentials from file
+        # Initialize service account credentials
         try:
-            credentials = service_account.Credentials.from_service_account_file(
-                settings.GOOGLE_APPLICATION_CREDENTIALS,
-                scopes=self.SCOPES
-            )
+            import json
+            if settings.GOOGLE_CREDENTIALS_JSON:
+                # Priority 1: Environment Variable (JSON content)
+                creds_dict = json.loads(settings.GOOGLE_CREDENTIALS_JSON)
+                credentials = service_account.Credentials.from_service_account_info(
+                    creds_dict,
+                    scopes=self.SCOPES
+                )
+            elif os.path.exists(settings.GOOGLE_APPLICATION_CREDENTIALS or ""):
+                # Priority 2: File path
+                credentials = service_account.Credentials.from_service_account_file(
+                    settings.GOOGLE_APPLICATION_CREDENTIALS,
+                    scopes=self.SCOPES
+                )
+            else:
+                # No credentials found - Log warning but allow start (service will fail on use)
+                logger.warning("Google Drive credentials not found (File or Env). Drive features will be disabled.")
+                return None
+                
         except Exception as e:
-            raise ValueError(f"Failed to load Google Drive service account credentials: {str(e)}")
+            # Log error but don't crash the entire backend start
+            logger.error(f"Failed to load Google Drive credentials: {str(e)}")
+            return None
 
         # Build the service
         self._service = build('drive', 'v3', credentials=credentials)

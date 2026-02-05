@@ -102,6 +102,9 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: Optional[str] = None
     GOOGLE_PROJECT_ID: Optional[str] = None
     GOOGLE_REDIRECT_URI: Optional[str] = None
+    
+    # Google Service Account (Production support via Env Var)
+    GOOGLE_CREDENTIALS_JSON: Optional[str] = None
 
     # Stripe
     STRIPE_SECRET_KEY: Optional[str] = None

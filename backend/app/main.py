@@ -82,7 +82,7 @@ allowed_origins = [
     "http://localhost:3001",
     "http://127.0.0.1:3001",
     # Production
-    "https://safetasks.vercel.app",
+    "https://safetasks.vercel.app", 
 ]
 
 # For development, allow additional origins
