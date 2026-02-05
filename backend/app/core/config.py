@@ -53,14 +53,25 @@ class Settings(BaseSettings):
     DATABASE_URL: Optional[str] = None
     SQLALCHEMY_DATABASE_URI: Optional[str] = None
 
+    @classmethod
+    def _normalize_async_db_url(cls, url: str) -> str:
+        cleaned = url.strip('"').strip("'")
+        if cleaned.startswith("postgresql+asyncpg://"):
+            return cleaned
+        if cleaned.startswith("postgresql://"):
+            return cleaned.replace("postgresql://", "postgresql+asyncpg://", 1)
+        if cleaned.startswith("postgres://"):
+            return cleaned.replace("postgres://", "postgresql+asyncpg://", 1)
+        return cleaned
+
     @validator("SQLALCHEMY_DATABASE_URI", pre=True)
     def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
         if isinstance(v, str):
-            return v.strip('"').strip("'")
+            return cls._normalize_async_db_url(v)
 
         database_url = values.get("DATABASE_URL")
         if isinstance(database_url, str) and database_url:
-            return database_url.strip('"').strip("'")
+            return cls._normalize_async_db_url(database_url)
         
         user = values.get("POSTGRES_USER")
         password = values.get("POSTGRES_PASSWORD")
