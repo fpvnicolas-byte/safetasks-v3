@@ -1,17 +1,18 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.pool import NullPool
 from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
 
 # Create async engine with robust pooling settings to prevent connection drops
 # Adjusted to handle potential network latency or cloud DB limits
+# Uses NullPool because Supabase Transaction Pooler (PgBouncer) handles pooling.
+# SQLAlchemy pooling must be disabled to avoid prepared statement issues.
 engine = create_async_engine(
     settings.SQLALCHEMY_DATABASE_URI,
     future=True,
     echo=settings.LOG_LEVEL == "DEBUG",
+    poolclass=NullPool,  # Disable SQLAlchemy pooling
     pool_pre_ping=True,
-    pool_size=5,  # Reduced pool size to prevent overloading
-    max_overflow=10,
-    pool_recycle=600,  # Recycle every 10 minutes
     connect_args={
         "timeout": 60,  # Increase connection timeout to 60s
         "statement_cache_size": 0,  # Required for Supabase Transaction Pooler (PgBouncer)
