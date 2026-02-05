@@ -16,6 +16,8 @@ export function generateStaticParams() {
   return locales.map((locale) => ({ locale }))
 }
 
+import { SpeedInsights } from "@vercel/speed-insights/next"
+
 export default async function LocaleLayout({
   children,
   params
@@ -68,6 +70,7 @@ export default async function LocaleLayout({
             </QueryProvider>
           </ThemeProvider>
         </NextIntlClientProvider>
+        <SpeedInsights />
       </body>
     </html>
   )
