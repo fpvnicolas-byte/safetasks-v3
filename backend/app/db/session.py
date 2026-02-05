@@ -14,6 +14,7 @@ engine = create_async_engine(
     pool_recycle=600,  # Recycle every 10 minutes
     connect_args={
         "timeout": 60,  # Increase connection timeout to 60s
+        "statement_cache_size": 0,  # Required for Supabase Transaction Pooler (PgBouncer)
         "server_settings": {
             "jit": "off",  # Disable JIT to improve query planning stability
             "application_name": "safetasks-v3"

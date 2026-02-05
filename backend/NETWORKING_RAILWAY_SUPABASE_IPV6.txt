@@ -1,0 +1,105 @@
+Railway + Supabase Direct Postgres (IPv6) - Why It Fails
+=======================================================
+
+Summary
+-------
+If you deploy this backend on Railway and point DATABASE_URL to Supabase "Direct connection"
+for Postgres (db.<project-ref>.supabase.co:5432), the service will fail to connect with:
+
+  OSError: [Errno 101] Network is unreachable
+
+This is not a CORS problem and not a SQLAlchemy/asyncpg config bug. It's a platform networking
+limitation: Railway does not support outbound IPv6 to the public internet.
+
+
+What You See
+------------
+- Backend starts, health endpoint works.
+- Any endpoint that touches the database returns 500/503 (profiles/me, notifications, etc).
+- WebSocket auth also fails (it queries DB for org_id/user profile).
+- Logs show asyncpg/uvloop connect failing with ENETUNREACH (errno 101).
+
+
+Root Cause
+----------
+1) Supabase Direct Postgres is IPv6-first (often IPv6-only)
+   - The hostname db.<project-ref>.supabase.co commonly resolves to AAAA records.
+   - If the runtime does not have outbound IPv6, it cannot reach the database.
+
+2) Railway outbound IPv6 is not supported
+   - Railway supports inbound HTTP and "private networking" between Railway services.
+   - But outbound IPv6 to external services is not available, so IPv6 DB endpoints fail.
+
+
+Why "Private Networking IPv4 & IPv6" Doesn't Help
+-------------------------------------------------
+Railway private networking domains like:
+
+  <service>.railway.internal
+
+are only for service-to-service communication inside Railway's network.
+Supabase Postgres is external, so private networking DNS does not apply.
+
+
+How To Confirm (From Inside Railway)
+-----------------------------------
+If you have a shell inside the container:
+
+1) Check if an IPv6 default route exists:
+   - ip -6 route
+
+   Expected in an IPv6-capable environment:
+   - a default route like "default via ..."
+
+2) Check what addresses Supabase resolves to:
+   - python - <<'PY'
+     import socket
+     host = "db.<project-ref>.supabase.co"
+     for family, *_ , sockaddr in socket.getaddrinfo(host, 5432, type=socket.SOCK_STREAM):
+         print("IPv6" if family == socket.AF_INET6 else "IPv4", sockaddr)
+     PY
+
+   If you only see IPv6 entries and Railway has no IPv6 route, connects will fail.
+
+
+Practical Options
+-----------------
+There is no code change that can make Railway perform outbound IPv6 today.
+Pick one:
+
+1) Use Supabase Pooler connection string (recommended on Railway)
+   - Get it from Supabase Dashboard -> Settings -> Database -> Connection string -> Pooler.
+   - Use "Session mode" if you need session semantics.
+
+2) Move the backend off Railway to an IPv6-egress capable host
+   - Example: Fly.io, a VM on AWS/GCP, Hetzner, etc.
+
+3) Use an IPv6-capable relay/proxy outside Railway
+   - Railway connects to the relay (IPv4), relay connects to Supabase via IPv6.
+   - This avoids paying for Supabase IPv4, but adds operational complexity.
+
+4) Enable Supabase paid IPv4 add-on (direct IPv4) if you want to keep direct connections.
+
+
+Security Note
+-------------
+Rotate any credentials that were pasted into chats/logs (DB passwords, service account keys).
+
+
+=======================================================
+RESOLUTION (2026-02-05)
+=======================================================
+The chosen solution is Option 1: Supabase Transaction Pooler.
+
+Railway does NOT support IPv6 outbound.
+Supabase Direct is IPv6 only.
+
+To bridge this without paying for the IPv4 add-on, we use the Supavisor Pooler.
+- Host: aws-0-[region].pooler.supabase.com (IPv4 accessible)
+- Port: 6543
+- Mode: Transaction (or Session)
+
+Action Taken:
+1. Updated `.env.example` to show the correct Pooler connection format.
+2. User must update `DATABASE_URL` in Railway Variables to use the Pooler URL.
+   Format: postgres://[user]:[password]@[host]:6543/[db]?pgbouncer=true
