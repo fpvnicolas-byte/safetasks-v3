@@ -14,7 +14,7 @@ class Transaction(Base):
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=True)
     invoice_id = Column(UUID(as_uuid=True), ForeignKey("invoices.id", ondelete="CASCADE"), nullable=True)
     supplier_id = Column(UUID(as_uuid=True), ForeignKey("suppliers.id"), nullable=True)  # Link to who we paid/received from
-    stakeholder_id = Column(UUID(as_uuid=True), ForeignKey("stakeholders.id"), nullable=True)  # Link to specific team member
+    stakeholder_id = Column(UUID(as_uuid=True), ForeignKey("stakeholders.id", ondelete="SET NULL"), nullable=True)  # Link to specific team member
     budget_line_id = Column(UUID(as_uuid=True), ForeignKey("project_budget_lines.id"), nullable=True)  # Link to budget line
     category = Column(String, nullable=False)  # crew_hire, equipment_rental, logistics, post_production, other, production_revenue, maintenance
     type = Column(String, nullable=False)  # income, expense

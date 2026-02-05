@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
 import { useNotifications, useNotificationStats, useMarkAsRead, useMarkAllAsRead } from '@/lib/api/hooks/useNotifications'
+import { useNotificationWebSocket } from '@/lib/hooks/useNotificationWebSocket'
 import { formatDistanceToNow } from 'date-fns'
 
 import { useTranslations } from 'next-intl'
@@ -83,8 +84,16 @@ const NotificationItem = ({ notification, onMarkRead }: { notification: any, onM
 
 export function NotificationsBell() {
   const [open, setOpen] = useState(false)
-  const { data: stats } = useNotificationStats()
-  const { data: notifications } = useNotifications(false)
+
+  // Connect WebSocket for real-time updates
+  const { isConnected } = useNotificationWebSocket()
+
+  // Disable polling when WebSocket is connected
+  const pollingInterval = isConnected ? false : 30000
+
+  const { data: stats } = useNotificationStats({ refetchInterval: pollingInterval })
+  const { data: notifications } = useNotifications(false, { refetchInterval: pollingInterval })
+
   const markAsRead = useMarkAsRead()
   const markAllAsRead = useMarkAllAsRead()
   const t = useTranslations('notifications')

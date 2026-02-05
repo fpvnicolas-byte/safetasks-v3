@@ -318,6 +318,7 @@
       "errorUpdating": "Error Updating Project",
       "errorCreating": "Error Creating Project",
       "newProjectSubtitle": "Start a new project for a client",
+      "converted": "Converted",
       "titleLabel": "Title",
       "titleRequired": "Title *",
       "titlePlaceholder": "e.g., Summer Commercial, Documentary Feature",
@@ -357,6 +358,8 @@
         "totalIncome": "Total Income",
         "totalExpenses": "Total Expenses",
         "netBalance": "Net Balance",
+        "profitMargin": "Profit Margin",
+        "profitOf": "Profit of",
         "budgetDescription": "Track estimated vs actual spending",
         "transactions": "Transactions",
         "transactionsDescription": "Recent project transactions",
@@ -382,6 +385,82 @@
           "invalidAmount": "Please enter a valid amount",
           "noBankAccount": "No bank account configured",
           "noBankAccountWarning": "No default bank account configured. Please set up a bank account in Settings first."
+        },
+        "budgetApproval": {
+          "title": "Budget Approval",
+          "status": {
+            "draft": "Draft",
+            "pending_approval": "Pending Approval",
+            "approved": "Approved",
+            "rejected": "Rejected",
+            "increment_pending": "Increment Pending"
+          },
+          "submit": "Submit for Approval",
+          "submitTitle": "Submit Budget",
+          "submitDescription": "Submit the budget for admin approval",
+          "approve": "Approve Budget",
+          "approveIncrement": "Approve Increment",
+          "reject": "Reject",
+          "approvalNotes": "Approval notes (optional)",
+          "rejectionReason": "Rejection reason",
+          "rejectionReasonPlaceholder": "Explain why the budget was rejected...",
+          "budgetAmount": "Budget Amount",
+          "budgetAmountPlaceholder": "e.g. 45000",
+          "amount": "Amount",
+          "notes": "Notes (optional)",
+          "notesPlaceholder": "Budget justification...",
+          "submitSuccess": "Budget submitted for approval",
+          "approveSuccess": "Budget approved successfully",
+          "rejectSuccess": "Budget rejected",
+          "error": "Error processing budget",
+          "approvedBy": "Approved by",
+          "approvedAt": "Approved on",
+          "pendingMessage": "This budget is waiting for admin approval",
+          "rejectedMessage": "This budget was rejected. Please revise and resubmit.",
+          "draftMessage": "Set the operational budget and submit for approval",
+          "requestIncrement": "Request Budget Increase",
+          "incrementTitle": "Request Budget Increase",
+          "incrementDescription": "Request additional budget for admin approval",
+          "incrementAmount": "Increase Amount",
+          "incrementNotesPlaceholder": "Explain why you need additional budget...",
+          "currentBudget": "Current Budget",
+          "newTotal": "New Total",
+          "requestedIncrement": "Requested Increment",
+          "incrementSuccess": "Budget increase request submitted",
+          "incrementPending": "Increment pending approval",
+          "incrementPendingMessage": "Your budget increase request is pending admin approval",
+          "incrementPendingAdminMessage": "A budget increase has been requested and is waiting for your approval"
+        },
+        "financialCalculator": {
+          "title": "Financial Summary",
+          "proposalValue": "Proposal Value",
+          "approvedBudget": "Approved Budget",
+          "totalIncome": "Total Income",
+          "totalExpenses": "Total Expenses",
+          "remainingBudget": "Remaining Budget",
+          "profit": "Profit",
+          "profitMargin": "Profit Margin",
+          "overBudget": "Over Budget",
+          "noProposal": "No proposal linked",
+          "budgetPending": "Budget pending approval"
+        },
+        "producer": {
+          "budgetOverview": "Budget Overview",
+          "budgetLimit": "Budget Limit",
+          "spent": "Spent",
+          "remaining": "Remaining",
+          "ofBudgetUsed": "of budget used",
+          "overBudgetWarning": "Project is over budget!",
+          "expenses": "Expenses",
+          "expensesDescription": "Track project expenses",
+          "noExpenses": "No expenses recorded yet",
+          "budgetNotApproved": "Budget must be approved before adding expenses",
+          "noBudgetRemaining": "No budget remaining - cannot add expenses",
+          "maxExpenseAllowed": "Maximum expense allowed",
+          "exceedsBudgetBlocked": "This expense would exceed the approved budget and cannot be added",
+          "teamCosts": "Team Costs",
+          "teamCostsDescription": "Expenses from team members",
+          "approved": "Approved"
         }
       },
       "production": {
@@ -868,6 +947,20 @@
       "description": "Track production costs and expenses",
       "noRecentExpenses": "No recent expenses.",
       "viewExpenses": "View Expenses"
+    },
+    "projects": {
+      "tab": "Projects",
+      "title": "Project Financials",
+      "description": "Manage financial details for all projects",
+      "noProjects": "No projects found",
+      "backToList": "Back to Projects",
+      "budget": "Budget",
+      "status": {
+        "draft": "Draft",
+        "pending_approval": "Pending Approval",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      }
     },
     "status": {
       "draft": "Draft",
@@ -1578,9 +1671,29 @@
       "approveConfirm": "Approve Expense",
       "dialogTitle": "Expense Details",
       "expenseInfo": "Expense Information",
+      "budgetApproved": "Budget Approved",
       "warnings": {
         "rejectionReasonRequired": "Rejection reason is required"
       }
+    },
+    "budgetApprovals": {
+      "title": "Budget Approvals",
+      "description": "Review and approve project budgets submitted by producers",
+      "pending": "Pending",
+      "pendingCount": "{count, plural, one {# pending budget} other {# pending budgets}}",
+      "pendingAmount": "Total Pending Budgets",
+      "noPending": "No pending budget approvals",
+      "approve": "Approve",
+      "reject": "Reject",
+      "approveSuccess": "Budget approved successfully",
+      "rejectSuccess": "Budget rejected successfully",
+      "error": "An error occurred. Please try again.",
+      "rejectTitle": "Reject Budget",
+      "rejectDescription": "Provide a reason for rejecting the budget for \"{project}\"",
+      "rejectReason": "Rejection Reason",
+      "rejectReasonPlaceholder": "Explain why this budget is being rejected...",
+      "cancel": "Cancel",
+      "confirmReject": "Reject Budget"
     }
   },
   "inventory": {
@@ -1837,14 +1950,18 @@
     "noBudgetLines": "No budget lines defined yet.",
     "categories": {
       "crew": "Crew",
+      "crew_hire": "Crew Hire",
       "equipment": "Equipment",
+      "equipment_rental": "Equipment Rental",
       "locations": "Locations",
       "talent": "Talent",
       "transportation": "Transportation",
+      "logistics": "Logistics",
       "catering": "Catering",
       "post_production": "Post Production",
       "music_licensing": "Music Licensing",
       "insurance": "Insurance",
+      "maintenance": "Maintenance",
       "contingency": "Contingency",
       "other": "Other"
     }
@@ -1852,6 +1969,18 @@
   "proposals": {
     "title": "Proposals",
     "description": "Create and manage client proposals",
+    "createTitle": "Create Proposal",
+    "createDescription": "Create a new proposal for a client",
+    "createAction": "Create Proposal",
+    "selectClient": "Select Client",
+    "placeholders": {
+      "title": "Proposal Title",
+      "description": "Description of the proposal",
+      "terms": "Terms and Conditions"
+    },
+    "noClients": "No clients found. Create a client to get started.",
+    "noServices": "No services found.",
+    "manageServices": "Manage Services",
     "newProposal": "New Proposal",
     "createProposal": "Create Proposal",
     "editProposal": "Edit Proposal",
@@ -1904,8 +2033,15 @@
       "notFound": "Proposal not found",
       "created": "Created",
       "approveProposal": "Approve Proposal",
+      "approveDisabledDraft": "You must send the proposal before approving it",
+      "sendFirst": "Send proposal first to approve",
+      "statusUpdated": "Status updated successfully",
+      "statusLocked": "Approved proposals cannot be changed",
+      "saving": "Saving...",
       "edit": "Edit",
       "delete": "Delete",
+      "clientCannotChange": "Client cannot be changed after proposal creation",
+      "useApproveButton": "Use the 'Approve Proposal' button to mark as approved",
       "approveDialog": {
         "title": "Approve Proposal",
         "description": "This will mark the proposal as approved and automatically create a new project.",
@@ -2099,7 +2235,8 @@
         "description": "Description",
         "value": "Value",
         "actions": "Actions",
-        "noDescription": "-"
+        "noDescription": "-",
+        "manageEquipment": "Manage Equipment"
       },
       "empty": "No services found. Create one to get started.",
       "dialog": {

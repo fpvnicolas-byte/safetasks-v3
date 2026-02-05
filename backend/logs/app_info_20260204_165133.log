@@ -1,0 +1,29 @@
+2026-02-04 16:51:33 [INFO] app: Logging configuration initialized
+2026-02-04 16:53:17 [WARNING] weasyprint: Ignored `print-color-adjust: exact ` at 476:9, unknown property.
+2026-02-04 16:53:17 [WARNING] weasyprint: Ignored `color-adjust: exact ` at 477:9, unknown property.
+2026-02-04 16:53:17 [WARNING] weasyprint: Ignored `print-color-adjust: exact ` at 487:9, unknown property.
+2026-02-04 16:53:17 [WARNING] weasyprint: Ignored `color-adjust: exact ` at 488:9, unknown property.
+2026-02-04 16:53:17 [WARNING] weasyprint: Ignored `print-color-adjust: exact ` at 476:9, unknown property.
+2026-02-04 16:53:17 [WARNING] weasyprint: Ignored `color-adjust: exact ` at 477:9, unknown property.
+2026-02-04 16:53:17 [WARNING] weasyprint: Ignored `print-color-adjust: exact ` at 487:9, unknown property.
+2026-02-04 16:53:17 [WARNING] weasyprint: Ignored `color-adjust: exact ` at 488:9, unknown property.
+2026-02-04 16:53:17 [INFO] app.services.proposal_pdf: Generated PDF for proposal 74b40a82-bbd6-4846-a7a7-41bfa6838344 (33277 bytes)
+2026-02-04 16:53:18 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/production-files/4384a92c-df41-444b-b34d-6c80e7820486/proposals/74b40a82-bbd6-4846-a7a7-41bfa6838344/Proposta_Coca-Cola_Brasil_teste_2026-02-04_84db03aa.pdf "HTTP/2 200 OK"
+2026-02-04 16:53:18 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/sign/production-files/4384a92c-df41-444b-b34d-6c80e7820486/proposals/74b40a82-bbd6-4846-a7a7-41bfa6838344/Proposta_Coca-Cola_Brasil_teste_2026-02-04_84db03aa.pdf "HTTP/2 200 OK"
+2026-02-04 16:53:18 [INFO] app.services.proposal_pdf: Stored PDF for proposal 74b40a82-bbd6-4846-a7a7-41bfa6838344 at 4384a92c-df41-444b-b34d-6c80e7820486/proposals/74b40a82-bbd6-4846-a7a7-41bfa6838344/Proposta_Coca-Cola_Brasil_teste_2026-02-04_84db03aa.pdf (version 1)
+2026-02-04 16:53:20 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/sign/production-files/4384a92c-df41-444b-b34d-6c80e7820486/proposals/74b40a82-bbd6-4846-a7a7-41bfa6838344/Proposta_Coca-Cola_Brasil_teste_2026-02-04_84db03aa.pdf "HTTP/2 200 OK"
+2026-02-04 16:55:24 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-04 16:55:33 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-04 16:55:46 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-04 16:57:59 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-04 17:01:10 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-04 17:05:20 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-04 17:07:42 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-04 17:08:47 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-04 17:09:46 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-04 17:16:58 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-04 17:17:17 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-04 17:17:20 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-04 17:22:23 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-04 17:22:23 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-04 17:22:24 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"

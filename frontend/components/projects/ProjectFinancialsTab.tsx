@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
   DialogContent,
@@ -34,16 +35,26 @@ import {
   Wallet,
   MoreHorizontal,
   ExternalLink,
-  Loader2
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Send,
+  ShieldCheck,
+  AlertTriangle,
+  Calculator,
+  Target,
+  Banknote,
 } from 'lucide-react'
 import { LocaleLink } from '@/components/LocaleLink'
 import { useTransactions, useCreateTransaction } from '@/lib/api/hooks/useTransactions'
 import { useBankAccounts } from '@/lib/api/hooks/useBankAccounts'
 import { useProjectBudget, CategorySummary } from '@/lib/api/hooks/useBudget'
+import { useSubmitBudget, useApproveBudget, useRejectBudget, useProjectFinancialSummary } from '@/lib/api/hooks/useProjects'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTranslations, useLocale } from 'next-intl'
 import { formatCurrency } from '@/lib/utils/money'
-import { TransactionWithRelations, getCategoryDisplayName, TransactionCategory, dollarsToCents } from '@/types'
+import { TransactionWithRelations, getCategoryDisplayName, TransactionCategory, dollarsToCents, ProjectWithClient, BudgetStatus, ProjectFinancialSummary } from '@/types'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,6 +65,29 @@ import { toast } from 'sonner'
 
 interface ProjectFinancialsTabProps {
   projectId: string
+  project?: ProjectWithClient
+  isAdmin?: boolean
+}
+
+// Budget status badge component
+function BudgetStatusBadge({ status }: { status: BudgetStatus }) {
+  const t = useTranslations('projects.details.financials.budgetApproval.status')
+
+  const config = {
+    draft: { icon: Clock, className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' },
+    pending_approval: { icon: Clock, className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' },
+    approved: { icon: CheckCircle2, className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
+    rejected: { icon: XCircle, className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
+  }
+
+  const { icon: Icon, className } = config[status] || config.draft
+
+  return (
+    <Badge className={`${className} gap-1`}>
+      <Icon className="h-3 w-3" />
+      {t(status)}
+    </Badge>
+  )
 }
 
 function CategoryProgress({ category, currency }: { category: CategorySummary; currency?: string }) {
@@ -140,7 +174,7 @@ const EXPENSE_CATEGORIES: TransactionCategory[] = [
   'other',
 ]
 
-export function ProjectFinancialsTab({ projectId }: ProjectFinancialsTabProps) {
+export function ProjectFinancialsTab({ projectId, project, isAdmin = false }: ProjectFinancialsTabProps) {
   const { organizationId } = useAuth()
   const locale = useLocale()
   const t = useTranslations('projects.details.financials')
@@ -157,6 +191,15 @@ export function ProjectFinancialsTab({ projectId }: ProjectFinancialsTabProps) {
     category: 'other' as TransactionCategory,
   })
 
+  // Budget approval dialog states
+  const [showSubmitBudget, setShowSubmitBudget] = useState(false)
+  const [showRejectBudget, setShowRejectBudget] = useState(false)
+  const [budgetForm, setBudgetForm] = useState({
+    amount: '',
+    notes: '',
+  })
+  const [rejectionReason, setRejectionReason] = useState('')
+
   const { data: budget, isLoading: budgetLoading } = useProjectBudget(projectId)
   const { data: transactions, isLoading: transactionsLoading } = useTransactions({
     organizationId: organizationId || undefined,
@@ -165,8 +208,16 @@ export function ProjectFinancialsTab({ projectId }: ProjectFinancialsTabProps) {
   const { data: bankAccounts } = useBankAccounts(organizationId || undefined)
   const createTransaction = useCreateTransaction()
 
-  // Get default bank account
-  const defaultBankAccount = bankAccounts?.find(acc => acc.is_default) || bankAccounts?.[0]
+  // Budget approval mutations
+  const submitBudget = useSubmitBudget(projectId, organizationId || '')
+  const approveBudget = useApproveBudget(projectId, organizationId || '')
+  const rejectBudget = useRejectBudget(projectId, organizationId || '')
+
+  // Financial summary for calculator
+  const { data: financialSummary, isLoading: financialLoading } = useProjectFinancialSummary(projectId)
+
+  // Get first bank account (default not supported in type)
+  const defaultBankAccount = bankAccounts?.[0]
 
   const handleQuickAddExpense = async () => {
     if (!organizationId || !defaultBankAccount) {
@@ -203,6 +254,54 @@ export function ProjectFinancialsTab({ projectId }: ProjectFinancialsTabProps) {
     }
   }
 
+  // Budget approval handlers
+  const handleSubmitBudget = async () => {
+    const amountCents = dollarsToCents(parseFloat(budgetForm.amount) || 0)
+    if (amountCents <= 0) {
+      toast.error(t('quickAdd.invalidAmount'))
+      return
+    }
+
+    try {
+      await submitBudget.mutateAsync({
+        budget_total_cents: amountCents,
+        notes: budgetForm.notes || undefined,
+      })
+      toast.success(t('budgetApproval.submitSuccess'))
+      setShowSubmitBudget(false)
+      setBudgetForm({ amount: '', notes: '' })
+    } catch (error) {
+      console.error('Failed to submit budget:', error)
+      toast.error(t('budgetApproval.error'))
+    }
+  }
+
+  const handleApproveBudget = async () => {
+    try {
+      await approveBudget.mutateAsync({})
+      toast.success(t('budgetApproval.approveSuccess'))
+    } catch (error) {
+      console.error('Failed to approve budget:', error)
+      toast.error(t('budgetApproval.error'))
+    }
+  }
+
+  const handleRejectBudget = async () => {
+    if (!rejectionReason.trim()) {
+      return
+    }
+
+    try {
+      await rejectBudget.mutateAsync({ reason: rejectionReason })
+      toast.success(t('budgetApproval.rejectSuccess'))
+      setShowRejectBudget(false)
+      setRejectionReason('')
+    } catch (error) {
+      console.error('Failed to reject budget:', error)
+      toast.error(t('budgetApproval.error'))
+    }
+  }
+
   // Filter transactions based on selected type
   const filteredTransactions = transactions?.filter(t => {
     if (transactionType === 'all') return true
@@ -218,6 +317,9 @@ export function ProjectFinancialsTab({ projectId }: ProjectFinancialsTabProps) {
   const percentSpent = budget && budget.total_estimated_cents > 0
     ? (budget.total_actual_cents / budget.total_estimated_cents) * 100
     : 0
+
+  // Get budget status from project
+  const budgetStatus = project?.budget_status || 'draft'
 
   const isLoading = budgetLoading || transactionsLoading
 
@@ -242,8 +344,203 @@ export function ProjectFinancialsTab({ projectId }: ProjectFinancialsTabProps) {
 
   return (
     <div className="space-y-6">
+      {/* Budget Approval Card */}
+      {project && (
+        <Card className={`border-2 ${budgetStatus === 'approved' ? 'border-green-500/30 bg-green-50/50 dark:bg-green-950/20' :
+          budgetStatus === 'pending_approval' ? 'border-yellow-500/30 bg-yellow-50/50 dark:bg-yellow-950/20' :
+            budgetStatus === 'rejected' ? 'border-red-500/30 bg-red-50/50 dark:bg-red-950/20' :
+              'border-border'
+          }`}>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-full ${budgetStatus === 'approved' ? 'bg-green-100 dark:bg-green-900/30' :
+                  budgetStatus === 'pending_approval' ? 'bg-yellow-100 dark:bg-yellow-900/30' :
+                    budgetStatus === 'rejected' ? 'bg-red-100 dark:bg-red-900/30' :
+                      'bg-gray-100 dark:bg-gray-800'
+                  }`}>
+                  <ShieldCheck className={`h-5 w-5 ${budgetStatus === 'approved' ? 'text-green-600 dark:text-green-400' :
+                    budgetStatus === 'pending_approval' ? 'text-yellow-600 dark:text-yellow-400' :
+                      budgetStatus === 'rejected' ? 'text-red-600 dark:text-red-400' :
+                        'text-gray-600 dark:text-gray-400'
+                    }`} />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">{t('budgetApproval.title')}</CardTitle>
+                  <div className="flex items-center gap-2 mt-1">
+                    <BudgetStatusBadge status={budgetStatus} />
+                    {project.budget_total_cents > 0 && (
+                      <span className="text-sm text-muted-foreground">
+                        • {formatCurrency(project.budget_total_cents)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {/* Draft or Rejected: Show submit button */}
+                {(budgetStatus === 'draft' || budgetStatus === 'rejected') && (
+                  <Button onClick={() => setShowSubmitBudget(true)} size="sm">
+                    <Send className="h-4 w-4 mr-2" />
+                    {t('budgetApproval.submit')}
+                  </Button>
+                )}
+                {/* Pending approval + Admin: Show approve/reject buttons */}
+                {budgetStatus === 'pending_approval' && isAdmin && (
+                  <>
+                    <Button onClick={handleApproveBudget} size="sm" variant="default" disabled={approveBudget.isPending}>
+                      {approveBudget.isPending ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                      )}
+                      {t('budgetApproval.approve')}
+                    </Button>
+                    <Button onClick={() => setShowRejectBudget(true)} size="sm" variant="destructive">
+                      <XCircle className="h-4 w-4 mr-2" />
+                      {t('budgetApproval.reject')}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <p className="text-sm text-muted-foreground">
+              {budgetStatus === 'pending_approval' && t('budgetApproval.pendingMessage')}
+              {budgetStatus === 'rejected' && t('budgetApproval.rejectedMessage')}
+              {budgetStatus === 'draft' && t('budgetApproval.draftMessage')}
+              {budgetStatus === 'approved' && project.budget_notes && (
+                <span>{project.budget_notes}</span>
+              )}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Financial Calculator Card */}
+      {financialSummary && (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Calculator className="h-5 w-5 text-primary" />
+              <CardTitle>{t('financialCalculator.title')}</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+              {/* Proposal Value */}
+              <div className="space-y-1 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20">
+                <div className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400">
+                  <Target className="h-3.5 w-3.5" />
+                  {t('financialCalculator.proposalValue')}
+                </div>
+                <p className="text-xl font-bold text-blue-700 dark:text-blue-300">
+                  {financialSummary.proposal_value_cents > 0
+                    ? formatCurrency(financialSummary.proposal_value_cents)
+                    : <span className="text-sm text-muted-foreground">{t('financialCalculator.noProposal')}</span>
+                  }
+                </p>
+              </div>
+
+              {/* Approved Budget */}
+              <div className={`space-y-1 p-3 rounded-lg ${financialSummary.budget_status === 'approved'
+                  ? 'bg-green-50 dark:bg-green-950/20'
+                  : 'bg-gray-50 dark:bg-gray-800/50'
+                }`}>
+                <div className={`flex items-center gap-1.5 text-xs ${financialSummary.budget_status === 'approved'
+                    ? 'text-green-600 dark:text-green-400'
+                    : 'text-muted-foreground'
+                  }`}>
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  {t('financialCalculator.approvedBudget')}
+                </div>
+                <p className={`text-xl font-bold ${financialSummary.budget_status === 'approved'
+                    ? 'text-green-700 dark:text-green-300'
+                    : 'text-muted-foreground'
+                  }`}>
+                  {financialSummary.budget_status === 'approved'
+                    ? formatCurrency(financialSummary.budget_total_cents)
+                    : <span className="text-sm">{t('financialCalculator.budgetPending')}</span>
+                  }
+                </p>
+              </div>
+
+              {/* Total Income */}
+              <div className="space-y-1 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/20">
+                <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+                  <TrendingUp className="h-3.5 w-3.5" />
+                  {t('financialCalculator.totalIncome')}
+                </div>
+                <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">
+                  {formatCurrency(financialSummary.total_income_cents)}
+                </p>
+              </div>
+
+              {/* Total Expenses */}
+              <div className="space-y-1 p-3 rounded-lg bg-red-50 dark:bg-red-950/20">
+                <div className="flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400">
+                  <TrendingDown className="h-3.5 w-3.5" />
+                  {t('financialCalculator.totalExpenses')}
+                </div>
+                <p className="text-xl font-bold text-red-700 dark:text-red-300">
+                  {formatCurrency(financialSummary.total_expense_cents)}
+                </p>
+              </div>
+
+              {/* Remaining Budget */}
+              <div className={`space-y-1 p-3 rounded-lg ${financialSummary.remaining_budget_cents >= 0
+                  ? 'bg-purple-50 dark:bg-purple-950/20'
+                  : 'bg-orange-50 dark:bg-orange-950/20'
+                }`}>
+                <div className={`flex items-center gap-1.5 text-xs ${financialSummary.remaining_budget_cents >= 0
+                    ? 'text-purple-600 dark:text-purple-400'
+                    : 'text-orange-600 dark:text-orange-400'
+                  }`}>
+                  <Wallet className="h-3.5 w-3.5" />
+                  {financialSummary.remaining_budget_cents >= 0
+                    ? t('financialCalculator.remainingBudget')
+                    : t('financialCalculator.overBudget')
+                  }
+                </div>
+                <p className={`text-xl font-bold ${financialSummary.remaining_budget_cents >= 0
+                    ? 'text-purple-700 dark:text-purple-300'
+                    : 'text-orange-700 dark:text-orange-300'
+                  }`}>
+                  {formatCurrency(Math.abs(financialSummary.remaining_budget_cents))}
+                </p>
+              </div>
+
+              {/* Profit */}
+              <div className={`space-y-1 p-3 rounded-lg ${financialSummary.profit_cents >= 0
+                  ? 'bg-cyan-50 dark:bg-cyan-950/20'
+                  : 'bg-rose-50 dark:bg-rose-950/20'
+                }`}>
+                <div className={`flex items-center gap-1.5 text-xs ${financialSummary.profit_cents >= 0
+                    ? 'text-cyan-600 dark:text-cyan-400'
+                    : 'text-rose-600 dark:text-rose-400'
+                  }`}>
+                  <Banknote className="h-3.5 w-3.5" />
+                  {t('financialCalculator.profit')}
+                  {financialSummary.profit_margin_percent !== null && (
+                    <span className="ml-1">({financialSummary.profit_margin_percent}%)</span>
+                  )}
+                </div>
+                <p className={`text-xl font-bold ${financialSummary.profit_cents >= 0
+                    ? 'text-cyan-700 dark:text-cyan-300'
+                    : 'text-rose-700 dark:text-rose-300'
+                  }`}>
+                  {financialSummary.profit_cents >= 0 ? '+' : '-'}
+                  {formatCurrency(Math.abs(financialSummary.profit_cents))}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -288,6 +585,21 @@ export function ProjectFinancialsTab({ projectId }: ProjectFinancialsTabProps) {
               <div className="p-3 bg-primary/10 rounded-full">
                 <Wallet className="h-5 w-5 text-primary" />
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Profit Margin Card */}
+        <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <p className="text-sm font-medium text-muted-foreground">{t('profitMargin')}</p>
+              <p className={`text-2xl font-bold ${netBalance >= 0 ? 'text-primary' : 'text-red-600 dark:text-red-400'}`}>
+                {totalIncome > 0 ? ((netBalance / totalIncome) * 100).toFixed(1) : 0}%
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t('profitOf')} {formatCurrency(Math.abs(netBalance))}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -478,6 +790,97 @@ export function ProjectFinancialsTab({ projectId }: ProjectFinancialsTabProps) {
             >
               {createTransaction.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {t('quickAdd.submit')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Submit Budget Dialog */}
+      <Dialog open={showSubmitBudget} onOpenChange={setShowSubmitBudget}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('budgetApproval.submitTitle')}</DialogTitle>
+            <DialogDescription>{t('budgetApproval.submitDescription')}</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="budget-amount">{t('budgetApproval.budgetAmount')}</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  R$
+                </span>
+                <Input
+                  id="budget-amount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder={t('budgetApproval.budgetAmountPlaceholder')}
+                  className="pl-10"
+                  value={budgetForm.amount}
+                  onChange={(e) => setBudgetForm({ ...budgetForm, amount: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="budget-notes">{t('budgetApproval.notes')}</Label>
+              <Textarea
+                id="budget-notes"
+                placeholder={t('budgetApproval.notesPlaceholder')}
+                value={budgetForm.notes}
+                onChange={(e) => setBudgetForm({ ...budgetForm, notes: e.target.value })}
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSubmitBudget(false)}>
+              {tCommon('cancel')}
+            </Button>
+            <Button
+              onClick={handleSubmitBudget}
+              disabled={submitBudget.isPending || !budgetForm.amount}
+            >
+              {submitBudget.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {t('budgetApproval.submit')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Budget Dialog */}
+      <Dialog open={showRejectBudget} onOpenChange={setShowRejectBudget}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('budgetApproval.reject')}</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="rejection-reason">{t('budgetApproval.rejectionReason')}</Label>
+              <Textarea
+                id="rejection-reason"
+                placeholder={t('budgetApproval.rejectionReasonPlaceholder')}
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRejectBudget(false)}>
+              {tCommon('cancel')}
+            </Button>
+            <Button
+              onClick={handleRejectBudget}
+              disabled={rejectBudget.isPending || !rejectionReason.trim()}
+              variant="destructive"
+            >
+              {rejectBudget.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {t('budgetApproval.reject')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -146,7 +146,7 @@ export function ExpenseApprovalDialog({ transaction, open, onOpenChange }: Expen
                                 Close
                             </Button>
 
-                            {transaction.payment_status === 'pending' && (
+                            {transaction.payment_status === 'pending' && transaction.project?.budget_status !== 'approved' && (
                                 <>
                                     <Button variant="destructive" onClick={() => setIsRejecting(true)}>
                                         <Ban className="w-4 h-4 mr-2" />
@@ -159,6 +159,15 @@ export function ExpenseApprovalDialog({ transaction, open, onOpenChange }: Expen
                                     </Button>
                                 </>
                             )}
+
+                            {/* Show info badge for expenses in approved budgets */}
+                            {transaction.payment_status === 'pending' && transaction.project?.budget_status === 'approved' && (
+                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                    <CheckCircle className="w-3 h-3 mr-1" />
+                                    {t('budgetApproved') || 'Budget Approved'}
+                                </Badge>
+                            )}
+
 
                             {transaction.payment_status === 'approved' && (
                                 <Button onClick={handleMarkPaid} disabled={markPaidMutation.isPending} className="bg-green-600 hover:bg-green-700">

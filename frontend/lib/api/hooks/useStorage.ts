@@ -28,9 +28,11 @@ export function useUploadFile() {
     mutationFn: async ({
       file,
       module,
+      entityId,
     }: {
       file: File
       module: string
+      entityId?: string
     }): Promise<FileUploadResponse> => {
       // Get JWT token from Supabase
       const supabase = createClient()
@@ -44,6 +46,9 @@ export function useUploadFile() {
       const formData = new FormData()
       formData.append('file', file)
       formData.append('module', module)
+      if (entityId) {
+        formData.append('entity_id', entityId)
+      }
 
       // Upload file
       const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'

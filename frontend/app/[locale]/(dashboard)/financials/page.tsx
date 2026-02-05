@@ -15,6 +15,9 @@ import { InvoiceWithItems, InvoiceStatus } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { ExpenseApprovalDashboard } from '@/components/financials/ExpenseApprovalDashboard'
+import { BudgetApprovalDashboard } from '@/components/financials/BudgetApprovalDashboard'
+import { ProjectsFinancialsTab } from '@/components/financials/ProjectsFinancialsTab'
+
 
 const statusVariant: Record<InvoiceStatus, 'secondary' | 'info' | 'success' | 'destructive' | 'outline'> = {
   draft: 'secondary',
@@ -61,13 +64,14 @@ export default function FinancialsPage() {
       </div>
 
       <Tabs defaultValue="overview">
-        <TabsList>
-          <TabsTrigger value="overview">{t('overview.tab')}</TabsTrigger>
-          <TabsTrigger value="approvals">{t('approvals.title')}</TabsTrigger>
-          <TabsTrigger value="invoices">{t('invoicesTab.tab')}</TabsTrigger>
-          <TabsTrigger value="bank-accounts">{t('bankAccountsTab.tab')}</TabsTrigger>
-          <TabsTrigger value="transactions">{t('transactionsTab.tab')}</TabsTrigger>
-          <TabsTrigger value="expenses">{t('expensesTab.tab')}</TabsTrigger>
+        <TabsList className="flex flex-wrap sm:inline-flex w-full sm:w-auto !h-auto gap-1 p-1.5 mb-3">
+          <TabsTrigger value="overview" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[22%] sm:min-w-0">{t('overview.tab')}</TabsTrigger>
+          <TabsTrigger value="approvals" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[22%] sm:min-w-0">{t('approvals.title')}</TabsTrigger>
+          <TabsTrigger value="projects" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[22%] sm:min-w-0">{t('projects.tab')}</TabsTrigger>
+          <TabsTrigger value="invoices" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[22%] sm:min-w-0">{t('invoicesTab.tab')}</TabsTrigger>
+          <TabsTrigger value="bank-accounts" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[22%] sm:min-w-0">{t('bankAccountsTab.tab')}</TabsTrigger>
+          <TabsTrigger value="transactions" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[22%] sm:min-w-0">{t('transactionsTab.tab')}</TabsTrigger>
+          <TabsTrigger value="expenses" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[22%] sm:min-w-0">{t('expensesTab.tab')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -101,8 +105,17 @@ export default function FinancialsPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="approvals" className="space-y-4">
+        <TabsContent value="approvals" className="space-y-8">
+          {/* Budget Approvals Section */}
+          <BudgetApprovalDashboard />
+
+          {/* Expense Approvals Section */}
           <ExpenseApprovalDashboard />
+        </TabsContent>
+
+
+        <TabsContent value="projects" className="space-y-4">
+          <ProjectsFinancialsTab />
         </TabsContent>
 
         <TabsContent value="invoices" className="space-y-6">

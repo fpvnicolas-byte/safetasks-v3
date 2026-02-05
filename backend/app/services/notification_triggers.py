@@ -177,3 +177,48 @@ async def notify_income_created(
             "amount_cents": amount_cents
         }
     )
+
+
+async def notify_project_created(
+    db: AsyncSession,
+    organization_id: UUID,
+    project_title: str,
+    project_id: UUID,
+    budget_cents: int
+):
+    """Notify admins when a new project is created/started (budget confirmed)."""
+    budget_formatted = f"R$ {budget_cents / 100:,.2f}"
+
+    await notify_organization_admins(
+        db=db,
+        organization_id=organization_id,
+        title="Project Started",
+        message=f"New project '{project_title}' started. Budget confirmed: {budget_formatted}",
+        type="success",
+        metadata={
+            "project_id": str(project_id),
+            "project_title": project_title,
+            "budget_cents": budget_cents
+        }
+    )
+
+
+async def notify_project_finished(
+    db: AsyncSession,
+    organization_id: UUID,
+    project_title: str,
+    project_id: UUID
+):
+    """Notify admins when a project is marked as finished/delivered."""
+    await notify_organization_admins(
+        db=db,
+        organization_id=organization_id,
+        title="Project Completed",
+        message=f"Project '{project_title}' has been marked as completed/delivered.",
+        type="success",
+        metadata={
+            "project_id": str(project_id),
+            "project_title": project_title,
+            "status": "delivered"
+        }
+    )

@@ -19,11 +19,11 @@ export default function DashboardLayout({
       <div className="min-h-screen flex">
         {/* Desktop Sidebar */}
         <Sidebar />
-        
+
         {/* Mobile Navigation */}
         <MobileNav isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        
-        <div className="flex-1 min-h-screen">
+
+        <div className="flex-1 min-h-screen min-w-0">
           <TrialBanner />
           <Header onSidebarToggle={() => setSidebarOpen(!sidebarOpen)} />
           <main className="flex-1 p-8">{children}</main>

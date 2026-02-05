@@ -318,6 +318,7 @@
       "errorUpdating": "Erro ao Atualizar Projeto",
       "errorCreating": "Erro ao Criar Projeto",
       "newProjectSubtitle": "Iniciar um novo projeto para um cliente",
+      "converted": "Convertido",
       "titleLabel": "Título",
       "titleRequired": "Título *",
       "titlePlaceholder": "ex: Comercial de Verão, Documentário",
@@ -357,6 +358,8 @@
         "totalIncome": "Receita Total",
         "totalExpenses": "Despesas Totais",
         "netBalance": "Saldo Líquido",
+        "profitMargin": "Margem de Lucro",
+        "profitOf": "Lucro de",
         "budgetDescription": "Acompanhe gastos estimados vs realizados",
         "transactions": "Transações",
         "transactionsDescription": "Transações recentes do projeto",
@@ -382,6 +385,82 @@
           "invalidAmount": "Por favor, insira um valor válido",
           "noBankAccount": "Nenhuma conta bancária configurada",
           "noBankAccountWarning": "Nenhuma conta bancária padrão configurada. Por favor, configure uma conta bancária em Configurações primeiro."
+        },
+        "budgetApproval": {
+          "title": "Aprovação de Orçamento",
+          "status": {
+            "draft": "Rascunho",
+            "pending_approval": "Aguardando Aprovação",
+            "approved": "Aprovado",
+            "rejected": "Rejeitado",
+            "increment_pending": "Aumento Pendente"
+          },
+          "submit": "Enviar para Aprovação",
+          "submitTitle": "Enviar Orçamento",
+          "submitDescription": "Envie o orçamento para aprovação do administrador",
+          "approve": "Aprovar Orçamento",
+          "approveIncrement": "Aprovar Aumento",
+          "reject": "Rejeitar",
+          "approvalNotes": "Notas de aprovação (opcional)",
+          "rejectionReason": "Motivo da rejeição",
+          "rejectionReasonPlaceholder": "Explique por que o orçamento foi rejeitado...",
+          "budgetAmount": "Valor do Orçamento",
+          "budgetAmountPlaceholder": "Ex: 45000",
+          "amount": "Valor",
+          "notes": "Notas (opcional)",
+          "notesPlaceholder": "Justificativa do orçamento...",
+          "submitSuccess": "Orçamento enviado para aprovação",
+          "approveSuccess": "Orçamento aprovado com sucesso",
+          "rejectSuccess": "Orçamento rejeitado",
+          "error": "Erro ao processar orçamento",
+          "approvedBy": "Aprovado por",
+          "approvedAt": "Aprovado em",
+          "pendingMessage": "Este orçamento está aguardando aprovação do administrador",
+          "rejectedMessage": "Este orçamento foi rejeitado. Revise e reenvie.",
+          "draftMessage": "Defina o orçamento operacional e envie para aprovação",
+          "requestIncrement": "Solicitar Aumento",
+          "incrementTitle": "Solicitar Aumento de Orçamento",
+          "incrementDescription": "Solicite orçamento adicional para aprovação do administrador",
+          "incrementAmount": "Valor do Aumento",
+          "incrementNotesPlaceholder": "Explique por que você precisa de orçamento adicional...",
+          "currentBudget": "Orçamento Atual",
+          "newTotal": "Novo Total",
+          "requestedIncrement": "Aumento Solicitado",
+          "incrementSuccess": "Solicitação de aumento de orçamento enviada",
+          "incrementPending": "Aumento aguardando aprovação",
+          "incrementPendingMessage": "Sua solicitação de aumento de orçamento está aguardando aprovação do administrador",
+          "incrementPendingAdminMessage": "Um aumento de orçamento foi solicitado e está aguardando sua aprovação"
+        },
+        "financialCalculator": {
+          "title": "Resumo Financeiro",
+          "proposalValue": "Valor da Proposta",
+          "approvedBudget": "Orçamento Aprovado",
+          "totalIncome": "Receita Total",
+          "totalExpenses": "Despesas Totais",
+          "remainingBudget": "Orçamento Restante",
+          "profit": "Lucro",
+          "profitMargin": "Margem de Lucro",
+          "overBudget": "Acima do Orçamento",
+          "noProposal": "Sem proposta vinculada",
+          "budgetPending": "Orçamento aguardando aprovação"
+        },
+        "producer": {
+          "budgetOverview": "Visão Geral do Orçamento",
+          "budgetLimit": "Limite do Orçamento",
+          "spent": "Gasto",
+          "remaining": "Restante",
+          "ofBudgetUsed": "do orçamento usado",
+          "overBudgetWarning": "Projeto está acima do orçamento!",
+          "expenses": "Despesas",
+          "expensesDescription": "Acompanhe as despesas do projeto",
+          "noExpenses": "Nenhuma despesa registrada ainda",
+          "budgetNotApproved": "O orçamento deve ser aprovado antes de adicionar despesas",
+          "noBudgetRemaining": "Sem orçamento restante - não é possível adicionar despesas",
+          "maxExpenseAllowed": "Despesa máxima permitida",
+          "exceedsBudgetBlocked": "Esta despesa excederia o orçamento aprovado e não pode ser adicionada",
+          "teamCosts": "Custos da Equipe",
+          "teamCostsDescription": "Despesas com membros da equipe",
+          "approved": "Aprovado"
         }
       },
       "production": {
@@ -868,6 +947,20 @@
       "description": "Acompanhe custos e despesas de produção",
       "noRecentExpenses": "Nenhuma despesa recente.",
       "viewExpenses": "Ver Despesas"
+    },
+    "projects": {
+      "tab": "Projetos",
+      "title": "Finanças dos Projetos",
+      "description": "Gerencie detalhes financeiros de todos os projetos",
+      "noProjects": "Nenhum projeto encontrado",
+      "backToList": "Voltar aos Projetos",
+      "budget": "Orçamento",
+      "status": {
+        "draft": "Rascunho",
+        "pending_approval": "Aguardando Aprovação",
+        "approved": "Aprovado",
+        "rejected": "Rejeitado"
+      }
     },
     "status": {
       "draft": "Rascunho",
@@ -1578,9 +1671,29 @@
       "approveConfirm": "Aprovar Despesa",
       "dialogTitle": "Detalhes da Despesa",
       "expenseInfo": "Informações da Despesa",
+      "budgetApproved": "Orçamento Aprovado",
       "warnings": {
         "rejectionReasonRequired": "Motivo da rejeição é obrigatório"
       }
+    },
+    "budgetApprovals": {
+      "title": "Aprovações de Orçamento",
+      "description": "Revise e aprove orçamentos de projetos enviados pelos produtores",
+      "pending": "Pendente",
+      "pendingCount": "{count, plural, one {# orçamento pendente} other {# orçamentos pendentes}}",
+      "pendingAmount": "Total de Orçamentos Pendentes",
+      "noPending": "Nenhuma aprovação de orçamento pendente",
+      "approve": "Aprovar",
+      "reject": "Rejeitar",
+      "approveSuccess": "Orçamento aprovado com sucesso",
+      "rejectSuccess": "Orçamento rejeitado com sucesso",
+      "error": "Ocorreu um erro. Por favor, tente novamente.",
+      "rejectTitle": "Rejeitar Orçamento",
+      "rejectDescription": "Forneça um motivo para rejeitar o orçamento de \"{project}\"",
+      "rejectReason": "Motivo da Rejeição",
+      "rejectReasonPlaceholder": "Explique por que este orçamento está sendo rejeitado...",
+      "cancel": "Cancelar",
+      "confirmReject": "Rejeitar Orçamento"
     }
   },
   "inventory": {
@@ -1856,11 +1969,15 @@
   "proposals": {
     "title": "Propostas",
     "description": "Crie e gerencie propostas de clientes",
+    "createTitle": "Criar Nova Proposta",
+    "createDescription": "Rascunhar uma nova proposta para um cliente",
     "newProposal": "Nova Proposta",
     "createProposal": "Criar Proposta",
     "editProposal": "Editar Proposta",
     "proposalTitle": "Título",
     "client": "Cliente",
+    "selectClient": "Selecione um cliente",
+    "noClients": "Nenhum cliente encontrado.",
     "budget": "Orçamento",
     "timeline": "Cronograma",
     "status": "Status",
@@ -1871,6 +1988,17 @@
     "rejected": "Rejeitado",
     "expired": "Expirado",
     "scope": "Escopo",
+    "noServices": "Nenhum serviço definido.",
+    "manageServices": "Gerenciar Serviços",
+    "creating": "Criando...",
+    "placeholders": {
+      "title": "ex: Campanha de Marketing Q1, Produção de Vídeo Institucional",
+      "description": "Resumo do escopo do trabalho...",
+      "terms": "Termos de pagamento, cronograma de entrega, etc."
+    },
+    "validation": {
+      "clientRequired": "Por favor, selecione um cliente"
+    },
     "noProposals": "Nenhuma proposta encontrada",
     "filter": {
       "title": "Filtrar Propostas",
@@ -1906,8 +2034,15 @@
     "detail": {
       "loading": "Carregando proposta...",
       "notFound": "Proposta não encontrada",
+      "clientCannotChange": "O cliente não pode ser alterado após a criação da proposta.",
+      "useApproveButton": "Use o botão \"Aprovar\" na página de detalhes para finalizar.",
       "created": "Criado em",
       "approveProposal": "Aprovar Proposta",
+      "approveDisabledDraft": "Você precisa enviar a proposta antes de aprová-la",
+      "sendFirst": "Envie a proposta primeiro para aprovar",
+      "statusUpdated": "Status atualizado com sucesso",
+      "statusLocked": "Propostas aprovadas não podem ser alteradas",
+      "saving": "Salvando...",
       "edit": "Editar",
       "delete": "Excluir",
       "approveDialog": {

@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { ProposalUpdate, ProposalStatus, dollarsToCents, centsToDollars, ProposalLineItem, formatCurrency } from '@/types'
 import { Button } from '@/components/ui/button'
+import { useTranslations } from 'next-intl'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -21,7 +22,10 @@ export default function EditProposalPage() {
   const router = useRouter()
   const params = useParams()
   const { organizationId } = useAuth()
+
   const proposalId = params.id as string
+  const t = useTranslations('proposals')
+  const tCommon = useTranslations('common')
 
   const { errorDialog, showError, closeError } = useErrorDialog()
   const { data: proposal, isLoading } = useProposal(proposalId)
@@ -56,11 +60,11 @@ export default function EditProposalPage() {
   const discountCents = dollarsToCents(parseFloat(discountInput) || 0)
 
   if (isLoading) {
-    return <div>Loading proposal...</div>
+    return <div>{t('detail.loading')}</div>
   }
 
   if (!proposal) {
-    return <div className="p-8 text-destructive">Proposal not found</div>
+    return <div className="p-8 text-destructive">{t('detail.notFound')}</div>
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -100,25 +104,25 @@ export default function EditProposalPage() {
       <Card>
         <form onSubmit={handleSubmit}>
           <CardHeader>
-            <CardTitle>Edit Proposal</CardTitle>
-            <CardDescription>Update proposal details</CardDescription>
+            <CardTitle>{t('editProposal')}</CardTitle>
+            <CardDescription>{t('description')}</CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-6">
 
-            {/* Client Selection (Read-only for now to avoid complexity with project transfer) */}
+            {/* Client Selection */}
             <div className="space-y-2">
-              <Label>Client (linked)</Label>
+              <Label>{t('client')}</Label>
               <div className="text-base font-medium px-3 py-2 border rounded-md bg-muted">
-                {proposal.client ? proposal.client.name : 'Loading client...'}
+                {proposal.client ? proposal.client.name : t('detail.loading')}
               </div>
-              <p className="text-xs text-muted-foreground">Client cannot be changed after proposal creation.</p>
+              <p className="text-xs text-muted-foreground">{t('detail.clientCannotChange')}</p>
             </div>
 
             {/* Basic Info */}
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Title *</Label>
+                <Label htmlFor="title">{t('proposalTitle')} *</Label>
                 <Input
                   id="title"
                   name="title"
@@ -129,25 +133,25 @@ export default function EditProposalPage() {
 
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
+                  <Label htmlFor="status">{t('status')}</Label>
                   <Select name="status" defaultValue={proposal.status}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="sent">Sent</SelectItem>
-                      {/* Removed 'approved'/'rejected' to enforce workflow actions */}
-                      <SelectItem value="expired">Expired</SelectItem>
+                      <SelectItem value="draft">{t('draft')}</SelectItem>
+                      <SelectItem value="sent">{t('sent')}</SelectItem>
+                      <SelectItem value="rejected">{t('rejected')}</SelectItem>
+                      <SelectItem value="expired">{t('expired')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    Use the "Approve" button on the detail page to finalize.
+                    {t('detail.useApproveButton')}
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="start_date">Est. Start Date</Label>
+                  <Label htmlFor="start_date">{t('detail.badges.estStart').replace(':', '')}</Label>
                   <Input
                     id="start_date"
                     name="start_date"
@@ -157,7 +161,7 @@ export default function EditProposalPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="end_date">Est. End Date</Label>
+                  <Label htmlFor="end_date">{t('detail.badges.estEnd').replace(':', '')}</Label>
                   <Input
                     id="end_date"
                     name="end_date"
@@ -169,7 +173,7 @@ export default function EditProposalPage() {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="valid_until">Proposal Valid Until</Label>
+                  <Label htmlFor="valid_until">{t('card.validUntil').replace(':', '')}</Label>
                   <Input
                     id="valid_until"
                     name="valid_until"
@@ -180,7 +184,7 @@ export default function EditProposalPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">{t('detail.descriptionCard.title')}</Label>
                 <Textarea
                   id="description"
                   name="description"
@@ -192,10 +196,10 @@ export default function EditProposalPage() {
 
             {/* Services */}
             <div className="space-y-2">
-              <Label>Services</Label>
+              <Label>{t('detail.financials.services')}</Label>
               <Card className="p-4 border-dashed shadow-none">
                 {servicesLoading ? (
-                  <div className="text-sm text-muted-foreground p-2">Loading services...</div>
+                  <div className="text-sm text-muted-foreground p-2">{t('detail.loading')}</div>
                 ) : services && services.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {services.map((service) => (
@@ -241,9 +245,9 @@ export default function EditProposalPage() {
             {/* Financials */}
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-4 mb-2">
-                <h3 className="text-lg font-bold tracking-tight text-foreground">Financial Details</h3>
+                <h3 className="text-lg font-bold tracking-tight text-foreground">{t('detail.financials.title')}</h3>
                 <div className="flex items-center gap-2 min-w-[120px]">
-                  <Label htmlFor="currency" className="text-xs font-bold uppercase text-muted-foreground">Currency</Label>
+                  <Label htmlFor="currency" className="text-xs font-bold uppercase text-muted-foreground">{t('detail.financials.currencyNote').replace(':', '')}</Label>
                   <Select
                     name="currency"
                     value={currency}
@@ -270,7 +274,7 @@ export default function EditProposalPage() {
                   />
 
                   <div className="space-y-3 pt-4 border-t border-muted/50">
-                    <Label htmlFor="discount_amount" className="text-sm font-bold text-foreground">Discount</Label>
+                    <Label htmlFor="discount_amount" className="text-sm font-bold text-foreground">{t('detail.financials.discount')}</Label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-bold">{currency === 'USD' ? '$' : currency === 'EUR' ? '€' : 'R$'}</span>
                       <Input
@@ -295,13 +299,13 @@ export default function EditProposalPage() {
               {/* Dynamic Calculation Preview */}
               <div className="rounded-xl border border-primary/20 bg-primary/[0.02] overflow-hidden shadow-sm">
                 <div className="px-4 py-2.5 bg-primary/5 border-b border-primary/10">
-                  <span className="text-[10px] uppercase font-bold text-primary tracking-widest cursor-default">Investment Summary</span>
+                  <span className="text-[10px] uppercase font-bold text-primary tracking-widest cursor-default">{t('detail.financials.totalInvestment')}</span>
                 </div>
 
                 <div className="p-4 space-y-3">
                   <div className="flex justify-between items-center text-sm">
                     <div className="flex flex-col">
-                      <span className="text-muted-foreground font-medium">Services</span>
+                      <span className="text-muted-foreground font-medium">{t('detail.financials.services')}</span>
                       <span className="text-[10px] text-muted-foreground/60 leading-none">Predefined rates</span>
                     </div>
                     <span className="font-mono text-foreground font-semibold">
@@ -311,7 +315,7 @@ export default function EditProposalPage() {
 
                   <div className="flex justify-between items-center text-sm">
                     <div className="flex flex-col">
-                      <span className="text-muted-foreground font-medium">Line Items</span>
+                      <span className="text-muted-foreground font-medium">{t('detail.financials.additionalItems')}</span>
                       <span className="text-[10px] text-muted-foreground/60 leading-none">Custom additions</span>
                     </div>
                     <span className="font-mono text-info font-semibold">
@@ -322,7 +326,7 @@ export default function EditProposalPage() {
                   {discountCents > 0 ? (
                     <div className="flex justify-between items-center text-sm italic">
                       <div className="flex flex-col">
-                        <span className="text-muted-foreground font-medium">Discount</span>
+                        <span className="text-muted-foreground font-medium">{t('detail.financials.discount')}</span>
                         <span className="text-[10px] text-muted-foreground/60 leading-none">Adjustment</span>
                       </div>
                       <span className="font-mono text-secondary-foreground font-semibold">
@@ -332,7 +336,7 @@ export default function EditProposalPage() {
                   ) : null}
 
                   <div className="flex justify-between items-center border-t border-primary/10 pt-3 mt-1">
-                    <span className="text-sm font-bold text-primary">Expected Total</span>
+                    <span className="text-sm font-bold text-primary">{t('detail.financials.finalTotal')}</span>
                     <div className="flex flex-col items-end">
                       <span className="text-xl font-black text-primary font-mono tracking-tighter">
                         {formatCurrency(
@@ -349,7 +353,7 @@ export default function EditProposalPage() {
 
             {/* Terms */}
             <div className="space-y-2 mt-6">
-              <Label htmlFor="terms_conditions">Terms & Conditions</Label>
+              <Label htmlFor="terms_conditions">{t('detail.termsConditions.title')}</Label>
               <Textarea
                 id="terms_conditions"
                 name="terms_conditions"
@@ -365,13 +369,13 @@ export default function EditProposalPage() {
               variant="outline"
               asChild
             >
-              <Link href={`/proposals/${proposalId}`}>Cancel</Link>
+              <Link href={`/proposals/${proposalId}`}>{tCommon('cancel')}</Link>
             </Button>
             <Button
               type="submit"
               disabled={updateProposal.isPending}
             >
-              {updateProposal.isPending ? 'Saving...' : 'Save Changes'}
+              {updateProposal.isPending ? t('loading') : tCommon('save')}
             </Button>
           </CardFooter>
         </form>

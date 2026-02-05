@@ -21,7 +21,7 @@ import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
 import { ErrorDialog } from '@/components/ui/error-dialog'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
-import { ProjectFinancialsTab } from '@/components/projects/ProjectFinancialsTab'
+import { ProjectExpensesTab } from '@/components/projects/ProjectExpensesTab'
 import { TeamTab } from '@/components/projects/TeamTab'
 
 export default function ProjectDetailPage() {
@@ -30,8 +30,11 @@ export default function ProjectDetailPage() {
   const locale = useLocale()
   const params = useParams()
   const router = useRouter()
-  const { organizationId } = useAuth()
+  const { organizationId, profile } = useAuth()
   const projectId = params.id as string
+
+  // Check if user is admin or owner
+  const isAdmin = profile?.effective_role === 'admin' || profile?.effective_role === 'owner' || profile?.is_master_owner === true
 
   const { data: project, isLoading, error } = useProject(projectId, organizationId || undefined)
   const { data: stats } = useProjectStats(projectId)
@@ -224,13 +227,13 @@ export default function ProjectDetailPage() {
 
       {/* Tabs */}
       <Tabs defaultValue="details">
-        <TabsList>
-          <TabsTrigger value="details">{t('details.tabs.details')}</TabsTrigger>
-          <TabsTrigger value="shooting-days">{t('details.tabs.shootingDays')}</TabsTrigger>
-          <TabsTrigger value="team">{t('details.team.title')}</TabsTrigger>
-          <TabsTrigger value="financials">{t('details.tabs.financials')}</TabsTrigger>
-          <TabsTrigger value="production">{t('details.tabs.production')}</TabsTrigger>
-          <TabsTrigger value="files">{t('details.tabs.files')}</TabsTrigger>
+        <TabsList className="flex flex-wrap sm:inline-flex w-full sm:w-auto !h-auto gap-1 p-1.5 mb-3">
+          <TabsTrigger value="details" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[30%] sm:min-w-0">{t('details.tabs.details')}</TabsTrigger>
+          <TabsTrigger value="shooting-days" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[30%] sm:min-w-0">{t('details.tabs.shootingDays')}</TabsTrigger>
+          <TabsTrigger value="team" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[30%] sm:min-w-0">{t('details.team.title')}</TabsTrigger>
+          <TabsTrigger value="financials" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[30%] sm:min-w-0">{t('details.tabs.financials')}</TabsTrigger>
+          <TabsTrigger value="production" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[30%] sm:min-w-0">{t('details.tabs.production')}</TabsTrigger>
+          <TabsTrigger value="files" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[30%] sm:min-w-0">{t('details.tabs.files')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="details" className="space-y-4">
@@ -287,7 +290,7 @@ export default function ProjectDetailPage() {
         </TabsContent>
 
         <TabsContent value="financials">
-          <ProjectFinancialsTab projectId={projectId} />
+          <ProjectExpensesTab projectId={projectId} project={project} />
         </TabsContent>
 
         <TabsContent value="production">

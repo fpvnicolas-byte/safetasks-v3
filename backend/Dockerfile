@@ -1,5 +1,5 @@
 # Multi-stage build for optimized production image
-FROM public.ecr.aws/docker/library/python:3.12-slim as builder
+FROM python:3.12-slim as builder
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -22,7 +22,7 @@ RUN pip install --upgrade pip && \
     pip install -r requirements.txt
 
 # Production stage
-FROM public.ecr.aws/docker/library/python:3.12-slim
+FROM python:3.12-slim
 
 # Install runtime dependencies (including WeasyPrint requirements for PDF generation)
 RUN apt-get update && apt-get install -y \

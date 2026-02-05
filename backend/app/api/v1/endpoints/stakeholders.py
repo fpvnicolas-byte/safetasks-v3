@@ -1,7 +1,7 @@
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, delete
 from typing import List, Optional
 import logging
 
@@ -126,7 +126,10 @@ async def create_stakeholder(
     an expense transaction will be automatically created for the project.
 
     Requires a default bank account to be configured if the stakeholder has a rate.
+    Will reject if the expense would exceed the project budget.
     """
+    from app.models.transactions import Transaction
+
     # Pre-check: If stakeholder has a rate, ensure default bank account exists
     has_rate = (
         stakeholder_in.rate_value_cents is not None
@@ -145,6 +148,62 @@ async def create_stakeholder(
                 detail="Cannot add team member with rate: no default bank account configured. "
                        "Please set up a default bank account in Settings > Organization first."
             )
+
+        # Budget limit validation
+        project_result = await db.execute(
+            select(Project).where(Project.id == stakeholder_in.project_id)
+        )
+        project = project_result.scalar_one_or_none()
+
+        if project and project.budget_total_cents and project.budget_total_cents > 0:
+            # Calculate the expense amount for this stakeholder
+            shooting_days_count = 0
+            sd_result = await db.execute(
+                select(func.count(ShootingDay.id)).where(
+                    ShootingDay.project_id == stakeholder_in.project_id
+                )
+            )
+            shooting_days_count = sd_result.scalar() or 0
+
+            # Calculate expense amount based on rate type
+            rate_type = stakeholder_in.rate_type
+            rate_value = stakeholder_in.rate_value_cents
+
+            if rate_type == "fixed":
+                expense_amount = rate_value
+            elif rate_type == "daily":
+                days = stakeholder_in.estimated_units or shooting_days_count or 1
+                expense_amount = rate_value * days
+            elif rate_type == "hourly":
+                hours = stakeholder_in.estimated_units or 8
+                expense_amount = rate_value * hours
+            else:
+                expense_amount = rate_value  # Fallback
+
+            # Get current total expenses (pending + approved) for this project
+            expenses_result = await db.execute(
+                select(func.sum(Transaction.amount_cents)).where(
+                    Transaction.project_id == stakeholder_in.project_id,
+                    Transaction.type == "expense",
+                    Transaction.payment_status.in_(["pending", "approved", "paid"])
+                )
+            )
+            current_expenses = expenses_result.scalar() or 0
+
+            # Check if adding this expense would exceed budget
+            new_total = current_expenses + expense_amount
+            if new_total > project.budget_total_cents:
+                budget_formatted = f"R$ {project.budget_total_cents / 100:,.2f}"
+                current_formatted = f"R$ {current_expenses / 100:,.2f}"
+                expense_formatted = f"R$ {expense_amount / 100:,.2f}"
+                over_formatted = f"R$ {(new_total - project.budget_total_cents) / 100:,.2f}"
+
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Cannot add team member: expense ({expense_formatted}) would exceed project budget. "
+                           f"Budget: {budget_formatted}, Current expenses: {current_formatted}, "
+                           f"Over by: {over_formatted}. Please request a budget increment first."
+                )
 
     try:
         stakeholder = await stakeholder_crud_service.create(
@@ -185,7 +244,7 @@ async def create_stakeholder(
                             db=db,
                             organization_id=organization_id,
                             stakeholder_name=stakeholder.name,
-                            project_name=project.title,
+                            project_title=project.title,
                             amount_cents=expense.amount_cents
                         )
 
@@ -354,7 +413,9 @@ async def delete_stakeholder(
     organization_id: UUID = Depends(get_current_organization),
     db: AsyncSession = Depends(get_db),
 ):
-    """Delete a stakeholder."""
+    """Delete a stakeholder and its associated pending expense transactions."""
+    from app.models.transactions import Transaction
+
     stakeholder = await stakeholder_crud_service.get(
         db=db,
         id=stakeholder_id,
@@ -368,12 +429,24 @@ async def delete_stakeholder(
         )
 
     try:
+        # Delete associated pending expense transactions to prevent orphaned expenses
+        # Only delete pending expenses - approved/paid ones are kept for financial records
+        await db.execute(
+            delete(Transaction).where(
+                Transaction.stakeholder_id == stakeholder_id,
+                Transaction.payment_status == "pending"
+            )
+        )
+        
         await stakeholder_crud_service.remove(
             db=db,
             id=stakeholder_id,
             organization_id=organization_id
         )
+        
+        await db.commit()
     except Exception as e:
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete stakeholder: {str(e)}"

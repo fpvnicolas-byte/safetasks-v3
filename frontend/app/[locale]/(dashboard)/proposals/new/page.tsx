@@ -6,8 +6,9 @@ import Link from 'next/link'
 import { useCreateProposal, useClients, useServices } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
-import { ProposalCreate, ProposalStatus, ProposalLineItem, formatCurrency } from '@/types'
+import { ProposalCreate, ProposalStatus, ProposalLineItem, formatCurrency, dollarsToCents } from '@/types'
 import { Button } from '@/components/ui/button'
+import { useTranslations } from 'next-intl'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -16,11 +17,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { ErrorDialog } from '@/components/ui/error-dialog'
 import { FinancialLinesPanel } from '../_components/FinancialLinesPanel'
-import { dollarsToCents } from '@/types'
+
 
 export default function NewProposalPage() {
   const router = useRouter()
   const { organizationId } = useAuth()
+  const t = useTranslations('proposals')
+  const tCommon = useTranslations('common')
   const { errorDialog, showError, closeError } = useErrorDialog()
   const [selectedClientId, setSelectedClientId] = useState<string>('')
   const [selectedServices, setSelectedServices] = useState<string[]>([])
@@ -41,7 +44,7 @@ export default function NewProposalPage() {
     e.preventDefault()
 
     if (!selectedClientId) {
-      showError({ message: 'Please select a client' }, 'Validation Error')
+      showError({ message: t('validation.clientRequired') }, tCommon('error'))
       return
     }
 
@@ -79,21 +82,21 @@ export default function NewProposalPage() {
       <Card>
         <form onSubmit={handleSubmit}>
           <CardHeader>
-            <CardTitle>Create New Proposal</CardTitle>
-            <CardDescription>Draft a new proposal for a client</CardDescription>
+            <CardTitle>{t('createTitle')}</CardTitle>
+            <CardDescription>{t('createDescription')}</CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-6">
 
             {/* Client Selection */}
             <div className="space-y-2">
-              <Label htmlFor="client">Client *</Label>
+              <Label htmlFor="client">{t('client')} *</Label>
               {clientsLoading ? (
-                <div className="text-sm text-muted-foreground">Loading clients...</div>
+                <div className="text-sm text-muted-foreground">{tCommon('loading')}</div>
               ) : clients && clients.length > 0 ? (
                 <Select value={selectedClientId} onValueChange={setSelectedClientId} required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a client" />
+                    <SelectValue placeholder={t('selectClient')} />
                   </SelectTrigger>
                   <SelectContent>
                     {clients.map((client) => (
@@ -105,9 +108,9 @@ export default function NewProposalPage() {
                 </Select>
               ) : (
                 <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">No clients found.</p>
+                  <p className="text-sm text-muted-foreground">{t('noClients')}</p>
                   <Button asChild size="sm" variant="outline">
-                    <Link href="/clients/new">Create Client</Link>
+                    <Link href="/clients/new">{tCommon('create')} {t('client')}</Link>
                   </Button>
                 </div>
               )}
@@ -116,31 +119,31 @@ export default function NewProposalPage() {
             {/* Basic Info */}
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Title *</Label>
+                <Label htmlFor="title">{t('proposalTitle')} *</Label>
                 <Input
                   id="title"
                   name="title"
-                  placeholder="e.g., Q1 Marketing Campaign, Feature Film Production"
+                  placeholder={t('placeholders.title')}
                   required
                 />
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
+                  <Label htmlFor="status">{t('status')}</Label>
                   <Select value={status} onValueChange={(value) => setStatus(value as ProposalStatus)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="sent">Sent</SelectItem>
+                      <SelectItem value="draft">{t('draft')}</SelectItem>
+                      <SelectItem value="sent">{t('sent')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="start_date">Est. Start Date</Label>
+                  <Label htmlFor="start_date">{t('detail.badges.estStart').replace(':', '')}</Label>
                   <Input
                     id="start_date"
                     name="start_date"
@@ -149,7 +152,7 @@ export default function NewProposalPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="end_date">Est. End Date</Label>
+                  <Label htmlFor="end_date">{t('detail.badges.estEnd').replace(':', '')}</Label>
                   <Input
                     id="end_date"
                     name="end_date"
@@ -160,7 +163,7 @@ export default function NewProposalPage() {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="valid_until">Proposal Valid Until</Label>
+                  <Label htmlFor="valid_until">{t('card.validUntil').replace(':', '')}</Label>
                   <Input
                     id="valid_until"
                     name="valid_until"
@@ -170,21 +173,21 @@ export default function NewProposalPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">{t('detail.descriptionCard.title')}</Label>
                 <Textarea
                   id="description"
                   name="description"
-                  placeholder="Scope of work summary..."
+                  placeholder={t('placeholders.description')}
                   rows={3}
                 />
               </div>
 
               {/* Services */}
               <div className="space-y-2">
-                <Label>Services</Label>
+                <Label>{t('detail.financials.services')}</Label>
                 <Card className="p-4">
                   {servicesLoading ? (
-                    <div className="text-sm text-muted-foreground p-2">Loading services...</div>
+                    <div className="text-sm text-muted-foreground p-2">{tCommon('loading')}</div>
                   ) : services && services.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {services.map((service) => (
@@ -218,9 +221,9 @@ export default function NewProposalPage() {
                     </div>
                   ) : (
                     <div className="text-sm text-muted-foreground p-2 text-center">
-                      <p>No services defined.</p>
+                      <p>{t('noServices')}</p>
                       <Button variant="link" asChild className="px-0 h-auto">
-                        <Link href="/settings/services">Manage Services</Link>
+                        <Link href="/settings/services">{t('manageServices')}</Link>
                       </Button>
                     </div>
                   )}
@@ -232,9 +235,9 @@ export default function NewProposalPage() {
             {/* Financials */}
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-4 mb-2">
-                <h3 className="text-lg font-bold tracking-tight text-foreground">Financial Details</h3>
+                <h3 className="text-lg font-bold tracking-tight text-foreground">{t('detail.financials.title')}</h3>
                 <div className="flex items-center gap-2 min-w-[120px]">
-                  <Label htmlFor="currency" className="text-xs font-bold uppercase text-muted-foreground">Currency</Label>
+                  <Label htmlFor="currency" className="text-xs font-bold uppercase text-muted-foreground">{t('detail.financials.currencyNote').replace(':', '')}</Label>
                   <Select
                     name="currency"
                     value={currency}
@@ -261,7 +264,7 @@ export default function NewProposalPage() {
                   />
 
                   <div className="space-y-3 pt-4 border-t border-muted/50">
-                    <Label htmlFor="discount_amount" className="text-sm font-bold text-foreground">Discount</Label>
+                    <Label htmlFor="discount_amount" className="text-sm font-bold text-foreground">{t('detail.financials.discount')}</Label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-bold">{currency === 'USD' ? '$' : currency === 'EUR' ? '€' : 'R$'}</span>
                       <Input
@@ -286,13 +289,13 @@ export default function NewProposalPage() {
               {/* Dynamic Calculation Preview */}
               <div className="rounded-xl border border-primary/20 bg-primary/[0.02] overflow-hidden shadow-sm">
                 <div className="px-4 py-2.5 bg-primary/5 border-b border-primary/10">
-                  <span className="text-[10px] uppercase font-bold text-primary tracking-widest cursor-default">Investment Summary</span>
+                  <span className="text-[10px] uppercase font-bold text-primary tracking-widest cursor-default">{t('detail.financials.totalInvestment')}</span>
                 </div>
 
                 <div className="p-4 space-y-3">
                   <div className="flex justify-between items-center text-sm">
                     <div className="flex flex-col">
-                      <span className="text-muted-foreground font-medium">Services</span>
+                      <span className="text-muted-foreground font-medium">{t('detail.financials.services')}</span>
                       <span className="text-[10px] text-muted-foreground/60 leading-none">Predefined rates</span>
                     </div>
                     <span className="font-mono text-foreground font-semibold">
@@ -302,7 +305,7 @@ export default function NewProposalPage() {
 
                   <div className="flex justify-between items-center text-sm">
                     <div className="flex flex-col">
-                      <span className="text-muted-foreground font-medium">Line Items</span>
+                      <span className="text-muted-foreground font-medium">{t('detail.financials.additionalItems')}</span>
                       <span className="text-[10px] text-muted-foreground/60 leading-none">Custom additions</span>
                     </div>
                     <span className="font-mono text-info font-semibold">
@@ -313,7 +316,7 @@ export default function NewProposalPage() {
                   {discountCents > 0 ? (
                     <div className="flex justify-between items-center text-sm italic">
                       <div className="flex flex-col">
-                        <span className="text-muted-foreground font-medium">Discount</span>
+                        <span className="text-muted-foreground font-medium">{t('detail.financials.discount')}</span>
                         <span className="text-[10px] text-muted-foreground/60 leading-none">Adjustment</span>
                       </div>
                       <span className="font-mono text-secondary-foreground font-semibold">
@@ -323,7 +326,7 @@ export default function NewProposalPage() {
                   ) : null}
 
                   <div className="flex justify-between items-center border-t border-primary/10 pt-3 mt-1">
-                    <span className="text-sm font-bold text-primary">Estimated Total</span>
+                    <span className="text-sm font-bold text-primary">{t('detail.financials.finalTotal')}</span>
                     <div className="flex flex-col items-end">
                       <span className="text-xl font-black text-primary font-mono tracking-tighter">
                         {formatCurrency(
@@ -340,11 +343,11 @@ export default function NewProposalPage() {
 
             {/* Terms */}
             <div className="space-y-2 mt-6">
-              <Label htmlFor="terms_conditions">Terms & Conditions</Label>
+              <Label htmlFor="terms_conditions">{t('detail.termsConditions.title')}</Label>
               <Textarea
                 id="terms_conditions"
                 name="terms_conditions"
-                placeholder="Payment terms, delivery schedule, etc."
+                placeholder={t('placeholders.terms')}
                 rows={4}
               />
             </div>
@@ -356,13 +359,13 @@ export default function NewProposalPage() {
               variant="outline"
               asChild
             >
-              <Link href="/proposals">Cancel</Link>
+              <Link href="/proposals">{tCommon('cancel')}</Link>
             </Button>
             <Button
               type="submit"
               disabled={createProposal.isPending || !selectedClientId}
             >
-              {createProposal.isPending ? 'Creating...' : 'Create Proposal'}
+              {createProposal.isPending ? t('creating') : t('createAction')}
             </Button>
           </CardFooter>
         </form>

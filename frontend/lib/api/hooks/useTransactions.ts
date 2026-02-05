@@ -134,9 +134,13 @@ export function useApproveTransaction() {
       return apiClient.patch<TransactionWithRelations>(`/api/v1/transactions/${transactionId}/approve?${params.toString()}`)
     },
     onSuccess: () => {
+      // Invalidate all transaction-related queries
       queryClient.invalidateQueries({ queryKey: [TRANSACTIONS_KEY] })
       queryClient.invalidateQueries({ queryKey: ['bank-accounts'] })
       queryClient.invalidateQueries({ queryKey: ['analytics'] })
+      queryClient.invalidateQueries({ queryKey: ['pending-budgets'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      queryClient.invalidateQueries({ queryKey: ['project-budget'] })
     },
   })
 }
@@ -162,7 +166,13 @@ export function useRejectTransaction() {
       )
     },
     onSuccess: () => {
+      // Invalidate all transaction-related queries
       queryClient.invalidateQueries({ queryKey: [TRANSACTIONS_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['bank-accounts'] })
+      queryClient.invalidateQueries({ queryKey: ['analytics'] })
+      queryClient.invalidateQueries({ queryKey: ['pending-budgets'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      queryClient.invalidateQueries({ queryKey: ['project-budget'] })
     },
   })
 }
@@ -177,8 +187,13 @@ export function useMarkTransactionPaid() {
       return apiClient.patch<TransactionWithRelations>(`/api/v1/transactions/${transactionId}/mark-paid?${params.toString()}`)
     },
     onSuccess: () => {
+      // Invalidate all transaction-related queries
       queryClient.invalidateQueries({ queryKey: [TRANSACTIONS_KEY] })
       queryClient.invalidateQueries({ queryKey: ['bank-accounts'] })
+      queryClient.invalidateQueries({ queryKey: ['analytics'] })
+      queryClient.invalidateQueries({ queryKey: ['pending-budgets'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      queryClient.invalidateQueries({ queryKey: ['project-budget'] })
     },
   })
 }

@@ -51,6 +51,8 @@ export type ProjectStatus =
   | 'delivered'
   | 'archived'
 
+export type BudgetStatus = 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'increment_pending'
+
 export interface Project {
   id: UUID
   organization_id: UUID
@@ -59,6 +61,16 @@ export interface Project {
   description: string | null // Backend has this field
   status: ProjectStatus
   budget_total_cents: number // Integer (cents), default 0, min 0
+  // Budget approval workflow
+  budget_status: BudgetStatus
+  budget_approved_by: UUID | null
+  budget_approved_at: ISODateTime | null
+  budget_notes: string | null
+  // Budget increment request fields
+  budget_increment_requested_cents: number
+  budget_increment_notes: string | null
+  budget_increment_requested_at: ISODateTime | null
+  budget_increment_requested_by: UUID | null
   start_date: ISODate | null // YYYY-MM-DD
   end_date: ISODate | null // YYYY-MM-DD
   is_active: boolean
@@ -78,6 +90,24 @@ export interface ProjectStats {
   shooting_days_count: number
   confirmed_shooting_days_count: number
   team_count: number
+}
+
+export interface ProjectFinancialSummary {
+  project_id: UUID
+  // Proposal / Revenue
+  proposal_value_cents: number
+  proposal_status: string | null
+  // Budget
+  budget_total_cents: number
+  budget_status: BudgetStatus
+  budget_approved_at: ISODateTime | null
+  // Actuals
+  total_income_cents: number
+  total_expense_cents: number
+  // Calculated
+  remaining_budget_cents: number
+  profit_cents: number
+  profit_margin_percent: number | null
 }
 
 

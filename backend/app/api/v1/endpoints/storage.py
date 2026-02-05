@@ -32,6 +32,7 @@ async def upload_file(
     organization_id: UUID = Depends(get_organization_from_profile),
     profile=Depends(get_current_profile),
     module: str = Form(..., description="Module name: kits, scripts, call-sheets, proposals"),
+    entity_id: Optional[str] = Form(None, description="Optional entity ID for sub-folder organization (e.g., proposal_id)"),
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
 ) -> FileUploadResponse:
@@ -58,7 +59,8 @@ async def upload_file(
             module=module,
             filename=file.filename,
             file_content=file_content,
-            bucket=bucket
+            bucket=bucket,
+            entity_id=entity_id
         )
 
         # Optionally sync to cloud providers for production files
@@ -221,16 +223,21 @@ async def get_sync_status(
 @router.get("/list/{module}", dependencies=[Depends(require_read_only)])
 async def list_files(
     module: str,
+    entity_id: Optional[str] = None,
     organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
 ) -> list[dict]:
     """
     List files for a specific module and organization.
+    Optionally filter by entity_id (e.g., proposal_id).
     Validates that the files belong to the requesting organization.
     """
     try:
-        # Generate organization-specific path prefix
-        path_prefix = f"{organization_id}/{module}/"
+        # Generate organization-specific path prefix (with optional entity_id)
+        if entity_id:
+            path_prefix = f"{organization_id}/{module}/{entity_id}/"
+        else:
+            path_prefix = f"{organization_id}/{module}/"
         
         # Determine bucket based on module
         if module == "kits":

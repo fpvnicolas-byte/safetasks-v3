@@ -242,16 +242,29 @@ class ProposalPDFService:
             locale=locale
         )
         
-        # Create filename with proposal ID
-        filename = f"proposal_{proposal.id}.pdf"
+        # Create friendly filename: Proposta_Client_Title_Date.pdf
+        import re
+        from datetime import datetime
+
+        def sanitize_filename(name: str) -> str:
+            # Replace spaces with underscores and remove non-alphanumeric chars (except -_)
+            name = re.sub(r'\s+', '_', name)
+            return re.sub(r'[^\w\-_]', '', name)
+
+        client_name = sanitize_filename(client.name if client else "Cliente")
+        title = sanitize_filename(proposal.title)
+        date_str = datetime.now().strftime("%Y-%m-%d")
         
-        # Upload to storage
+        filename = f"Proposta_{client_name}_{title}_{date_str}.pdf"
+        
+        # Upload to storage (using proposal ID as entity_id for folder organization)
         upload_result = await storage_service.upload_file(
             organization_id=str(proposal.organization_id),
             module="proposals",
             filename=filename,
             file_content=pdf_bytes,
-            bucket="production-files"
+            bucket="production-files",
+            entity_id=str(proposal.id)
         )
         
         # Update proposal metadata with PDF info

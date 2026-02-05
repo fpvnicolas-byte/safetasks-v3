@@ -22,7 +22,13 @@ export interface NotificationStats {
   read_count: number
 }
 
-export function useNotifications(unreadOnly: boolean = false) {
+interface UseNotificationsOptions {
+  refetchInterval?: number | false
+  enabled?: boolean
+}
+
+export function useNotifications(unreadOnly: boolean = false, options: UseNotificationsOptions = {}) {
+  const { refetchInterval = 30000, enabled = true } = options
   return useQuery({
     queryKey: [NOTIFICATIONS_KEY, unreadOnly],
     queryFn: () => {
@@ -31,15 +37,18 @@ export function useNotifications(unreadOnly: boolean = false) {
       const url = params.toString() ? `/api/v1/notifications/?${params.toString()}` : '/api/v1/notifications/'
       return apiClient.get<Notification[]>(url)
     },
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval,
+    enabled,
   })
 }
 
-export function useNotificationStats() {
+export function useNotificationStats(options: UseNotificationsOptions = {}) {
+  const { refetchInterval = 30000, enabled = true } = options
   return useQuery({
     queryKey: [NOTIFICATIONS_KEY, 'stats'],
     queryFn: () => apiClient.get<NotificationStats>('/api/v1/notifications/stats'),
-    refetchInterval: 30000,
+    refetchInterval,
+    enabled,
   })
 }
 
@@ -66,3 +75,28 @@ export function useMarkAllAsRead() {
     },
   })
 }
+
+export function useDeleteNotification() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (notificationId: string) =>
+      apiClient.delete(`/api/v1/notifications/${notificationId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [NOTIFICATIONS_KEY] })
+    },
+  })
+}
+
+export function useClearAllNotifications() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: () =>
+      apiClient.delete('/api/v1/notifications/'),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [NOTIFICATIONS_KEY] })
+    },
+  })
+}
+

@@ -84,7 +84,12 @@ export default function NewStakeholderPage() {
       toast.success(tFeedback('actionSuccess'))
       router.push(`/${locale}/stakeholders`)
     } catch (error: unknown) {
-      console.error('Create error:', error)
+      // Improved error logging - show full error details
+      const errorObj = error as Record<string, unknown>
+      console.error('Create error:', JSON.stringify(errorObj, null, 2))
+      console.error('Error message:', errorObj?.message)
+      console.error('Error details:', errorObj?.details)
+      console.error('Raw error:', error)
       showError(error, tFeedback('actionError', { message: 'Error Creating Stakeholder' }))
     }
   }

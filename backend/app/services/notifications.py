@@ -55,6 +55,27 @@ class NotificationService(BaseService[Notification, NotificationCreate, Notifica
         db.add(notification)
         await db.flush()
         await db.refresh(notification)
+        
+        # Broadcast via WebSocket for real-time updates
+        try:
+            from app.core.websocket_manager import notification_ws_manager
+            await notification_ws_manager.broadcast_notification(
+                organization_id=organization_id,
+                profile_id=profile_id,
+                notification_data={
+                    "id": str(notification.id),
+                    "title": notification.title,
+                    "message": notification.message,
+                    "type": notification.type,
+                    "is_read": notification.is_read,
+                    "created_at": notification.created_at.isoformat() if notification.created_at else None,
+                    "metadata": metadata
+                }
+            )
+        except Exception as e:
+            # Don't fail notification creation if WebSocket broadcast fails
+            logger.warning(f"Failed to broadcast notification via WebSocket: {e}")
+        
         return notification
 
     async def get_user_notifications(
@@ -159,6 +180,55 @@ class NotificationService(BaseService[Notification, NotificationCreate, Notifica
 
         result = await db.execute(query)
         return result.scalar() or 0
+
+    async def delete_notification(
+        self,
+        db: AsyncSession,
+        *,
+        organization_id: UUID,
+        profile_id: UUID,
+        notification_id: UUID
+    ) -> bool:
+        """Delete a single notification. Returns True if deleted, False if not found."""
+        from sqlalchemy import delete
+
+        # First check ownership
+        notification = await self.get(db=db, organization_id=organization_id, id=notification_id)
+        if not notification or notification.profile_id != profile_id:
+            return False
+
+        query = (
+            delete(Notification)
+            .where(
+                Notification.id == notification_id,
+                Notification.organization_id == organization_id,
+                Notification.profile_id == profile_id
+            )
+        )
+
+        result = await db.execute(query)
+        return result.rowcount > 0
+
+    async def delete_all_notifications(
+        self,
+        db: AsyncSession,
+        *,
+        organization_id: UUID,
+        profile_id: UUID
+    ) -> int:
+        """Delete all notifications for a user. Returns count of deleted notifications."""
+        from sqlalchemy import delete
+
+        query = (
+            delete(Notification)
+            .where(
+                Notification.organization_id == organization_id,
+                Notification.profile_id == profile_id
+            )
+        )
+
+        result = await db.execute(query)
+        return result.rowcount
 
     async def send_external_notification(
         self,

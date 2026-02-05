@@ -163,10 +163,8 @@ class ProjectService(BaseService[ProjectModel, ProjectCreate, ProjectUpdate]):
             result = await db.execute(select(ServiceModel).where(ServiceModel.id.in_(service_ids)))
             services = result.scalars().all()
             db_obj.services = services
-
-            # Auto-add service values to budget
-            services_total = sum(s.value_cents for s in services)
-            db_obj.budget_total_cents = (db_obj.budget_total_cents or 0) + services_total
+            # Note: We do NOT auto-set budget_total_cents from services.
+            # Service values represent client pricing, not operational budget.
 
         db.add(db_obj)
         
@@ -188,37 +186,70 @@ class ProjectService(BaseService[ProjectModel, ProjectCreate, ProjectUpdate]):
         else:
             await db.flush()
             await db.refresh(db_obj)
+            
+        # Send notification for project creation (started/budget confirmed)
+        try:
+            from app.services.notification_triggers import notify_project_created
+            # Calculate initial budget based on manual entry or services if manually set
+            initial_budget = db_obj.budget_total_cents or 0
+            
+            await notify_project_created(
+                db=db,
+                organization_id=organization_id,
+                project_title=db_obj.title,
+                project_id=db_obj.id,
+                budget_cents=initial_budget
+            )
+        except Exception as e:
+            print(f"Failed to send project creation notification: {e}")
+            
         return db_obj
 
     async def update(self, db, *, organization_id, id, obj_in):
         """Update project with services. Auto-updates budget when services change."""
+        # Check for status change before update
+        old_status = None
+        project = None
+        if obj_in.status is not None:
+            project = await self.get(db=db, organization_id=organization_id, id=id)
+            if project:
+                old_status = project.status
+
         # Handle service_ids
         if obj_in.service_ids is not None:
             from sqlalchemy import select
 
-            # Get existing project with services
-            project = await self.get(db=db, organization_id=organization_id, id=id)
+            # Get existing project with services if not already fetched
+            if not project:
+                project = await self.get(db=db, organization_id=organization_id, id=id)
+            
             if project:
-                # Calculate old services total
-                old_services_total = sum(s.value_cents for s in project.services)
-
                 # Fetch new services
                 result = await db.execute(select(ServiceModel).where(ServiceModel.id.in_(obj_in.service_ids)))
                 services = result.scalars().all()
 
-                # Calculate new services total
-                new_services_total = sum(s.value_cents for s in services)
-
-                # Update budget: remove old services value, add new services value
-                budget_delta = new_services_total - old_services_total
-                project.budget_total_cents = (project.budget_total_cents or 0) + budget_delta
-
-                # Update services relationship
+                # Update services relationship (do NOT modify budget)
                 project.services = services
 
             del obj_in.service_ids
-
-        return await super().update(db=db, organization_id=organization_id, id=id, obj_in=obj_in)
+            
+        updated_project = await super().update(db=db, organization_id=organization_id, id=id, obj_in=obj_in)
+        
+        # Check for completion status change
+        if old_status and updated_project and updated_project.status != old_status:
+            if updated_project.status in ["delivered", "completed", "archived"] and old_status not in ["delivered", "completed", "archived"]:
+                 try:
+                    from app.services.notification_triggers import notify_project_finished
+                    await notify_project_finished(
+                        db=db,
+                        organization_id=organization_id,
+                        project_title=updated_project.title,
+                        project_id=updated_project.id
+                    )
+                 except Exception as e:
+                    print(f"Failed to send project completion notification: {e}")
+                    
+        return updated_project
 
 
 class ProposalService(BaseService[ProposalModel, ProposalCreate, ProposalUpdate]):

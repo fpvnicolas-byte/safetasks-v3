@@ -45,13 +45,15 @@ class StorageService:
 
         return self._supabase
 
-    def _get_file_path(self, organization_id: str, module: str, filename: str) -> str:
-        """Generate a multi-tenant file path: /{organization_id}/{module}/{filename}"""
+    def _get_file_path(self, organization_id: str, module: str, filename: str, entity_id: Optional[str] = None) -> str:
+        """Generate a multi-tenant file path: /{organization_id}/{module}/{entity_id?}/{filename}"""
         # Sanitize filename and ensure unique name
         file_stem = Path(filename).stem
         file_suffix = Path(filename).suffix
         unique_filename = f"{file_stem}_{uuid.uuid4().hex[:8]}{file_suffix}"
 
+        if entity_id:
+            return f"{organization_id}/{module}/{entity_id}/{unique_filename}"
         return f"{organization_id}/{module}/{unique_filename}"
 
     def _validate_file(self, file_content: bytes, filename: str, bucket: str) -> None:
@@ -93,7 +95,8 @@ class StorageService:
         module: str,
         filename: str,
         file_content: bytes,
-        bucket: str = "production-files"
+        bucket: str = "production-files",
+        entity_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Upload a file to Supabase Storage with multi-tenant path.
@@ -104,6 +107,7 @@ class StorageService:
             filename: Original filename
             file_content: File content as bytes
             bucket: Storage bucket ('public-assets' or 'production-files')
+            entity_id: Optional entity ID (e.g., proposal_id) for sub-folder organization
 
         Returns:
             Dict with file path and access URL
@@ -113,7 +117,7 @@ class StorageService:
             self._validate_file(file_content, filename, bucket)
 
             # Generate multi-tenant file path
-            file_path = self._get_file_path(organization_id, module, filename)
+            file_path = self._get_file_path(organization_id, module, filename, entity_id)
 
             # Upload to Supabase Storage
             supabase_client = self._get_supabase_client()

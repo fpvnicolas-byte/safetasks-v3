@@ -13,20 +13,24 @@ import {
   AlertCircle,
   Info,
   X,
-  RefreshCw
+  RefreshCw,
+  Trash2
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
-import { useNotifications, useNotificationStats, useMarkAsRead, useMarkAllAsRead } from '@/lib/api/hooks/useNotifications'
+import { useNotifications, useNotificationStats, useMarkAsRead, useMarkAllAsRead, useDeleteNotification, useClearAllNotifications } from '@/lib/api/hooks/useNotifications'
 import { useTranslations } from 'next-intl'
 
 export default function NotificationsPage() {
   const t = useTranslations('notifications')
   const tMessages = useTranslations('notifications.messages')
   const [unreadOnly, setUnreadOnly] = useState(false)
-  const { data: notifications, isLoading, error } = useNotifications(unreadOnly)
-  const { data: stats } = useNotificationStats()
+  // Disable polling here, relying on NotificationsBell (Header) which handles WS/Polling and shares the cache
+  const { data: notifications, isLoading, error } = useNotifications(unreadOnly, { refetchInterval: false })
+  const { data: stats } = useNotificationStats({ refetchInterval: false })
   const markAsRead = useMarkAsRead()
   const markAllAsRead = useMarkAllAsRead()
+  const deleteNotification = useDeleteNotification()
+  const clearAllNotifications = useClearAllNotifications()
 
   const getNotificationIcon = (type: string) => {
     const icons = {
@@ -54,6 +58,14 @@ export default function NotificationsPage() {
 
   const handleMarkAllAsRead = async () => {
     await markAllAsRead.mutateAsync()
+  }
+
+  const handleDeleteNotification = async (notificationId: string) => {
+    await deleteNotification.mutateAsync(notificationId)
+  }
+
+  const handleClearAll = async () => {
+    await clearAllNotifications.mutateAsync()
   }
 
   // Helper to get translated text or fallback to original
@@ -170,6 +182,19 @@ export default function NotificationsPage() {
                   {t('controls.markAllRead')}
                 </Button>
               )}
+
+              {stats && stats.total_count > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearAll}
+                  disabled={clearAllNotifications.isPending}
+                  className="text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {t('clearAll')}
+                </Button>
+              )}
             </div>
 
             <div className="text-sm text-muted-foreground">
@@ -239,17 +264,29 @@ export default function NotificationsPage() {
                         </div>
                       </div>
 
-                      {!notification.is_read && (
+                      <div className="flex items-center gap-1">
+                        {!notification.is_read && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleMarkAsRead(notification.id)}
+                            disabled={markAsRead.isPending}
+                            className="h-8 w-8 p-0"
+                            title={t('markAsRead')}
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleMarkAsRead(notification.id)}
-                          disabled={markAsRead.isPending}
-                          className="h-8 w-8 p-0"
+                          onClick={() => handleDeleteNotification(notification.id)}
+                          disabled={deleteNotification.isPending}
+                          className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                         >
-                          <Check className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                      )}
+                      </div>
                     </div>
                   </div>
                 )

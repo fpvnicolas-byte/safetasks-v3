@@ -10,14 +10,15 @@ interface FileMetadata {
   is_public: boolean
 }
 
-export function useFiles(module: string, organizationId?: string) {
+export function useFiles(module: string, organizationId?: string, entityId?: string) {
   return useQuery({
-    queryKey: ['files', module, organizationId],
+    queryKey: ['files', module, organizationId, entityId],
     queryFn: () => {
       if (!organizationId) {
         throw new Error('Organization ID is required')
       }
-      return apiClient.get<FileMetadata[]>(`/api/v1/storage/list/${module}`)
+      const params = entityId ? `?entity_id=${entityId}` : ''
+      return apiClient.get<FileMetadata[]>(`/api/v1/storage/list/${module}${params}`)
     },
     enabled: !!organizationId && !!module,
   })

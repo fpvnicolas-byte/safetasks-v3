@@ -1,16 +1,17 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { useProposal, useDeleteProposal, useApproveProposal } from '@/lib/api/hooks'
+import { useProposal, useDeleteProposal, useApproveProposal, useUpdateProposal } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { useFiles } from '@/lib/api/hooks/useFiles'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Pencil, Trash2, ArrowLeft, CheckCircle, FileText, Calendar, DollarSign, ExternalLink, Paperclip, Download, Loader2 } from 'lucide-react'
+import { Pencil, Trash2, ArrowLeft, CheckCircle, FileText, Calendar, DollarSign, ExternalLink, Paperclip, Download, Loader2, Mail, Phone, Building } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency, ProposalStatus, FileUploadResponse } from '@/types'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
@@ -29,15 +30,17 @@ export default function ProposalDetailPage() {
   const { organizationId } = useAuth()
   const locale = useLocale()
   const t = useTranslations('proposals')
+  const tCommon = useTranslations('common')
   const proposalId = params.id as string
 
   const { data: proposal, isLoading, error } = useProposal(proposalId)
   const deleteProposal = useDeleteProposal()
   const approveProposal = useApproveProposal()
+  const updateProposal = useUpdateProposal()
   const { errorDialog, showError, closeError } = useErrorDialog()
 
   // File persistence hook for proposal attachments
-  const { data: proposalFiles = [] } = useFiles('proposals', organizationId || undefined)
+  const { data: proposalFiles = [] } = useFiles('proposals', organizationId || undefined, proposalId)
 
   const [approvalNotes, setApprovalNotes] = useState('')
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false)
@@ -57,23 +60,27 @@ export default function ProposalDetailPage() {
 
   // Initialize uploadedFiles with existing proposal files on component mount
   useEffect(() => {
-    if (proposalFiles.length > 0) {
-      const existingFiles: FileUploadResponse[] = []
+    let newFiles: FileUploadResponse[] = []
 
+    if (proposalFiles && proposalFiles.length > 0) {
       // Convert proposal files
-      proposalFiles.forEach(file => {
-        existingFiles.push({
-          file_path: file.path,
-          bucket: file.bucket,
-          access_url: file.is_public ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${file.bucket}/${file.path}` : null,
-          is_public: file.is_public,
-          size_bytes: file.size || 0,
-          content_type: 'application/pdf', // Could be improved with actual content type
-        })
-      })
-
-      setUploadedFiles(existingFiles)
+      newFiles = proposalFiles.map(file => ({
+        file_path: file.path,
+        bucket: file.bucket,
+        access_url: file.is_public ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${file.bucket}/${file.path}` : null,
+        is_public: file.is_public,
+        size_bytes: file.size || 0,
+        content_type: 'application/pdf', // Could be improved with actual content type
+      }))
     }
+
+    // Only update state if files have changed to prevent infinite loops
+    setUploadedFiles(prev => {
+      if (JSON.stringify(prev) === JSON.stringify(newFiles)) {
+        return prev
+      }
+      return newFiles
+    })
   }, [proposalFiles])
 
   const handleUploadComplete = (result: FileUploadResponse) => {
@@ -239,11 +246,43 @@ export default function ProposalDetailPage() {
     }
   }
 
+  // Status change handler
+  const handleStatusChange = async (newStatus: ProposalStatus) => {
+    // Don't allow changing from 'approved' status via dropdown
+    if (proposal.status === 'approved') {
+      toast.error(t('detail.statusLocked'))
+      return
+    }
+
+    try {
+      await updateProposal.mutateAsync({
+        proposalId,
+        data: { status: newStatus }
+      })
+      toast.success(t('detail.statusUpdated'))
+    } catch (err) {
+      console.error('Failed to update status:', err)
+      showError(err, 'Failed to update status')
+    }
+  }
+
+  // Get status variant for styling
+  const getStatusStyles = (status: ProposalStatus) => {
+    switch (status) {
+      case 'approved': return 'bg-green-100 text-green-800 border-green-300'
+      case 'rejected': return 'bg-red-100 text-red-800 border-red-300'
+      case 'sent': return 'bg-blue-100 text-blue-800 border-blue-300'
+      case 'draft': return 'bg-gray-100 text-gray-800 border-gray-300'
+      case 'expired': return 'bg-orange-100 text-orange-800 border-orange-300'
+      default: return 'bg-gray-100 text-gray-800 border-gray-300'
+    }
+  }
+
   const showApproveButton = proposal.status === 'draft' || proposal.status === 'sent'
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-6">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/proposals">
@@ -263,11 +302,17 @@ export default function ProposalDetailPage() {
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
-          {showApproveButton && (
+        <div className="flex flex-wrap gap-2">
+          {/* Approve Button - Only enabled for 'sent' proposals */}
+          {(proposal.status === 'draft' || proposal.status === 'sent') && (
+
             <Dialog open={isApproveDialogOpen} onOpenChange={setIsApproveDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="default">
+                <Button
+                  variant="default"
+                  disabled={proposal.status !== 'sent'}
+                  title={proposal.status === 'draft' ? t('detail.approveDisabledDraft') : undefined}
+                >
                   <CheckCircle className="mr-2 h-4 w-4" />
                   {t('detail.approveProposal')}
                 </Button>
@@ -299,6 +344,14 @@ export default function ProposalDetailPage() {
               </DialogContent>
             </Dialog>
           )}
+
+          {/* Show hint when proposal is in draft */}
+          {proposal.status === 'draft' && (
+            <span className="text-xs text-muted-foreground ml-1">
+              {t('detail.sendFirst') || 'Send proposal first to approve'}
+            </span>
+          )}
+
 
           <Button asChild variant="outline">
             <Link href={`/proposals/${proposalId}/edit`}>
@@ -335,9 +388,36 @@ export default function ProposalDetailPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Badge variant={getStatusVariant(proposal.status)} className="text-base px-3 py-1">
-          {t(proposal.status)}
-        </Badge>
+        {/* Status Dropdown - disabled for approved proposals */}
+        <Select
+          value={proposal.status}
+          onValueChange={(value) => handleStatusChange(value as ProposalStatus)}
+          disabled={proposal.status === 'approved' || updateProposal.isPending}
+        >
+          <SelectTrigger
+            className={`w-auto min-w-[120px] text-base font-medium border-2 ${getStatusStyles(proposal.status)}`}
+          >
+            <SelectValue>
+              {updateProposal.isPending ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  {t('detail.saving')}
+                </span>
+              ) : (
+                t(proposal.status)
+              )}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="draft">{t('draft')}</SelectItem>
+            <SelectItem value="sent">{t('sent')}</SelectItem>
+            {proposal.status === 'approved' && (
+              <SelectItem value="approved">{t('approved')}</SelectItem>
+            )}
+            <SelectItem value="rejected">{t('rejected')}</SelectItem>
+            <SelectItem value="expired">{t('expired')}</SelectItem>
+          </SelectContent>
+        </Select>
         {proposal.valid_until && (
           <Badge variant="outline" className="text-base px-3 py-1">
             {t('detail.badges.validUntil')} {new Date(proposal.valid_until).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
@@ -355,30 +435,114 @@ export default function ProposalDetailPage() {
         )}
       </div>
 
-      {proposal.status === 'approved' && proposal.project_id && (
-        <Alert className="border-success/30 bg-success/10 text-success">
-          <CheckCircle className="h-4 w-4 text-success" />
-          <AlertTitle>{t('detail.approvedAlert.title')}</AlertTitle>
-          <AlertDescription className="mt-2">
-            {t('detail.approvedAlert.description')}
-            <Button asChild variant="link" className="p-0 h-auto ml-2 text-success font-semibold">
-              <Link href={`/projects/${proposal.project_id}`}>
-                {t('detail.approvedAlert.viewProject')} <ExternalLink className="ml-1 h-3 w-3 inline" />
-              </Link>
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
+      {
+        proposal.status === 'approved' && proposal.project_id && (
+          <Alert className="border-success/30 bg-success/10 text-success">
+            <CheckCircle className="h-4 w-4 text-success" />
+            <AlertTitle>{t('detail.approvedAlert.title')}</AlertTitle>
+            <AlertDescription className="mt-2">
+              {t('detail.approvedAlert.description')}
+              <Button asChild variant="link" className="p-0 h-auto ml-2 text-success font-semibold">
+                <Link href={`/projects/${proposal.project_id}`}>
+                  {t('detail.approvedAlert.viewProject')} <ExternalLink className="ml-1 h-3 w-3 inline" />
+                </Link>
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )
+      }
 
       <div className="grid gap-6 md:grid-cols-3">
         <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle>{t('detail.descriptionCard.title')}</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-base whitespace-pre-wrap">
-              {proposal.description || t('detail.descriptionCard.empty')}
+          <CardContent className="space-y-8">
+            {/* Client Info */}
+            {proposal.client && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg border">
+                <div className="flex items-center gap-3">
+                  <Building className="h-4 w-4 text-primary" />
+                  <div>
+                    <div className="text-xs font-semibold text-muted-foreground uppercase">{tCommon('name')}</div>
+                    <div className="font-medium">{proposal.client.name}</div>
+                  </div>
+                </div>
+                {proposal.client.email && (
+                  <div className="flex items-center gap-3">
+                    <Mail className="h-4 w-4 text-primary" />
+                    <div>
+                      <div className="text-xs font-semibold text-muted-foreground uppercase">{tCommon('email')}</div>
+                      <div className="font-medium">{proposal.client.email}</div>
+                    </div>
+                  </div>
+                )}
+                {proposal.client.phone && (
+                  <div className="flex items-center gap-3">
+                    <Phone className="h-4 w-4 text-primary" />
+                    <div>
+                      <div className="text-xs font-semibold text-muted-foreground uppercase">{tCommon('phone')}</div>
+                      <div className="font-medium">{proposal.client.phone}</div>
+                    </div>
+                  </div>
+                )}
+                {proposal.client.document && (
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-4 w-4 text-primary" />
+                    <div>
+                      <div className="text-xs font-semibold text-muted-foreground uppercase">Documento</div>
+                      <div className="font-medium">{proposal.client.document}</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Description */}
+            <div>
+              <h3 className="font-semibold mb-3 text-lg">{t('detail.descriptionCard.title')}</h3>
+              <div className="text-base whitespace-pre-wrap leading-relaxed text-muted-foreground">
+                {proposal.description || t('detail.descriptionCard.empty')}
+              </div>
             </div>
+
+            {/* Detailed Services Breakdown */}
+            {((proposal.services && proposal.services.length > 0) || (proposal.proposal_metadata?.line_items && proposal.proposal_metadata.line_items.length > 0)) && (
+              <div>
+                <h3 className="font-semibold mb-3 text-lg">{t('detail.financials.services')}</h3>
+                <div className="border rounded-lg divide-y bg-card">
+                  {/* Services */}
+                  {proposal.services?.map(service => (
+                    <div key={service.id} className="p-4">
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="font-medium">{service.name}</span>
+                        <span className="font-mono text-muted-foreground">{formatCurrency(service.value_cents, proposal.currency)}</span>
+                      </div>
+                      {service.description && <p className="text-sm text-muted-foreground">{service.description}</p>}
+                    </div>
+                  ))}
+                  {/* Line Items */}
+                  {proposal.proposal_metadata?.line_items?.map((item: any, i: number) => (
+                    <div key={item.id || i} className="p-4">
+                      <div className="flex justify-between items-start">
+                        <span className="font-medium">{item.description || t('detail.financials.unnamedItem')}</span>
+                        <span className="font-mono text-muted-foreground">{formatCurrency(item.value_cents, proposal.currency)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Terms Conditions (Moved here) */}
+            {proposal.terms_conditions && (
+              <div>
+                <h3 className="font-semibold mb-3 text-lg">{t('detail.termsConditions.title')}</h3>
+                <div className="text-sm bg-muted/10 p-4 rounded-lg border whitespace-pre-wrap text-muted-foreground">
+                  {proposal.terms_conditions}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -398,51 +562,7 @@ export default function ProposalDetailPage() {
               </div>
 
               <div className="border-t border-muted/30">
-                <div className="px-4 py-3 bg-muted/5 flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t('detail.financials.detailedBreakdown')}</span>
-                  <Badge variant="outline" className="text-[10px] font-mono uppercase tracking-tighter bg-background/50">
-                    {proposal.currency}
-                  </Badge>
-                </div>
-
                 <div className="divide-y divide-muted/20">
-                  {/* Predefined Services Section */}
-                  {proposal.services && proposal.services.length > 0 && (
-                    <div className="px-4 py-3 space-y-2">
-                      <span className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-wider">{t('detail.financials.services')}</span>
-                      <div className="space-y-3">
-                        {proposal.services.map((service) => (
-                          <div key={service.id} className="space-y-0.5">
-                            <div className="flex justify-between items-start text-sm">
-                              <span className="text-foreground/80 font-medium">{service.name}</span>
-                              <span className="text-muted-foreground font-mono ml-4 shrink-0">{formatCurrency(service.value_cents, proposal.currency)}</span>
-                            </div>
-                            {service.description && (
-                              <p className="text-xs text-muted-foreground/70 pr-16">{service.description}</p>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Custom Line Items Section */}
-                  {proposal.proposal_metadata?.line_items && proposal.proposal_metadata.line_items.length > 0 && (
-                    <div className="px-4 py-3 space-y-2">
-                      <span className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-wider">{t('detail.financials.additionalItems')}</span>
-                      <div className="space-y-3">
-                        {proposal.proposal_metadata.line_items.map((item) => (
-                          <div key={item.id} className="space-y-0.5">
-                            <div className="flex justify-between items-start text-sm">
-                              <span className="text-foreground/80 font-medium">{item.description || t('detail.financials.unnamedItem')}</span>
-                              <span className="text-muted-foreground font-mono ml-4 shrink-0">{formatCurrency(item.value_cents, proposal.currency)}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
                   {/* Base Fee / Manual Adjustment */}
                   {proposal.base_amount_cents ? (
                     <div className="px-4 py-3 flex justify-between items-center bg-muted/10">
@@ -471,20 +591,6 @@ export default function ProposalDetailPage() {
               </div>
             </CardContent>
           </Card>
-
-          {proposal.terms_conditions && (
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('detail.termsConditions.title')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm whitespace-pre-wrap text-muted-foreground">
-                  {proposal.terms_conditions}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
         </div>
       </div>
 
@@ -501,6 +607,7 @@ export default function ProposalDetailPage() {
         <CardContent className="space-y-4">
           <FileUploadZone
             module="proposals"
+            entityId={proposalId}
             accept={{
               'application/pdf': ['.pdf'],
               'application/msword': ['.doc'],
@@ -539,6 +646,6 @@ export default function ProposalDetailPage() {
         validationErrors={errorDialog.validationErrors}
         statusCode={errorDialog.statusCode}
       />
-    </div>
+    </div >
   )
 }

@@ -102,11 +102,19 @@ export function ExpenseApprovalDashboard() {
                                         <div className="flex items-center gap-4">
                                             <div className="text-right">
                                                 <div className="font-bold">{formatCurrency(tx.amount_cents)}</div>
-                                                <Badge variant="secondary" className="mt-1">
-                                                    {t('pending')}
-                                                </Badge>
+                                                {tx.project?.budget_status === 'approved' ? (
+                                                    <Badge variant="outline" className="mt-1 bg-blue-50 text-blue-700 border-blue-200">
+                                                        <CheckCircle className="w-3 h-3 mr-1" />
+                                                        {t('budgetApproved') || 'Budget Approved'}
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge variant="secondary" className="mt-1">
+                                                        {t('pending')}
+                                                    </Badge>
+                                                )}
                                             </div>
                                         </div>
+
                                     </div>
                                 ))}
                             </div>

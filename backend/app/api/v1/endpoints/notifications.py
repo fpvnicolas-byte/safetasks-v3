@@ -141,3 +141,46 @@ async def create_test_notification(
         "title": notification.title,
         "type": notification.type
     }
+
+
+@router.delete("/{notification_id}", dependencies=[Depends(require_billing_active())])
+async def delete_notification(
+    notification_id: UUID,
+    profile = Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Delete a specific notification.
+    """
+    deleted = await notification_service.delete_notification(
+        db=db,
+        organization_id=profile.organization_id,
+        profile_id=profile.id,
+        notification_id=notification_id
+    )
+
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Notification not found or does not belong to you"
+        )
+
+    return {"message": "Notification deleted", "notification_id": str(notification_id)}
+
+
+@router.delete("/", dependencies=[Depends(require_billing_active())])
+async def delete_all_notifications(
+    profile = Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Delete all notifications for the current user.
+    """
+    deleted_count = await notification_service.delete_all_notifications(
+        db=db,
+        organization_id=profile.organization_id,
+        profile_id=profile.id
+    )
+
+    return {"message": f"Deleted {deleted_count} notifications"}
+

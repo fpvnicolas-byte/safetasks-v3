@@ -15,6 +15,7 @@ class Project(Base):
 
     __table_args__ = (
         CheckConstraint("status IN ('draft', 'pre-production', 'production', 'post-production', 'delivered', 'archived')"),
+        CheckConstraint("budget_status IN ('draft', 'pending_approval', 'approved', 'rejected', 'increment_pending')"),
     )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -26,6 +27,18 @@ class Project(Base):
 
     # Financial tracking (money stored as cents for precision)
     budget_total_cents = Column(BIGINT, default=0, nullable=False)  # Total project budget in cents
+    
+    # Budget Approval Workflow
+    budget_status = Column(String, default="draft", nullable=False)  # draft, pending_approval, approved, rejected, increment_pending
+    budget_approved_by = Column(UUID(as_uuid=True), ForeignKey("profiles.id"), nullable=True)
+    budget_approved_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    budget_notes = Column(String, nullable=True)  # Notes from approver
+    
+    # Budget Increment Request Fields
+    budget_increment_requested_cents = Column(BIGINT, default=0, nullable=False)  # Requested increment amount
+    budget_increment_notes = Column(String, nullable=True)  # Notes for increment request
+    budget_increment_requested_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    budget_increment_requested_by = Column(UUID(as_uuid=True), ForeignKey("profiles.id"), nullable=True)
 
     # Timeline
     start_date = Column(DATE)

@@ -1,0 +1,9 @@
+2026-02-05 02:56:40 [INFO] app: Logging configuration initialized
+2026-02-05 02:56:43 [INFO] app.core.websocket_manager: WebSocket connected: user=3454bfa2-aabe-4254-b89d-af29c98548fc, org=4384a92c-df41-444b-b34d-6c80e7820486. Total connections: 1
+2026-02-05 02:56:43 [INFO] app.core.websocket_manager: WebSocket connected: user=3454bfa2-aabe-4254-b89d-af29c98548fc, org=4384a92c-df41-444b-b34d-6c80e7820486. Total connections: 2
+2026-02-05 02:56:54 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-05 02:56:54 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-05 02:56:54 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-05 02:57:21 [INFO] app.api.v1.endpoints.stakeholders: Auto-created expense for stakeholder cededb68-240a-4ffb-a400-f69295561d3c: 5000 cents
+2026-02-05 02:59:27 [INFO] app.core.websocket_manager: WebSocket disconnected: user=3454bfa2-aabe-4254-b89d-af29c98548fc, org=4384a92c-df41-444b-b34d-6c80e7820486. Total connections: 1
+2026-02-05 02:59:27 [INFO] app.core.websocket_manager: WebSocket disconnected: user=3454bfa2-aabe-4254-b89d-af29c98548fc, org=4384a92c-df41-444b-b34d-6c80e7820486. Total connections: 0

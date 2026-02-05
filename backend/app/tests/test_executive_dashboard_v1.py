@@ -391,7 +391,7 @@ async def main():
     print("✅ Cloud Integration: Automated Google Drive sync")
     print("✅ Equipment Management: Full lifecycle tracking")
     print("✅ Financial Intelligence: Revenue, expense, profit analytics")
-    print("\n🚀 Ready for production deployment at Fly.io/Railway/Render!")
+    print("\n🚀 Ready for production deployment!")
     print("=" * 80)
 
 

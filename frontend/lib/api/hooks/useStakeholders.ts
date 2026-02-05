@@ -63,7 +63,12 @@ export function useDeleteStakeholder() {
     mutationFn: (stakeholderId: string) =>
       apiClient.delete(`/api/v1/stakeholders/${stakeholderId}`),
     onSuccess: () => {
+      // Invalidate stakeholders to refresh the list
       queryClient.invalidateQueries({ queryKey: [STAKEHOLDERS_KEY] })
+      // Invalidate transactions so the expense is removed from history and budget recalculated
+      queryClient.invalidateQueries({ queryKey: ['transactions'] })
+      // Invalidate project budget as well
+      queryClient.invalidateQueries({ queryKey: ['project-budget'] })
     },
   })
 }

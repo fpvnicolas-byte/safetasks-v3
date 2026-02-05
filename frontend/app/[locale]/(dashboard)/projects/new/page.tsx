@@ -45,7 +45,9 @@ export default function NewProjectPage() {
     if (proposal) {
       setSelectedClientId(proposal.client_id)
       setSelectedServices(proposal.services?.map((s: any) => s.id) || [])
-      setBudgetTotal(((proposal.total_amount_cents || 0) / 100).toString())
+      // NOTE: We do NOT auto-fill budget from proposal.total_amount_cents
+      // Proposal total = client-facing price (revenue)
+      // Project budget = operational costs (expenses) - a separate concept
       setStartDate(proposal.start_date || '')
       setEndDate(proposal.end_date || '')
     }
@@ -107,6 +109,8 @@ export default function NewProjectPage() {
 
   const selectedProposal = proposals?.find(p => p.id === selectedProposalId)
 
+
+
   return (
     <div className="max-w-2xl mx-auto">
       <Card>
@@ -143,21 +147,23 @@ export default function NewProjectPage() {
                 <SelectContent>
                   {proposalsLoading ? (
                     <div className="p-2 text-xs text-muted-foreground">Loading proposals...</div>
-                  ) : proposals && proposals.filter((p: any) => !p.project_id || p.id === selectedProposalId).length > 0 ? (
-                    proposals
-                      .filter((p: any) => !p.project_id || p.id === selectedProposalId)
-                      .map((prop: any) => (
-                        <SelectItem key={prop.id} value={prop.id}>
-                          {prop.title} ({prop.client?.name || 'No Client'})
-                        </SelectItem>
-                      ))
+                  ) : proposals && proposals.length > 0 ? (
+                    proposals.map((prop: any) => (
+                      <SelectItem
+                        key={prop.id}
+                        value={prop.id}
+                        disabled={!!prop.project_id && prop.id !== selectedProposalId}
+                      >
+                        {prop.title} ({prop.client?.name || 'No Client'}) {prop.project_id ? `(${t('form.converted')})` : ''}
+                      </SelectItem>
+                    ))
                   ) : (
                     <div className="p-2 text-xs text-muted-foreground">No available proposals</div>
                   )}
                 </SelectContent>
               </Select>
               <p className="text-[10px] text-muted-foreground">
-                Selecting a proposal will automatically fill the client, services, and budget fields.
+                Selecting a proposal will auto-fill client, services, and dates. Budget must be set separately.
               </p>
             </div>
 

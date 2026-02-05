@@ -35,6 +35,9 @@ export default function SupplierDetailPage() {
   // Only show statement when explicitly generated (not from URL)
   const [showStatement, setShowStatement] = useState<boolean>(false)
 
+  // Delete dialog state
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+
   const { data: supplier, isLoading, error } = useSupplier(supplierId, organizationId || undefined)
   const deleteSupplier = useDeleteSupplier()
 
@@ -92,8 +95,6 @@ export default function SupplierDetailPage() {
       </Alert>
     )
   }
-
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   const handleDelete = async () => {
     try {

@@ -24,6 +24,10 @@ class ProjectCreate(ProjectBase):
     proposal_id: Optional[UUID] = None
 
 
+# Budget status type
+BudgetStatus = Literal["draft", "pending_approval", "approved", "rejected", "increment_pending"]
+
+
 class ProjectUpdate(BaseModel):
     """Schema for updating a Project."""
     client_id: Optional[UUID] = None
@@ -31,6 +35,8 @@ class ProjectUpdate(BaseModel):
     description: Optional[str] = None
     status: Optional[Literal["draft", "pre-production", "production", "post-production", "delivered", "archived"]] = None
     budget_total_cents: Optional[int] = Field(None, ge=0)
+    budget_status: Optional[BudgetStatus] = None
+    budget_notes: Optional[str] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     service_ids: Optional[List[UUID]] = None
@@ -45,10 +51,20 @@ class Project(ProjectBase):
     organization_id: UUID
     is_active: bool
     created_at: datetime
-    is_active: bool
-    created_at: datetime
     updated_at: datetime
     services: List[Service] = []
+    
+    # Budget approval fields
+    budget_status: BudgetStatus = "draft"
+    budget_approved_by: Optional[UUID] = None
+    budget_approved_at: Optional[datetime] = None
+    budget_notes: Optional[str] = None
+    
+    # Budget increment fields
+    budget_increment_requested_cents: int = 0
+    budget_increment_notes: Optional[str] = None
+    budget_increment_requested_at: Optional[datetime] = None
+    budget_increment_requested_by: Optional[UUID] = None
 
 
 class ProjectWithClient(Project):

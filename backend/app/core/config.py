@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     @validator("API_V1_STR", pre=True)
     def validate_api_v1_str(cls, v: str) -> str:
         if v:
-            # Strip quotes which might differ between local .env and AWS S3 .env injection
+            # Strip quotes which might differ between local .env and injected env vars
             cleaned = v.strip('"').strip("'")
             if not cleaned.startswith("/"):
                 return f"/{cleaned}"

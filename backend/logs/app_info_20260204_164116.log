@@ -1,0 +1,6 @@
+2026-02-04 16:41:16 [INFO] app: Logging configuration initialized
+2026-02-04 16:41:27 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-04 16:41:27 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-04 16:43:03 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-04 16:46:55 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"
+2026-02-04 16:47:36 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/list/production-files "HTTP/2 200 OK"

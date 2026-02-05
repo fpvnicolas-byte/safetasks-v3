@@ -12,6 +12,7 @@ import { useTranslations } from 'next-intl'
 
 interface FileUploadZoneProps {
   module: string // kits, scripts, call-sheets, proposals
+  entityId?: string // Optional entity ID (e.g., proposalId)
   accept?: Record<string, string[]>
   maxSize?: number // In MB
   multiple?: boolean
@@ -28,6 +29,7 @@ interface UploadingFile {
 
 export function FileUploadZone({
   module,
+  entityId,
   accept = {
     'image/*': ['.png', '.jpg', '.jpeg', '.webp'],
     'application/pdf': ['.pdf'],
@@ -57,7 +59,7 @@ export function FileUploadZone({
         const file = acceptedFiles[i]
 
         try {
-          const result = await uploadFile.mutateAsync({ file, module })
+          const result = await uploadFile.mutateAsync({ file, module, entityId })
 
           // Update file status to success
           setUploadingFiles((prev) =>
@@ -83,17 +85,17 @@ export function FileUploadZone({
             prev.map((f) =>
               f.file === file
                 ? {
-                    ...f,
-                    status: 'error' as const,
-                    error: error instanceof Error ? error.message : 'Upload failed',
-                  }
+                  ...f,
+                  status: 'error' as const,
+                  error: error instanceof Error ? error.message : 'Upload failed',
+                }
                 : f
             )
           )
         }
       }
     },
-    [module, uploadFile, onUploadComplete]
+    [module, entityId, uploadFile, onUploadComplete]
   )
 
   const { getRootProps, getInputProps, isDragActive, fileRejections } =
@@ -165,8 +167,8 @@ export function FileUploadZone({
                         {error.code === 'file-too-large'
                           ? t('fileTooLarge', { size: maxSize })
                           : error.code === 'file-invalid-type'
-                          ? t('invalidFileType')
-                          : error.message}
+                            ? t('invalidFileType')
+                            : error.message}
                       </li>
                     ))}
                   </ul>
