@@ -1,5 +1,4 @@
 from typing import List, Union, Optional, Dict, Any
-import socket
 from pydantic import AnyHttpUrl, validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -51,30 +50,25 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = "safetasks"
     POSTGRES_PORT: str = "5432"
     
+    DATABASE_URL: Optional[str] = None
     SQLALCHEMY_DATABASE_URI: Optional[str] = None
 
     @validator("SQLALCHEMY_DATABASE_URI", pre=True)
     def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
         if isinstance(v, str):
-            return v
+            return v.strip('"').strip("'")
+
+        database_url = values.get("DATABASE_URL")
+        if isinstance(database_url, str) and database_url:
+            return database_url.strip('"').strip("'")
         
         user = values.get("POSTGRES_USER")
         password = values.get("POSTGRES_PASSWORD")
         server = values.get("POSTGRES_SERVER")
         port = values.get("POSTGRES_PORT")
         db = values.get("POSTGRES_DB")
-
-        try:
-            print(f"DEBUG: Attempting to resolve host: {server}")
-            full_addr = socket.gethostbyname(server)
-            print(f"DEBUG: SUCCESS - Resolved {server} to IPv4: {full_addr}")
-            server = full_addr
-        except Exception as e:
-            print(f"CRITICAL ERROR: Could not resolve hostname {server}: {e}")
-            # Fallback: Don't crash, let it try the original (though it will likely fail with Errno 99)
         
         uri = f"postgresql+asyncpg://{user}:{password}@{server}:{port}/{db}"
-        print(f"DEBUG: Final Database URI (masked): postgresql+asyncpg://{user}:***@{server}:{port}/{db}")
         return uri
 
     # Auth
