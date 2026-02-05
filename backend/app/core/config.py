@@ -56,17 +56,12 @@ class Settings(BaseSettings):
     @classmethod
     def _normalize_async_db_url(cls, url: str) -> str:
         cleaned = url.strip('"').strip("'")
+        if cleaned.startswith("postgresql+asyncpg://"):
+            return cleaned
+        if cleaned.startswith("postgresql://"):
+            return cleaned.replace("postgresql://", "postgresql+asyncpg://", 1)
         if cleaned.startswith("postgres://"):
-            cleaned = cleaned.replace("postgres://", "postgresql+asyncpg://", 1)
-        elif cleaned.startswith("postgresql://"):
-            cleaned = cleaned.replace("postgresql://", "postgresql+asyncpg://", 1)
-            
-        # Enforce statement_cache_size=0 for Supabase Transaction Pooler compatibility
-        # This is a fallback/enforcement because connect_args sometimes get ignored or overriden
-        if "statement_cache_size" not in cleaned:
-            separator = "&" if "?" in cleaned else "?"
-            cleaned = f"{cleaned}{separator}statement_cache_size=0"
-            
+            return cleaned.replace("postgres://", "postgresql+asyncpg://", 1)
         return cleaned
 
     @validator("SQLALCHEMY_DATABASE_URI", pre=True)

@@ -22,6 +22,8 @@ engine = create_async_engine(
         }
     }
 )
+# DEBUG: Verify that code is effectively deployed
+print("DEBUG: SafeTasks DB Engine Initialized with statement_cache_size=0 and NullPool", flush=True)
 
 # Cria a fábrica de sessões (Essa é a variável que o script estava procurando com o nome errado)
 SessionLocal = sessionmaker(
