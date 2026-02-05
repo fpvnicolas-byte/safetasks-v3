@@ -977,6 +977,7 @@
         "loading": "Carregando transações...",
         "error": "Falha ao carregar transações. Tente novamente.",
         "actions": {
+          "back": "Voltar para Financeiro",
           "new": "Nova Transação"
         },
         "summary": {
@@ -1654,9 +1655,10 @@
     },
     "approvals": {
       "title": "Aprovações",
-      "pending": "Pendentes",
-      "approved": "Aprovados",
-      "rejected": "Rejeitados",
+      "pending": "Pendente",
+      "waitingApproval": "Aguardando aprovação",
+      "approved": "Aprovado",
+      "rejected": "Rejeitado",
       "paid": "Pago",
       "pendingCount": "{count} Pendentes",
       "pendingAmount": "Total Pendente",
@@ -2239,7 +2241,8 @@
         "description": "Descrição",
         "value": "Valor",
         "actions": "Ações",
-        "noDescription": "-"
+        "noDescription": "-",
+        "manageEquipment": "Gerenciar Equipamentos"
       },
       "empty": "Nenhum serviço encontrado. Crie um para começar.",
       "dialog": {

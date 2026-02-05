@@ -3,7 +3,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, func, and_, text
 from sqlalchemy.orm import selectinload
-from datetime import date, datetime, timezone
+from datetime import date
 
 from app.services.base import BaseService
 from app.models.bank_accounts import BankAccount
@@ -78,6 +78,8 @@ class BankAccountService(BaseService[BankAccount, BankAccountCreate, BankAccount
 class TransactionService(BaseService[Transaction, TransactionCreate, TransactionUpdate]):
     """Service for Transaction operations with atomic balance updates."""
 
+    APPLIED_PAYMENT_STATUSES = ("approved", "paid")
+
     def __init__(self):
         super().__init__(Transaction)
 
@@ -130,6 +132,10 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
 
         # Create the transaction
         transaction_data = obj_in.dict()
+
+        # All expenses must go through approval workflow
+        if obj_in.type == "expense":
+            transaction_data["payment_status"] = "pending"
 
         # Auto-link expense transactions to a budget line when possible
         if obj_in.type == "expense":
@@ -216,28 +222,6 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
                 if candidate_budget_line_id:
                     transaction_data["budget_line_id"] = candidate_budget_line_id
 
-        # Budget-approved projects: auto-approve expenses within remaining budget
-        if obj_in.type == "expense":
-            project_id = transaction_data.get("project_id")
-            if project_id and transaction_data.get("payment_status") == "pending":
-                if not project or project.id != project_id:
-                    project = await self._validate_project_ownership(db, organization_id, project_id)
-
-                if getattr(project, "budget_status", None) == "approved" and getattr(project, "budget_total_cents", 0) > 0:
-                    approved_spend_result = await db.execute(
-                        select(func.coalesce(func.sum(Transaction.amount_cents), 0))
-                        .where(Transaction.organization_id == organization_id)
-                        .where(Transaction.project_id == project_id)
-                        .where(Transaction.type == "expense")
-                        .where(Transaction.payment_status.in_(("approved", "paid")))
-                    )
-                    approved_spend_cents = approved_spend_result.scalar() or 0
-                    remaining_cents = (project.budget_total_cents or 0) - approved_spend_cents
-
-                    if remaining_cents >= obj_in.amount_cents:
-                        transaction_data["payment_status"] = "approved"
-                        transaction_data["approved_at"] = datetime.now(timezone.utc)
-        
         # Auto-approve income: if it's income, mark as paid immediately
         # Income transactions (like receipts) are usually recorded after they happen
         if obj_in.type == "income" and transaction_data.get("payment_status") == "pending":
@@ -248,17 +232,19 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
         db.add(db_transaction)
         await db.flush()
 
-        # Update bank account balance
-        await db.execute(
-            update(BankAccount)
-            .where(
-                and_(
-                    BankAccount.id == obj_in.bank_account_id,
-                    BankAccount.organization_id == organization_id
+        # Update bank account balance only when the transaction is applied
+        # (pending/rejected transactions should not impact cash/balance).
+        if transaction_data.get("payment_status") in self.APPLIED_PAYMENT_STATUSES:
+            await db.execute(
+                update(BankAccount)
+                .where(
+                    and_(
+                        BankAccount.id == obj_in.bank_account_id,
+                        BankAccount.organization_id == organization_id
+                    )
                 )
+                .values(balance_cents=BankAccount.balance_cents + balance_change)
             )
-            .values(balance_cents=BankAccount.balance_cents + balance_change)
-        )
 
         # Reload transaction with relationships
         result = await db.execute(
@@ -452,27 +438,27 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
         if not transaction:
             return None
 
-        # Calculate reverse balance change
-        balance_change = transaction.amount_cents
+        # Calculate reverse balance change (only if transaction was applied)
+        applied_balance_change = transaction.amount_cents
         if transaction.type == "expense":
-            balance_change = -balance_change  # Reverse the expense (add back)
-        else:
-            balance_change = -balance_change  # Reverse the income (subtract)
+            applied_balance_change = -applied_balance_change
+        reverse_balance_change = -applied_balance_change
 
         # Delete the transaction
         await db.delete(transaction)
 
-        # Rollback bank account balance
-        await db.execute(
-            update(BankAccount)
-            .where(
-                and_(
-                    BankAccount.id == transaction.bank_account_id,
-                    BankAccount.organization_id == organization_id
+        # Rollback bank account balance only if this transaction affected it
+        if transaction.payment_status in self.APPLIED_PAYMENT_STATUSES:
+            await db.execute(
+                update(BankAccount)
+                .where(
+                    and_(
+                        BankAccount.id == transaction.bank_account_id,
+                        BankAccount.organization_id == organization_id
+                    )
                 )
+                .values(balance_cents=BankAccount.balance_cents + reverse_balance_change)
             )
-            .values(balance_cents=BankAccount.balance_cents + balance_change)
-        )
 
         return transaction
 
@@ -524,6 +510,7 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
             and_(
                 Transaction.organization_id == organization_id,
                 Transaction.type == "income",
+                Transaction.payment_status.in_(self.APPLIED_PAYMENT_STATUSES),
                 Transaction.transaction_date >= start_date,
                 Transaction.transaction_date < end_date
             )
@@ -534,6 +521,7 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
             and_(
                 Transaction.organization_id == organization_id,
                 Transaction.type == "expense",
+                Transaction.payment_status.in_(self.APPLIED_PAYMENT_STATUSES),
                 Transaction.transaction_date >= start_date,
                 Transaction.transaction_date < end_date
             )
@@ -565,7 +553,8 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
         income_query = select(func.sum(Transaction.amount_cents)).where(
             and_(
                 Transaction.organization_id == organization_id,
-                Transaction.type == "income"
+                Transaction.type == "income",
+                Transaction.payment_status.in_(self.APPLIED_PAYMENT_STATUSES),
             )
         )
 
@@ -573,7 +562,8 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
         expense_query = select(func.sum(Transaction.amount_cents)).where(
             and_(
                 Transaction.organization_id == organization_id,
-                Transaction.type == "expense"
+                Transaction.type == "expense",
+                Transaction.payment_status.in_(self.APPLIED_PAYMENT_STATUSES),
             )
         )
 
@@ -590,6 +580,7 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
             and_(
                 Transaction.organization_id == organization_id,
                 Transaction.type == "expense",
+                Transaction.payment_status.in_(self.APPLIED_PAYMENT_STATUSES),
                 Project.is_active == True
             )
         )

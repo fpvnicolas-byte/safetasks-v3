@@ -570,47 +570,6 @@ async def approve_budget(
     await db.commit()
     await db.refresh(project)
 
-    # Auto-approve pending expenses that fit within the approved budget
-    # This keeps project financials consistent: once the budget is approved,
-    # expenses inside the remaining budget should not require per-expense approval.
-    if (project.budget_total_cents or 0) > 0:
-        from sqlalchemy import func
-        from app.models.transactions import Transaction as TransactionModel
-
-        approved_spend_result = await db.execute(
-            select(func.coalesce(func.sum(TransactionModel.amount_cents), 0))
-            .where(TransactionModel.organization_id == organization_id)
-            .where(TransactionModel.project_id == project_id)
-            .where(TransactionModel.type == "expense")
-            .where(TransactionModel.payment_status.in_(("approved", "paid")))
-        )
-        approved_spend_cents = approved_spend_result.scalar() or 0
-        remaining_cents = (project.budget_total_cents or 0) - approved_spend_cents
-
-        if remaining_cents > 0:
-            pending_expenses_result = await db.execute(
-                select(TransactionModel)
-                .where(TransactionModel.organization_id == organization_id)
-                .where(TransactionModel.project_id == project_id)
-                .where(TransactionModel.type == "expense")
-                .where(TransactionModel.payment_status == "pending")
-                .order_by(TransactionModel.transaction_date.asc(), TransactionModel.created_at.asc())
-            )
-            pending_expenses = pending_expenses_result.scalars().all()
-
-            updated = False
-            for tx in pending_expenses:
-                if tx.amount_cents <= remaining_cents:
-                    tx.payment_status = "approved"
-                    tx.approved_by = profile.id
-                    tx.approved_at = dt.utcnow()
-                    tx.rejection_reason = None
-                    remaining_cents -= tx.amount_cents
-                    updated = True
-
-            if updated:
-                await db.commit()
-
     return project
 
 
@@ -806,6 +765,7 @@ async def get_project_financial_summary(
         .where(TransactionModel.project_id == project_id)
         .where(TransactionModel.organization_id == organization_id)
         .where(TransactionModel.type == "income")
+        .where(TransactionModel.payment_status.in_(("approved", "paid")))
     )
     total_income_cents = income_result.scalar() or 0
     
@@ -815,6 +775,7 @@ async def get_project_financial_summary(
         .where(TransactionModel.project_id == project_id)
         .where(TransactionModel.organization_id == organization_id)
         .where(TransactionModel.type == "expense")
+        .where(TransactionModel.payment_status.in_(("approved", "paid")))
     )
     total_expense_cents = expense_result.scalar() or 0
     

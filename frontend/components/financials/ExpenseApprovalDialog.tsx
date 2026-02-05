@@ -211,7 +211,7 @@ function StatusBadge({ status, t }: { status?: string, t: any }) {
 
     return (
         <Badge variant={variants[status] as any || "outline"} className={className}>
-            {t(status)}
+            {t(status === 'pending' ? 'waitingApproval' : status)}
         </Badge>
     )
 }

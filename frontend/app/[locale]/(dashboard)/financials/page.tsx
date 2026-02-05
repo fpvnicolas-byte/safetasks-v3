@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { DollarSign, Plus, Eye, Edit, Trash2 } from 'lucide-react'
+import { DollarSign, Plus, Eye, Edit, Trash2, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency } from '@/lib/utils/money'
 import { InvoiceWithItems, InvoiceStatus } from '@/types'
@@ -31,6 +31,7 @@ export default function FinancialsPage() {
   const { organizationId } = useAuth()
   const locale = useLocale()
   const t = useTranslations('financials')
+  const tApprovals = useTranslations('financials.approvals')
   const tCommon = useTranslations('common')
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | 'all'>('all')
 
@@ -227,7 +228,15 @@ export default function FinancialsPage() {
                   {recentTransactions.map((transaction) => (
                     <div key={transaction.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
                       <div>
-                        <div className="font-medium">{transaction.description || t('transactionsTab.noDescription')}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="font-medium">{transaction.description || t('transactionsTab.noDescription')}</div>
+                          {transaction.payment_status === 'pending' && (
+                            <Badge variant="warning" className="text-[10px]">
+                              <Clock className="w-3 h-3" />
+                              {tApprovals('waitingApproval')}
+                            </Badge>
+                          )}
+                        </div>
                         <div className="text-sm text-muted-foreground">
                           {new Date(transaction.transaction_date).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} • {transaction.category}
                         </div>
@@ -267,7 +276,15 @@ export default function FinancialsPage() {
                   {recentExpenses.map((expense) => (
                     <div key={expense.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
                       <div>
-                        <div className="font-medium">{expense.description || t('transactionsTab.noDescription')}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="font-medium">{expense.description || t('transactionsTab.noDescription')}</div>
+                          {expense.payment_status === 'pending' && (
+                            <Badge variant="warning" className="text-[10px]">
+                              <Clock className="w-3 h-3" />
+                              {tApprovals('waitingApproval')}
+                            </Badge>
+                          )}
+                        </div>
                         <div className="text-sm text-muted-foreground">
                           {new Date(expense.transaction_date).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} • {expense.category}
                         </div>

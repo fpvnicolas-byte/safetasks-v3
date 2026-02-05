@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { ArrowLeft, Trash2, Receipt, Calendar, Wallet, FolderOpen, ArrowUpCircle, ArrowDownCircle } from 'lucide-react'
+import { ArrowLeft, Trash2, Receipt, Calendar, Wallet, FolderOpen, ArrowUpCircle, ArrowDownCircle, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency, getCategoryDisplayName, TransactionCategory } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
@@ -19,6 +19,7 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
   const { organizationId } = useAuth()
   const locale = useLocale()
   const t = useTranslations('financials.pages.transactionDetail')
+  const tApprovals = useTranslations('financials.approvals')
   const [transactionId, setTransactionId] = useState<string | null>(null)
 
   // Resolve the promise in useEffect
@@ -136,6 +137,24 @@ export default function TransactionViewPage({ params }: { params: Promise<{ id: 
                   </Badge>
                   <Badge variant="secondary">
                     {getCategoryDisplayName(transaction.category as TransactionCategory)}
+                  </Badge>
+                  <Badge
+                    variant={
+                      transaction.payment_status === 'pending'
+                        ? 'warning'
+                        : transaction.payment_status === 'approved'
+                          ? 'info'
+                          : transaction.payment_status === 'paid'
+                            ? 'success'
+                            : transaction.payment_status === 'rejected'
+                              ? 'destructive'
+                              : 'secondary'
+                    }
+                  >
+                    {transaction.payment_status === 'pending' && <Clock className="w-3 h-3" />}
+                    {transaction.payment_status === 'pending'
+                      ? tApprovals('waitingApproval')
+                      : tApprovals(transaction.payment_status)}
                   </Badge>
                 </CardDescription>
               </div>

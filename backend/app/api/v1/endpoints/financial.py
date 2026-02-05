@@ -550,7 +550,8 @@ async def get_project_budget(
     )
     budget_lines = result.scalars().all()
 
-    # Get actual spending per budget line
+    # Only count approved/paid expenses as "actuals" for budget tracking.
+    # Pending expenses are requests and should not be applied until approved.
     actual_by_line = {}
     if budget_lines:
         line_ids = [line.id for line in budget_lines]
@@ -562,6 +563,7 @@ async def get_project_budget(
             .where(Transaction.organization_id == organization_id)
             .where(Transaction.budget_line_id.in_(line_ids))
             .where(Transaction.type == 'expense')
+            .where(Transaction.payment_status.in_(("approved", "paid")))
             .group_by(Transaction.budget_line_id)
         )
         for row in result:
@@ -578,6 +580,7 @@ async def get_project_budget(
         .where(Transaction.project_id == project_id)
         .where(Transaction.type == "expense")
         .where(Transaction.budget_line_id.is_(None))
+        .where(Transaction.payment_status.in_(("approved", "paid")))
         .group_by(Transaction.category)
     )
     for row in result:
@@ -748,8 +751,10 @@ async def update_budget_line(
     from app.models.transactions import Transaction
     result = await db.execute(
         select(sql_func.sum(Transaction.amount_cents))
+        .where(Transaction.organization_id == organization_id)
         .where(Transaction.budget_line_id == line_id)
         .where(Transaction.type == 'expense')
+        .where(Transaction.payment_status.in_(("approved", "paid")))
     )
     actual = result.scalar() or 0
 

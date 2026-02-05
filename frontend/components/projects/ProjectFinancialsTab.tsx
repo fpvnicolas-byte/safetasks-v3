@@ -309,9 +309,13 @@ export function ProjectFinancialsTab({ projectId, project, isAdmin = false }: Pr
     return t.type === transactionType
   }) || []
 
-  // Calculate totals
-  const totalIncome = transactions?.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount_cents, 0) || 0
-  const totalExpenses = transactions?.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount_cents, 0) || 0
+  // Calculate totals (only apply approved/paid transactions)
+  const appliedTransactions = transactions?.filter(t =>
+    t.payment_status === 'approved' || t.payment_status === 'paid'
+  ) || []
+
+  const totalIncome = appliedTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount_cents, 0) || 0
+  const totalExpenses = appliedTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount_cents, 0) || 0
   const netBalance = totalIncome - totalExpenses
 
   const estimatedBudgetCents = budget?.total_estimated_cents && budget.total_estimated_cents > 0

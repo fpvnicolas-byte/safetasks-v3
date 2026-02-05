@@ -85,6 +85,7 @@ async def test_budget_summary_includes_unassigned_project_expenses():
             description="Unassigned crew expense",
             transaction_date=date.today(),
             budget_line_id=None,
+            payment_status="approved",
         )
         db.add(unassigned_expense)
         await db.commit()

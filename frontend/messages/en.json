@@ -977,6 +977,7 @@
         "loading": "Loading transactions...",
         "error": "Failed to load transactions. Please try again.",
         "actions": {
+          "back": "Back to Financials",
           "new": "New Transaction"
         },
         "summary": {
@@ -1655,6 +1656,7 @@
     "approvals": {
       "title": "Approvals",
       "pending": "Pending",
+      "waitingApproval": "Waiting for approval",
       "approved": "Approved",
       "rejected": "Rejected",
       "paid": "Paid",
@@ -1978,6 +1980,9 @@
       "title": "Proposal Title",
       "description": "Description of the proposal",
       "terms": "Terms and Conditions"
+    },
+    "validation": {
+      "clientRequired": "Please select a client"
     },
     "noClients": "No clients found. Create a client to get started.",
     "noServices": "No services found.",

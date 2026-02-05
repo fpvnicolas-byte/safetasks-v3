@@ -102,6 +102,7 @@ class AnalyticsService:
         ).where(
             and_(
                 Transaction.organization_id == organization_id,
+                Transaction.payment_status.in_(("approved", "paid")),
                 extract('year', Transaction.transaction_date) == today.year,
                 extract('month', Transaction.transaction_date) == today.month
             )
@@ -137,6 +138,7 @@ class AnalyticsService:
         ).where(
             and_(
                 Transaction.organization_id == organization_id,
+                Transaction.payment_status.in_(("approved", "paid")),
                 extract('year', Transaction.transaction_date) == today.year
             )
         )
@@ -285,7 +287,8 @@ class AnalyticsService:
             and_(
                 Transaction.organization_id == organization_id,
                 Transaction.category == "maintenance",
-                Transaction.type == "expense"
+                Transaction.type == "expense",
+                Transaction.payment_status.in_(("approved", "paid")),
             )
         )
 
@@ -415,6 +418,7 @@ class AnalyticsService:
             ).where(
                 and_(
                     Transaction.organization_id == organization_id,
+                    Transaction.payment_status.in_(("approved", "paid")),
                     Transaction.transaction_date >= month_start,
                     Transaction.transaction_date <= month_end
                 )

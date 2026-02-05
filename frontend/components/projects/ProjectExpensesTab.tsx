@@ -112,6 +112,7 @@ export function ProjectExpensesTab({ projectId, project }: ProjectExpensesTabPro
     const t = useTranslations('projects.details.financials')
     const tCategories = useTranslations('budget.categories')
     const tCommon = useTranslations('common')
+    const tApprovals = useTranslations('financials.approvals')
 
     // Quick add expense dialog state
     const [showQuickAdd, setShowQuickAdd] = useState(false)
@@ -355,7 +356,7 @@ export function ProjectExpensesTab({ projectId, project }: ProjectExpensesTabPro
                             </p>
                             {totalPendingExpenses > 0 && (
                                 <p className="text-[10px] sm:text-xs text-yellow-600 dark:text-yellow-400">
-                                    + {formatCurrency(totalPendingExpenses)} pending
+                                    + {formatCurrency(totalPendingExpenses)} {tApprovals('waitingApproval').toLocaleLowerCase(locale)}
                                 </p>
                             )}
                         </div>
@@ -438,7 +439,7 @@ export function ProjectExpensesTab({ projectId, project }: ProjectExpensesTabPro
                                     {t('producer.teamCosts') || 'Team Costs'}
                                     {totalTeamPending > 0 && (
                                         <Badge className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 text-[10px]">
-                                            {formatCurrency(totalTeamPending)} pending
+                                            {formatCurrency(totalTeamPending)} {tApprovals('waitingApproval').toLocaleLowerCase(locale)}
                                         </Badge>
                                     )}
                                 </CardTitle>
@@ -490,9 +491,11 @@ export function ProjectExpensesTab({ projectId, project }: ProjectExpensesTabPro
                                                                     : ''
                                                             }`}
                                                     >
-                                                        {transaction.payment_status === 'pending' ? 'Pending' :
-                                                            transaction.payment_status === 'approved' ? 'Approved' :
-                                                                transaction.payment_status === 'paid' ? 'Paid' : transaction.payment_status}
+                                                        {transaction.payment_status === 'pending' ? tApprovals('waitingApproval') :
+                                                            transaction.payment_status === 'approved' ? tApprovals('approved') :
+                                                                transaction.payment_status === 'paid' ? tApprovals('paid') :
+                                                                    transaction.payment_status === 'rejected' ? tApprovals('rejected') :
+                                                                        transaction.payment_status}
                                                     </Badge>
                                                 </div>
                                             </div>

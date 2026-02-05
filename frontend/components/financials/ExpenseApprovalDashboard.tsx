@@ -8,7 +8,7 @@ import { usePendingTransactions, useTransactions } from '@/lib/api/hooks/useTran
 import { useAuth } from '@/contexts/AuthContext'
 import { useTranslations } from 'next-intl'
 import { formatCurrency } from '@/lib/utils/money'
-import { Loader2, CheckCircle, XCircle, AlertCircle, Filter } from 'lucide-react'
+import { Loader2, CheckCircle, XCircle, AlertCircle, Filter, Clock } from 'lucide-react'
 import { ExpenseApprovalDialog } from './ExpenseApprovalDialog'
 import { TransactionWithRelations } from '@/types'
 
@@ -102,16 +102,18 @@ export function ExpenseApprovalDashboard() {
                                         <div className="flex items-center gap-4">
                                             <div className="text-right">
                                                 <div className="font-bold">{formatCurrency(tx.amount_cents)}</div>
-                                                {tx.project?.budget_status === 'approved' ? (
-                                                    <Badge variant="outline" className="mt-1 bg-blue-50 text-blue-700 border-blue-200">
-                                                        <CheckCircle className="w-3 h-3 mr-1" />
-                                                        {t('budgetApproved') || 'Budget Approved'}
+                                                <div className="mt-1 flex flex-wrap justify-end gap-1.5">
+                                                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                                                        <Clock className="w-3 h-3 mr-1" />
+                                                        {t('waitingApproval')}
                                                     </Badge>
-                                                ) : (
-                                                    <Badge variant="secondary" className="mt-1">
-                                                        {t('pending')}
-                                                    </Badge>
-                                                )}
+                                                    {tx.project?.budget_status === 'approved' && (
+                                                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                                            <CheckCircle className="w-3 h-3 mr-1" />
+                                                            {t('budgetApproved') || 'Budget Approved'}
+                                                        </Badge>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
 

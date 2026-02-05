@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Search, Eye, Trash2, ArrowUpCircle, ArrowDownCircle, Receipt, TrendingUp, TrendingDown } from 'lucide-react'
+import { Plus, Search, Eye, Trash2, ArrowUpCircle, ArrowDownCircle, Receipt, TrendingUp, TrendingDown, Clock, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency, TransactionType, TransactionCategory } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
@@ -28,6 +28,7 @@ export default function TransactionsPage() {
   const { data: projects } = useProjects(organizationId || '')
   const deleteTransaction = useDeleteTransaction()
   const t = useTranslations('financials.pages.transactions')
+  const tApprovals = useTranslations('financials.approvals')
   const tCommon = useTranslations('common.feedback')
 
   // Apply filters
@@ -73,11 +74,15 @@ export default function TransactionsPage() {
   }) || []
 
   // Calculate summary stats
-  const totalIncome = filteredTransactions
+  const appliedTransactions = filteredTransactions.filter(
+    (t) => t.payment_status === 'approved' || t.payment_status === 'paid'
+  )
+
+  const totalIncome = appliedTransactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + t.amount_cents, 0)
 
-  const totalExpense = filteredTransactions
+  const totalExpense = appliedTransactions
     .filter(t => t.type === 'expense')
     .reduce((sum, t) => sum + t.amount_cents, 0)
 
@@ -128,6 +133,15 @@ export default function TransactionsPage() {
 
   return (
     <div className="space-y-8">
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="sm" asChild>
+          <Link href="/financials">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {t('actions.back')}
+          </Link>
+        </Button>
+      </div>
+
       <ConfirmDeleteDialog
         open={!!deleteTarget}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
@@ -360,6 +374,12 @@ export default function TransactionsPage() {
                           <Badge variant="secondary">
                             {t(`categories.${transaction.category as TransactionCategory}`)}
                           </Badge>
+                          {transaction.payment_status === 'pending' && (
+                            <Badge variant="warning">
+                              <Clock className="w-3 h-3" />
+                              {tApprovals('waitingApproval')}
+                            </Badge>
+                          )}
                         </div>
                         <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                           <span>{transaction.bank_account?.name}</span>

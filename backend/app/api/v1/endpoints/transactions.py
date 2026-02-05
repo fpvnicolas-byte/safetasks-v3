@@ -3,6 +3,7 @@ from uuid import UUID
 from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import update, and_
 
 from app.api.deps import (
     get_current_organization,
@@ -236,6 +237,25 @@ async def approve_transaction(
     transaction.approved_by = current_user
     transaction.approved_at = datetime.now(timezone.utc)
     transaction.rejection_reason = None
+
+    # Apply the transaction to the bank account balance on approval.
+    # Pending expenses/transactions should not impact balance until approved.
+    from app.models.bank_accounts import BankAccount
+
+    balance_change = transaction.amount_cents
+    if transaction.type == "expense":
+        balance_change = -balance_change
+
+    await db.execute(
+        update(BankAccount)
+        .where(
+            and_(
+                BankAccount.id == transaction.bank_account_id,
+                BankAccount.organization_id == organization_id,
+            )
+        )
+        .values(balance_cents=BankAccount.balance_cents + balance_change)
+    )
     
     db.add(transaction)
     await db.commit()
