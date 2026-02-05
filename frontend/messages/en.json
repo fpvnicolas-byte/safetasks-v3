@@ -1972,6 +1972,7 @@
     "createTitle": "Create Proposal",
     "createDescription": "Create a new proposal for a client",
     "createAction": "Create Proposal",
+    "creating": "Creating...",
     "selectClient": "Select Client",
     "placeholders": {
       "title": "Proposal Title",

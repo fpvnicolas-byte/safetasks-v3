@@ -1971,6 +1971,7 @@
     "description": "Crie e gerencie propostas de clientes",
     "createTitle": "Criar Nova Proposta",
     "createDescription": "Rascunhar uma nova proposta para um cliente",
+    "createAction": "Criar Proposta",
     "newProposal": "Nova Proposta",
     "createProposal": "Criar Proposta",
     "editProposal": "Editar Proposta",

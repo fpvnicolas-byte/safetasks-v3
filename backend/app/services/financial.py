@@ -81,6 +81,26 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
     def __init__(self):
         super().__init__(Transaction)
 
+    def _get_relation_options(self):
+        return [
+            selectinload(Transaction.bank_account),
+            selectinload(Transaction.project).selectinload(Project.services),
+        ]
+
+    async def get_with_relations(
+        self,
+        db: AsyncSession,
+        *,
+        organization_id: UUID,
+        id: UUID,
+    ) -> Optional[Transaction]:
+        return await self.get(
+            db=db,
+            organization_id=organization_id,
+            id=id,
+            options=self._get_relation_options(),
+        )
+
     async def create(
         self,
         db: AsyncSession,
@@ -137,8 +157,7 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
             select(Transaction)
             .where(Transaction.id == db_transaction.id)
             .options(
-                selectinload(Transaction.bank_account),
-                selectinload(Transaction.project).selectinload(Project.services)
+                *self._get_relation_options()
             )
         )
         return result.scalar_one()
@@ -366,10 +385,7 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
                 if hasattr(Transaction, field):
                     query = query.where(getattr(Transaction, field) == value)
 
-        query = query.options(
-            selectinload(Transaction.bank_account),
-            selectinload(Transaction.project).selectinload(Project.services)
-        ).order_by(
+        query = query.options(*self._get_relation_options()).order_by(
             Transaction.transaction_date.desc(),
             Transaction.created_at.desc()
         ).offset(skip).limit(limit)

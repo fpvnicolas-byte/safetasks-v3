@@ -551,13 +551,30 @@ class ProposalService(BaseService[ProposalModel, ProposalCreate, ProposalUpdate]
         # Fetch the proposal fully loaded BEFORE deleting it
         # This is critical because returning a deleted object with unloaded relationships
         # causes serialization errors (MissingGreenlet)
-        proposal = await self.get(db=db, organization_id=organization_id, id=id)
+        proposal = await self.get(
+            db=db,
+            organization_id=organization_id,
+            id=id,
+            options=[
+                selectinload(ProposalModel.services),
+                selectinload(ProposalModel.client),
+            ],
+        )
         if not proposal:
             return None
             
         # Clear relationships first to avoid ForeignKeyViolationError
         proposal.services = []
         await db.flush()
+
+        # Fix: Nullify proposal_id in invoices before deletion to avoid IntegrityError
+        # Invoices should remain (historical record) but unlink from the deleted proposal
+        from app.models.financial import Invoice
+        await db.execute(
+            update(Invoice)
+            .where(and_(Invoice.organization_id == organization_id, Invoice.proposal_id == id))
+            .values(proposal_id=None)
+        )
             
         await super().remove(db=db, organization_id=organization_id, id=id)
         

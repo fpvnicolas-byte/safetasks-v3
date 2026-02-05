@@ -14,12 +14,13 @@ from app.api.deps import (
 from app.db.session import get_db
 from app.services.financial import transaction_service
 from app.schemas.transactions import (
-    Transaction, TransactionCreate, TransactionUpdate,
-    Transaction, TransactionCreate, TransactionUpdate,
-    TransactionWithRelations, TransactionStats, TransactionOverviewStats,
-    TransactionApproval
+    TransactionCreate,
+    TransactionUpdate,
+    TransactionWithRelations,
+    TransactionStats,
+    TransactionOverviewStats,
+    TransactionApproval,
 )
-from app.models.transactions import Transaction as TransactionModel
 
 router = APIRouter()
 
@@ -99,15 +100,7 @@ async def create_transaction(
             obj_in=transaction_in
         )
 
-        # Return with relations loaded
-        return await transaction_service.get(
-            db=db,
-            organization_id=organization_id,
-            id=transaction.id,
-            options=[
-                transaction_service._get_relation_options()
-            ] if hasattr(transaction_service, '_get_relation_options') else []
-        )
+        return transaction
 
     except ValueError as e:
         raise HTTPException(
@@ -125,18 +118,10 @@ async def get_transaction(
     """
     Get transaction by ID with relations (must belong to current user's organization).
     """
-    from sqlalchemy.orm import selectinload
-    from app.models.transactions import Transaction as TransactionModel
-    from app.models.projects import Project
-
-    transaction = await transaction_service.get(
+    transaction = await transaction_service.get_with_relations(
         db=db,
         organization_id=organization_id,
         id=transaction_id,
-        options=[
-            selectinload(TransactionModel.bank_account),
-            selectinload(TransactionModel.project).selectinload(Project.services)
-        ]
     )
 
     if not transaction:
@@ -256,13 +241,10 @@ async def approve_transaction(
     await db.commit()
     await db.refresh(transaction)
     
-    return await transaction_service.get(
+    return await transaction_service.get_with_relations(
         db=db, 
         organization_id=organization_id, 
-        id=transaction.id,
-        options=[
-             transaction_service._get_relation_options()
-        ] if hasattr(transaction_service, '_get_relation_options') else []
+        id=transaction.id
     )
 
 
@@ -314,13 +296,10 @@ async def reject_transaction(
     await db.commit()
     await db.refresh(transaction)
     
-    return await transaction_service.get(
+    return await transaction_service.get_with_relations(
         db=db, 
         organization_id=organization_id, 
-        id=transaction.id,
-        options=[
-             transaction_service._get_relation_options()
-        ] if hasattr(transaction_service, '_get_relation_options') else []
+        id=transaction.id
     )
 
 
@@ -357,13 +336,10 @@ async def mark_transaction_paid(
     await db.commit()
     await db.refresh(transaction)
     
-    return await transaction_service.get(
+    return await transaction_service.get_with_relations(
         db=db,
         organization_id=organization_id,
-        id=transaction.id,
-        options=[
-             transaction_service._get_relation_options()
-        ] if hasattr(transaction_service, '_get_relation_options') else []
+        id=transaction.id
     )
 
 

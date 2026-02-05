@@ -185,7 +185,6 @@ async def delete_proposal(
         organization_id=organization_id,
         id=proposal_id
     )
-    await increment_usage_count(db, organization_id, resource="proposals", delta=-1)
 
     if not proposal:
         raise HTTPException(
@@ -193,6 +192,7 @@ async def delete_proposal(
             detail="Proposal not found"
         )
 
+    await increment_usage_count(db, organization_id, resource="proposals", delta=-1)
     return proposal
 
 

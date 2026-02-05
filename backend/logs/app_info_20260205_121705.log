@@ -1,0 +1,3 @@
+2026-02-05 12:17:05 [INFO] app: Logging configuration initialized
+2026-02-05 12:17:05 [INFO] app.main: CORS configured for 9 origin(s) in development environment
+2026-02-05 12:17:05 [INFO] app.main: CORS origins: http://localhost:3000, https://safetasks.vercel.app, http://127.0.0.1:3000, http://localhost:3001, http://127.0.0.1:3001, http://localhost:5173, http://127.0.0.1:5173, http://192.168.15.3:3000, http://192.168.15.11:3000
