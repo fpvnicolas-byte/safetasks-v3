@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="{{ locale | default('pt-BR') }}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t.invoice }} #{{ invoice.invoice_number }} - {{ client.name if client else '' }}</title>
+    <link rel="stylesheet" href="invoice.css">
+</head>
+
+<body>
+    <div class="invoice-document">
+        <!-- Header with Logo and Organization Info -->
+        <header class="invoice-header">
+            <div class="logo-section">
+                {% if logo_url %}
+                <img src="{{ logo_url }}" alt="{{ organization.name }}" class="organization-logo">
+                {% endif %}
+            </div>
+            <div class="organization-info">
+                <h1 class="organization-name">{{ organization.name }}</h1>
+                {% if organization.email %}
+                <p class="contact-item">{{ organization.email }}</p>
+                {% endif %}
+                {% if organization.phone %}
+                <p class="contact-item">{{ organization.phone }}</p>
+                {% endif %}
+            </div>
+        </header>
+
+        <!-- Invoice Title and Meta -->
+        <section class="invoice-meta">
+            <h2 class="invoice-title">{{ t.invoice }}</h2>
+            <div class="meta-grid">
+                <div class="meta-item">
+                    <span class="meta-label">{{ t.invoice_number }}</span>
+                    <span class="meta-value">{{ invoice.invoice_number }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">{{ t.issue_date }}</span>
+                    <span class="meta-value">{{ invoice.issue_date.strftime('%d/%m/%Y') }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">{{ t.due_date }}</span>
+                    <span class="meta-value">{{ invoice.due_date.strftime('%d/%m/%Y') }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">{{ t.status }}</span>
+                    <span class="meta-value status-{{ invoice.status.value if invoice.status.value is defined else invoice.status }}">{{ translate_status(invoice.status.value if invoice.status.value is defined else invoice.status) }}</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Client Information -->
+        <section class="client-section">
+            <h3 class="section-title">{{ t.client }}</h3>
+            <div class="client-info">
+                {% if client %}
+                <p class="client-name">{{ client.name }}</p>
+                {% if client.company_name %}
+                <p class="client-company">{{ client.company_name }}</p>
+                {% endif %}
+                {% if client.email %}
+                <p class="client-contact">{{ client.email }}</p>
+                {% endif %}
+                {% if client.phone %}
+                <p class="client-contact">{{ client.phone }}</p>
+                {% endif %}
+                {% else %}
+                <p class="client-name">-</p>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- Description -->
+        {% if invoice.description %}
+        <section class="description-section">
+            <h3 class="section-title">{{ t.description }}</h3>
+            <div class="description-content">
+                {{ invoice.description }}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Invoice Items Table -->
+        {% if items and items | length > 0 %}
+        <section class="items-section">
+            <h3 class="section-title">{{ t.items }}</h3>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th class="col-item">{{ t.item }}</th>
+                        <th class="col-quantity">{{ t.quantity }}</th>
+                        <th class="col-unit-price">{{ t.unit_price }}</th>
+                        <th class="col-total">{{ t.total }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td class="item-description">{{ item.description }}</td>
+                        <td class="item-quantity">{{ item.quantity }}</td>
+                        <td class="item-unit-price">{{ item.unit_price_cents | format_currency(invoice.currency) }}</td>
+                        <td class="item-total">{{ item.total_cents | format_currency(invoice.currency) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
+
+        <!-- Totals Section -->
+        <section class="totals-section">
+            <div class="totals-box">
+                <div class="total-row subtotal">
+                    <span class="total-label">{{ t.subtotal }}</span>
+                    <span class="total-value">{{ invoice.subtotal_cents | format_currency(invoice.currency) }}</span>
+                </div>
+                {% if invoice.tax_amount_cents and invoice.tax_amount_cents > 0 %}
+                <div class="total-row tax">
+                    <span class="total-label">{{ t.tax }}</span>
+                    <span class="total-value">{{ invoice.tax_amount_cents | format_currency(invoice.currency) }}</span>
+                </div>
+                {% endif %}
+                <div class="total-row grand-total">
+                    <span class="total-label">{{ t.grand_total }}</span>
+                    <span class="total-value">{{ invoice.total_amount_cents | format_currency(invoice.currency) }}</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Payment Information (if paid) -->
+        {% if invoice.status.value == 'paid' or invoice.payment_method %}
+        <section class="payment-section">
+            <h3 class="section-title">{{ t.payment_info }}</h3>
+            <div class="payment-info">
+                {% if invoice.paid_date %}
+                <div class="payment-row">
+                    <span class="payment-label">{{ t.paid_date }}</span>
+                    <span class="payment-value">{{ invoice.paid_date.strftime('%d/%m/%Y') }}</span>
+                </div>
+                {% endif %}
+                {% if invoice.payment_method %}
+                <div class="payment-row">
+                    <span class="payment-label">{{ t.payment_method }}</span>
+                    <span class="payment-value">{{ translate_payment_method(invoice.payment_method) }}</span>
+                </div>
+                {% endif %}
+                {% if invoice.payment_reference %}
+                <div class="payment-row">
+                    <span class="payment-label">{{ t.payment_reference }}</span>
+                    <span class="payment-value">{{ invoice.payment_reference }}</span>
+                </div>
+                {% endif %}
+                {% if invoice.payment_notes %}
+                <div class="payment-row">
+                    <span class="payment-label">{{ t.payment_notes }}</span>
+                    <span class="payment-value">{{ invoice.payment_notes }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Notes -->
+        {% if invoice.notes %}
+        <section class="notes-section">
+            <h3 class="section-title">{{ t.notes }}</h3>
+            <div class="notes-content">
+                {{ invoice.notes }}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Footer -->
+        <footer class="invoice-footer">
+            <div class="footer-content">
+                <p class="generated-info">{{ t.generated_at }} {{ generated_at[:10] }}</p>
+                <p class="page-number">{{ t.page }} <span class="page"></span> {{ t.of }} <span class="topage"></span></p>
+            </div>
+        </footer>
+    </div>
+</body>
+
+</html>

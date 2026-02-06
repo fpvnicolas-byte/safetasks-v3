@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { useProposal, useUpdateProposal, useServices } from '@/lib/api/hooks'
+import { useProposal, useUpdateProposal, useServices, useOrganization } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { ProposalUpdate, ProposalStatus, toCents, fromCents, ProposalLineItem, formatCurrency } from '@/types'
@@ -30,6 +30,7 @@ export default function EditProposalPage() {
   const { errorDialog, showError, closeError } = useErrorDialog()
   const { data: proposal, isLoading } = useProposal(proposalId)
   const { data: services, isLoading: servicesLoading } = useServices(organizationId || undefined)
+  const { data: organization } = useOrganization(organizationId || undefined)
   const updateProposal = useUpdateProposal()
 
   const [selectedServices, setSelectedServices] = useState<string[]>([])
@@ -58,6 +59,14 @@ export default function EditProposalPage() {
   const servicesTotalCents = (services?.filter(s => selectedServices.includes(s.id))
     .reduce((sum, s) => sum + (s.value_cents || 0), 0) || 0)
   const discountCents = toCents(parseFloat(discountInput) || 0)
+
+  // Tax calculations from organization defaults
+  const cnpjTaxRate = organization?.cnpj_tax_rate ?? 0
+  const produtoraTaxRate = organization?.produtora_tax_rate ?? 0
+  const subtotalCents = servicesTotalCents + totalLineItemsCents - discountCents
+  const cnpjTaxCents = Math.round(subtotalCents * cnpjTaxRate / 100)
+  const produtoraTaxCents = Math.round(subtotalCents * produtoraTaxRate / 100)
+  const totalWithTaxesCents = subtotalCents + cnpjTaxCents + produtoraTaxCents
 
   if (isLoading) {
     return <div>{t('detail.loading')}</div>
@@ -335,12 +344,49 @@ export default function EditProposalPage() {
                     </div>
                   ) : null}
 
+                  {(cnpjTaxRate > 0 || produtoraTaxRate > 0) ? (
+                    <>
+                      <div className="flex justify-between items-center text-sm border-t border-primary/10 pt-3 mt-1">
+                        <div className="flex flex-col">
+                          <span className="text-muted-foreground font-medium">{t('detail.financials.subtotalBeforeTax')}</span>
+                        </div>
+                        <span className="font-mono text-foreground font-semibold">
+                          {formatCurrency(subtotalCents, currency)}
+                        </span>
+                      </div>
+
+                      {cnpjTaxRate > 0 ? (
+                        <div className="flex justify-between items-center text-sm">
+                          <div className="flex flex-col">
+                            <span className="text-muted-foreground font-medium">{t('detail.financials.cnpjTax')} ({cnpjTaxRate}%)</span>
+                            <span className="text-[10px] text-muted-foreground/60 leading-none">{t('detail.financials.cnpjTaxSub')}</span>
+                          </div>
+                          <span className="font-mono text-orange-600 font-semibold">
+                            + {formatCurrency(cnpjTaxCents, currency)}
+                          </span>
+                        </div>
+                      ) : null}
+
+                      {produtoraTaxRate > 0 ? (
+                        <div className="flex justify-between items-center text-sm">
+                          <div className="flex flex-col">
+                            <span className="text-muted-foreground font-medium">{t('detail.financials.produtoraTax')} ({produtoraTaxRate}%)</span>
+                            <span className="text-[10px] text-muted-foreground/60 leading-none">{t('detail.financials.produtoraTaxSub')}</span>
+                          </div>
+                          <span className="font-mono text-orange-600 font-semibold">
+                            + {formatCurrency(produtoraTaxCents, currency)}
+                          </span>
+                        </div>
+                      ) : null}
+                    </>
+                  ) : null}
+
                   <div className="flex justify-between items-center border-t border-primary/10 pt-3 mt-1">
                     <span className="text-sm font-bold text-primary">{t('detail.financials.finalTotal')}</span>
                     <div className="flex flex-col items-end">
                       <span className="text-xl font-black text-primary font-mono tracking-tighter">
                         {formatCurrency(
-                          (servicesTotalCents + totalLineItemsCents - discountCents),
+                          (cnpjTaxRate > 0 || produtoraTaxRate > 0) ? totalWithTaxesCents : subtotalCents,
                           currency
                         )}
                       </span>

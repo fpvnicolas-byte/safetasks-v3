@@ -806,3 +806,217 @@ async def delete_budget_line(
 
     await db.delete(budget_line)
     await db.commit()
+
+
+# =============================================================================
+# Invoice PDF Generation Endpoints
+# =============================================================================
+
+@router.post(
+    "/invoices/{invoice_id}/pdf",
+    response_model=dict,
+    dependencies=[Depends(require_finance_or_admin)]
+)
+async def generate_invoice_pdf(
+    invoice_id: UUID,
+    regenerate: bool = Query(False, description="Force regeneration even if PDF exists"),
+    locale: str = Query("pt-BR", description="Locale for PDF rendering (pt-BR or en)"),
+    organization_id: UUID = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Generate PDF for invoice and store in storage.
+    Returns PDF metadata including signed URL for download.
+    """
+    from app.services.invoice_pdf import invoice_pdf_service
+    from sqlalchemy.orm import selectinload
+    from app.models.financial import Invoice as InvoiceModel
+
+    # Get invoice with items and client
+    invoice = await invoice_service.get(
+        db=db,
+        organization_id=organization_id,
+        id=invoice_id,
+        options=[
+            selectinload(InvoiceModel.items),
+            selectinload(InvoiceModel.client),
+        ]
+    )
+
+    if not invoice:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invoice not found"
+        )
+
+    # Check if PDF already exists and regenerate is not requested
+    if not regenerate:
+        existing = await invoice_pdf_service.get_existing_pdf_url(
+            organization_id=str(organization_id),
+            invoice_id=str(invoice_id)
+        )
+        if existing:
+            return {
+                "status": "exists",
+                "signed_url": existing["signed_url"],
+                "pdf_path": existing["file_path"],
+            }
+
+    # Get organization for header/logo
+    from app.models.organizations import Organization
+    org_result = await db.execute(
+        select(Organization).where(Organization.id == organization_id)
+    )
+    organization = org_result.scalar_one_or_none()
+
+    if not organization:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organization not found"
+        )
+
+    try:
+        # Generate and store PDF
+        pdf_result = await invoice_pdf_service.generate_and_store(
+            db=db,
+            invoice=invoice,
+            organization=organization,
+            client=invoice.client,
+            items=list(invoice.items) if invoice.items else [],
+            locale=locale
+        )
+
+        return {
+            "status": "generated",
+            "signed_url": pdf_result["signed_url"],
+            "pdf_path": pdf_result["pdf_path"],
+            "size_bytes": pdf_result["size_bytes"],
+            "filename": pdf_result["filename"],
+        }
+    except RuntimeError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"PDF generation failed: {str(e)}"
+        )
+
+
+@router.get(
+    "/invoices/{invoice_id}/pdf",
+    dependencies=[Depends(require_admin_producer_or_finance)]
+)
+async def get_invoice_pdf(
+    invoice_id: UUID,
+    download: bool = Query(False, description="Return download URL for direct download"),
+    organization_id: UUID = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get PDF access for invoice.
+    If download=true, returns a short-lived signed URL for direct download.
+    Otherwise returns signed URL for viewing the PDF.
+    """
+    from app.services.invoice_pdf import invoice_pdf_service
+
+    # Check invoice exists
+    invoice = await invoice_service.get(
+        db=db,
+        organization_id=organization_id,
+        id=invoice_id
+    )
+
+    if not invoice:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invoice not found"
+        )
+
+    # Check if PDF exists
+    existing = await invoice_pdf_service.get_existing_pdf_url(
+        organization_id=str(organization_id),
+        invoice_id=str(invoice_id),
+        expires_in=60 if download else 3600
+    )
+
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="PDF not generated yet. Use POST to generate."
+        )
+
+    if download:
+        return {
+            "status": "redirect",
+            "download_url": existing["signed_url"],
+            "filename": f"invoice_{invoice.invoice_number}.pdf"
+        }
+    else:
+        return {
+            "status": "ok",
+            "signed_url": existing["signed_url"],
+            "pdf_path": existing["file_path"],
+        }
+
+
+@router.get(
+    "/invoices/{invoice_id}/pdf/preview",
+    dependencies=[Depends(require_admin_producer_or_finance)]
+)
+async def preview_invoice_pdf(
+    invoice_id: UUID,
+    locale: str = Query("pt-BR", description="Locale for PDF rendering (pt-BR or en)"),
+    organization_id: UUID = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Render invoice as HTML for preview.
+    Useful for template development and quick preview without generating PDF.
+    """
+    from fastapi.responses import HTMLResponse
+    from app.services.invoice_pdf import invoice_pdf_service
+    from sqlalchemy.orm import selectinload
+    from app.models.financial import Invoice as InvoiceModel
+
+    # Get invoice with items and client
+    invoice = await invoice_service.get(
+        db=db,
+        organization_id=organization_id,
+        id=invoice_id,
+        options=[
+            selectinload(InvoiceModel.items),
+            selectinload(InvoiceModel.client),
+        ]
+    )
+
+    if not invoice:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invoice not found"
+        )
+
+    # Get organization
+    from app.models.organizations import Organization
+    org_result = await db.execute(
+        select(Organization).where(Organization.id == organization_id)
+    )
+    organization = org_result.scalar_one_or_none()
+
+    try:
+        html_content = await invoice_pdf_service.render_html(
+            invoice=invoice,
+            organization=organization,
+            client=invoice.client,
+            items=list(invoice.items) if invoice.items else [],
+            locale=locale
+        )
+
+        return HTMLResponse(content=html_content)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"HTML rendering failed: {str(e)}"
+        )

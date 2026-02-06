@@ -12,8 +12,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Edit, Trash2, ArrowLeft, Download, Mail, DollarSign, CreditCard } from 'lucide-react'
+// Tooltip imports retained for potential future use
+// import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Edit, Trash2, ArrowLeft, Download, Mail, DollarSign, CreditCard, FileText, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency } from '@/lib/utils/money'
 import { useState } from 'react'
@@ -21,6 +22,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { InvoiceStatus } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
+import { toast } from 'sonner'
 
 const statusVariant: Record<InvoiceStatus, 'secondary' | 'info' | 'success' | 'destructive' | 'outline'> = {
   draft: 'secondary',
@@ -44,6 +46,100 @@ export default function InvoiceDetailPage() {
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+
+  // PDF Generation State
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
+  const [pdfGenerated, setPdfGenerated] = useState(false)
+
+  // PDF Generation Handler
+  const handleGeneratePdf = async (regenerate = false) => {
+    setIsGeneratingPdf(true)
+    try {
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+      const { data: { session }, error: authError } = await supabase.auth.getSession()
+
+      if (authError || !session) {
+        throw new Error('Not authenticated')
+      }
+
+      const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
+      const pdfLocale = locale === 'pt-br' ? 'pt-BR' : 'en'
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/financial/invoices/${invoiceId}/pdf?regenerate=${regenerate}&locale=${pdfLocale}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+        }
+      )
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.detail || t('pdf.generateFailed'))
+      }
+
+      const data = await response.json()
+      setPdfGenerated(true)
+
+      if (data.status === 'exists' && !regenerate) {
+        toast.success(t('pdf.exists'))
+      } else {
+        toast.success(t('pdf.generated'))
+      }
+    } catch (error) {
+      console.error('PDF generation failed:', error)
+
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        toast.error('Cannot connect to server. Please check if backend is running.')
+      } else if (error instanceof Error && error.message === 'Not authenticated') {
+        toast.error('Please log in again to generate PDF.')
+      } else {
+        toast.error(error instanceof Error ? error.message : t('pdf.generateFailed'))
+      }
+    } finally {
+      setIsGeneratingPdf(false)
+    }
+  }
+
+  // PDF Download Handler
+  const handleDownloadPdf = async () => {
+    try {
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+      const { data: { session }, error: authError } = await supabase.auth.getSession()
+
+      if (authError || !session) {
+        throw new Error('Not authenticated')
+      }
+
+      const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/financial/invoices/${invoiceId}/pdf?download=true`,
+        {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to get PDF URL')
+      }
+
+      const data = await response.json()
+      if (data.download_url) {
+        window.open(data.download_url, '_blank')
+      } else if (data.signed_url) {
+        window.open(data.signed_url, '_blank')
+      }
+    } catch (error) {
+      console.error('PDF download failed:', error)
+      toast.error(t('pdf.downloadFailed'))
+    }
+  }
 
   async function handleDelete() {
     try {
@@ -155,19 +251,24 @@ export default function InvoiceDetailPage() {
             <Mail className="mr-2 h-4 w-4" />
             {t('actions.sendEmail')}
           </Button>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" disabled>
-                  <Download className="mr-2 h-4 w-4" />
-                  {t('actions.downloadPdf')}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{t('pdfUnavailable')}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Button
+            variant="outline"
+            onClick={() => handleGeneratePdf(pdfGenerated)}
+            disabled={isGeneratingPdf}
+          >
+            {isGeneratingPdf ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <FileText className="mr-2 h-4 w-4" />
+            )}
+            {pdfGenerated ? t('pdf.regenerate') : t('pdf.generate')}
+          </Button>
+          {pdfGenerated && (
+            <Button variant="secondary" onClick={handleDownloadPdf}>
+              <Download className="mr-2 h-4 w-4" />
+              {t('pdf.download')}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -331,19 +432,25 @@ export default function InvoiceDetailPage() {
                 <Mail className="mr-2 h-4 w-4" />
                 {t('actions.sendToClient')}
               </Button>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button className="w-full" variant="outline" disabled>
-                      <Download className="mr-2 h-4 w-4" />
-                      {t('actions.downloadPdf')}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{t('pdfUnavailable')}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Button
+                className="w-full"
+                variant="outline"
+                onClick={() => handleGeneratePdf(pdfGenerated)}
+                disabled={isGeneratingPdf}
+              >
+                {isGeneratingPdf ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <FileText className="mr-2 h-4 w-4" />
+                )}
+                {pdfGenerated ? t('pdf.regenerate') : t('pdf.generate')}
+              </Button>
+              {pdfGenerated && (
+                <Button className="w-full" variant="outline" onClick={handleDownloadPdf}>
+                  <Download className="mr-2 h-4 w-4" />
+                  {t('pdf.download')}
+                </Button>
+              )}
               {invoice.status !== 'paid' && (
                 <PaymentDialog invoiceId={invoiceId} invoiceTotal={total} organizationId={organizationId || undefined} />
               )}

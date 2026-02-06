@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ArrowLeft, Building2, Wallet } from 'lucide-react'
+import { ArrowLeft, Building2, Wallet, Percent } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/api/client'
@@ -28,6 +28,8 @@ export default function OrganizationSettingsPage() {
   const [formData, setFormData] = useState({
     name: '',
     tax_id: '',
+    cnpj_tax_rate: '',
+    produtora_tax_rate: '',
     default_bank_account_id: 'none',
   })
 
@@ -47,6 +49,8 @@ export default function OrganizationSettingsPage() {
       setFormData({
         name: data.name || '',
         tax_id: data.tax_id || '',
+        cnpj_tax_rate: data.cnpj_tax_rate != null ? String(data.cnpj_tax_rate) : '0',
+        produtora_tax_rate: data.produtora_tax_rate != null ? String(data.produtora_tax_rate) : '0',
         default_bank_account_id: data.default_bank_account_id || 'none',
       })
     } catch (error) {
@@ -67,6 +71,8 @@ export default function OrganizationSettingsPage() {
       await apiClient.put(`/api/v1/organizations/${organization.id}`, {
         name: formData.name,
         tax_id: formData.tax_id || null,
+        cnpj_tax_rate: formData.cnpj_tax_rate ? parseFloat(formData.cnpj_tax_rate) : 0,
+        produtora_tax_rate: formData.produtora_tax_rate ? parseFloat(formData.produtora_tax_rate) : 0,
         default_bank_account_id: formData.default_bank_account_id === 'none' ? null : formData.default_bank_account_id,
       })
       toast.success(tCommon('feedback.actionSuccess'))
@@ -149,6 +155,58 @@ export default function OrganizationSettingsPage() {
               <p className="text-xs text-muted-foreground">
                 {t('fields.taxIdHelp')}
               </p>
+            </div>
+
+            {/* Default Tax Rates */}
+            <div className="space-y-4 rounded-lg border p-4 bg-muted/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Percent className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">{t('fields.defaultTaxRates')}</span>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="cnpj_tax_rate">{t('fields.cnpjTaxRate')}</Label>
+                  <div className="relative">
+                    <Input
+                      id="cnpj_tax_rate"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      value={formData.cnpj_tax_rate}
+                      onChange={(e) => setFormData({ ...formData, cnpj_tax_rate: e.target.value })}
+                      placeholder="0.00"
+                      className="pr-8"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">%</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t('fields.cnpjTaxRateHelp')}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="produtora_tax_rate">{t('fields.produtoraTaxRate')}</Label>
+                  <div className="relative">
+                    <Input
+                      id="produtora_tax_rate"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      value={formData.produtora_tax_rate}
+                      onChange={(e) => setFormData({ ...formData, produtora_tax_rate: e.target.value })}
+                      placeholder="0.00"
+                      className="pr-8"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">%</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t('fields.produtoraTaxRateHelp')}
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-2">

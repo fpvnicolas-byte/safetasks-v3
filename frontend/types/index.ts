@@ -31,6 +31,8 @@ export interface Organization {
   id: UUID
   name: string
   tax_id: string | null
+  cnpj_tax_rate: number | null
+  produtora_tax_rate: number | null
   default_bank_account_id: UUID | null
   plan: OrganizationPlan
   subscription_status: SubscriptionStatus
