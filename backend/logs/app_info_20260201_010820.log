@@ -1,5 +1,0 @@
-2026-02-01 01:08:20 [INFO] app: Logging configuration initialized
-2026-02-01 01:13:35 [INFO] app.services.analytics: MTD Financial Metrics for org aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee: Revenue: 8.50E+6, Expenses: 5.05E+6, Date range: 2026-02-01 to 2026-02-01
-2026-02-01 01:13:35 [INFO] app.services.analytics: YTD Financial Metrics for org aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee: Revenue: 1.470E+7, Expenses: 9.70E+6, Date range: 2026-01-01 to 2026-02-01
-2026-02-01 01:14:10 [INFO] app.services.analytics: MTD Financial Metrics for org aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee: Revenue: 8.50E+6, Expenses: 5.05E+6, Date range: 2026-02-01 to 2026-02-01
-2026-02-01 01:14:10 [INFO] app.services.analytics: YTD Financial Metrics for org aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee: Revenue: 1.470E+7, Expenses: 9.70E+6, Date range: 2026-01-01 to 2026-02-01

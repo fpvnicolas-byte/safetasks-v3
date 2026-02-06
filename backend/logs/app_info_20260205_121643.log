@@ -1,5 +1,0 @@
-2026-02-05 12:16:43 [INFO] app: Logging configuration initialized
-2026-02-05 12:16:43 [INFO] app.main: CORS configured for 9 origin(s) in development environment
-2026-02-05 12:16:43 [INFO] app.main: CORS origins: http://localhost:3000, https://safetasks.vercel.app, http://127.0.0.1:3000, http://localhost:3001, http://127.0.0.1:3001, http://localhost:5173, http://127.0.0.1:5173, http://192.168.15.3:3000, http://192.168.15.11:3000
-2026-02-05 12:16:44 [INFO] app.core.websocket_manager: WebSocket connected: user=3454bfa2-aabe-4254-b89d-af29c98548fc, org=4384a92c-df41-444b-b34d-6c80e7820486. Total connections: 1
-2026-02-05 12:17:02 [INFO] app.core.websocket_manager: WebSocket disconnected: user=3454bfa2-aabe-4254-b89d-af29c98548fc, org=4384a92c-df41-444b-b34d-6c80e7820486. Total connections: 0

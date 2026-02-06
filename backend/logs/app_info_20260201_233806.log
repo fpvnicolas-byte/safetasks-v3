@@ -1,5 +1,0 @@
-2026-02-01 23:38:06 [INFO] app: Logging configuration initialized
-2026-02-01 23:38:39 [INFO] app.services.analytics: MTD Financial Metrics for org 4384a92c-df41-444b-b34d-6c80e7820486: Revenue: 2.7E+5, Expenses: 0, Month: 2/2026
-2026-02-01 23:38:39 [INFO] app.services.analytics: YTD Financial Metrics for org 4384a92c-df41-444b-b34d-6c80e7820486: Revenue: 395000, Expenses: 5E+4, Year: 2026
-2026-02-01 23:43:45 [INFO] app.services.analytics: MTD Financial Metrics for org 4384a92c-df41-444b-b34d-6c80e7820486: Revenue: 2.7E+5, Expenses: 0, Month: 2/2026
-2026-02-01 23:43:45 [INFO] app.services.analytics: YTD Financial Metrics for org 4384a92c-df41-444b-b34d-6c80e7820486: Revenue: 395000, Expenses: 5E+4, Year: 2026

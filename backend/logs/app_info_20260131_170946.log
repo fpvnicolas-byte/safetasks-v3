@@ -1,8 +1,0 @@
-2026-01-31 17:09:46 [INFO] app: Logging configuration initialized
-2026-01-31 17:14:08 [INFO] app.services.analytics: MTD Financial Metrics for org aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee: Revenue: 8.50E+6, Expenses: 5.05E+6, Date range: 2026-01-01 to 2026-01-31
-2026-01-31 17:14:08 [INFO] app.services.analytics: YTD Financial Metrics for org aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee: Revenue: 8.50E+6, Expenses: 5.05E+6, Date range: 2026-01-01 to 2026-01-31
-2026-01-31 17:14:42 [INFO] app.services.analytics: MTD Financial Metrics for org aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee: Revenue: 8.50E+6, Expenses: 5.05E+6, Date range: 2026-01-01 to 2026-01-31
-2026-01-31 17:14:42 [INFO] app.services.analytics: YTD Financial Metrics for org aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee: Revenue: 8.50E+6, Expenses: 5.05E+6, Date range: 2026-01-01 to 2026-01-31
-2026-01-31 17:24:24 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/public-assets/12345678-9012-3456-7890-123456789012/kits/camera_kit_photo_fd11c6e8.jpg "HTTP/2 200 OK"
-2026-01-31 17:24:24 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/production-files/12345678-9012-3456-7890-123456789012/scripts/movie_script_v1_3411f849.pdf "HTTP/2 200 OK"
-2026-01-31 17:24:24 [INFO] httpx: HTTP Request: POST https://jxhbhzryzuzedqlxjrzj.supabase.co/storage/v1/object/sign/production-files/12345678-9012-3456-7890-123456789012/scripts/movie_script_v1_3411f849.pdf "HTTP/2 200 OK"

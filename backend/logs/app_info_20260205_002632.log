@@ -1,7 +1,0 @@
-2026-02-05 00:26:32 [INFO] app: Logging configuration initialized
-2026-02-05 00:39:42 [INFO] app.core.websocket_manager: WebSocket connected: user=3454bfa2-aabe-4254-b89d-af29c98548fc, org=4384a92c-df41-444b-b34d-6c80e7820486. Total connections: 1
-2026-02-05 00:39:42 [INFO] app.services.analytics: MTD Financial Metrics for org 4384a92c-df41-444b-b34d-6c80e7820486: Revenue: 2.7E+5, Expenses: 1E+4, Month: 2/2026
-2026-02-05 00:39:42 [INFO] app.core.websocket_manager: WebSocket connected: user=3454bfa2-aabe-4254-b89d-af29c98548fc, org=4384a92c-df41-444b-b34d-6c80e7820486. Total connections: 2
-2026-02-05 00:39:42 [INFO] app.services.analytics: YTD Financial Metrics for org 4384a92c-df41-444b-b34d-6c80e7820486: Revenue: 395000, Expenses: 6E+4, Year: 2026
-2026-02-05 00:52:42 [INFO] app.core.websocket_manager: WebSocket disconnected: user=3454bfa2-aabe-4254-b89d-af29c98548fc, org=4384a92c-df41-444b-b34d-6c80e7820486. Total connections: 1
-2026-02-05 00:52:42 [INFO] app.core.websocket_manager: WebSocket disconnected: user=3454bfa2-aabe-4254-b89d-af29c98548fc, org=4384a92c-df41-444b-b34d-6c80e7820486. Total connections: 0

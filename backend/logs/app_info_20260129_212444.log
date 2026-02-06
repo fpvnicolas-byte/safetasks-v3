@@ -1,5 +1,0 @@
-2026-01-29 21:24:44 [INFO] app: Logging configuration initialized
-2026-01-29 21:26:28 [ERROR] app.api.deps: Missing credentials. URL: http://127.0.0.1:8000/api/v1/transactions/
-2026-01-29 21:26:28 [WARNING] app.api.deps: No Authorization header found.
-2026-01-29 21:27:13 [ERROR] app.api.deps: Missing credentials. URL: http://127.0.0.1:8000/api/v1/transactions/?organization_id=4384a92c-df41-444b-b34d-6c80e7820486
-2026-01-29 21:27:13 [WARNING] app.api.deps: No Authorization header found.

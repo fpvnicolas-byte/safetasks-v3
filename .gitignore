@@ -15,5 +15,11 @@ __pycache__/
 .venv/
 venv/
 
+# Logs
+backend/logs/
+
+# Claude
+.claude/
+
 # OS
 .DS_Store

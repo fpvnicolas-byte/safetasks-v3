@@ -1,3 +1,0 @@
-2026-02-05 01:23:39 [INFO] app: Logging configuration initialized
-2026-02-05 01:23:39 [INFO] app.core.websocket_manager: WebSocket connected: user=3454bfa2-aabe-4254-b89d-af29c98548fc, org=4384a92c-df41-444b-b34d-6c80e7820486. Total connections: 1
-2026-02-05 01:24:02 [INFO] app.core.websocket_manager: WebSocket disconnected: user=3454bfa2-aabe-4254-b89d-af29c98548fc, org=4384a92c-df41-444b-b34d-6c80e7820486. Total connections: 0

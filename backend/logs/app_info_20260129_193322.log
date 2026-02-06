@@ -1,7 +1,0 @@
-2026-01-29 19:33:22 [INFO] app: Logging configuration initialized
-2026-01-29 19:33:39 [ERROR] app.api.deps: Missing credentials. URL: http://127.0.0.1:8000/api/v1/notifications/
-2026-01-29 19:33:39 [WARNING] app.api.deps: No Authorization header found.
-2026-01-29 19:33:40 [ERROR] app.api.deps: Missing credentials. URL: http://127.0.0.1:8000/api/v1/notifications/
-2026-01-29 19:33:40 [WARNING] app.api.deps: No Authorization header found.
-2026-01-29 19:33:42 [ERROR] app.api.deps: Missing credentials. URL: http://127.0.0.1:8000/api/v1/notifications/
-2026-01-29 19:33:42 [WARNING] app.api.deps: No Authorization header found.
