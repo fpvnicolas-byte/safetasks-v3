@@ -1177,6 +1177,7 @@
         "loading": "Loading bank accounts...",
         "error": "Failed to load bank accounts. Please try again.",
         "actions": {
+          "back": "Back to Financials",
           "new": "New Bank Account",
           "transfer": "Transfer"
         },

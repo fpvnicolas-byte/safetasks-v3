@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Search, Edit, Trash2, Wallet, TrendingUp, DollarSign, ArrowLeftRight } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, Wallet, TrendingUp, DollarSign, ArrowLeftRight, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
@@ -97,6 +97,14 @@ export default function BankAccountsPage() {
         title={t('deleteConfirmTitle', { name: deleteTarget?.name || '' })}
         description={t('deleteConfirm', { name: deleteTarget?.name || '' })}
       />
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="sm" asChild>
+          <Link href="/financials">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {t('actions.back')}
+          </Link>
+        </Button>
+      </div>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>

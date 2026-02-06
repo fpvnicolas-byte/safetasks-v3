@@ -1177,6 +1177,7 @@
         "loading": "Carregando contas bancárias...",
         "error": "Falha ao carregar contas bancárias. Tente novamente.",
         "actions": {
+          "back": "Voltar para Financeiro",
           "new": "Nova Conta Bancária",
           "transfer": "Transferir"
         },
