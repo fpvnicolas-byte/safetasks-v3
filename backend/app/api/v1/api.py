@@ -5,7 +5,8 @@ from app.api.v1.endpoints import (
     kits, call_sheets, proposals, storage, notifications, ai,
     scenes, characters, shooting_days, production, financial,
     suppliers, stakeholders, inventory, cloud, dashboard, profiles,
-    ai_monitoring, services, project_assignments, billing, whatsapp
+    ai_monitoring, services, project_assignments, billing, whatsapp,
+    stripe_connect,
 )
 
 api_router = APIRouter()
@@ -172,4 +173,10 @@ api_router.include_router(
     whatsapp.router,
     prefix="/whatsapp",
     tags=["whatsapp"]
+)
+
+api_router.include_router(
+    stripe_connect.router,
+    prefix="/stripe-connect",
+    tags=["stripe_connect"]
 )

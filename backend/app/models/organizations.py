@@ -1,6 +1,7 @@
-from sqlalchemy import Column, String, TIMESTAMP, Boolean, func, CheckConstraint, ForeignKey
+from sqlalchemy import Column, String, TIMESTAMP, Boolean, func, CheckConstraint, ForeignKey, Numeric
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
+from datetime import datetime
 from app.core.base import Base
 
 
@@ -18,6 +19,10 @@ class Organization(Base):
     slug = Column(String, unique=True, nullable=False)
     tax_id = Column(String, nullable=True)
 
+    # Default tax rates (percentages, e.g. 15.00 = 15%)
+    cnpj_tax_rate = Column(Numeric(5, 2), nullable=True, default=0)
+    produtora_tax_rate = Column(Numeric(5, 2), nullable=True, default=0)
+
     # Subscription & Billing
     plan = Column(String, default="free", nullable=False)  # free, starter, professional, enterprise
     subscription_status = Column(String, default="trialing", nullable=False)  # trialing, active, past_due, cancelled, paused
@@ -25,6 +30,11 @@ class Organization(Base):
     trial_ends_at = Column(TIMESTAMP(timezone=True), nullable=True)
     stripe_customer_id = Column(String, nullable=True)
     stripe_subscription_id = Column(String, nullable=True)
+
+    # Stripe Connect (for receiving payments from clients)
+    stripe_connect_account_id = Column(String, nullable=True)           # e.g., "acct_xxx"
+    stripe_connect_onboarding_complete = Column(Boolean, default=False, nullable=False)
+    stripe_connect_enabled_at = Column(TIMESTAMP(timezone=True), nullable=True)
     plan_id = Column(UUID(as_uuid=True), ForeignKey("plans.id"), nullable=True)
     billing_contact_user_id = Column(UUID(as_uuid=True), ForeignKey("profiles.id"), nullable=True)
     owner_profile_id = Column(UUID(as_uuid=True), ForeignKey("profiles.id"), nullable=True)

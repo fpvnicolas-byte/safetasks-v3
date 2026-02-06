@@ -116,6 +116,10 @@ class Settings(BaseSettings):
     STRIPE_PUBLISHABLE_KEY: Optional[str] = None
     STRIPE_WEBHOOK_SECRET: Optional[str] = None
 
+    # Stripe Connect (for receiving payments from clients)
+    STRIPE_CONNECT_CLIENT_ID: Optional[str] = None          # Stripe Connect OAuth client ID (ca_xxx)
+    STRIPE_CONNECT_WEBHOOK_SECRET: Optional[str] = None      # Separate webhook secret for Connect events
+
     # WhatsApp (Evolution API) - Optional, for future integration
     WHATSAPP_API_URL: Optional[str] = None
     WHATSAPP_API_KEY: Optional[str] = None

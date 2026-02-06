@@ -25,6 +25,16 @@ class InvoiceStatusEnum(str, enum.Enum):
     cancelled = "cancelled"
 
 
+class InvoicePaymentMethodEnum(str, enum.Enum):
+    """How the client is expected to pay this invoice."""
+    stripe = "stripe"                # Online payment via Stripe (enables payment link generation)
+    bank_transfer = "bank_transfer"  # Manual bank transfer / TED / DOC
+    pix_manual = "pix_manual"        # PIX sent manually (not via Stripe)
+    boleto_manual = "boleto_manual"  # Boleto generated outside Stripe
+    cash = "cash"                    # Cash payment
+    other = "other"                  # Other method
+
+
 class BudgetCategoryEnum(str, enum.Enum):
     """Standard production budget categories."""
     CREW = "crew"
@@ -107,9 +117,17 @@ class Invoice(Base):
     notes = Column(TEXT, nullable=True)
 
     # Payment details
-    payment_method = Column(String, nullable=True)
+    payment_method = Column(String, nullable=True)  # InvoicePaymentMethodEnum value
     payment_reference = Column(String, nullable=True)
     payment_notes = Column(TEXT, nullable=True)
+
+    # Stripe Connect payment fields
+    stripe_checkout_session_id = Column(String, nullable=True)    # Checkout Session ID
+    stripe_payment_intent_id = Column(String, nullable=True)      # PaymentIntent ID (after payment)
+    payment_link_url = Column(String, nullable=True)              # Generated checkout URL
+    payment_link_expires_at = Column(TIMESTAMP(timezone=True), nullable=True)  # Checkout session expiry
+    paid_at = Column(TIMESTAMP(timezone=True), nullable=True)     # When payment was confirmed
+    paid_via = Column(String, nullable=True)                      # Actual method: stripe_card, stripe_pix, stripe_boleto, manual
 
     # Status management
     is_active = Column(Boolean, default=True, nullable=False)

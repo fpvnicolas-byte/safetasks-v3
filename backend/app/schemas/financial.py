@@ -6,6 +6,16 @@ from decimal import Decimal
 from enum import Enum
 
 
+class InvoicePaymentMethod(str, Enum):
+    """How the client is expected to pay this invoice."""
+    stripe = "stripe"                # Online payment via Stripe
+    bank_transfer = "bank_transfer"  # Manual bank transfer / TED / DOC
+    pix_manual = "pix_manual"        # PIX sent manually
+    boleto_manual = "boleto_manual"  # Boleto generated outside Stripe
+    cash = "cash"                    # Cash payment
+    other = "other"                  # Other method
+
+
 class TransactionCategory(str, Enum):
     crew_hire = "crew_hire"
     equipment_rental = "equipment_rental"
@@ -135,6 +145,14 @@ class InvoiceBase(BaseModel):
     payment_reference: Optional[str] = None
     payment_notes: Optional[str] = None
 
+    # Stripe Connect payment fields
+    stripe_checkout_session_id: Optional[str] = None
+    stripe_payment_intent_id: Optional[str] = None
+    payment_link_url: Optional[str] = None
+    payment_link_expires_at: Optional[datetime] = None
+    paid_at: Optional[datetime] = None
+    paid_via: Optional[str] = None
+
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -151,6 +169,7 @@ class InvoiceCreate(BaseModel):
     description: Optional[str] = None
     notes: Optional[str] = None
     currency: str = "BRL"
+    payment_method: Optional[str] = None  # InvoicePaymentMethod value
 
     model_config = ConfigDict(from_attributes=True)
 
