@@ -237,16 +237,32 @@ class ProjectService(BaseService[ProjectModel, ProjectCreate, ProjectUpdate]):
         
         # Check for completion status change
         if old_status and updated_project and updated_project.status != old_status:
+            concluded_statuses = {"delivered", "archived"}
+            if updated_project.status in concluded_statuses and old_status not in concluded_statuses:
+                # Record equipment usage once the project is concluded.
+                try:
+                    from app.services.equipment_usage import equipment_usage_service
+
+                    await equipment_usage_service.record_usage_when_project_concluded(
+                        db=db,
+                        organization_id=organization_id,
+                        project_id=updated_project.id,
+                        source="project_delivered" if updated_project.status == "delivered" else "project_archived",
+                    )
+                except Exception as e:
+                    print(f"Failed to record equipment usage for project {updated_project.id}: {e}")
+
             if updated_project.status in ["delivered", "completed", "archived"] and old_status not in ["delivered", "completed", "archived"]:
-                 try:
+                try:
                     from app.services.notification_triggers import notify_project_finished
+
                     await notify_project_finished(
                         db=db,
                         organization_id=organization_id,
                         project_title=updated_project.title,
                         project_id=updated_project.id
                     )
-                 except Exception as e:
+                except Exception as e:
                     print(f"Failed to send project completion notification: {e}")
                     
         return updated_project

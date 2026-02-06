@@ -29,6 +29,7 @@ from app.models import (
     ShootingDay,
     KitItem,
     MaintenanceLog,
+    KitItemUsageLog,
     TaxTable,
     Invoice
 )

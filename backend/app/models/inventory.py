@@ -1,5 +1,6 @@
-from sqlalchemy import Column, String, TEXT, TIMESTAMP, func, ForeignKey, BIGINT, Float, Date, Enum
+from sqlalchemy import Column, String, TEXT, TIMESTAMP, func, ForeignKey, BIGINT, Float, Date, Enum, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from app.core.base import Base
 import uuid
@@ -55,6 +56,7 @@ class KitItem(Base):
     # Relationships
     kit = relationship("Kit", back_populates="items")
     maintenance_logs = relationship("MaintenanceLog", back_populates="kit_item", cascade="all, delete-orphan")
+    usage_logs = relationship("KitItemUsageLog", back_populates="kit_item", cascade="all, delete-orphan")
 
     __table_args__ = (
         {'schema': None}
@@ -96,4 +98,26 @@ class MaintenanceLog(Base):
 
     __table_args__ = (
         {'schema': None}
+    )
+
+
+class KitItemUsageLog(Base):
+    __tablename__ = "kit_item_usage_logs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    kit_item_id = Column(UUID(as_uuid=True), ForeignKey("kit_items.id", ondelete="CASCADE"), nullable=False)
+
+    hours = Column(Float, nullable=False)
+    source = Column(String, nullable=False, default="project_delivered")
+    usage_metadata = Column(JSONB, nullable=True)
+
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
+
+    kit_item = relationship("KitItem", back_populates="usage_logs")
+
+    __table_args__ = (
+        UniqueConstraint("project_id", "kit_item_id", name="uq_kit_item_usage_project_item"),
+        {'schema': None},
     )
