@@ -328,10 +328,9 @@ async def create_invoice_payment_link(
                 "quantity": 1,
             }],
             mode="payment",
-            # Offer multiple payment options directly in Checkout (Brazil-friendly).
-            payment_method_types=["card", "pix", "boleto"],
+            # Offer multiple payment options directly in Checkout.
+            payment_method_types=["card", "boleto"],
             payment_method_options={
-                "pix": {"expires_after_seconds": 86400},  # 24h
                 "boleto": {"expires_after_days": 2},
             },
             success_url=f"{frontend_url}/payment/success?session_id={{CHECKOUT_SESSION_ID}}",
@@ -480,7 +479,7 @@ async def handle_connect_checkout_completed(
 
     elif payment_status == "unpaid":
         # Boleto generated but not yet paid — leave as sent
-        logger.info(f"Invoice {invoice_id} awaiting async payment (boleto/pix)")
+        logger.info(f"Invoice {invoice_id} awaiting async payment (boleto)")
 
 
 async def handle_connect_async_payment_succeeded(
@@ -490,7 +489,7 @@ async def handle_connect_async_payment_succeeded(
     """
     Handle checkout.session.async_payment_succeeded for a connected account.
 
-    This fires when a Boleto or async PIX payment is confirmed.
+    This fires when a Boleto payment is confirmed.
     """
     session = event_data["object"]
     session_id = session["id"]
