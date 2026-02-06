@@ -1687,6 +1687,7 @@
           "expiresAt": "Expires {date}",
           "expired": "Previous payment link has expired",
           "regenerate": "Generate New Link",
+          "paid": "Payment completed",
           "notConnected": "Stripe is not connected. Connect your Stripe account to generate payment links.",
           "setupStripe": "Set up Stripe Connect →",
           "checkoutStatus": "Checkout Status"

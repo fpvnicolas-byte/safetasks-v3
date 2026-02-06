@@ -643,7 +643,8 @@ function StripePaymentLinkCard({ invoiceId, invoice, organizationId }: StripePay
   const t = useTranslations('financials.pages.invoiceDetail')
   const generateLink = useGeneratePaymentLink()
   const { data: connectStatus } = useStripeConnectStatus()
-  const { data: paymentStatus } = usePaymentStatus(invoiceId, !!invoice.stripe_checkout_session_id)
+  const shouldCheckStatus = !!invoice.stripe_checkout_session_id && invoice.status !== 'paid'
+  const { data: paymentStatus } = usePaymentStatus(invoiceId, shouldCheckStatus)
   const [copied, setCopied] = useState(false)
 
   // Allow link generation if account is connected (even if charges_enabled is false in test mode)
@@ -668,7 +669,8 @@ function StripePaymentLinkCard({ invoiceId, invoice, organizationId }: StripePay
     }
   }
 
-  const paymentLinkUrl = invoice.payment_link_url || paymentStatus?.payment_link_url
+  const isPaid = invoice.status === 'paid' || paymentStatus?.invoice_status === 'paid' || paymentStatus?.payment_status === 'paid'
+  const paymentLinkUrl = !isPaid ? (invoice.payment_link_url || paymentStatus?.payment_link_url) : null
   const hasActiveLink = !!paymentLinkUrl
   const isExpired = invoice.payment_link_expires_at && new Date(invoice.payment_link_expires_at) < new Date()
 
@@ -721,6 +723,13 @@ function StripePaymentLinkCard({ invoiceId, invoice, organizationId }: StripePay
               {generateLink.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {t('paymentLink.regenerate')}
             </Button>
+          </div>
+        ) : isPaid ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-success" />
+              <span className="text-sm font-medium text-success">{t('paymentLink.paid')}</span>
+            </div>
           </div>
         ) : (
           <div className="space-y-3">

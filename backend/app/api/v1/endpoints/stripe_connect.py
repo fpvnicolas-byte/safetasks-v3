@@ -281,10 +281,19 @@ async def get_payment_status(
             detail="Invoice not found"
         )
 
+    was_paid = invoice.status == "paid"
+    had_link = invoice.payment_link_url is not None or invoice.payment_link_expires_at is not None
+
     status_info = await connect_service.get_invoice_payment_status(
         organization=organization,
         invoice=invoice,
+        db=db,
     )
+
+    # Best-effort persistence: if the status check synced invoice fields, persist them.
+    if (not was_paid and invoice.status == "paid") or (had_link and invoice.payment_link_url is None and invoice.payment_link_expires_at is None):
+        await db.commit()
+
     return PaymentStatusResponse(**status_info)
 
 

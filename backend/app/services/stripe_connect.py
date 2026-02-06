@@ -366,6 +366,7 @@ async def create_invoice_payment_link(
 async def get_invoice_payment_status(
     organization: Organization,
     invoice: Invoice,
+    db: AsyncSession | None = None,
 ) -> dict:
     """
     Get the current payment status for an invoice.
@@ -404,6 +405,44 @@ async def get_invoice_payment_status(
         )
         result["checkout_session_status"] = session.get("status")
         result["payment_status"] = session.get("payment_status")
+
+        # Best-effort sync: if Stripe says it's paid but local invoice isn't, update now.
+        if (
+            db is not None
+            and result["payment_status"] == "paid"
+            and result["invoice_status"] != "paid"
+        ):
+            await _mark_invoice_paid_from_checkout_session(db, invoice, session)
+            await db.flush()
+            await db.refresh(invoice)
+
+            result["invoice_status"] = invoice.status
+            result["paid_at"] = invoice.paid_at.isoformat() if invoice.paid_at else None
+            result["paid_via"] = invoice.paid_via
+            result["payment_link_url"] = invoice.payment_link_url
+            result["payment_link_expires_at"] = (
+                invoice.payment_link_expires_at.isoformat()
+                if invoice.payment_link_expires_at
+                else None
+            )
+        # If the invoice is already paid, make sure we don't keep advertising an "active" payment link.
+        elif (
+            db is not None
+            and result["invoice_status"] == "paid"
+            and (invoice.payment_link_url is not None or invoice.payment_link_expires_at is not None)
+        ):
+            invoice.payment_link_url = None
+            invoice.payment_link_expires_at = None
+            db.add(invoice)
+            await db.flush()
+            await db.refresh(invoice)
+
+            result["payment_link_url"] = invoice.payment_link_url
+            result["payment_link_expires_at"] = (
+                invoice.payment_link_expires_at.isoformat()
+                if invoice.payment_link_expires_at
+                else None
+            )
     except stripe.error.StripeError as e:
         logger.warning(f"Failed to retrieve checkout session {invoice.stripe_checkout_session_id}: {e}")
         result["error"] = "Failed to retrieve payment status from Stripe"
@@ -458,24 +497,8 @@ async def handle_connect_checkout_completed(
         return
 
     if payment_status == "paid":
-        # Mark invoice as paid
-        invoice.status = "paid"
-        invoice.paid_at = datetime.now(timezone.utc)
-        invoice.paid_date = datetime.now(timezone.utc).date()
-
-        # Determine the payment method used
-        payment_intent_id = session.get("payment_intent")
-        if payment_intent_id:
-            invoice.stripe_payment_intent_id = payment_intent_id
-
-        # Try to determine the actual payment method
-        invoice.paid_via = _determine_paid_via(session)
-
-        db.add(invoice)
+        await _mark_invoice_paid_from_checkout_session(db, invoice, session)
         logger.info(f"Marked invoice {invoice_id} as paid via Stripe (session: {session_id})")
-
-        # Create a transaction record for the income
-        await _create_payment_transaction(db, invoice)
 
     elif payment_status == "unpaid":
         # Boleto generated but not yet paid — leave as sent
@@ -518,19 +541,8 @@ async def handle_connect_async_payment_succeeded(
         logger.info(f"Invoice {invoice_id} already paid, skipping async payment event")
         return
 
-    invoice.status = "paid"
-    invoice.paid_at = datetime.now(timezone.utc)
-    invoice.paid_date = datetime.now(timezone.utc).date()
-    invoice.paid_via = _determine_paid_via(session)
-
-    payment_intent_id = session.get("payment_intent")
-    if payment_intent_id:
-        invoice.stripe_payment_intent_id = payment_intent_id
-
-    db.add(invoice)
+    await _mark_invoice_paid_from_checkout_session(db, invoice, session)
     logger.info(f"Marked invoice {invoice_id} as paid via async payment")
-
-    await _create_payment_transaction(db, invoice)
 
 
 async def handle_connect_async_payment_failed(
@@ -607,6 +619,35 @@ def _determine_paid_via(session: dict) -> str:
     # If multiple methods were offered, check the payment_method_collection
     # Default to generic "stripe" if we can't determine
     return "stripe"
+
+
+async def _mark_invoice_paid_from_checkout_session(
+    db: AsyncSession,
+    invoice: Invoice,
+    session: dict,
+) -> None:
+    """
+    Mark an invoice as paid based on a Stripe Checkout Session and deactivate its payment link.
+
+    This is used both by webhooks and by best-effort polling sync.
+    """
+    invoice.status = "paid"
+    invoice.paid_at = datetime.now(timezone.utc)
+    invoice.paid_date = datetime.now(timezone.utc).date()
+    invoice.paid_via = _determine_paid_via(session)
+
+    payment_intent_id = session.get("payment_intent")
+    if payment_intent_id:
+        invoice.stripe_payment_intent_id = payment_intent_id
+
+    # Deactivate the link in our UI once the invoice is paid.
+    invoice.payment_link_url = None
+    invoice.payment_link_expires_at = None
+
+    db.add(invoice)
+
+    # Create a transaction record for the income (best-effort; may be skipped if no default bank account).
+    await _create_payment_transaction(db, invoice)
 
 
 async def _create_payment_transaction(
