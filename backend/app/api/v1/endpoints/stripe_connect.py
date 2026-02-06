@@ -11,6 +11,7 @@ from uuid import UUID
 
 import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -117,28 +118,39 @@ async def connect_oauth_callback(
     code: str,
     state: str,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+):
     """
     Handle Stripe Connect OAuth callback.
 
     This endpoint receives the authorization code from Stripe after the user
-    authorizes SafeTasks. It exchanges the code for a connected account ID.
+    authorizes SafeTasks. It exchanges the code for a connected account ID,
+    then redirects the user back to the frontend settings page.
 
     Note: This endpoint does NOT require authentication because it's called
     by the browser redirect from Stripe.
     """
-    organization = await connect_service.handle_connect_oauth_callback(
-        db=db,
-        code=code,
-        state=state,
-    )
-    await db.commit()
+    frontend_url = str(settings.FRONTEND_URL).rstrip("/")
 
-    return {
-        "status": "success",
-        "message": "Stripe account connected successfully",
-        "account_id": organization.stripe_connect_account_id,
-    }
+    try:
+        organization = await connect_service.handle_connect_oauth_callback(
+            db=db,
+            code=code,
+            state=state,
+        )
+        await db.commit()
+
+        # Redirect back to the frontend payment methods page with success
+        return RedirectResponse(
+            url=f"{frontend_url}/settings/payment-methods?stripe_connected=true",
+            status_code=302,
+        )
+    except Exception as e:
+        logger.error(f"Stripe Connect OAuth callback failed: {e}", exc_info=True)
+        # Redirect back with error
+        return RedirectResponse(
+            url=f"{frontend_url}/settings/payment-methods?stripe_error={str(e)[:100]}",
+            status_code=302,
+        )
 
 
 @router.get(

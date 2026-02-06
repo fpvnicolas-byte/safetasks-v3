@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/AuthContext'
 import { useStripeConnectStatus, useStripeConnectOnboard, useStripeConnectDisconnect } from '@/lib/api/hooks'
@@ -19,14 +20,34 @@ export default function PaymentMethodsPage() {
   const { organizationId } = useAuth()
   const [isDisconnecting, setIsDisconnecting] = useState(false)
 
+  const searchParams = useSearchParams()
+
   const { data: connectStatus, isLoading, error, refetch } = useStripeConnectStatus()
   const onboard = useStripeConnectOnboard()
   const disconnect = useStripeConnectDisconnect()
 
+  // Handle OAuth callback redirect params
+  useEffect(() => {
+    if (searchParams.get('stripe_connected') === 'true') {
+      toast.success('Stripe account connected successfully!')
+      refetch()
+      // Clean up URL params
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+    const stripeError = searchParams.get('stripe_error')
+    if (stripeError) {
+      toast.error(`Stripe connection failed: ${stripeError}`)
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [searchParams, refetch])
+
   const handleConnect = async () => {
     try {
-      const currentUrl = window.location.origin
-      const redirectUri = `${currentUrl}/settings/payment-methods?stripe_callback=true`
+      // The redirect_uri must point to the BACKEND callback endpoint
+      // because Stripe redirects there after OAuth, and the backend
+      // exchanges the code for the connected account ID
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
+      const redirectUri = `${backendUrl}/api/v1/stripe-connect/callback`
       const result = await onboard.mutateAsync(redirectUri)
       // Redirect to Stripe OAuth
       window.location.href = result.authorization_url
