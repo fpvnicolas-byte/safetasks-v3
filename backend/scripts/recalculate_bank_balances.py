@@ -21,6 +21,7 @@ Usage
 
 import argparse
 import asyncio
+import os
 import sys
 from pathlib import Path
 from uuid import UUID
@@ -28,6 +29,7 @@ from uuid import UUID
 # Add backend to path
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
+os.chdir(backend_dir)
 
 from sqlalchemy import case, func, select
 
@@ -106,4 +108,3 @@ async def _main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(asyncio.run(_main()))
-
