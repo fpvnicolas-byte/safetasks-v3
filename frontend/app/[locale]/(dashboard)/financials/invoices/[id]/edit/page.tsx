@@ -7,7 +7,8 @@ import {
   useUpdateInvoice,
   useAddInvoiceItem,
   useUpdateInvoiceItem,
-  useDeleteInvoiceItem
+  useDeleteInvoiceItem,
+  useStripeConnectStatus,
 } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { InvoiceItemCreate, Invoice } from '@/types'
@@ -17,6 +18,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Textarea } from '@/components/ui/textarea'
 import { Plus, Trash2 } from 'lucide-react'
 import { toCents, formatCurrency, fromCents } from '@/lib/utils/money'
 import { useTranslations } from 'next-intl'
@@ -44,6 +46,8 @@ export default function EditInvoicePage() {
   const updateInvoice = useUpdateInvoice(organizationId || undefined)
   const addItem = useAddInvoiceItem(invoiceId)
   const deleteItem = useDeleteInvoiceItem(invoiceId)
+  const { data: connectStatus } = useStripeConnectStatus()
+  const isStripeConnected = connectStatus?.connected ?? false
 
   // Initialize items from invoice data
   useState(() => {
@@ -72,6 +76,7 @@ export default function EditInvoicePage() {
 
   const isDraft = invoice.status === 'draft'
   const canEditItems = isDraft
+  const canEditDetails = invoice.status !== 'paid' && invoice.status !== 'cancelled'
 
   const addNewItem = () => {
     setItems([...items, { description: '', quantity: 1, unit_price: '0.00', category: '' }])
@@ -147,9 +152,31 @@ export default function EditInvoicePage() {
     const formData = new FormData(e.currentTarget)
 
     try {
-      const data: Partial<Invoice> = {
-        status: formData.get('status') as Invoice['status'],
-        due_date: formData.get('due_date') as string,
+      const data: Partial<Invoice> = {}
+
+      const status = formData.get('status')
+      if (typeof status === 'string' && status) {
+        data.status = status as Invoice['status']
+      }
+
+      const dueDate = formData.get('due_date')
+      if (typeof dueDate === 'string' && dueDate) {
+        data.due_date = dueDate
+      }
+
+      const paymentMethod = formData.get('payment_method')
+      if (typeof paymentMethod === 'string' && paymentMethod) {
+        data.payment_method = paymentMethod
+      }
+
+      const description = formData.get('description')
+      if (typeof description === 'string') {
+        data.description = description.trim() || null
+      }
+
+      const notes = formData.get('notes')
+      if (typeof notes === 'string') {
+        data.notes = notes.trim() || null
       }
 
       await updateInvoice.mutateAsync({ invoiceId, data })
@@ -301,6 +328,56 @@ export default function EditInvoicePage() {
                   defaultValue={invoice.due_date}
                 />
               </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="payment_method">{t('statusForm.fields.paymentMethod')}</Label>
+                <Select name="payment_method" defaultValue={invoice.payment_method || 'bank_transfer'} disabled={!canEditDetails}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('statusForm.fields.paymentMethodPlaceholder')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="stripe" disabled={!isStripeConnected}>
+                      {t('statusForm.paymentMethod.options.stripe')}
+                    </SelectItem>
+                    <SelectItem value="bank_transfer">{t('statusForm.paymentMethod.options.bank_transfer')}</SelectItem>
+                    <SelectItem value="pix_manual">{t('statusForm.paymentMethod.options.pix_manual')}</SelectItem>
+                    <SelectItem value="boleto_manual">{t('statusForm.paymentMethod.options.boleto_manual')}</SelectItem>
+                    <SelectItem value="cash">{t('statusForm.paymentMethod.options.cash')}</SelectItem>
+                    <SelectItem value="other">{t('statusForm.paymentMethod.options.other')}</SelectItem>
+                  </SelectContent>
+                </Select>
+                {!isStripeConnected && (
+                  <p className="text-xs text-muted-foreground">
+                    {t('statusForm.paymentMethod.stripeHint')}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">{t('statusForm.fields.description')}</Label>
+                <Textarea
+                  id="description"
+                  name="description"
+                  defaultValue={invoice.description || ''}
+                  placeholder={t('statusForm.fields.descriptionPlaceholder')}
+                  rows={3}
+                  disabled={!canEditDetails}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">{t('statusForm.fields.notes')}</Label>
+              <Textarea
+                id="notes"
+                name="notes"
+                defaultValue={invoice.notes || ''}
+                placeholder={t('statusForm.fields.notesPlaceholder')}
+                rows={3}
+                disabled={!canEditDetails}
+              />
             </div>
             <div className="flex gap-2">
               <Button type="button" variant="outline" onClick={() => router.back()}>

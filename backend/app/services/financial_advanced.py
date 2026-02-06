@@ -1,5 +1,11 @@
 from app.services.base import BaseService
-from app.models.financial import TaxTable, Invoice, InvoiceItem, InvoiceStatusEnum
+from app.models.financial import (
+    TaxTable,
+    Invoice,
+    InvoiceItem,
+    InvoiceStatusEnum,
+    InvoicePaymentMethodEnum,
+)
 from app.models.transactions import Transaction
 from app.schemas.financial import (
     TaxTableCreate, TaxTableUpdate,
@@ -106,6 +112,10 @@ class InvoiceService(BaseService[Invoice, InvoiceCreate, InvoiceUpdate]):
         # In a real implementation, you'd track sequential numbers per organization
         invoice_number = self._generate_invoice_number(organization_id)
 
+        resolved_payment_method = getattr(obj_in, "payment_method", None)
+        if not resolved_payment_method:
+            resolved_payment_method = InvoicePaymentMethodEnum.bank_transfer.value
+
         # Create invoice data
         invoice_data = {
             "client_id": obj_in.client_id,
@@ -119,7 +129,8 @@ class InvoiceService(BaseService[Invoice, InvoiceCreate, InvoiceUpdate]):
             "issue_date": datetime.now().date(),  # Always use today's date for new invoices
             "due_date": obj_in.due_date,
             "description": obj_in.description,
-            "notes": obj_in.notes
+            "notes": obj_in.notes,
+            "payment_method": resolved_payment_method,
         }
 
         # Create invoice
@@ -186,7 +197,8 @@ class InvoiceService(BaseService[Invoice, InvoiceCreate, InvoiceUpdate]):
             "issue_date": date.today(),
             "due_date": resolved_due_date,
             "description": proposal.description,
-            "notes": None
+            "notes": None,
+            "payment_method": InvoicePaymentMethodEnum.bank_transfer.value,
         }
 
         invoice = await super().create(db=db, organization_id=organization_id, obj_in=invoice_data)

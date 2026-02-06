@@ -174,6 +174,23 @@ export default function InvoiceDetailPage() {
   const tax = invoice.tax_amount_cents
   const total = invoice.total_amount_cents
 
+  const paymentMethodLabel = (() => {
+    if (!invoice.payment_method) {
+      return t('info.paymentMethodNotSet')
+    }
+
+    const labels: Record<string, string> = {
+      stripe: t('invoicePaymentMethods.stripe'),
+      bank_transfer: t('invoicePaymentMethods.bank_transfer'),
+      pix_manual: t('invoicePaymentMethods.pix_manual'),
+      boleto_manual: t('invoicePaymentMethods.boleto_manual'),
+      cash: t('invoicePaymentMethods.cash'),
+      other: t('invoicePaymentMethods.other'),
+    }
+
+    return labels[invoice.payment_method] || invoice.payment_method
+  })()
+
   return (
     <div className="space-y-8">
       <ConfirmDeleteDialog
@@ -302,14 +319,28 @@ export default function InvoiceDetailPage() {
                     {isOverdue && ` (${t('status.overdue')})`}
                   </div>
                 </div>
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">{t('info.paymentMethod')}</div>
+                  <div className="text-lg">{paymentMethodLabel}</div>
+                </div>
               </div>
+
+              {invoice.description && (
+                <>
+                  <Separator />
+                  <div>
+                    <div className="text-sm font-medium text-muted-foreground mb-2">{t('info.description')}</div>
+                    <div className="text-sm whitespace-pre-line">{invoice.description}</div>
+                  </div>
+                </>
+              )}
 
               {invoice.notes && (
                 <>
                   <Separator />
                   <div>
                     <div className="text-sm font-medium text-muted-foreground mb-2">{t('info.notes')}</div>
-                    <div className="text-sm">{invoice.notes}</div>
+                    <div className="text-sm whitespace-pre-line">{invoice.notes}</div>
                   </div>
                 </>
               )}

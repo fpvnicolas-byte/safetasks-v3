@@ -1615,7 +1615,18 @@
           "noProject": "Nenhum projeto atribuído",
           "issueDate": "Data de Emissão",
           "dueDate": "Data de Vencimento",
+          "paymentMethod": "Método de Pagamento",
+          "paymentMethodNotSet": "Não definido",
+          "description": "Descrição",
           "notes": "Notas"
+        },
+        "invoicePaymentMethods": {
+          "stripe": "Stripe (Pagamento Online)",
+          "bank_transfer": "Transferência Bancária",
+          "pix_manual": "PIX (Manual)",
+          "boleto_manual": "Boleto (Manual)",
+          "cash": "Dinheiro",
+          "other": "Outro"
         },
         "items": {
           "title": "Itens da Fatura",
@@ -1719,7 +1730,24 @@
           "description": "Atualize o status e as datas da fatura",
           "fields": {
             "status": "Status",
-            "dueDate": "Data de Vencimento"
+            "dueDate": "Data de Vencimento",
+            "paymentMethod": "Método de Pagamento",
+            "paymentMethodPlaceholder": "Selecione o método de pagamento",
+            "description": "Descrição da Fatura",
+            "descriptionPlaceholder": "Breve descrição dos serviços...",
+            "notes": "Notas Adicionais",
+            "notesPlaceholder": "Termos de pagamento, instruções especiais..."
+          },
+          "paymentMethod": {
+            "options": {
+              "stripe": "Stripe (Pagamento Online)",
+              "bank_transfer": "Transferência Bancária",
+              "pix_manual": "PIX (Manual)",
+              "boleto_manual": "Boleto (Manual)",
+              "cash": "Dinheiro",
+              "other": "Outro"
+            },
+            "stripeHint": "Conecte o Stripe em Configurações → Métodos de Pagamento para habilitar pagamentos online"
           }
         },
         "status": {

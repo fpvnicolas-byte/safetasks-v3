@@ -1615,7 +1615,18 @@
           "noProject": "No project assigned",
           "issueDate": "Issue Date",
           "dueDate": "Due Date",
+          "paymentMethod": "Payment Method",
+          "paymentMethodNotSet": "Not set",
+          "description": "Description",
           "notes": "Notes"
+        },
+        "invoicePaymentMethods": {
+          "stripe": "Stripe (Online Payment)",
+          "bank_transfer": "Bank Transfer",
+          "pix_manual": "PIX (Manual)",
+          "boleto_manual": "Boleto (Manual)",
+          "cash": "Cash",
+          "other": "Other"
         },
         "items": {
           "title": "Line Items",
@@ -1719,7 +1730,24 @@
           "description": "Update invoice status and dates",
           "fields": {
             "status": "Status",
-            "dueDate": "Due Date"
+            "dueDate": "Due Date",
+            "paymentMethod": "Payment Method",
+            "paymentMethodPlaceholder": "Select payment method",
+            "description": "Invoice Description",
+            "descriptionPlaceholder": "Brief description of services...",
+            "notes": "Additional Notes",
+            "notesPlaceholder": "Payment terms, special instructions..."
+          },
+          "paymentMethod": {
+            "options": {
+              "stripe": "Stripe (Online Payment)",
+              "bank_transfer": "Bank Transfer",
+              "pix_manual": "PIX (Manual)",
+              "boleto_manual": "Boleto (Manual)",
+              "cash": "Cash",
+              "other": "Other"
+            },
+            "stripeHint": "Connect Stripe in Settings → Payment Methods to enable online payments"
           }
         },
         "status": {
