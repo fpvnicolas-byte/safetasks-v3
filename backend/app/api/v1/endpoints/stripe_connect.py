@@ -55,6 +55,9 @@ class ConnectStatusResponse(BaseModel):
     payouts_enabled: bool = False
     livemode: bool | None = None
     business_name: str | None = None
+    details_submitted: bool | None = None
+    capabilities: dict[str, str] | None = None
+    requirements: dict | None = None
     error: str | None = None
 
 

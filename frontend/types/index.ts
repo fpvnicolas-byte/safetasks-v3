@@ -260,6 +260,15 @@ export interface StripeConnectStatus {
   payouts_enabled: boolean
   livemode: boolean | null
   business_name: string | null
+  details_submitted?: boolean | null
+  capabilities?: Record<string, string> | null
+  requirements?: {
+    disabled_reason: string | null
+    currently_due: string[]
+    past_due: string[]
+    eventually_due: string[]
+    pending_verification: string[]
+  } | null
   error: string | null
 }
 

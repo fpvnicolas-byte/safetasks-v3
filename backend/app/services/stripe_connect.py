@@ -163,6 +163,9 @@ async def get_connect_status(
             "payouts_enabled": False,
             "livemode": None,
             "business_name": None,
+            "details_submitted": None,
+            "capabilities": None,
+            "requirements": None,
         }
 
     # Fetch live status from Stripe
@@ -170,6 +173,14 @@ async def get_connect_status(
         account = stripe.Account.retrieve(
             organization.stripe_connect_account_id
         )
+        requirements = account.get("requirements") or {}
+        requirements_summary = {
+            "disabled_reason": requirements.get("disabled_reason"),
+            "currently_due": requirements.get("currently_due") or [],
+            "past_due": requirements.get("past_due") or [],
+            "eventually_due": requirements.get("eventually_due") or [],
+            "pending_verification": requirements.get("pending_verification") or [],
+        }
         return {
             "connected": True,
             "account_id": organization.stripe_connect_account_id,
@@ -179,6 +190,9 @@ async def get_connect_status(
             "payouts_enabled": account.get("payouts_enabled", False),
             "livemode": account.get("livemode"),
             "business_name": account.get("business_profile", {}).get("name") or account.get("settings", {}).get("dashboard", {}).get("display_name"),
+            "details_submitted": account.get("details_submitted"),
+            "capabilities": dict(account.get("capabilities") or {}),
+            "requirements": requirements_summary,
         }
     except stripe.error.PermissionError:
         # Account was likely disconnected from Stripe's side
@@ -192,6 +206,9 @@ async def get_connect_status(
             "payouts_enabled": False,
             "livemode": None,
             "business_name": None,
+            "details_submitted": None,
+            "capabilities": None,
+            "requirements": None,
             "error": "Lost access to connected account. Please reconnect.",
         }
     except stripe.error.StripeError as e:

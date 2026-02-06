@@ -2376,6 +2376,14 @@
         "setupPending": "A configuração da sua conta Stripe ainda está pendente. Conclua para habilitar cobranças e repasses.",
         "completeSetup": "Concluir configuração",
         "manageDashboard": "Gerenciar painel do Stripe",
+        "setupDetails": {
+          "disabledReason": "Motivo",
+          "currentlyDue": "Pendências atuais",
+          "pastDue": "Pendências em atraso",
+          "pendingVerification": "Verificação pendente",
+          "eventuallyDue": "Pendências futuras",
+          "none": "O Stripe não reportou pendências no momento. Sua conta pode estar em verificação."
+        },
         "connectPrompt": {
           "title": "Conecte Sua Conta Stripe",
           "description": "Vincule sua conta Stripe para aceitar pagamentos online diretamente nas suas faturas. Clientes podem pagar via cartão de crédito, PIX ou boleto."

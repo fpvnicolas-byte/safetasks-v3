@@ -79,6 +79,7 @@ export default function PaymentMethodsPage() {
 
   const isConnected = connectStatus?.connected ?? false
   const chargesEnabled = connectStatus?.charges_enabled ?? false
+  const payoutsEnabled = connectStatus?.payouts_enabled ?? false
   const stripeDashboardBase =
     connectStatus?.livemode === false ? 'https://dashboard.stripe.com/test' : 'https://dashboard.stripe.com'
   const stripeAccountId = connectStatus?.account_id
@@ -197,7 +198,7 @@ export default function PaymentMethodsPage() {
                 <div className="rounded-lg border p-4 space-y-2">
                   <div className="text-sm text-muted-foreground">{t('stripe.details.payouts')}</div>
                   <div className="flex items-center gap-2">
-                    {connectStatus?.payouts_enabled ? (
+                    {payoutsEnabled ? (
                       <><CheckCircle2 className="h-4 w-4 text-success" /><span className="text-success">{t('stripe.details.enabled')}</span></>
                     ) : (
                       <><XCircle className="h-4 w-4 text-destructive" /><span className="text-destructive">{t('stripe.details.disabled')}</span></>
@@ -206,6 +207,12 @@ export default function PaymentMethodsPage() {
                 </div>
               </div>
 
+              {connectStatus?.error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{connectStatus.error}</AlertDescription>
+                </Alert>
+              )}
+
               {connectStatus?.enabled_at && (
                 <p className="text-sm text-muted-foreground">
                   {t('stripe.details.connectedSince', { date: new Date(connectStatus.enabled_at).toLocaleDateString() })}
@@ -213,19 +220,68 @@ export default function PaymentMethodsPage() {
               )}
 
               {/* Alert when setup is pending */}
-              {(!chargesEnabled || !connectStatus?.payouts_enabled) && (
+              {(!chargesEnabled || !payoutsEnabled) && (
                 <Alert>
-                  <AlertDescription className="flex items-center justify-between">
-                    <span>{t('stripe.setupPending')}</span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="ml-4 shrink-0"
-                      onClick={openStripeDashboard}
-                    >
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                      {t('stripe.completeSetup')}
-                    </Button>
+                  <AlertDescription className="space-y-3">
+                    <div className="flex items-center justify-between gap-4">
+                      <span>{t('stripe.setupPending')}</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0"
+                        onClick={openStripeDashboard}
+                      >
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        {t('stripe.completeSetup')}
+                      </Button>
+                    </div>
+
+                    {connectStatus?.requirements && (
+                      <div className="text-xs text-muted-foreground space-y-2">
+                        {connectStatus.requirements.disabled_reason && (
+                          <div>
+                            <span className="font-medium text-foreground">{t('stripe.setupDetails.disabledReason')}:</span>{' '}
+                            <span className="font-mono">{connectStatus.requirements.disabled_reason}</span>
+                          </div>
+                        )}
+
+                        {[
+                          { label: t('stripe.setupDetails.currentlyDue'), items: connectStatus.requirements.currently_due },
+                          { label: t('stripe.setupDetails.pastDue'), items: connectStatus.requirements.past_due },
+                          { label: t('stripe.setupDetails.pendingVerification'), items: connectStatus.requirements.pending_verification },
+                          { label: t('stripe.setupDetails.eventuallyDue'), items: connectStatus.requirements.eventually_due },
+                        ].some((group) => Array.isArray(group.items) && group.items.length > 0) ? (
+                          <div className="grid gap-3 md:grid-cols-2">
+                            {[
+                              { label: t('stripe.setupDetails.currentlyDue'), items: connectStatus.requirements.currently_due },
+                              { label: t('stripe.setupDetails.pastDue'), items: connectStatus.requirements.past_due },
+                              { label: t('stripe.setupDetails.pendingVerification'), items: connectStatus.requirements.pending_verification },
+                              { label: t('stripe.setupDetails.eventuallyDue'), items: connectStatus.requirements.eventually_due },
+                            ]
+                              .filter((group) => Array.isArray(group.items) && group.items.length > 0)
+                              .map((group) => (
+                                <div key={group.label} className="space-y-1">
+                                  <div className="font-medium text-foreground">{group.label}</div>
+                                  <ul className="ml-4 list-disc space-y-0.5">
+                                    {group.items.slice(0, 6).map((item) => (
+                                      <li key={item}>
+                                        <span className="font-mono">{item}</span>
+                                      </li>
+                                    ))}
+                                    {group.items.length > 6 && (
+                                      <li>
+                                        <span className="font-mono">+{group.items.length - 6}</span>
+                                      </li>
+                                    )}
+                                  </ul>
+                                </div>
+                              ))}
+                          </div>
+                        ) : (
+                          <div>{t('stripe.setupDetails.none')}</div>
+                        )}
+                      </div>
+                    )}
                   </AlertDescription>
                 </Alert>
               )}
