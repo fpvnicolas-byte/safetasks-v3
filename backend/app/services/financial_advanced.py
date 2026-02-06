@@ -18,6 +18,7 @@ from typing import List, Optional, Dict, Any
 from uuid import UUID
 from datetime import datetime, date, timedelta
 from app.core.config import settings
+from app.models.organizations import Organization
 
 
 class TaxTableService(BaseService[TaxTable, TaxTableCreate, TaxTableUpdate]):
@@ -33,9 +34,60 @@ class InvoiceService(BaseService[Invoice, InvoiceCreate, InvoiceUpdate]):
     def __init__(self):
         super().__init__(Invoice)
 
-    def _generate_invoice_number(self, organization_id: UUID) -> str:
-        year = datetime.now().year
-        return f"INV-{year}-{organization_id.hex[:8].upper()}"
+    async def _generate_invoice_number(
+        self,
+        db: AsyncSession,
+        organization_id: UUID,
+        *,
+        issue_date: date,
+    ) -> str:
+        """
+        Generate a human-friendly invoice number.
+
+        Previous versions used `INV-{year}-{org_id_prefix}` which is NOT unique and causes duplicates.
+        We now generate `INV-{year}-{org_id_prefix}-{seq}` where seq is per-org/per-year.
+        """
+        year = issue_date.year
+        org_prefix = organization_id.hex[:8].upper()
+
+        # Serialize invoice number generation per org to avoid duplicates under concurrent requests.
+        await db.execute(
+            select(Organization.id)
+            .where(Organization.id == organization_id)
+            .with_for_update()
+        )
+
+        start_date = date(year, 1, 1)
+        end_date = date(year + 1, 1, 1)
+
+        # Start sequence at (count in the year) + 1.
+        # We also check actual uniqueness below to be defensive against existing bad data.
+        count_result = await db.execute(
+            select(func.count(Invoice.id)).where(
+                and_(
+                    Invoice.organization_id == organization_id,
+                    Invoice.issue_date >= start_date,
+                    Invoice.issue_date < end_date,
+                )
+            )
+        )
+        seq = int(count_result.scalar() or 0) + 1
+
+        while True:
+            candidate = f"INV-{year}-{org_prefix}-{seq:03d}"
+            exists_result = await db.execute(
+                select(Invoice.id)
+                .where(
+                    and_(
+                        Invoice.organization_id == organization_id,
+                        Invoice.invoice_number == candidate,
+                    )
+                )
+                .limit(1)
+            )
+            if exists_result.scalar_one_or_none() is None:
+                return candidate
+            seq += 1
 
     def _get_default_due_date(self, proposal_valid_until: Optional[date]) -> date:
         if proposal_valid_until:
@@ -107,10 +159,12 @@ class InvoiceService(BaseService[Invoice, InvoiceCreate, InvoiceUpdate]):
         subtotal = sum(item.total_cents for item in obj_in.items)
 
         # Auto-generate invoice number (simplified)
-        from datetime import datetime
-        year = datetime.now().year
-        # In a real implementation, you'd track sequential numbers per organization
-        invoice_number = self._generate_invoice_number(organization_id)
+        issue_date = datetime.now().date()  # Always use today's date for new invoices
+        invoice_number = await self._generate_invoice_number(
+            db,
+            organization_id,
+            issue_date=issue_date,
+        )
 
         resolved_payment_method = getattr(obj_in, "payment_method", None)
         if not resolved_payment_method:
@@ -126,7 +180,7 @@ class InvoiceService(BaseService[Invoice, InvoiceCreate, InvoiceUpdate]):
             "tax_amount_cents": 0,  # Will be calculated later if needed
             "total_amount_cents": subtotal,  # No taxes for now
             "currency": obj_in.currency,
-            "issue_date": datetime.now().date(),  # Always use today's date for new invoices
+            "issue_date": issue_date,
             "due_date": obj_in.due_date,
             "description": obj_in.description,
             "notes": obj_in.notes,
@@ -184,17 +238,22 @@ class InvoiceService(BaseService[Invoice, InvoiceCreate, InvoiceUpdate]):
 
         resolved_due_date = due_date or self._get_default_due_date(proposal.valid_until)
 
+        issue_date = date.today()
         invoice_data = {
             "client_id": proposal.client_id,
             "project_id": proposal.project_id,
             "proposal_id": proposal.id,
-            "invoice_number": self._generate_invoice_number(organization_id),
+            "invoice_number": await self._generate_invoice_number(
+                db,
+                organization_id,
+                issue_date=issue_date,
+            ),
             "status": status,
             "subtotal_cents": subtotal,
             "tax_amount_cents": 0,
             "total_amount_cents": subtotal,
             "currency": proposal.currency or "BRL",
-            "issue_date": date.today(),
+            "issue_date": issue_date,
             "due_date": resolved_due_date,
             "description": proposal.description,
             "notes": None,
