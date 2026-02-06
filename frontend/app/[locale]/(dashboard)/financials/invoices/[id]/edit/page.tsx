@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Plus, Trash2 } from 'lucide-react'
-import { dollarsToCents, formatCurrency, centsToDollars } from '@/lib/utils/money'
+import { toCents, formatCurrency, fromCents } from '@/lib/utils/money'
 import { useTranslations } from 'next-intl'
 
 interface InvoiceItemForm {
@@ -52,7 +52,7 @@ export default function EditInvoicePage() {
         id: item.id,
         description: item.description,
         quantity: Number(item.quantity),
-        unit_price: centsToDollars(item.unit_price_cents).toFixed(2),
+        unit_price: fromCents(item.unit_price_cents).toFixed(2),
         category: ''
       })))
     }
@@ -121,8 +121,8 @@ export default function EditInvoicePage() {
         const itemData: InvoiceItemCreate = {
           description: item.description,
           quantity: item.quantity,
-          unit_price_cents: dollarsToCents(parseFloat(item.unit_price)),
-          total_cents: dollarsToCents(parseFloat(item.unit_price) * item.quantity),
+          unit_price_cents: toCents(parseFloat(item.unit_price)),
+          total_cents: toCents(parseFloat(item.unit_price) * item.quantity),
           category: item.category || undefined
         }
 
@@ -232,7 +232,7 @@ export default function EditInvoicePage() {
                 </div>
                 <div className="md:col-span-4 flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">
-                    {t('items.total', { total: formatCurrency(dollarsToCents(parseFloat(item.unit_price || '0') * item.quantity)) })}
+                    {t('items.total', { total: formatCurrency(toCents(parseFloat(item.unit_price || '0') * item.quantity)) })}
                   </span>
                   <Button
                     type="button"
@@ -249,7 +249,7 @@ export default function EditInvoicePage() {
             <div className="pt-4 border-t space-y-2">
               <div className="flex justify-between">
                 <span>{t('summary.subtotal')}</span>
-                <span>{formatCurrency(dollarsToCents(subtotal))}</span>
+                <span>{formatCurrency(toCents(subtotal))}</span>
               </div>
               <div className="flex justify-between">
                 <span>{t('summary.tax')}</span>
@@ -257,7 +257,7 @@ export default function EditInvoicePage() {
               </div>
               <div className="flex justify-between font-bold text-lg">
                 <span>{t('summary.total')}</span>
-                <span>{formatCurrency(dollarsToCents(total))}</span>
+                <span>{formatCurrency(toCents(total))}</span>
               </div>
             </div>
 

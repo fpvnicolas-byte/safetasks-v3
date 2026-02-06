@@ -49,12 +49,13 @@ import {
 import { LocaleLink } from '@/components/LocaleLink'
 import { useTransactions, useCreateTransaction } from '@/lib/api/hooks/useTransactions'
 import { useBankAccounts } from '@/lib/api/hooks/useBankAccounts'
+import { useOrganization } from '@/lib/api/hooks/useOrganization'
 import { useProjectBudget, CategorySummary } from '@/lib/api/hooks/useBudget'
 import { useSubmitBudget, useApproveBudget, useRejectBudget, useProjectFinancialSummary } from '@/lib/api/hooks/useProjects'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTranslations, useLocale } from 'next-intl'
 import { formatCurrency } from '@/lib/utils/money'
-import { TransactionWithRelations, getCategoryDisplayName, TransactionCategory, dollarsToCents, ProjectWithClient, BudgetStatus, ProjectFinancialSummary } from '@/types'
+import { TransactionWithRelations, getCategoryDisplayName, TransactionCategory, toCents, ProjectWithClient, BudgetStatus, ProjectFinancialSummary } from '@/types'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -206,6 +207,7 @@ export function ProjectFinancialsAdmin({ projectId, project, isAdmin = false }: 
     organizationId: organizationId || undefined,
     project_id: projectId,
   })
+  const { data: organization } = useOrganization(organizationId || undefined)
   const { data: bankAccounts } = useBankAccounts(organizationId || undefined)
   const createTransaction = useCreateTransaction()
 
@@ -217,8 +219,9 @@ export function ProjectFinancialsAdmin({ projectId, project, isAdmin = false }: 
   // Financial summary for calculator
   const { data: financialSummary, isLoading: financialLoading } = useProjectFinancialSummary(projectId)
 
-  // Get first bank account (default not supported in type)
-  const defaultBankAccount = bankAccounts?.[0]
+  const defaultBankAccount =
+    bankAccounts?.find((account) => account.id === organization?.default_bank_account_id) ??
+    bankAccounts?.[0]
 
   const handleQuickAddExpense = async () => {
     if (!organizationId || !defaultBankAccount) {
@@ -226,7 +229,7 @@ export function ProjectFinancialsAdmin({ projectId, project, isAdmin = false }: 
       return
     }
 
-    const amountCents = dollarsToCents(parseFloat(quickAddForm.amount) || 0)
+    const amountCents = toCents(parseFloat(quickAddForm.amount) || 0)
     if (amountCents <= 0) {
       toast.error(t('quickAdd.invalidAmount'))
       return
@@ -257,7 +260,7 @@ export function ProjectFinancialsAdmin({ projectId, project, isAdmin = false }: 
 
   // Budget approval handlers
   const handleSubmitBudget = async () => {
-    const amountCents = dollarsToCents(parseFloat(budgetForm.amount) || 0)
+    const amountCents = toCents(parseFloat(budgetForm.amount) || 0)
     if (amountCents <= 0) {
       toast.error(t('quickAdd.invalidAmount'))
       return

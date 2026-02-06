@@ -31,6 +31,7 @@ export default function FinancialsPage() {
   const { organizationId } = useAuth()
   const locale = useLocale()
   const t = useTranslations('financials')
+  const tTransactionsPage = useTranslations('financials.pages.transactions')
   const tApprovals = useTranslations('financials.approvals')
   const tCommon = useTranslations('common')
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | 'all'>('all')
@@ -238,11 +239,14 @@ export default function FinancialsPage() {
                           )}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {new Date(transaction.transaction_date).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} • {transaction.category}
+                          {new Date(transaction.transaction_date).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}{' '}
+                          • {tTransactionsPage(`categories.${transaction.category}`)}
+                          {transaction.bank_account?.name ? ` • ${transaction.bank_account.name}` : ''}
                         </div>
                       </div>
                       <div className={`font-bold ${transaction.type === 'income' ? 'text-success' : 'text-destructive'}`}>
-                        {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount_cents)}
+                        {transaction.type === 'income' ? '+' : '-'}
+                        {formatCurrency(transaction.amount_cents, transaction.bank_account?.currency)}
                       </div>
                     </div>
                   ))}
@@ -286,11 +290,13 @@ export default function FinancialsPage() {
                           )}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {new Date(expense.transaction_date).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} • {expense.category}
+                          {new Date(expense.transaction_date).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}{' '}
+                          • {tTransactionsPage(`categories.${expense.category}`)}
+                          {expense.bank_account?.name ? ` • ${expense.bank_account.name}` : ''}
                         </div>
                       </div>
                       <div className="font-bold text-destructive">
-                        -{formatCurrency(expense.amount_cents)}
+                        -{formatCurrency(expense.amount_cents, expense.bank_account?.currency)}
                       </div>
                     </div>
                   ))}

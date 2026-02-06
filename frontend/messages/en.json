@@ -1019,6 +1019,7 @@
           "logistics": "Logistics",
           "post_production": "Post Production",
           "maintenance": "Maintenance",
+          "internal_transfer": "Internal Transfer",
           "production_revenue": "Production Revenue",
           "other": "Other"
         },
@@ -1176,7 +1177,8 @@
         "loading": "Loading bank accounts...",
         "error": "Failed to load bank accounts. Please try again.",
         "actions": {
-          "new": "New Bank Account"
+          "new": "New Bank Account",
+          "transfer": "Transfer"
         },
         "summary": {
           "totalBalance": "Total Balance ({currency})",
@@ -1253,6 +1255,54 @@
           "authTitle": "Authentication Error",
           "organizationMissing": "Organization not found. Please log in again.",
           "createTitle": "Error Creating Bank Account"
+        }
+      },
+      "bankAccountsTransfer": {
+        "title": "Transfer Funds",
+        "subtitle": "Move money between your bank accounts",
+        "loading": "Loading bank accounts...",
+        "actions": {
+          "back": "Back to Bank Accounts",
+          "transfer": "Transfer",
+          "transferring": "Transferring...",
+          "cancel": "Cancel"
+        },
+        "fields": {
+          "from": {
+            "label": "From account *",
+            "placeholder": "Select source account",
+            "helper": "{currency} • Balance {balance}"
+          },
+          "to": {
+            "label": "To account *",
+            "placeholder": "Select destination account",
+            "noMatches": "No destination accounts with the same currency."
+          },
+          "amount": {
+            "label": "Amount *",
+            "placeholder": "0.00"
+          },
+          "date": {
+            "label": "Date *"
+          },
+          "description": {
+            "label": "Description",
+            "placeholder": "Optional note (e.g., Move funds to savings)"
+          }
+        },
+        "errors": {
+          "validationTitle": "Validation Error",
+          "authTitle": "Authentication Error",
+          "organizationMissing": "Organization not found. Please log in again.",
+          "notEnoughAccountsTitle": "Not enough bank accounts",
+          "notEnoughAccountsDescription": "Create at least two bank accounts to make a transfer.",
+          "fromRequired": "Select a source account",
+          "toRequired": "Select a destination account",
+          "differentAccounts": "Source and destination accounts must be different",
+          "amountRequired": "Amount must be greater than 0",
+          "accountNotFound": "Selected bank account not found",
+          "currencyMismatch": "Bank accounts must use the same currency",
+          "transferTitle": "Error Transferring Funds"
         }
       },
       "bankAccountsEdit": {

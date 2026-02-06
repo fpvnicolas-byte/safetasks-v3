@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../client'
-import { BankAccount, BankAccountCreate, BankAccountUpdate } from '@/types'
+import { BankAccount, BankAccountCreate, BankAccountUpdate, BankAccountTransferCreate, BankAccountTransferResponse } from '@/types'
 
 const BANK_ACCOUNTS_KEY = 'bank-accounts'
 
@@ -67,6 +67,20 @@ export function useDeleteBankAccount() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [BANK_ACCOUNTS_KEY] })
+    },
+  })
+}
+
+export function useTransferBetweenBankAccounts() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (transfer: BankAccountTransferCreate) =>
+      apiClient.post<BankAccountTransferResponse>('/api/v1/bank-accounts/transfer', transfer),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [BANK_ACCOUNTS_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['transactions'] })
+      queryClient.invalidateQueries({ queryKey: ['analytics'] })
     },
   })
 }

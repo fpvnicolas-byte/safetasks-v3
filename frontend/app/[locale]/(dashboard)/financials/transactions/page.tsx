@@ -75,7 +75,9 @@ export default function TransactionsPage() {
 
   // Calculate summary stats
   const appliedTransactions = filteredTransactions.filter(
-    (t) => t.payment_status === 'approved' || t.payment_status === 'paid'
+    (t) =>
+      (t.payment_status === 'approved' || t.payment_status === 'paid') &&
+      t.category !== 'internal_transfer'
   )
 
   const totalIncome = appliedTransactions
@@ -178,7 +180,7 @@ export default function TransactionsPage() {
             </div>
             <p className="text-xs text-muted-foreground">
               {t('summary.transactionCount', {
-                count: filteredTransactions.filter(t => t.type === 'income').length
+                count: filteredTransactions.filter(t => t.type === 'income' && t.category !== 'internal_transfer').length
               })}
             </p>
           </CardContent>
@@ -195,7 +197,7 @@ export default function TransactionsPage() {
             </div>
             <p className="text-xs text-muted-foreground">
               {t('summary.transactionCount', {
-                count: filteredTransactions.filter(t => t.type === 'expense').length
+                count: filteredTransactions.filter(t => t.type === 'expense' && t.category !== 'internal_transfer').length
               })}
             </p>
           </CardContent>
@@ -302,6 +304,7 @@ export default function TransactionsPage() {
                 <option value="logistics">{t('categories.logistics')}</option>
                 <option value="post_production">{t('categories.post_production')}</option>
                 <option value="maintenance">{t('categories.maintenance')}</option>
+                <option value="internal_transfer">{t('categories.internal_transfer')}</option>
                 <option value="production_revenue">{t('categories.production_revenue')}</option>
                 <option value="other">{t('categories.other')}</option>
               </select>

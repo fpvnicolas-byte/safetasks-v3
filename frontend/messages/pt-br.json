@@ -1019,6 +1019,7 @@
           "logistics": "Logística",
           "post_production": "Pós-Produção",
           "maintenance": "Manutenção",
+          "internal_transfer": "Transferência Interna",
           "production_revenue": "Receita de Produção",
           "other": "Outros"
         },
@@ -1176,7 +1177,8 @@
         "loading": "Carregando contas bancárias...",
         "error": "Falha ao carregar contas bancárias. Tente novamente.",
         "actions": {
-          "new": "Nova Conta Bancária"
+          "new": "Nova Conta Bancária",
+          "transfer": "Transferir"
         },
         "summary": {
           "totalBalance": "Saldo Total ({currency})",
@@ -1253,6 +1255,54 @@
           "authTitle": "Erro de Autenticação",
           "organizationMissing": "Organização não encontrada. Faça login novamente.",
           "createTitle": "Erro ao Criar Conta Bancária"
+        }
+      },
+      "bankAccountsTransfer": {
+        "title": "Transferir Fundos",
+        "subtitle": "Mova dinheiro entre suas contas bancárias",
+        "loading": "Carregando contas bancárias...",
+        "actions": {
+          "back": "Voltar para Contas Bancárias",
+          "transfer": "Transferir",
+          "transferring": "Transferindo...",
+          "cancel": "Cancelar"
+        },
+        "fields": {
+          "from": {
+            "label": "Conta de origem *",
+            "placeholder": "Selecione a conta de origem",
+            "helper": "{currency} • Saldo {balance}"
+          },
+          "to": {
+            "label": "Conta de destino *",
+            "placeholder": "Selecione a conta de destino",
+            "noMatches": "Nenhuma conta de destino com a mesma moeda."
+          },
+          "amount": {
+            "label": "Valor *",
+            "placeholder": "0.00"
+          },
+          "date": {
+            "label": "Data *"
+          },
+          "description": {
+            "label": "Descrição",
+            "placeholder": "Nota opcional (ex.: mover fundos para poupança)"
+          }
+        },
+        "errors": {
+          "validationTitle": "Erro de Validação",
+          "authTitle": "Erro de Autenticação",
+          "organizationMissing": "Organização não encontrada. Faça login novamente.",
+          "notEnoughAccountsTitle": "Contas bancárias insuficientes",
+          "notEnoughAccountsDescription": "Crie pelo menos duas contas bancárias para fazer uma transferência.",
+          "fromRequired": "Selecione a conta de origem",
+          "toRequired": "Selecione a conta de destino",
+          "differentAccounts": "As contas de origem e destino devem ser diferentes",
+          "amountRequired": "O valor deve ser maior que 0",
+          "accountNotFound": "Conta bancária selecionada não encontrada",
+          "currencyMismatch": "As contas bancárias devem usar a mesma moeda",
+          "transferTitle": "Erro ao Transferir Fundos"
         }
       },
       "bankAccountsEdit": {

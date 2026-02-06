@@ -259,6 +259,19 @@ export interface BankAccountUpdate {
   currency?: string
 }
 
+export interface BankAccountTransferCreate {
+  from_bank_account_id: UUID
+  to_bank_account_id: UUID
+  amount_cents: number
+  transaction_date: ISODate
+  description?: string
+}
+
+export interface BankAccountTransferResponse {
+  from_transaction: TransactionWithRelations
+  to_transaction: TransactionWithRelations
+}
+
 // Helper functions for currency conversion
 export function formatCurrency(cents: number, currency: string = 'USD'): string {
   return new Intl.NumberFormat('en-US', {
@@ -267,13 +280,18 @@ export function formatCurrency(cents: number, currency: string = 'USD'): string 
   }).format(cents / 100)
 }
 
-export function dollarsToCents(dollars: number): number {
-  return Math.round(dollars * 100)
+export function toCents(amount: number): number {
+  return Math.round(amount * 100)
 }
 
-export function centsToDollars(cents: number): number {
+export function fromCents(cents: number): number {
   return cents / 100
 }
+
+/** @deprecated Use toCents() */
+export const dollarsToCents = toCents
+/** @deprecated Use fromCents() */
+export const centsToDollars = fromCents
 
 // ============================================================================
 // TRANSACTION TYPES
@@ -290,6 +308,7 @@ export type TransactionCategory =
   | 'maintenance'
   | 'other'
   | 'production_revenue'
+  | 'internal_transfer'
 
 export interface Transaction {
   id: UUID
@@ -310,6 +329,8 @@ export interface Transaction {
   approved_by?: UUID | null
   approved_at?: ISODateTime | null
   rejection_reason?: string | null
+  paid_by?: UUID | null
+  paid_at?: ISODateTime | null
 }
 
 export interface TransactionWithRelations extends Transaction {
@@ -373,15 +394,19 @@ export function getCategoryDisplayName(category: TransactionCategory): string {
     post_production: 'Post Production',
     maintenance: 'Maintenance',
     other: 'Other',
-    production_revenue: 'Production Revenue'
+    production_revenue: 'Production Revenue',
+    internal_transfer: 'Internal Transfer'
   }
   return categoryNames[category]
 }
 
 // Helper function to get income vs expense categories
-export function getIncomCategories(): TransactionCategory[] {
+export function getIncomeCategories(): TransactionCategory[] {
   return ['production_revenue', 'other']
 }
+
+/** @deprecated Use getIncomeCategories() */
+export const getIncomCategories = getIncomeCategories
 
 export function getExpenseCategories(): TransactionCategory[] {
   return ['crew_hire', 'equipment_rental', 'logistics', 'post_production', 'maintenance', 'other']

@@ -15,7 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { ErrorDialog } from '@/components/ui/error-dialog'
-import { dollarsToCents } from '@/types'
+import { toCents } from '@/types'
 import { useTranslations } from 'next-intl'
 
 export default function NewProjectPage() {
@@ -79,7 +79,7 @@ export default function NewProjectPage() {
         status: status,
         start_date: startDate || (formData.get('start_date') as string) || undefined,
         end_date: endDate || (formData.get('end_date') as string) || undefined,
-        budget_total_cents: budgetDollars ? dollarsToCents(budgetDollars) : undefined,
+        budget_total_cents: budgetDollars ? toCents(budgetDollars) : undefined,
         service_ids: selectedServices.length > 0 ? selectedServices : undefined,
       }
 

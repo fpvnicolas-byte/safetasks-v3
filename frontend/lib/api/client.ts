@@ -211,6 +211,19 @@ class ApiClient {
         } as ApiError
       }
 
+      // Network/CORS errors: fetch rejects with a TypeError (no HTTP status available).
+      if (error instanceof TypeError) {
+        throw {
+          message:
+            'Network error: Could not reach the server. Check that the backend is running and the URL is correct.',
+          statusCode: 0,
+          details: {
+            url: `${this.baseURL}${endpoint}`,
+            originalMessage: error.message,
+          },
+        } as ApiError
+      }
+
       throw error
     }
   }

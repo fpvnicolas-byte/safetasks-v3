@@ -103,6 +103,7 @@ class AnalyticsService:
             and_(
                 Transaction.organization_id == organization_id,
                 Transaction.payment_status.in_(("approved", "paid")),
+                Transaction.category != "internal_transfer",
                 extract('year', Transaction.transaction_date) == today.year,
                 extract('month', Transaction.transaction_date) == today.month
             )
@@ -139,6 +140,7 @@ class AnalyticsService:
             and_(
                 Transaction.organization_id == organization_id,
                 Transaction.payment_status.in_(("approved", "paid")),
+                Transaction.category != "internal_transfer",
                 extract('year', Transaction.transaction_date) == today.year
             )
         )
@@ -419,6 +421,7 @@ class AnalyticsService:
                 and_(
                     Transaction.organization_id == organization_id,
                     Transaction.payment_status.in_(("approved", "paid")),
+                    Transaction.category != "internal_transfer",
                     Transaction.transaction_date >= month_start,
                     Transaction.transaction_date <= month_end
                 )

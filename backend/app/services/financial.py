@@ -133,12 +133,16 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
         # Create the transaction
         transaction_data = obj_in.dict()
 
+        # Internal transfers are applied immediately and do not go through approval.
+        if obj_in.category == "internal_transfer":
+            transaction_data["payment_status"] = "paid"
+
         # All expenses must go through approval workflow
-        if obj_in.type == "expense":
+        if obj_in.type == "expense" and obj_in.category != "internal_transfer":
             transaction_data["payment_status"] = "pending"
 
         # Auto-link expense transactions to a budget line when possible
-        if obj_in.type == "expense":
+        if obj_in.type == "expense" and obj_in.category != "internal_transfer":
             budget_line_id = transaction_data.get("budget_line_id")
 
             # If budget_line_id is explicitly provided, validate it belongs to the organization (+ project when set)
@@ -195,6 +199,9 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
 
                 # 3) Category-based fallback
                 if not candidate_budget_line_id:
+                    # Maps expense transaction categories to budget line categories.
+                    # Income categories (production_revenue) and internal_transfer
+                    # are excluded from budget auto-linking upstream.
                     transaction_category_to_budget_category = {
                         "crew_hire": BudgetCategoryEnum.CREW,
                         "equipment_rental": BudgetCategoryEnum.EQUIPMENT,
@@ -462,6 +469,100 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
 
         return transaction
 
+    async def approve(
+        self,
+        db: AsyncSession,
+        *,
+        organization_id: UUID,
+        transaction_id: UUID,
+        approver_id: UUID,
+    ) -> Transaction:
+        """Approve a pending transaction and apply balance change."""
+        from datetime import datetime, timezone
+
+        transaction = await self.get(db=db, organization_id=organization_id, id=transaction_id)
+        if not transaction:
+            raise ValueError("Transaction not found")
+        if transaction.payment_status != "pending":
+            raise ValueError(f"Transaction is already {transaction.payment_status}")
+
+        transaction.payment_status = "approved"
+        transaction.approved_by = approver_id
+        transaction.approved_at = datetime.now(timezone.utc)
+        transaction.rejection_reason = None
+
+        # Apply balance change
+        balance_change = transaction.amount_cents
+        if transaction.type == "expense":
+            balance_change = -balance_change
+
+        await db.execute(
+            update(BankAccount)
+            .where(
+                and_(
+                    BankAccount.id == transaction.bank_account_id,
+                    BankAccount.organization_id == organization_id,
+                )
+            )
+            .values(balance_cents=BankAccount.balance_cents + balance_change)
+        )
+
+        db.add(transaction)
+        await db.flush()
+        await db.refresh(transaction)
+        return transaction
+
+    async def reject(
+        self,
+        db: AsyncSession,
+        *,
+        organization_id: UUID,
+        transaction_id: UUID,
+        rejection_reason: str,
+    ) -> Transaction:
+        """Reject a pending transaction. No balance change."""
+        transaction = await self.get(db=db, organization_id=organization_id, id=transaction_id)
+        if not transaction:
+            raise ValueError("Transaction not found")
+        if transaction.payment_status != "pending":
+            raise ValueError(f"Transaction is already {transaction.payment_status}")
+
+        transaction.payment_status = "rejected"
+        transaction.rejection_reason = rejection_reason
+
+        db.add(transaction)
+        await db.flush()
+        await db.refresh(transaction)
+        return transaction
+
+    async def mark_paid(
+        self,
+        db: AsyncSession,
+        *,
+        organization_id: UUID,
+        transaction_id: UUID,
+        paid_by_id: UUID,
+    ) -> Transaction:
+        """Mark an approved transaction as paid. Records who and when."""
+        from datetime import datetime, timezone
+
+        transaction = await self.get(db=db, organization_id=organization_id, id=transaction_id)
+        if not transaction:
+            raise ValueError("Transaction not found")
+        if transaction.payment_status != "approved":
+            raise ValueError(
+                f"Transaction must be approved before being paid. Current status: {transaction.payment_status}"
+            )
+
+        transaction.payment_status = "paid"
+        transaction.paid_by = paid_by_id
+        transaction.paid_at = datetime.now(timezone.utc)
+
+        db.add(transaction)
+        await db.flush()
+        await db.refresh(transaction)
+        return transaction
+
     async def get_multi_with_relations(
         self,
         db: AsyncSession,
@@ -510,6 +611,7 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
             and_(
                 Transaction.organization_id == organization_id,
                 Transaction.type == "income",
+                Transaction.category != "internal_transfer",
                 Transaction.payment_status.in_(self.APPLIED_PAYMENT_STATUSES),
                 Transaction.transaction_date >= start_date,
                 Transaction.transaction_date < end_date
@@ -521,6 +623,7 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
             and_(
                 Transaction.organization_id == organization_id,
                 Transaction.type == "expense",
+                Transaction.category != "internal_transfer",
                 Transaction.payment_status.in_(self.APPLIED_PAYMENT_STATUSES),
                 Transaction.transaction_date >= start_date,
                 Transaction.transaction_date < end_date
@@ -554,6 +657,7 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
             and_(
                 Transaction.organization_id == organization_id,
                 Transaction.type == "income",
+                Transaction.category != "internal_transfer",
                 Transaction.payment_status.in_(self.APPLIED_PAYMENT_STATUSES),
             )
         )
@@ -563,6 +667,7 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
             and_(
                 Transaction.organization_id == organization_id,
                 Transaction.type == "expense",
+                Transaction.category != "internal_transfer",
                 Transaction.payment_status.in_(self.APPLIED_PAYMENT_STATUSES),
             )
         )
@@ -580,6 +685,7 @@ class TransactionService(BaseService[Transaction, TransactionCreate, Transaction
             and_(
                 Transaction.organization_id == organization_id,
                 Transaction.type == "expense",
+                Transaction.category != "internal_transfer",
                 Transaction.payment_status.in_(self.APPLIED_PAYMENT_STATUSES),
                 Project.is_active == True
             )

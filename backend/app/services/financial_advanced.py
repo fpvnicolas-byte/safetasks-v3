@@ -406,7 +406,8 @@ class FinancialReportService:
             and_(
                 Transaction.organization_id == organization_id,
                 Transaction.project_id == project_id,
-                Transaction.type == "expense"
+                Transaction.type == "expense",
+                Transaction.category != "internal_transfer",
             )
         ).group_by(Transaction.category)
 
@@ -441,7 +442,8 @@ class FinancialReportService:
             and_(
                 Transaction.organization_id == organization_id,
                 Transaction.project_id == project_id,
-                Transaction.type == "expense"
+                Transaction.type == "expense",
+                Transaction.category != "internal_transfer",
             )
         ).order_by(Transaction.transaction_date.desc())
 
@@ -490,7 +492,11 @@ class FinancialReportService:
         Useful for organization-wide financial reporting.
         """
         # Build query conditions
-        conditions = [Transaction.organization_id == organization_id, Transaction.type == "expense"]
+        conditions = [
+            Transaction.organization_id == organization_id,
+            Transaction.type == "expense",
+            Transaction.category != "internal_transfer",
+        ]
 
         if project_ids:
             conditions.append(Transaction.project_id.in_(project_ids))

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Search, Edit, Trash2, Wallet, TrendingUp, DollarSign } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, Wallet, TrendingUp, DollarSign, ArrowLeftRight } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
@@ -104,12 +104,20 @@ export default function BankAccountsPage() {
             {t('subtitle')}
           </p>
         </div>
-        <Button asChild>
-          <Link href="/financials/bank-accounts/new">
-            <Plus className="mr-2 h-4 w-4" />
-            {t('actions.new')}
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/financials/bank-accounts/transfer">
+              <ArrowLeftRight className="mr-2 h-4 w-4" />
+              {t('actions.transfer')}
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href="/financials/bank-accounts/new">
+              <Plus className="mr-2 h-4 w-4" />
+              {t('actions.new')}
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Total Balance Summary */}

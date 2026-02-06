@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Plus, Trash2 } from 'lucide-react'
-import { dollarsToCents, formatCurrency } from '@/lib/utils/money'
+import { toCents, formatCurrency } from '@/lib/utils/money'
 import { useTranslations } from 'next-intl'
 
 export const dynamic = 'force-dynamic'
@@ -115,7 +115,7 @@ function NewInvoiceForm() {
 
     try {
       const invoiceItems: InvoiceItemCreate[] = validItems.map(item => {
-        const unitPriceCents = dollarsToCents(parseFloat(item.unit_price))
+        const unitPriceCents = toCents(parseFloat(item.unit_price))
         const totalCents = Math.round(unitPriceCents * item.quantity)
         const cleanItemProjectId = selectedProjectId && selectedProjectId.trim() !== '' ? selectedProjectId : undefined
 
@@ -349,15 +349,15 @@ function NewInvoiceForm() {
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
                   <span>{t('summary.subtotal')}</span>
-                  <span>{formatCurrency(dollarsToCents(subtotal))}</span>
+                  <span>{formatCurrency(toCents(subtotal))}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>{t('summary.tax', { rate: 10 })}</span>
-                  <span>{formatCurrency(dollarsToCents(tax))}</span>
+                  <span>{formatCurrency(toCents(tax))}</span>
                 </div>
                 <div className="border-t pt-4 flex justify-between font-bold text-lg">
                   <span>{t('summary.total')}</span>
-                  <span>{formatCurrency(dollarsToCents(total))}</span>
+                  <span>{formatCurrency(toCents(total))}</span>
                 </div>
               </CardContent>
             </Card>

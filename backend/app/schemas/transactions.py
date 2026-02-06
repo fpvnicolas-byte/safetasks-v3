@@ -31,7 +31,8 @@ class TransactionBase(BaseModel):
             'post_production',
             'maintenance',
             'other',
-            'production_revenue'
+            'production_revenue',
+            'internal_transfer'
         ]
         if v not in allowed_categories:
             raise ValueError(
@@ -87,11 +88,25 @@ class TransactionUpdate(BaseModel):
             'post_production',
             'maintenance',
             'other',
-            'production_revenue'
+            'production_revenue',
+            'internal_transfer'
         ]
         if v not in allowed_categories:
             raise ValueError(
                 f"Category must be one of: {', '.join(allowed_categories)}. Got: {v}"
+            )
+        return v
+
+    @field_validator('payment_status')
+    @classmethod
+    def validate_payment_status(cls, v: Optional[str]) -> Optional[str]:
+        """Validate payment_status against allowed values."""
+        if v is None:
+            return v
+        allowed_statuses = ['pending', 'approved', 'paid', 'rejected']
+        if v not in allowed_statuses:
+            raise ValueError(
+                f"Payment status must be one of: {', '.join(allowed_statuses)}. Got: {v}"
             )
         return v
 
@@ -106,6 +121,8 @@ class Transaction(TransactionBase):
     approved_by: Optional[UUID] = None
     approved_at: Optional[datetime] = None
     rejection_reason: Optional[str] = None
+    paid_by: Optional[UUID] = None
+    paid_at: Optional[datetime] = None
 
 
 class TransactionWithRelations(Transaction):

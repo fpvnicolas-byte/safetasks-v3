@@ -35,12 +35,13 @@ import {
 } from 'lucide-react'
 import { useTransactions, useCreateTransaction } from '@/lib/api/hooks/useTransactions'
 import { useBankAccounts } from '@/lib/api/hooks/useBankAccounts'
+import { useOrganization } from '@/lib/api/hooks/useOrganization'
 import { useProjectBudget } from '@/lib/api/hooks/useBudget'
 import { useSubmitBudget, useRequestBudgetIncrement } from '@/lib/api/hooks/useProjects'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTranslations, useLocale } from 'next-intl'
 import { formatCurrency } from '@/lib/utils/money'
-import { TransactionWithRelations, getCategoryDisplayName, TransactionCategory, dollarsToCents, centsToDollars, ProjectWithClient, BudgetStatus } from '@/types'
+import { TransactionWithRelations, getCategoryDisplayName, TransactionCategory, toCents, fromCents, ProjectWithClient, BudgetStatus } from '@/types'
 import { toast } from 'sonner'
 
 interface ProjectExpensesTabProps {
@@ -142,12 +143,15 @@ export function ProjectExpensesTab({ projectId, project }: ProjectExpensesTabPro
         project_id: projectId,
         type: 'expense', // Only fetch expenses for producer view
     })
+    const { data: organization } = useOrganization(organizationId || undefined)
     const { data: bankAccounts } = useBankAccounts(organizationId || undefined)
     const createTransaction = useCreateTransaction()
     const submitBudget = useSubmitBudget(projectId, organizationId || '')
     const requestIncrement = useRequestBudgetIncrement(projectId, organizationId || '')
 
-    const defaultBankAccount = bankAccounts?.[0]
+    const defaultBankAccount =
+        bankAccounts?.find((account) => account.id === organization?.default_bank_account_id) ??
+        bankAccounts?.[0]
 
     // Calculate budget values - only count approved/paid expenses toward budget
     const budgetLimit = project?.budget_total_cents || 0
@@ -185,7 +189,7 @@ export function ProjectExpensesTab({ projectId, project }: ProjectExpensesTabPro
         if (showSubmitBudget && project?.budget_total_cents) {
             setBudgetForm(prev => ({
                 ...prev,
-                amount: centsToDollars(project.budget_total_cents).toString()
+                amount: fromCents(project.budget_total_cents).toString()
             }))
         }
     }, [showSubmitBudget, project?.budget_total_cents])
@@ -196,7 +200,7 @@ export function ProjectExpensesTab({ projectId, project }: ProjectExpensesTabPro
             return
         }
 
-        const amountCents = dollarsToCents(parseFloat(quickAddForm.amount) || 0)
+        const amountCents = toCents(parseFloat(quickAddForm.amount) || 0)
         if (amountCents <= 0) {
             toast.error(t('quickAdd.invalidAmount'))
             return
@@ -232,7 +236,7 @@ export function ProjectExpensesTab({ projectId, project }: ProjectExpensesTabPro
     }
 
     const handleSubmitBudget = async () => {
-        const amountCents = dollarsToCents(parseFloat(budgetForm.amount) || 0)
+        const amountCents = toCents(parseFloat(budgetForm.amount) || 0)
         if (amountCents <= 0) {
             toast.error(t('quickAdd.invalidAmount'))
             return
@@ -253,7 +257,7 @@ export function ProjectExpensesTab({ projectId, project }: ProjectExpensesTabPro
     }
 
     const handleRequestIncrement = async () => {
-        const incrementCents = dollarsToCents(parseFloat(incrementForm.amount) || 0)
+        const incrementCents = toCents(parseFloat(incrementForm.amount) || 0)
         if (incrementCents <= 0) {
             toast.error(t('quickAdd.invalidAmount'))
             return
@@ -736,7 +740,7 @@ export function ProjectExpensesTab({ projectId, project }: ProjectExpensesTabPro
                             </div>
                             {incrementForm.amount && parseFloat(incrementForm.amount) > 0 && (
                                 <p className="text-sm text-muted-foreground">
-                                    {t('budgetApproval.newTotal')}: {formatCurrency((project?.budget_total_cents ?? 0) + dollarsToCents(parseFloat(incrementForm.amount)))}
+                                    {t('budgetApproval.newTotal')}: {formatCurrency((project?.budget_total_cents ?? 0) + toCents(parseFloat(incrementForm.amount)))}
                                 </p>
                             )}
                         </div>

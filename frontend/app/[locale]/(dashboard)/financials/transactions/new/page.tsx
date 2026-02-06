@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useCreateTransaction, useBankAccounts, useProjects, useStakeholders, useStakeholderRateCalculation } from '@/lib/api/hooks'
+import { useCreateTransaction, useBankAccounts, useOrganization, useProjects, useStakeholders, useStakeholderRateCalculation } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,7 +14,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ArrowLeft, Calculator, Check, AlertCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
-import { TransactionType, TransactionCategory, dollarsToCents, getIncomCategories, getExpenseCategories, getCategoryDisplayName } from '@/types'
+import { TransactionType, TransactionCategory, toCents, getIncomeCategories, getExpenseCategories, getCategoryDisplayName, formatCurrency } from '@/types'
 import { useTranslations } from 'next-intl'
 
 export default function NewTransactionPage() {
@@ -37,21 +37,29 @@ export default function NewTransactionPage() {
 
   // Get data for dropdowns
   const { data: bankAccounts, isLoading: loadingAccounts } = useBankAccounts(organizationId || '')
+  const { data: organization } = useOrganization(organizationId || undefined)
   const { data: projects, isLoading: loadingProjects } = useProjects(organizationId || '')
   const { data: stakeholders } = useStakeholders(formData.project_id || undefined)
   const { data: stakeholderRateInfo } = useStakeholderRateCalculation(formData.stakeholder_id || undefined)
   const createTransaction = useCreateTransaction()
 
-  // Set first bank account as default when loaded
+  // Default to the organization's principal bank account (fallback to first account)
   useEffect(() => {
     if (bankAccounts && bankAccounts.length > 0 && !formData.bank_account_id) {
-      setFormData(prev => ({ ...prev, bank_account_id: bankAccounts[0].id }))
+      const preferred = organization?.default_bank_account_id
+        ? bankAccounts.find((account) => account.id === organization.default_bank_account_id)
+        : undefined
+      setFormData(prev => ({ ...prev, bank_account_id: (preferred ?? bankAccounts[0]).id }))
     }
-  }, [bankAccounts, formData.bank_account_id])
+  }, [bankAccounts, organization?.default_bank_account_id, formData.bank_account_id])
+
+  // Derive currency from selected bank account
+  const selectedBankAccount = bankAccounts?.find(a => a.id === formData.bank_account_id)
+  const currency = selectedBankAccount?.currency || 'BRL'
 
   // Get categories based on transaction type
   const availableCategories = formData.type === 'income'
-    ? getIncomCategories()
+    ? getIncomeCategories()
     : getExpenseCategories()
 
   // Update category when type changes
@@ -101,7 +109,7 @@ export default function NewTransactionPage() {
         bank_account_id: formData.bank_account_id,
         type: formData.type,
         category: formData.category,
-        amount_cents: dollarsToCents(parseFloat(formData.amount)),
+        amount_cents: toCents(parseFloat(formData.amount)),
         description: formData.description.trim() || undefined,
         transaction_date: formData.transaction_date,
         project_id: formData.project_id || undefined,
@@ -386,7 +394,7 @@ export default function NewTransactionPage() {
                     {stakeholders?.map((stakeholder) => (
                       <SelectItem key={stakeholder.id} value={stakeholder.id}>
                         {stakeholder.name} ({stakeholder.role})
-                        {stakeholder.rate_value_cents ? ` - R$ ${(stakeholder.rate_value_cents / 100).toFixed(2)}/${stakeholder.rate_type === 'daily' ? 'day' : stakeholder.rate_type === 'hourly' ? 'hour' : 'fixed'}` : ''}
+                        {stakeholder.rate_value_cents ? ` - ${formatCurrency(stakeholder.rate_value_cents, currency)}/${stakeholder.rate_type === 'daily' ? 'day' : stakeholder.rate_type === 'hourly' ? 'hour' : 'fixed'}` : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -405,7 +413,7 @@ export default function NewTransactionPage() {
                           <div>
                             <span className="font-semibold">Suggested Amount: </span>
                             <span className="text-lg font-bold text-primary">
-                              R$ {(stakeholderRateInfo.suggested_amount_cents / 100).toFixed(2)}
+                              {formatCurrency(stakeholderRateInfo.suggested_amount_cents, currency)}
                             </span>
                           </div>
                           <Button
@@ -425,10 +433,10 @@ export default function NewTransactionPage() {
                         {stakeholderRateInfo.calculation_breakdown && (
                           <p className="text-sm text-muted-foreground">
                             {stakeholderRateInfo.calculation_breakdown.type === 'daily' && (
-                              <>{stakeholderRateInfo.calculation_breakdown.days} days x R$ {(stakeholderRateInfo.calculation_breakdown.rate_per_day_cents! / 100).toFixed(2)}/day</>
+                              <>{stakeholderRateInfo.calculation_breakdown.days} days x {formatCurrency(stakeholderRateInfo.calculation_breakdown.rate_per_day_cents!, currency)}/day</>
                             )}
                             {stakeholderRateInfo.calculation_breakdown.type === 'hourly' && (
-                              <>{stakeholderRateInfo.calculation_breakdown.hours} hours x R$ {(stakeholderRateInfo.calculation_breakdown.rate_per_hour_cents! / 100).toFixed(2)}/hour</>
+                              <>{stakeholderRateInfo.calculation_breakdown.hours} hours x {formatCurrency(stakeholderRateInfo.calculation_breakdown.rate_per_hour_cents!, currency)}/hour</>
                             )}
                             {stakeholderRateInfo.calculation_breakdown.type === 'fixed' && (
                               <>Fixed amount</>
@@ -453,12 +461,12 @@ export default function NewTransactionPage() {
                           </Badge>
                           {stakeholderRateInfo.total_paid_cents > 0 && (
                             <span className="text-sm text-muted-foreground">
-                              (Paid: R$ {(stakeholderRateInfo.total_paid_cents / 100).toFixed(2)})
+                              (Paid: {formatCurrency(stakeholderRateInfo.total_paid_cents, currency)})
                             </span>
                           )}
                           {stakeholderRateInfo.pending_amount_cents !== null && stakeholderRateInfo.pending_amount_cents > 0 && (
                             <span className="text-sm text-muted-foreground">
-                              | Pending: R$ {(stakeholderRateInfo.pending_amount_cents / 100).toFixed(2)}
+                              | Pending: {formatCurrency(stakeholderRateInfo.pending_amount_cents, currency)}
                             </span>
                           )}
                         </div>

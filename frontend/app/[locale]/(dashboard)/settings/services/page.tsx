@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { ErrorDialog } from '@/components/ui/error-dialog'
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { Plus, Pencil, Trash2, Loader2, Package, Link as LinkIcon } from 'lucide-react'
-import { Service, ServiceCreate, ServiceUpdate, dollarsToCents, centsToDollars } from '@/types'
+import { Service, ServiceCreate, ServiceUpdate, toCents, fromCents } from '@/types'
 import { useTranslations } from 'next-intl'
 import { formatCurrency } from '@/lib/utils/money'
 import { ServiceEquipmentDialog } from './ServiceEquipmentDialog'
@@ -42,14 +42,14 @@ export default function ServicesPage() {
                 const data: ServiceUpdate = {
                     name: (formData.get('name') as string).trim(),
                     description: (formData.get('description') as string || '').trim() || undefined,
-                    value_cents: dollarsToCents(valueDollars),
+                    value_cents: toCents(valueDollars),
                 }
                 await updateService.mutateAsync({ id: editingService.id, data })
             } else {
                 const data: ServiceCreate = {
                     name: (formData.get('name') as string).trim(),
                     description: (formData.get('description') as string || '').trim() || undefined,
-                    value_cents: dollarsToCents(valueDollars),
+                    value_cents: toCents(valueDollars),
                 }
                 await createService.mutateAsync(data)
             }
@@ -202,7 +202,7 @@ export default function ServicesPage() {
                                     type="number"
                                     step="0.01"
                                     min="0"
-                                    defaultValue={editingService ? centsToDollars(editingService.value_cents) : ''}
+                                    defaultValue={editingService ? fromCents(editingService.value_cents) : ''}
                                     placeholder={t('dialog.valuePlaceholder')}
                                 />
                             </div>

@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useProposal, useUpdateProposal, useServices } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
-import { ProposalUpdate, ProposalStatus, dollarsToCents, centsToDollars, ProposalLineItem, formatCurrency } from '@/types'
+import { ProposalUpdate, ProposalStatus, toCents, fromCents, ProposalLineItem, formatCurrency } from '@/types'
 import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
 import { Input } from '@/components/ui/input'
@@ -50,14 +50,14 @@ export default function EditProposalPage() {
     }
     if (proposal?.base_amount_cents !== null && proposal?.base_amount_cents !== undefined) {
       const discountValue = Math.abs(proposal.base_amount_cents || 0)
-      setDiscountInput(discountValue ? centsToDollars(discountValue).toString() : '')
+      setDiscountInput(discountValue ? fromCents(discountValue).toString() : '')
     }
   }, [proposal])
 
   const totalLineItemsCents = lineItems.reduce((sum, item) => sum + (item.value_cents || 0), 0)
   const servicesTotalCents = (services?.filter(s => selectedServices.includes(s.id))
     .reduce((sum, s) => sum + (s.value_cents || 0), 0) || 0)
-  const discountCents = dollarsToCents(parseFloat(discountInput) || 0)
+  const discountCents = toCents(parseFloat(discountInput) || 0)
 
   if (isLoading) {
     return <div>{t('detail.loading')}</div>

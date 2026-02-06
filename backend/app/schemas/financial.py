@@ -11,8 +11,10 @@ class TransactionCategory(str, Enum):
     equipment_rental = "equipment_rental"
     logistics = "logistics"
     post_production = "post_production"
+    maintenance = "maintenance"
     other = "other"
     production_revenue = "production_revenue"
+    internal_transfer = "internal_transfer"
 
 
 class TaxType(str, Enum):

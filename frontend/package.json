@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbo",
+    "predev": "node scripts/ensure-next-dev-dirs.js",
+    "dev": "next dev",
+    "dev:turbo": "next dev --turbo",
     "build": "NEXT_FONT_GOOGLE_DISABLE_DOWNLOAD=1 next build",
     "start": "next start",
     "lint": "eslint",

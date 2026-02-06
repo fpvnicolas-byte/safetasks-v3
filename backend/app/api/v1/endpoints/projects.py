@@ -765,6 +765,7 @@ async def get_project_financial_summary(
         .where(TransactionModel.project_id == project_id)
         .where(TransactionModel.organization_id == organization_id)
         .where(TransactionModel.type == "income")
+        .where(TransactionModel.category != "internal_transfer")
         .where(TransactionModel.payment_status.in_(("approved", "paid")))
     )
     total_income_cents = income_result.scalar() or 0
@@ -775,6 +776,7 @@ async def get_project_financial_summary(
         .where(TransactionModel.project_id == project_id)
         .where(TransactionModel.organization_id == organization_id)
         .where(TransactionModel.type == "expense")
+        .where(TransactionModel.category != "internal_transfer")
         .where(TransactionModel.payment_status.in_(("approved", "paid")))
     )
     total_expense_cents = expense_result.scalar() or 0

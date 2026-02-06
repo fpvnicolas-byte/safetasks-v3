@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { ErrorDialog } from '@/components/ui/error-dialog'
-import { dollarsToCents, centsToDollars } from '@/lib/utils/money'
+import { toCents, fromCents } from '@/lib/utils/money'
 import { FormSkeleton } from '@/components/LoadingSkeletons'
 import { useTranslations } from 'next-intl'
 
@@ -63,7 +63,7 @@ export default function EditProjectPage() {
         status: formData.get('status') as ProjectStatus,
         start_date: (formData.get('start_date') as string || '').trim() || undefined,
         end_date: (formData.get('end_date') as string || '').trim() || undefined,
-        budget_total_cents: dollarsToCents(budgetDollars),
+        budget_total_cents: toCents(budgetDollars),
       }
 
       await updateProject.mutateAsync(data)
@@ -170,7 +170,7 @@ export default function EditProjectPage() {
                 type="number"
                 step="0.01"
                 min="0"
-                defaultValue={centsToDollars(project.budget_total_cents)}
+                defaultValue={fromCents(project.budget_total_cents)}
                 placeholder={t('form.budgetPlaceholder')}
               />
               <p className="text-xs text-muted-foreground">

@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useCreateProposal, useClients, useServices } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
-import { ProposalCreate, ProposalStatus, ProposalLineItem, formatCurrency, dollarsToCents } from '@/types'
+import { ProposalCreate, ProposalStatus, ProposalLineItem, formatCurrency, toCents } from '@/types'
 import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
 import { Input } from '@/components/ui/input'
@@ -35,7 +35,7 @@ export default function NewProposalPage() {
   const { data: clients, isLoading: clientsLoading } = useClients(organizationId || undefined)
   const { data: services, isLoading: servicesLoading } = useServices(organizationId || undefined)
   const createProposal = useCreateProposal()
-  const discountCents = dollarsToCents(parseFloat(discountInput) || 0)
+  const discountCents = toCents(parseFloat(discountInput) || 0)
   const servicesTotalCents = (services?.filter(s => selectedServices.includes(s.id))
     .reduce((sum, s) => sum + (s.value_cents || 0), 0) || 0)
   const lineItemsTotalCents = lineItems.reduce((sum, item) => sum + (item.value_cents || 0), 0)

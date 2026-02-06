@@ -563,6 +563,7 @@ async def get_project_budget(
             .where(Transaction.organization_id == organization_id)
             .where(Transaction.budget_line_id.in_(line_ids))
             .where(Transaction.type == 'expense')
+            .where(Transaction.category != "internal_transfer")
             .where(Transaction.payment_status.in_(("approved", "paid")))
             .group_by(Transaction.budget_line_id)
         )
@@ -579,6 +580,7 @@ async def get_project_budget(
         .where(Transaction.organization_id == organization_id)
         .where(Transaction.project_id == project_id)
         .where(Transaction.type == "expense")
+        .where(Transaction.category != "internal_transfer")
         .where(Transaction.budget_line_id.is_(None))
         .where(Transaction.payment_status.in_(("approved", "paid")))
         .group_by(Transaction.category)
@@ -754,6 +756,7 @@ async def update_budget_line(
         .where(Transaction.organization_id == organization_id)
         .where(Transaction.budget_line_id == line_id)
         .where(Transaction.type == 'expense')
+        .where(Transaction.category != "internal_transfer")
         .where(Transaction.payment_status.in_(("approved", "paid")))
     )
     actual = result.scalar() or 0
