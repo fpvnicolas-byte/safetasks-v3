@@ -17,7 +17,8 @@ from app.core.config import settings
 from app.models.organizations import Organization
 from app.models.financial import Invoice, InvoicePaymentMethodEnum
 from app.models.transactions import Transaction
-from app.models.billing import BillingEvent
+from app.schemas.transactions import TransactionCreate
+from app.services.financial import transaction_service
 
 logger = logging.getLogger(__name__)
 
@@ -671,18 +672,46 @@ async def _create_payment_transaction(
         )
         return None
 
-    transaction = Transaction(
-        organization_id=invoice.organization_id,
-        bank_account_id=organization.default_bank_account_id,
-        project_id=invoice.project_id,
-        invoice_id=invoice.id,
-        category="production_revenue",
-        type="income",
-        amount_cents=invoice.total_amount_cents,
-        description=f"Payment received for Invoice #{invoice.invoice_number}",
-        payment_status="paid",
-        paid_at=invoice.paid_at,
+    # Idempotency: do not create duplicate income transactions for the same invoice.
+    existing_result = await db.execute(
+        select(Transaction).where(
+            Transaction.organization_id == invoice.organization_id,
+            Transaction.invoice_id == invoice.id,
+        )
     )
-    db.add(transaction)
-    logger.info(f"Created income transaction for invoice {invoice.id}")
+    existing = existing_result.scalar_one_or_none()
+    if existing:
+        logger.info(f"Income transaction already exists for invoice {invoice.id}")
+        return existing
+
+    transaction_date = invoice.paid_date or datetime.now(timezone.utc).date()
+    try:
+        transaction = await transaction_service.create(
+            db=db,
+            organization_id=invoice.organization_id,
+            obj_in=TransactionCreate(
+                bank_account_id=organization.default_bank_account_id,
+                category="production_revenue",
+                type="income",
+                amount_cents=invoice.total_amount_cents,
+                description=f"Payment received for Invoice #{invoice.invoice_number}",
+                transaction_date=transaction_date,
+                project_id=invoice.project_id,
+                invoice_id=invoice.id,
+                payment_status="paid",
+            ),
+        )
+    except Exception as e:
+        logger.error(
+            f"Failed to create income transaction for invoice {invoice.id}: {e}",
+            exc_info=True,
+        )
+        return None
+
+    # Keep the paid timestamp aligned with the invoice.
+    if invoice.paid_at and not transaction.paid_at:
+        transaction.paid_at = invoice.paid_at
+        db.add(transaction)
+
+    logger.info(f"Created income transaction for invoice {invoice.id} and applied it to bank balance")
     return transaction

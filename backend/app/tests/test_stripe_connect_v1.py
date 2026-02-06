@@ -476,6 +476,12 @@ async def test_9_webhook_checkout_completed():
         assert transaction.payment_status == "paid"
         print("    ✓ Income transaction created correctly")
 
+        # Verify bank account balance was updated
+        acc_result = await db.execute(select(BankAccount).where(BankAccount.id == BANK_ACCOUNT_ID))
+        account = acc_result.scalar_one()
+        assert account.balance_cents == 550000
+        print("    ✓ Bank account balance updated correctly")
+
     print("  PASSED ✅\n")
 
 
@@ -528,6 +534,12 @@ async def test_10_webhook_idempotency():
         assert len(transactions) == 1, f"Expected 1 transaction, got {len(transactions)}"
         print("    ✓ Duplicate webhook processing produced only 1 transaction")
 
+        # Balance should not be double-applied
+        acc_result = await db.execute(select(BankAccount).where(BankAccount.id == BANK_ACCOUNT_ID))
+        account = acc_result.scalar_one()
+        assert account.balance_cents == 550000
+        print("    ✓ Bank account balance not double-applied")
+
     print("  PASSED ✅\n")
 
 
@@ -571,6 +583,11 @@ async def test_11_webhook_async_payment_succeeded():
         assert invoice.paid_via == "stripe_boleto"
         assert invoice.paid_at is not None
         print("    ✓ Boleto async payment marked invoice as paid")
+
+        acc_result = await db.execute(select(BankAccount).where(BankAccount.id == BANK_ACCOUNT_ID))
+        account = acc_result.scalar_one()
+        assert account.balance_cents == 550000
+        print("    ✓ Bank account balance updated for async payment")
 
     print("  PASSED ✅\n")
 
