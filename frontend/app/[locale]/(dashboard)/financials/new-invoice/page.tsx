@@ -3,8 +3,9 @@
 import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCreateInvoice, useClients, useProjects } from '@/lib/api/hooks'
+import { useStripeConnectStatus } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
-import { InvoiceCreate, InvoiceItemCreate } from '@/types'
+import { InvoiceCreate, InvoiceItemCreate, InvoicePaymentMethod } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -34,6 +35,7 @@ function NewInvoiceForm() {
   const tCommon = useTranslations('common')
 
   const [error, setError] = useState<string | null>(null)
+  const [paymentMethod, setPaymentMethod] = useState<InvoicePaymentMethod>('bank_transfer')
   const [items, setItems] = useState<InvoiceItemForm[]>([
     { description: '', quantity: 1, unit_price: '0.00', category: '' }
   ])
@@ -43,6 +45,8 @@ function NewInvoiceForm() {
   const { data: clients } = useClients(organizationId || undefined)
   const { data: projects } = useProjects(organizationId || undefined)
   const createInvoice = useCreateInvoice(organizationId || undefined)
+  const { data: connectStatus } = useStripeConnectStatus()
+  const isStripeConnected = connectStatus?.connected && connectStatus?.charges_enabled
 
   if (isLoadingOrg) {
     return <div>{tCommon('loading')}</div>
@@ -149,6 +153,7 @@ function NewInvoiceForm() {
         ...(cleanDescription && cleanDescription.trim() && { description: cleanDescription.trim() }),
         ...(cleanNotes && cleanNotes.trim() && { notes: cleanNotes.trim() }),
         currency: 'BRL',
+        payment_method: paymentMethod,
       }
 
       console.log('Creating invoice with data:', JSON.stringify(invoiceData, null, 2))
@@ -233,6 +238,31 @@ function NewInvoiceForm() {
                 type="date"
                 required
               />
+            </div>
+
+            {/* Payment Method */}
+            <div className="space-y-2">
+              <Label htmlFor="payment_method">{t('fields.paymentMethod.label')}</Label>
+              <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as InvoicePaymentMethod)}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('fields.paymentMethod.placeholder')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {isStripeConnected && (
+                    <SelectItem value="stripe">{t('fields.paymentMethod.options.stripe')}</SelectItem>
+                  )}
+                  <SelectItem value="bank_transfer">{t('fields.paymentMethod.options.bank_transfer')}</SelectItem>
+                  <SelectItem value="pix_manual">{t('fields.paymentMethod.options.pix_manual')}</SelectItem>
+                  <SelectItem value="boleto_manual">{t('fields.paymentMethod.options.boleto_manual')}</SelectItem>
+                  <SelectItem value="cash">{t('fields.paymentMethod.options.cash')}</SelectItem>
+                  <SelectItem value="other">{t('fields.paymentMethod.options.other')}</SelectItem>
+                </SelectContent>
+              </Select>
+              {!isStripeConnected && (
+                <p className="text-xs text-muted-foreground">
+                  {t('fields.paymentMethod.stripeHint')}
+                </p>
+              )}
             </div>
 
             {/* Invoice Items */}

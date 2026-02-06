@@ -20,5 +20,6 @@ export * from './useStakeholders'
 export * from './useStakeholderStatus'
 export * from './useBudget'
 export * from './useOrganization'
+export * from './useStripeConnect'
 
 // Additional exports will be added in later phases

@@ -1519,6 +1519,19 @@
           "notes": {
             "label": "Notas Adicionais",
             "placeholder": "Termos de pagamento, instruções especiais..."
+          },
+          "paymentMethod": {
+            "label": "Método de Pagamento",
+            "placeholder": "Selecione o método de pagamento",
+            "options": {
+              "stripe": "Stripe (Pagamento Online)",
+              "bank_transfer": "Transferência Bancária",
+              "pix_manual": "PIX (Manual)",
+              "boleto_manual": "Boleto (Manual)",
+              "cash": "Dinheiro",
+              "other": "Outro"
+            },
+            "stripeHint": "Conecte o Stripe em Configurações → Métodos de Pagamento para habilitar pagamentos online"
           }
         },
         "items": {
@@ -1649,6 +1662,23 @@
           "check": "Cheque",
           "paypal": "PayPal",
           "other": "Outros"
+        },
+        "paymentLink": {
+          "title": "Link de Pagamento",
+          "generate": "Gerar Link de Pagamento",
+          "generating": "Gerando...",
+          "generated": "Link de pagamento criado com sucesso",
+          "generateFailed": "Falha ao gerar link de pagamento",
+          "active": "Link de pagamento ativo",
+          "copyLink": "Copiar Link",
+          "copiedBtn": "Copiado!",
+          "copied": "Link de pagamento copiado",
+          "expiresAt": "Expira em {date}",
+          "expired": "Link de pagamento anterior expirou",
+          "regenerate": "Gerar Novo Link",
+          "notConnected": "Stripe não está conectado. Conecte sua conta Stripe para gerar links de pagamento.",
+          "setupStripe": "Configurar Stripe Connect →",
+          "checkoutStatus": "Status do Checkout"
         },
         "errors": {
           "load": "Erro ao carregar fatura: {message}",
@@ -2243,6 +2273,11 @@
         "title": "Notificações",
         "description": "Alertas e atualizações em tempo real",
         "content": "Gerencie suas preferências de notificação e veja alertas recentes"
+      },
+      "paymentMethods": {
+        "title": "Métodos de Pagamento",
+        "description": "Aceitar pagamentos online",
+        "content": "Conecte o Stripe para aceitar pagamentos via cartão, PIX e boleto"
       }
     },
     "organizationPage": {
@@ -2297,6 +2332,46 @@
         "passwordManagement": "Gerenciamento de senha"
       },
       "backButton": "Voltar para Configurações"
+    },
+    "paymentMethods": {
+      "title": "Métodos de Pagamento",
+      "description": "Conecte provedores de pagamento para aceitar pagamentos online dos clientes",
+      "stripe": {
+        "title": "Stripe Connect",
+        "description": "Aceite pagamentos via cartão de crédito, PIX e boleto pelo Stripe",
+        "connected": "Conectado",
+        "notConnected": "Não Conectado",
+        "connectButton": "Conectar Conta Stripe",
+        "connecting": "Conectando...",
+        "disconnectButton": "Desconectar Conta",
+        "disconnecting": "Desconectando...",
+        "connectPrompt": {
+          "title": "Conecte Sua Conta Stripe",
+          "description": "Vincule sua conta Stripe para aceitar pagamentos online diretamente nas suas faturas. Clientes podem pagar via cartão de crédito, PIX ou boleto."
+        },
+        "benefits": {
+          "title": "Benefícios de conectar o Stripe:",
+          "item1": "Aceitar pagamentos com cartão de crédito nas faturas",
+          "item2": "Aceitar pagamentos via PIX e boleto",
+          "item3": "Rastreamento automático de pagamentos e conciliação",
+          "item4": "Links de pagamento seguros para seus clientes"
+        },
+        "details": {
+          "accountId": "ID da Conta",
+          "businessName": "Nome da Empresa",
+          "charges": "Cobranças",
+          "payouts": "Repasses",
+          "enabled": "Habilitado",
+          "disabled": "Pendente de Configuração",
+          "connectedSince": "Conectado desde {date}"
+        }
+      },
+      "errors": {
+        "loadFailed": "Falha ao carregar status da conexão de pagamento",
+        "connectFailed": "Falha ao iniciar conexão com o Stripe",
+        "disconnectFailed": "Falha ao desconectar conta Stripe"
+      },
+      "disconnected": "Conta Stripe desconectada com sucesso"
     },
     "servicesPage": {
       "title": "Serviços",

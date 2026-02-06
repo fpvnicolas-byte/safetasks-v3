@@ -51,12 +51,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Use refs to track current state for async callbacks (avoids stale closures)
   const profileRef = useRef<Profile | null>(null)
   const isSigningOutRef = useRef(false)
+  const isFetchingProfileRef = useRef(false)
 
   const fetchProfile = useCallback(async (token: string) => {
     // Don't fetch if we're signing out
     if (isSigningOutRef.current) {
       return
     }
+
+    // Prevent concurrent fetchProfile calls (race condition guard)
+    if (isFetchingProfileRef.current) {
+      return
+    }
+    isFetchingProfileRef.current = true
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/profiles/me`, {
@@ -89,6 +96,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       logger.error('Error fetching profile', error)
+    } finally {
+      isFetchingProfileRef.current = false
     }
   }, [pathname, locale, router])
 

@@ -1519,6 +1519,19 @@
           "notes": {
             "label": "Additional Notes",
             "placeholder": "Payment terms, special instructions..."
+          },
+          "paymentMethod": {
+            "label": "Payment Method",
+            "placeholder": "Select payment method",
+            "options": {
+              "stripe": "Stripe (Online Payment)",
+              "bank_transfer": "Bank Transfer",
+              "pix_manual": "PIX (Manual)",
+              "boleto_manual": "Boleto (Manual)",
+              "cash": "Cash",
+              "other": "Other"
+            },
+            "stripeHint": "Connect Stripe in Settings → Payment Methods to enable online payments"
           }
         },
         "items": {
@@ -1649,6 +1662,23 @@
           "check": "Check",
           "paypal": "PayPal",
           "other": "Other"
+        },
+        "paymentLink": {
+          "title": "Payment Link",
+          "generate": "Generate Payment Link",
+          "generating": "Generating...",
+          "generated": "Payment link created successfully",
+          "generateFailed": "Failed to generate payment link",
+          "active": "Payment link active",
+          "copyLink": "Copy Link",
+          "copiedBtn": "Copied!",
+          "copied": "Payment link copied to clipboard",
+          "expiresAt": "Expires {date}",
+          "expired": "Previous payment link has expired",
+          "regenerate": "Generate New Link",
+          "notConnected": "Stripe is not connected. Connect your Stripe account to generate payment links.",
+          "setupStripe": "Set up Stripe Connect →",
+          "checkoutStatus": "Checkout Status"
         },
         "errors": {
           "load": "Error loading invoice: {message}",
@@ -2243,6 +2273,11 @@
         "title": "Notifications",
         "description": "Real-time alerts and updates",
         "content": "Manage your notification preferences and view recent alerts"
+      },
+      "paymentMethods": {
+        "title": "Payment Methods",
+        "description": "Accept online payments",
+        "content": "Connect Stripe to accept credit card, PIX, and boleto payments"
       }
     },
     "organizationPage": {
@@ -2297,6 +2332,46 @@
         "passwordManagement": "Password management"
       },
       "backButton": "Back to Settings"
+    },
+    "paymentMethods": {
+      "title": "Payment Methods",
+      "description": "Connect payment providers to accept online payments from clients",
+      "stripe": {
+        "title": "Stripe Connect",
+        "description": "Accept credit card, PIX, and boleto payments through Stripe",
+        "connected": "Connected",
+        "notConnected": "Not Connected",
+        "connectButton": "Connect Stripe Account",
+        "connecting": "Connecting...",
+        "disconnectButton": "Disconnect Account",
+        "disconnecting": "Disconnecting...",
+        "connectPrompt": {
+          "title": "Connect Your Stripe Account",
+          "description": "Link your Stripe account to accept online payments directly on your invoices. Clients can pay via credit card, PIX, or boleto."
+        },
+        "benefits": {
+          "title": "Benefits of connecting Stripe:",
+          "item1": "Accept credit card payments on invoices",
+          "item2": "Accept PIX and boleto payments (Brazil)",
+          "item3": "Automatic payment tracking and reconciliation",
+          "item4": "Secure payment links for your clients"
+        },
+        "details": {
+          "accountId": "Account ID",
+          "businessName": "Business Name",
+          "charges": "Charges",
+          "payouts": "Payouts",
+          "enabled": "Enabled",
+          "disabled": "Pending Setup",
+          "connectedSince": "Connected since {date}"
+        }
+      },
+      "errors": {
+        "loadFailed": "Failed to load payment connection status",
+        "connectFailed": "Failed to initiate Stripe connection",
+        "disconnectFailed": "Failed to disconnect Stripe account"
+      },
+      "disconnected": "Stripe account disconnected successfully"
     },
     "servicesPage": {
       "title": "Services",

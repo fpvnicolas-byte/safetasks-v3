@@ -39,6 +39,10 @@ export interface Organization {
   is_active: boolean
   created_at: ISODateTime
   updated_at: ISODateTime
+  // Stripe Connect
+  stripe_connect_account_id: string | null
+  stripe_connect_onboarding_complete: boolean
+  stripe_connect_enabled_at: ISODateTime | null
 }
 
 // ============================================================================
@@ -198,6 +202,7 @@ export interface CallSheetWithProject extends CallSheet {
 
 export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled'
 export type ExpenseCategory = 'pre_production' | 'production' | 'post_production' | 'marketing' | 'other'
+export type InvoicePaymentMethod = 'stripe' | 'bank_transfer' | 'pix_manual' | 'boleto_manual' | 'cash' | 'other'
 
 export interface InvoiceItem {
   id: UUID
@@ -228,6 +233,13 @@ export interface Invoice {
   payment_method: string | null
   payment_reference: string | null
   payment_notes: string | null
+  // Stripe Connect payment fields
+  stripe_checkout_session_id: string | null
+  stripe_payment_intent_id: string | null
+  payment_link_url: string | null
+  payment_link_expires_at: ISODateTime | null
+  paid_at: ISODateTime | null
+  paid_via: string | null
   created_at: ISODateTime
   updated_at: ISODateTime
 }
@@ -236,6 +248,38 @@ export interface InvoiceWithItems extends Invoice {
   items: InvoiceItem[]
   client?: Client | null
   project?: Project | null
+}
+
+// Stripe Connect Types
+export interface StripeConnectStatus {
+  connected: boolean
+  account_id: string | null
+  onboarding_complete: boolean
+  enabled_at: string | null
+  charges_enabled: boolean
+  payouts_enabled: boolean
+  business_name: string | null
+  error: string | null
+}
+
+export interface PaymentLinkResponse {
+  invoice_id: string
+  payment_link_url: string
+  stripe_checkout_session_id: string
+  expires_at: string | null
+}
+
+export interface PaymentStatusResponse {
+  invoice_id: string
+  invoice_status: string
+  payment_method: string | null
+  paid_at: string | null
+  paid_via: string | null
+  payment_link_url: string | null
+  payment_link_expires_at: string | null
+  checkout_session_status: string | null
+  payment_status: string | null
+  error: string | null
 }
 
 // ============================================================================
@@ -1206,6 +1250,7 @@ export interface InvoiceCreate {
   description?: string
   notes?: string
   currency?: string
+  payment_method?: InvoicePaymentMethod
 }
 
 // ============================================================================

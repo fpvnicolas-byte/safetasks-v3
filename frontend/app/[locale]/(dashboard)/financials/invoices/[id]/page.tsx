@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 // Tooltip imports retained for potential future use
 // import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Edit, Trash2, ArrowLeft, Download, Mail, DollarSign, CreditCard, FileText, Loader2 } from 'lucide-react'
+import { Edit, Trash2, ArrowLeft, Download, Mail, DollarSign, CreditCard, FileText, Loader2, Link2, Copy, ExternalLink, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency } from '@/lib/utils/money'
 import { useState } from 'react'
@@ -23,6 +23,7 @@ import { InvoiceStatus } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { toast } from 'sonner'
+import { useGeneratePaymentLink, usePaymentStatus, useStripeConnectStatus } from '@/lib/api/hooks'
 
 const statusVariant: Record<InvoiceStatus, 'secondary' | 'info' | 'success' | 'destructive' | 'outline'> = {
   draft: 'secondary',
@@ -456,6 +457,11 @@ export default function InvoiceDetailPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Stripe Payment Link */}
+          {invoice.payment_method === 'stripe' && invoice.status !== 'paid' && invoice.status !== 'cancelled' && (
+            <StripePaymentLinkCard invoiceId={invoiceId} invoice={invoice} organizationId={organizationId || undefined} />
+          )}
         </div>
       </div>
     </div>
@@ -592,5 +598,130 @@ function PaymentDialog({ invoiceId, invoiceTotal, organizationId }: PaymentDialo
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  )
+}
+
+// Stripe Payment Link Card
+interface StripePaymentLinkCardProps {
+  invoiceId: string
+  invoice: any
+  organizationId?: string
+}
+
+function StripePaymentLinkCard({ invoiceId, invoice, organizationId }: StripePaymentLinkCardProps) {
+  const t = useTranslations('financials.pages.invoiceDetail')
+  const generateLink = useGeneratePaymentLink()
+  const { data: connectStatus } = useStripeConnectStatus()
+  const { data: paymentStatus } = usePaymentStatus(invoiceId, !!invoice.stripe_checkout_session_id)
+  const [copied, setCopied] = useState(false)
+
+  const isConnected = connectStatus?.connected && connectStatus?.charges_enabled
+
+  const handleGenerateLink = async () => {
+    try {
+      await generateLink.mutateAsync(invoiceId)
+      toast.success(t('paymentLink.generated'))
+    } catch (err: any) {
+      toast.error(err.message || t('paymentLink.generateFailed'))
+    }
+  }
+
+  const handleCopyLink = () => {
+    const url = invoice.payment_link_url || paymentStatus?.payment_link_url
+    if (url) {
+      navigator.clipboard.writeText(url)
+      setCopied(true)
+      toast.success(t('paymentLink.copied'))
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  const paymentLinkUrl = invoice.payment_link_url || paymentStatus?.payment_link_url
+  const hasActiveLink = !!paymentLinkUrl
+  const isExpired = invoice.payment_link_expires_at && new Date(invoice.payment_link_expires_at) < new Date()
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Link2 className="h-5 w-5" />
+          {t('paymentLink.title')}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {!isConnected ? (
+          <div className="text-sm text-muted-foreground">
+            <p>{t('paymentLink.notConnected')}</p>
+            <Button asChild variant="link" className="p-0 h-auto mt-1">
+              <Link href="/settings/payment-methods">
+                {t('paymentLink.setupStripe')}
+              </Link>
+            </Button>
+          </div>
+        ) : hasActiveLink && !isExpired ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-success" />
+              <span className="text-sm font-medium text-success">{t('paymentLink.active')}</span>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="flex-1" onClick={handleCopyLink}>
+                {copied ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                {copied ? t('paymentLink.copiedBtn') : t('paymentLink.copyLink')}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => window.open(paymentLinkUrl, '_blank')}>
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+            </div>
+            {invoice.payment_link_expires_at && (
+              <p className="text-xs text-muted-foreground">
+                {t('paymentLink.expiresAt', { date: new Date(invoice.payment_link_expires_at).toLocaleDateString() })}
+              </p>
+            )}
+            {/* Regenerate option */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full text-muted-foreground"
+              onClick={handleGenerateLink}
+              disabled={generateLink.isPending}
+            >
+              {generateLink.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {t('paymentLink.regenerate')}
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {isExpired && (
+              <p className="text-sm text-destructive">{t('paymentLink.expired')}</p>
+            )}
+            <Button
+              className="w-full"
+              onClick={handleGenerateLink}
+              disabled={generateLink.isPending}
+            >
+              {generateLink.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Link2 className="mr-2 h-4 w-4" />
+              )}
+              {generateLink.isPending ? t('paymentLink.generating') : t('paymentLink.generate')}
+            </Button>
+          </div>
+        )}
+
+        {/* Live payment status */}
+        {paymentStatus?.checkout_session_status && (
+          <div className="pt-2 border-t">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">{t('paymentLink.checkoutStatus')}</span>
+              <Badge variant={paymentStatus.checkout_session_status === 'complete' ? 'success' : 'secondary'}>
+                {paymentStatus.checkout_session_status}
+              </Badge>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
