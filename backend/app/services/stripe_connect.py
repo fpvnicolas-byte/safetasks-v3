@@ -311,7 +311,12 @@ async def create_invoice_payment_link(
                 "quantity": 1,
             }],
             mode="payment",
-            automatic_payment_methods={"enabled": True},
+            # Offer multiple payment options directly in Checkout (Brazil-friendly).
+            payment_method_types=["card", "pix", "boleto"],
+            payment_method_options={
+                "pix": {"expires_after_seconds": 86400},  # 24h
+                "boleto": {"expires_after_days": 2},
+            },
             success_url=f"{frontend_url}/payment/success?session_id={{CHECKOUT_SESSION_ID}}",
             cancel_url=f"{frontend_url}/payment/cancelled?invoice_id={invoice.id}",
             metadata={
