@@ -79,6 +79,13 @@ export default function PaymentMethodsPage() {
 
   const isConnected = connectStatus?.connected ?? false
   const chargesEnabled = connectStatus?.charges_enabled ?? false
+  const stripeDashboardBase =
+    connectStatus?.livemode === false ? 'https://dashboard.stripe.com/test' : 'https://dashboard.stripe.com'
+  const stripeAccountId = connectStatus?.account_id
+  const stripeDashboardUrl = typeof stripeAccountId === 'string' && stripeAccountId.startsWith('acct_')
+    ? `${stripeDashboardBase}/${stripeAccountId}/`
+    : `${stripeDashboardBase}/`
+  const openStripeDashboard = () => window.open(stripeDashboardUrl, '_blank', 'noopener,noreferrer')
 
   return (
     <div className="space-y-8">
@@ -205,9 +212,34 @@ export default function PaymentMethodsPage() {
                 </p>
               )}
 
+              {/* Alert when setup is pending */}
+              {(!chargesEnabled || !connectStatus?.payouts_enabled) && (
+                <Alert>
+                  <AlertDescription className="flex items-center justify-between">
+                    <span>{t('stripe.setupPending')}</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="ml-4 shrink-0"
+                      onClick={openStripeDashboard}
+                    >
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      {t('stripe.completeSetup')}
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <Separator />
 
-              <div className="flex justify-end">
+              <div className="flex justify-between">
+                <Button
+                  variant="outline"
+                  onClick={openStripeDashboard}
+                >
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  {t('stripe.manageDashboard')}
+                </Button>
                 <Button
                   variant="destructive"
                   onClick={handleDisconnect}

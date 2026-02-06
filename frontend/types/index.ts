@@ -258,6 +258,7 @@ export interface StripeConnectStatus {
   enabled_at: string | null
   charges_enabled: boolean
   payouts_enabled: boolean
+  livemode: boolean | null
   business_name: string | null
   error: string | null
 }

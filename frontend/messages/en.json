@@ -2345,6 +2345,9 @@
         "connecting": "Connecting...",
         "disconnectButton": "Disconnect Account",
         "disconnecting": "Disconnecting...",
+        "setupPending": "Your Stripe account setup is still pending. Complete it to enable charges and payouts.",
+        "completeSetup": "Complete setup",
+        "manageDashboard": "Manage Stripe Dashboard",
         "connectPrompt": {
           "title": "Connect Your Stripe Account",
           "description": "Link your Stripe account to accept online payments directly on your invoices. Clients can pay via credit card, PIX, or boleto."

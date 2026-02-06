@@ -615,7 +615,8 @@ function StripePaymentLinkCard({ invoiceId, invoice, organizationId }: StripePay
   const { data: paymentStatus } = usePaymentStatus(invoiceId, !!invoice.stripe_checkout_session_id)
   const [copied, setCopied] = useState(false)
 
-  const isConnected = connectStatus?.connected && connectStatus?.charges_enabled
+  // Allow link generation if account is connected (even if charges_enabled is false in test mode)
+  const isConnected = connectStatus?.connected ?? false
 
   const handleGenerateLink = async () => {
     try {

@@ -2345,6 +2345,9 @@
         "connecting": "Conectando...",
         "disconnectButton": "Desconectar Conta",
         "disconnecting": "Desconectando...",
+        "setupPending": "A configuração da sua conta Stripe ainda está pendente. Conclua para habilitar cobranças e repasses.",
+        "completeSetup": "Concluir configuração",
+        "manageDashboard": "Gerenciar painel do Stripe",
         "connectPrompt": {
           "title": "Conecte Sua Conta Stripe",
           "description": "Vincule sua conta Stripe para aceitar pagamentos online diretamente nas suas faturas. Clientes podem pagar via cartão de crédito, PIX ou boleto."

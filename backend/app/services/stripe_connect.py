@@ -161,6 +161,7 @@ async def get_connect_status(
             "enabled_at": None,
             "charges_enabled": False,
             "payouts_enabled": False,
+            "livemode": None,
             "business_name": None,
         }
 
@@ -176,6 +177,7 @@ async def get_connect_status(
             "enabled_at": organization.stripe_connect_enabled_at.isoformat() if organization.stripe_connect_enabled_at else None,
             "charges_enabled": account.get("charges_enabled", False),
             "payouts_enabled": account.get("payouts_enabled", False),
+            "livemode": account.get("livemode"),
             "business_name": account.get("business_profile", {}).get("name") or account.get("settings", {}).get("dashboard", {}).get("display_name"),
         }
     except stripe.error.PermissionError:
@@ -188,6 +190,7 @@ async def get_connect_status(
             "enabled_at": organization.stripe_connect_enabled_at.isoformat() if organization.stripe_connect_enabled_at else None,
             "charges_enabled": False,
             "payouts_enabled": False,
+            "livemode": None,
             "business_name": None,
             "error": "Lost access to connected account. Please reconnect.",
         }
@@ -316,7 +319,7 @@ async def create_invoice_payment_link(
                 "organization_id": str(invoice.organization_id),
             },
             stripe_account=organization.stripe_connect_account_id,
-            expires_after=86400,  # 24 hours
+            expires_at=int((datetime.now(timezone.utc) + timedelta(hours=24)).timestamp()),
         )
     except stripe.error.StripeError as e:
         logger.error(f"Failed to create checkout session for invoice {invoice.id}: {e}")

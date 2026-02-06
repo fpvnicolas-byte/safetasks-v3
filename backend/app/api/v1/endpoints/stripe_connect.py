@@ -53,6 +53,7 @@ class ConnectStatusResponse(BaseModel):
     enabled_at: str | None = None
     charges_enabled: bool = False
     payouts_enabled: bool = False
+    livemode: bool | None = None
     business_name: str | None = None
     error: str | None = None
 

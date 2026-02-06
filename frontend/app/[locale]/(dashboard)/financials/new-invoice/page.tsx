@@ -46,7 +46,9 @@ function NewInvoiceForm() {
   const { data: projects } = useProjects(organizationId || undefined)
   const createInvoice = useCreateInvoice(organizationId || undefined)
   const { data: connectStatus } = useStripeConnectStatus()
-  const isStripeConnected = connectStatus?.connected && connectStatus?.charges_enabled
+  // In test mode, charges_enabled may be false even though Connect is linked.
+  // Allow selecting Stripe if the account is connected (charges check happens on backend).
+  const isStripeConnected = connectStatus?.connected ?? false
 
   if (isLoadingOrg) {
     return <div>{tCommon('loading')}</div>
