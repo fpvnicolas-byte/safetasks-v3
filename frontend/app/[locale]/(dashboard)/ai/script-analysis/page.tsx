@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/AuthContext'
@@ -44,6 +44,11 @@ export default function AiScriptAnalysisPage() {
     error?: string
   } | null>(null)
 
+  // Any edit invalidates the previous AI preview.
+  useEffect(() => {
+    setAiAnalysisResult(null)
+  }, [selectedProjectId, analysisType, scriptText])
+
   // Queries
   const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId || '')
   const { mutateAsync: analyzeScript, isPending: isAnalyzing } = useAiScriptAnalysis()
@@ -60,6 +65,9 @@ export default function AiScriptAnalysisPage() {
     }
 
     try {
+      // Clear any stale preview while the new analysis is running.
+      setAiAnalysisResult(null)
+
       const result = await analyzeScript({
         project_id: selectedProjectId,
         analysis_type: analysisType,
@@ -271,7 +279,10 @@ export default function AiScriptAnalysisPage() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => setScriptText('')}
+                onClick={() => {
+                  setScriptText('')
+                  setAiAnalysisResult(null)
+                }}
                 disabled={isAnalyzing}
               >
                 {tAi('actions.clear')}
@@ -294,7 +305,7 @@ export default function AiScriptAnalysisPage() {
       </div>
 
       {/* Analysis Preview */}
-      {scriptText.length > 0 && (
+      {aiAnalysisResult && (
         <Card>
           <CardHeader>
             <CardTitle>{t('preview.title')}</CardTitle>
@@ -309,15 +320,9 @@ export default function AiScriptAnalysisPage() {
                   <Users className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">{t('preview.cards.characters')}</span>
                 </div>
-                {/* AI-Assisted Detection (Option 5) */}
-                <div className="text-2xl font-bold">
-                  {aiAnalysisResult?.result?.characters?.length ||
-                    scriptText.match(/\b[A-Z][A-Z\s]+\b/g)?.length || 0}
-                </div>
+                <div className="text-2xl font-bold">{aiAnalysisResult.result?.characters?.length ?? 0}</div>
                 <div className="text-xs text-muted-foreground">
-                  {aiAnalysisResult?.result?.characters?.length
-                    ? t('preview.labels.aiCharacters')
-                    : t('preview.labels.estimatedCharacters')}
+                  {t('preview.labels.aiCharacters')}
                 </div>
               </div>
 
@@ -326,14 +331,9 @@ export default function AiScriptAnalysisPage() {
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">{t('preview.cards.scenes')}</span>
                 </div>
-                <div className="text-2xl font-bold">
-                  {aiAnalysisResult?.result?.scenes?.length ||
-                    scriptText.match(/INT\.|EXT\./g)?.length || 0}
-                </div>
+                <div className="text-2xl font-bold">{aiAnalysisResult.result?.scenes?.length ?? 0}</div>
                 <div className="text-xs text-muted-foreground">
-                  {aiAnalysisResult?.result?.scenes?.length
-                    ? t('preview.labels.aiScenes')
-                    : t('preview.labels.estimatedScenes')}
+                  {t('preview.labels.aiScenes')}
                 </div>
               </div>
 

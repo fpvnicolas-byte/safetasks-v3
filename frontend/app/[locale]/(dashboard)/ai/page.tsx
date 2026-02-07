@@ -31,6 +31,7 @@ import { useTranslations, useLocale } from 'next-intl'
 export default function AiFeaturesPage() {
   const t = useTranslations('ai')
   const tFeedback = useTranslations('common.feedback')
+  const tCommonLabels = useTranslations('common')
   const locale = useLocale()
   const router = useRouter()
   const { user, organizationId } = useAuth()
@@ -71,7 +72,7 @@ export default function AiFeaturesPage() {
       toast.success(tFeedback('actionSuccess'))
       setScriptText('')
     } catch (error: any) {
-      toast.error(tFeedback('actionError', { message: 'Failed to start script analysis' }))
+      toast.error(tFeedback('actionError', { message: error?.message || 'Failed to start script analysis' }))
       console.error('Script analysis error:', error)
     }
   }
@@ -380,19 +381,56 @@ export default function AiFeaturesPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="suggestions" className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold">{t('lists.suggestionsTitle')}</h2>
-            <div className="text-sm text-muted-foreground">
-              {suggestions?.length || 0} {t('lists.available')}
-            </div>
-          </div>
+	        <TabsContent value="suggestions" className="space-y-6">
+	          <div className="flex justify-between items-center">
+	            <h2 className="text-2xl font-bold">{t('lists.suggestionsTitle')}</h2>
+	            <div className="text-sm text-muted-foreground">
+	              {suggestions?.length || 0} {t('lists.available')}
+	            </div>
+	          </div>
 
-          {isLoadingSuggestions ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : suggestions && suggestions.length > 0 ? (
+	          <Card>
+	            <CardContent className="py-4">
+	              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+	                <div className="space-y-2">
+	                  <Label htmlFor="project-select-suggestions">{t('analysisForm.selectProject')}</Label>
+	                  <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+	                    <SelectTrigger id="project-select-suggestions">
+	                      <SelectValue placeholder={t('analysisForm.selectProjectPlaceholder')} />
+	                    </SelectTrigger>
+	                    <SelectContent>
+	                      {isLoadingProjects ? (
+	                        <div className="p-2 text-sm text-muted-foreground">{tCommonLabels('loading')}</div>
+	                      ) : projects && projects.length > 0 ? (
+	                        projects.map((project) => (
+	                          <SelectItem key={project.id} value={project.id}>
+	                            {project.title}
+	                          </SelectItem>
+	                        ))
+	                      ) : (
+	                        <div className="p-2 text-sm text-muted-foreground">{t('empty.projects')}</div>
+	                      )}
+	                    </SelectContent>
+	                  </Select>
+	                </div>
+	                <div className="flex gap-2">
+	                  <Button
+	                    variant="outline"
+	                    onClick={() => router.push('/ai/script-analysis')}
+	                  >
+	                    <Sparkles className="mr-2 h-4 w-4" />
+	                    {t('actions.generateSuggestions')}
+	                  </Button>
+	                </div>
+	              </div>
+	            </CardContent>
+	          </Card>
+
+	          {isLoadingSuggestions ? (
+	            <div className="flex justify-center items-center py-8">
+	              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+	            </div>
+	          ) : suggestions && suggestions.length > 0 ? (
             <div className="grid gap-6">
               {suggestions.map((suggestion: AiSuggestion) => (
                 <Card key={suggestion.id}>
@@ -433,28 +471,65 @@ export default function AiFeaturesPage() {
                 </Card>
               ))}
             </div>
-          ) : (
-            <Card>
-              <CardContent className="py-8 text-center text-muted-foreground">
-                {t('empty.suggestions')}
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
+	          ) : (
+	            <Card>
+	              <CardContent className="py-8 text-center text-muted-foreground">
+	                {selectedProjectId ? t('empty.suggestions') : tFeedback('selectProject')}
+	              </CardContent>
+	            </Card>
+	          )}
+	        </TabsContent>
 
-        <TabsContent value="recommendations" className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold">{t('lists.recommendationsTitle')}</h2>
-            <div className="text-sm text-muted-foreground">
-              {recommendations?.length || 0} {t('lists.available')}
-            </div>
-          </div>
+	        <TabsContent value="recommendations" className="space-y-6">
+	          <div className="flex justify-between items-center">
+	            <h2 className="text-2xl font-bold">{t('lists.recommendationsTitle')}</h2>
+	            <div className="text-sm text-muted-foreground">
+	              {recommendations?.length || 0} {t('lists.available')}
+	            </div>
+	          </div>
 
-          {isLoadingRecommendations ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : recommendations && recommendations.length > 0 ? (
+	          <Card>
+	            <CardContent className="py-4">
+	              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+	                <div className="space-y-2">
+	                  <Label htmlFor="project-select-recommendations">{t('analysisForm.selectProject')}</Label>
+	                  <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+	                    <SelectTrigger id="project-select-recommendations">
+	                      <SelectValue placeholder={t('analysisForm.selectProjectPlaceholder')} />
+	                    </SelectTrigger>
+	                    <SelectContent>
+	                      {isLoadingProjects ? (
+	                        <div className="p-2 text-sm text-muted-foreground">{tCommonLabels('loading')}</div>
+	                      ) : projects && projects.length > 0 ? (
+	                        projects.map((project) => (
+	                          <SelectItem key={project.id} value={project.id}>
+	                            {project.title}
+	                          </SelectItem>
+	                        ))
+	                      ) : (
+	                        <div className="p-2 text-sm text-muted-foreground">{t('empty.projects')}</div>
+	                      )}
+	                    </SelectContent>
+	                  </Select>
+	                </div>
+	                <div className="flex gap-2">
+	                  <Button
+	                    variant="outline"
+	                    onClick={() => router.push('/ai/script-analysis')}
+	                  >
+	                    <Sparkles className="mr-2 h-4 w-4" />
+	                    {t('actions.generateSuggestions')}
+	                  </Button>
+	                </div>
+	              </div>
+	            </CardContent>
+	          </Card>
+
+	          {isLoadingRecommendations ? (
+	            <div className="flex justify-center items-center py-8">
+	              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+	            </div>
+	          ) : recommendations && recommendations.length > 0 ? (
             <div className="grid gap-6">
               {recommendations.map((recommendation: AiRecommendation) => (
                 <Card key={recommendation.id}>
@@ -505,14 +580,14 @@ export default function AiFeaturesPage() {
                 </Card>
               ))}
             </div>
-          ) : (
-            <Card>
-              <CardContent className="py-8 text-center text-muted-foreground">
-                {t('empty.recommendations')}
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
+	          ) : (
+	            <Card>
+	              <CardContent className="py-8 text-center text-muted-foreground">
+	                {selectedProjectId ? t('empty.recommendations') : tFeedback('selectProject')}
+	              </CardContent>
+	            </Card>
+	          )}
+	        </TabsContent>
 
         <TabsContent value="analysis" className="space-y-6">
           <div className="flex justify-between items-center">

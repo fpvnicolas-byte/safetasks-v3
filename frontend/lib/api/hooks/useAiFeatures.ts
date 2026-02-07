@@ -52,12 +52,16 @@ export function useAnalyzeScript() {
 
   return useMutation({
     mutationFn: async (analysisRequest: AiScriptAnalysisRequest) => {
-      const result = await apiClient.post<AiAnalysisResponse>(`/api/v1/ai/projects/${analysisRequest.project_id}/analyze-script`, analysisRequest)
+      // Use the real, persisted script-analysis endpoint so suggestions/recommendations
+      // show up in the tabs (they are created server-side when analysis completes).
+      const result = await apiClient.post<AiAnalysisResponse>('/api/v1/ai/script-analysis', analysisRequest, {
+        timeout: 120000,
+      })
       return result
     },
     onSuccess: (data, variables) => {
       // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: ['ai-analysis', variables.project_id] })
+      queryClient.invalidateQueries({ queryKey: ['ai-analysis'] })
       queryClient.invalidateQueries({ queryKey: ['ai-suggestions', variables.project_id] })
       queryClient.invalidateQueries({ queryKey: ['ai-recommendations', variables.project_id] })
     }

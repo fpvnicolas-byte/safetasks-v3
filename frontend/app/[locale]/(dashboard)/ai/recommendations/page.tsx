@@ -286,23 +286,17 @@ export default function AiRecommendationsPage() {
                             <CardDescription className="mt-1">{recommendation.description}</CardDescription>
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleApplyRecommendation(recommendation)}
-                          >
-                            {t('recommendations.list.apply')}
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => router.push(`/ai/recommendations/${recommendation.id}`)}
-                          >
-                            {t('recommendations.list.details')}
-                          </Button>
-                        </div>
-                      </div>
-                    </CardHeader>
+	                        <div className="flex gap-2">
+	                          <Button
+	                            variant="outline"
+	                            size="sm"
+	                            onClick={() => handleApplyRecommendation(recommendation)}
+	                          >
+	                            {t('recommendations.list.apply')}
+	                          </Button>
+	                        </div>
+	                      </div>
+	                    </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div>
