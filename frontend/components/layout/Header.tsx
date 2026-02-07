@@ -89,6 +89,7 @@ export function Header({ onSidebarToggle }: HeaderProps) {
           {/* Mobile Navigation Toggle */}
           <button
             onClick={onSidebarToggle}
+            aria-label={t('openMenu')}
             className="md:hidden p-2 rounded-md hover:bg-muted"
           >
             <Menu className="h-6 w-6" />
@@ -99,7 +100,7 @@ export function Header({ onSidebarToggle }: HeaderProps) {
           {user && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" aria-label={tHeader('userMenu')}>
                   <User className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>

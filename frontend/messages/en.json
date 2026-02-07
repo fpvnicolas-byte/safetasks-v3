@@ -238,10 +238,12 @@
     "ai": "AI Features",
     "notifications": "Notifications",
     "team": "Team",
-    "settings": "Settings"
+    "settings": "Settings",
+    "openMenu": "Open menu"
   },
   "header": {
-    "signOut": "Sign Out"
+    "signOut": "Sign Out",
+    "userMenu": "User menu"
   },
   "projects": {
     "title": "Projects",
@@ -2640,6 +2642,7 @@
     "controls": {
       "showAll": "Show All",
       "unreadOnly": "Unread Only",
+      "markRead": "Mark as read",
       "markAllRead": "Mark All Read",
       "loading": "Loading...",
       "count": "{count} notifications"

@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { DollarSign, Plus, Eye, Edit, Trash2, Clock } from 'lucide-react'
+import { DollarSign, Plus, Eye, Edit, Trash2, Clock, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency } from '@/lib/utils/money'
 import { InvoiceWithItems, InvoiceStatus } from '@/types'
@@ -35,13 +35,16 @@ export default function FinancialsPage() {
   const tApprovals = useTranslations('financials.approvals')
   const tCommon = useTranslations('common')
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | 'all'>('all')
+  const [activeTab, setActiveTab] = useState('overview')
 
   const filters = statusFilter === 'all' ? {} : { status: statusFilter }
-  const { data: invoices, isLoading, error } = useInvoices(organizationId || undefined, filters)
-  const { data: stats } = useOverviewStats(organizationId || undefined)
-  const { data: bankAccounts } = useBankAccounts(organizationId || undefined)
-  const { data: recentTransactions } = useTransactions(organizationId ? { organizationId, limit: 5 } : {})
-  const { data: recentExpenses } = useTransactions(organizationId ? { organizationId, type: 'expense', limit: 5 } : {})
+
+  // Only fetch data for the currently active tab to avoid loading all tabs at once
+  const { data: stats, isLoading: isLoadingStats } = useOverviewStats(activeTab === 'overview' ? (organizationId || undefined) : undefined)
+  const { data: invoices, isLoading: isLoadingInvoices, error: invoicesError } = useInvoices(activeTab === 'invoices' ? (organizationId || undefined) : undefined, filters)
+  const { data: bankAccounts, isLoading: isLoadingBankAccounts } = useBankAccounts(activeTab === 'bank-accounts' ? (organizationId || undefined) : undefined)
+  const { data: recentTransactions, isLoading: isLoadingTransactions } = useTransactions(activeTab === 'transactions' && organizationId ? { organizationId, limit: 5 } : {})
+  const { data: recentExpenses, isLoading: isLoadingExpenses } = useTransactions(activeTab === 'expenses' && organizationId ? { organizationId, type: 'expense', limit: 5 } : {})
 
   return (
     <div className="space-y-8">
@@ -65,7 +68,7 @@ export default function FinancialsPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="overview">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex flex-wrap sm:inline-flex w-full sm:w-auto !h-auto gap-1 p-1.5 mb-3">
           <TabsTrigger value="overview" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[22%] sm:min-w-0">{t('overview.tab')}</TabsTrigger>
           <TabsTrigger value="approvals" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[22%] sm:min-w-0">{t('approvals.title')}</TabsTrigger>
@@ -77,34 +80,40 @@ export default function FinancialsPage() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('overview.totalBudget')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{formatCurrency(stats?.total_budget_cents || 0)}</div>
-              </CardContent>
-            </Card>
+          {isLoadingStats ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('overview.totalBudget')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{formatCurrency(stats?.total_budget_cents || 0)}</div>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('overview.totalSpent')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{formatCurrency(stats?.total_expense_cents || 0)}</div>
-              </CardContent>
-            </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('overview.totalSpent')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{formatCurrency(stats?.total_expense_cents || 0)}</div>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('overview.remaining')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{formatCurrency(stats?.remaining_budget_cents || 0)}</div>
-              </CardContent>
-            </Card>
-          </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('overview.remaining')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{formatCurrency(stats?.remaining_budget_cents || 0)}</div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="approvals" className="space-y-8">
@@ -142,10 +151,12 @@ export default function FinancialsPage() {
           </div>
 
           {/* Invoice List */}
-          {isLoading ? (
-            <div>{t('invoicesTab.loading')}</div>
-          ) : error ? (
-            <div>{t('invoicesTab.error', { message: error.message })}</div>
+          {isLoadingInvoices ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : invoicesError ? (
+            <div>{t('invoicesTab.error', { message: invoicesError.message })}</div>
           ) : invoices && invoices.length > 0 ? (
             <div className="grid gap-4">
               {invoices.map((invoice) => (
@@ -188,7 +199,11 @@ export default function FinancialsPage() {
               <CardDescription>{t('bankAccountsTab.description')}</CardDescription>
             </CardHeader>
             <CardContent>
-              {bankAccounts && bankAccounts.length > 0 ? (
+              {isLoadingBankAccounts ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : bankAccounts && bankAccounts.length > 0 ? (
                 <div className="space-y-4">
                   {bankAccounts.map((account) => (
                     <div key={account.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
@@ -224,7 +239,11 @@ export default function FinancialsPage() {
               <CardDescription>{t('transactionsTab.description')}</CardDescription>
             </CardHeader>
             <CardContent>
-              {recentTransactions && recentTransactions.length > 0 ? (
+              {isLoadingTransactions ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : recentTransactions && recentTransactions.length > 0 ? (
                 <div className="space-y-4">
                   {recentTransactions.map((transaction) => (
                     <div key={transaction.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
@@ -275,7 +294,11 @@ export default function FinancialsPage() {
               <CardDescription>{t('expensesTab.description')}</CardDescription>
             </CardHeader>
             <CardContent>
-              {recentExpenses && recentExpenses.length > 0 ? (
+              {isLoadingExpenses ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : recentExpenses && recentExpenses.length > 0 ? (
                 <div className="space-y-4">
                   {recentExpenses.map((expense) => (
                     <div key={expense.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">

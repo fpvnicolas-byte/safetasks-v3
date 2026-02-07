@@ -238,10 +238,12 @@
     "ai": "Recursos de IA",
     "notifications": "Notificações",
     "team": "Equipe",
-    "settings": "Configurações"
+    "settings": "Configurações",
+    "openMenu": "Abrir menu"
   },
   "header": {
-    "signOut": "Sair"
+    "signOut": "Sair",
+    "userMenu": "Menu do usuário"
   },
   "projects": {
     "title": "Projetos",
@@ -2640,6 +2642,7 @@
     "controls": {
       "showAll": "Mostrar Todas",
       "unreadOnly": "Apenas Não Lidas",
+      "markRead": "Marcar como lida",
       "markAllRead": "Marcar Todas como Lidas",
       "loading": "Carregando...",
       "count": "{count} notificações"

@@ -21,6 +21,7 @@ import { LocaleLink } from '@/components/LocaleLink'
 // Helper component for individual notification item to use hooks
 const NotificationItem = ({ notification, onMarkRead }: { notification: any, onMarkRead: (id: string, e: React.MouseEvent) => void }) => {
   const tMessages = useTranslations('notifications.messages')
+  const tControls = useTranslations('notifications.controls')
 
   const getTranslatedContent = (defaultText: string, metadata: any) => {
     const isLikelyKey = !defaultText.includes(' ') && defaultText.length < 50;
@@ -73,6 +74,7 @@ const NotificationItem = ({ notification, onMarkRead }: { notification: any, onM
             size="icon"
             className="h-6 w-6 flex-shrink-0"
             onClick={(e) => onMarkRead(notification.id, e)}
+            aria-label={tControls('markRead')}
           >
             <Check className="h-3 w-3" />
           </Button>
@@ -114,7 +116,7 @@ export function NotificationsBell() {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="relative" aria-label={t('title')}>
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <Badge

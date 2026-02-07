@@ -68,7 +68,9 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold">Menu</h2>
             <button
+              type="button"
               onClick={onClose}
+              aria-label="Close menu"
               className="p-2 rounded-md hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

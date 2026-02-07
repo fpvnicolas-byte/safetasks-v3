@@ -37,6 +37,117 @@ from app.api.v1.endpoints.ai_schemas import (
 
 router = APIRouter()
 
+def infer_suggestion_type(text: str) -> str:
+    """
+    Best-effort classifier for AiSuggestion.suggestion_type.
+
+    The AI engine currently returns production_notes as plain strings; we map them into
+    our limited enum: budget/schedule/casting/logistics/equipment/other.
+    """
+    t = (text or "").strip().lower()
+    if not t:
+        return "other"
+
+    # Order matters (more specific first).
+    casting_keywords = [
+        "cast",
+        "casting",
+        "actor",
+        "actors",
+        "talent",
+        "extra",
+        "extras",
+        "stunt",
+        "stunts",
+        "voiceover",
+        "voice over",
+        "wardrobe",
+        "costume",
+        "makeup",
+        "hair",
+    ]
+    schedule_keywords = [
+        "schedule",
+        "scheduling",
+        "call sheet",
+        "timeline",
+        "availability",
+        "overtime",
+        "day/night",
+        "day-night",
+        "weather",
+        "sunset",
+        "sunrise",
+    ]
+    logistics_keywords = [
+        "permit",
+        "permits",
+        "clearance",
+        "location",
+        "transport",
+        "travel",
+        "parking",
+        "catering",
+        "security",
+        "shipping",
+        "customs",
+        "visa",
+        "insurance",
+        "truck",
+        "van",
+        "refrigerated",
+        "cold chain",
+        "anvisa",
+        "covisa",
+        "compliance",
+        "regulatory",
+    ]
+    budget_keywords = [
+        "budget",
+        "cost",
+        "costs",
+        "fee",
+        "fees",
+        "rates",
+        "expensive",
+        "save",
+        "savings",
+        "rental",
+        "licensing",
+        "license",
+        "music licensing",
+    ]
+    equipment_keywords = [
+        "camera",
+        "lens",
+        "lenses",
+        "lighting",
+        "light",
+        "mic",
+        "microphone",
+        "boom",
+        "audio",
+        "equipment",
+        "gear",
+        "drone",
+        "fpv",
+        "rig",
+    ]
+
+    if any(k in t for k in casting_keywords):
+        return "casting"
+    if any(k in t for k in schedule_keywords):
+        return "schedule"
+    if any(k in t for k in logistics_keywords):
+        return "logistics"
+    if any(k in t for k in budget_keywords):
+        return "budget"
+    if any(k in t for k in equipment_keywords):
+        return "equipment"
+
+    # Post-production / legal / general notes end up here.
+    return "other"
+
 
 async def process_script_analysis(
     organization_id: UUID,
@@ -797,14 +908,22 @@ async def analyze_script_content(
         # Extract and save suggestions if present in the analysis
         suggestions_data = analysis_result.get("production_notes", [])
         if suggestions_data and isinstance(suggestions_data, list):
+            seen_notes: set[str] = set()
             for suggestion_text in suggestions_data[:10]:  # Limit to 10
                 if isinstance(suggestion_text, str):
+                    clean_note = suggestion_text.strip()
+                    if not clean_note:
+                        continue
+                    note_key = clean_note.lower()
+                    if note_key in seen_notes:
+                        continue
+                    seen_notes.add(note_key)
                     await ai_suggestion_service.create_from_ai_result(
                         db=db,
                         organization_id=organization_id,
                         project_id=request.project_id,
-                        suggestion_type="logistics",  # Changed from 'production' to match DB constraint
-                        suggestion_text=suggestion_text,
+                        suggestion_type=infer_suggestion_type(clean_note),
+                        suggestion_text=clean_note,
                         confidence=0.75,
                         priority="medium",
                         related_scenes=[],
@@ -814,7 +933,37 @@ async def analyze_script_content(
         # Equipment recommendations
         equipment_data = analysis_result.get("suggested_equipment", [])
         if equipment_data and isinstance(equipment_data, list) and len(equipment_data) > 0:
-            equipment_list = [eq.get("item", str(eq)) if isinstance(eq, dict) else str(eq) for eq in equipment_data[:5]]
+            raw_items: list[str] = []
+            for eq in equipment_data:
+                if isinstance(eq, dict):
+                    # Current AI engine prompt uses {"category": "...", "items": [...], "reasoning": "..."}
+                    items = eq.get("items")
+                    if isinstance(items, list):
+                        for item in items:
+                            if isinstance(item, str):
+                                raw_items.append(item)
+                    else:
+                        item = eq.get("item")
+                        if isinstance(item, str):
+                            raw_items.append(item)
+                elif isinstance(eq, str):
+                    raw_items.append(eq)
+
+            equipment_list: list[str] = []
+            seen_items: set[str] = set()
+            for item in raw_items:
+                clean_item = item.strip()
+                if not clean_item:
+                    continue
+                item_key = clean_item.lower()
+                if item_key in seen_items:
+                    continue
+                seen_items.add(item_key)
+                equipment_list.append(clean_item)
+                if len(equipment_list) >= 10:
+                    break
+
+        if equipment_list:
             await ai_recommendation_service.create_from_ai_result(
                 db=db,
                 organization_id=organization_id,
@@ -832,13 +981,19 @@ async def analyze_script_content(
         if scenes_data and isinstance(scenes_data, list) and len(scenes_data) > 0:
             scene_count = len(scenes_data)
             locations = set()
-            for scene in scenes_data:
-                if isinstance(scene, dict) and "location" in scene:
-                    locations.add(scene["location"])
+            locations_data = analysis_result.get("locations", [])
+            if isinstance(locations_data, list):
+                for loc in locations_data:
+                    if isinstance(loc, dict):
+                        name = loc.get("name")
+                        if isinstance(name, str) and name.strip():
+                            locations.add(name.strip())
+                    elif isinstance(loc, str) and loc.strip():
+                        locations.add(loc.strip())
 
             action_items = [
                 f"Plan for {scene_count} scenes",
-                f"Coordinate {len(locations)} unique locations",
+                f"Coordinate {len(locations)} unique locations" if locations else "Coordinate locations and permits",
                 "Schedule location permits",
                 "Plan crew and talent availability",
             ]
