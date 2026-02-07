@@ -97,7 +97,7 @@ export default function LoginPage() {
                 />
               </div>
             </CardContent>
-            <CardFooter className="flex flex-col space-y-4">
+            <CardFooter className="flex flex-col space-y-4 pt-6">
               <Button type="submit" className="w-full bg-amber-300 text-slate-900 hover:bg-amber-200" disabled={isLoading}>
                 {isLoading ? t('signingIn') : t('signIn')}
               </Button>
