@@ -11,6 +11,7 @@ import { Loader2, CheckCircle, XCircle, AlertTriangle, Mail } from 'lucide-react
 import Link from 'next/link'
 import { useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
+import type { ApiError } from '@/types'
 
 type PageState = 'loading' | 'no-token' | 'not-logged-in' | 'accepting' | 'success' | 'error'
 
@@ -55,16 +56,19 @@ export default function AcceptInvitePage() {
       setPageState('accepting')
 
       acceptInvite.mutate(token, {
-        onSuccess: async () => {
+        onSuccess: async (data) => {
           setPageState('success')
           await refreshProfile()
+          const nextPath =
+            data?.role_v2 === 'freelancer' ? `/${locale}/projects` : `/${locale}/dashboard`
           setTimeout(() => {
-            router.push(`/${locale}/dashboard`)
+            router.push(nextPath)
           }, 1500)
         },
-        onError: (err: any) => {
+        onError: (err: unknown) => {
           setPageState('error')
-          const status = err?.statusCode
+          const status = (err as Partial<ApiError>)?.statusCode
+          const message = (err as Partial<ApiError>)?.message
           if (status === 410) {
             setErrorMessage('This invite has expired. Ask the team admin to resend it.')
           } else if (status === 403) {
@@ -74,7 +78,7 @@ export default function AcceptInvitePage() {
           } else if (status === 402) {
             setErrorMessage('This organization has reached its member limit. Contact the team admin.')
           } else {
-            setErrorMessage(err?.message || 'Something went wrong. Please try again.')
+            setErrorMessage(message || 'Something went wrong. Please try again.')
           }
         },
       })
@@ -153,7 +157,7 @@ export default function AcceptInvitePage() {
             <CardContent className="flex flex-col items-center justify-center py-12">
               <CheckCircle className="h-10 w-10 text-emerald-400 mb-4" />
               <p className="text-lg font-medium">Welcome to the team!</p>
-              <p className="text-slate-400 text-sm mt-1">Redirecting to dashboard...</p>
+              <p className="text-slate-400 text-sm mt-1">Redirecting...</p>
             </CardContent>
           )}
 

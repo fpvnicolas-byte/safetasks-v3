@@ -16,7 +16,7 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { profile, isLoading } = useAuth()
+  const { user, profile, isLoading, refreshProfile, signOut } = useAuth()
   const locale = useLocale()
   const pathname = usePathname()
   const router = useRouter()
@@ -80,16 +80,55 @@ export default function DashboardLayout({
     return false
   }, [effectiveRole, isLoading, pathWithoutLocale, profile])
 
+  const [profileTimeout, setProfileTimeout] = useState(false)
+
+  useEffect(() => {
+    setProfileTimeout(false)
+    if (!user) return
+    if (profile) return
+
+    const handle = setTimeout(() => setProfileTimeout(true), 7000)
+    return () => clearTimeout(handle)
+  }, [profile, user])
+
   useEffect(() => {
     if (shouldRedirectFreelancer) {
       router.replace(`/${locale}/projects`)
     }
   }, [locale, router, shouldRedirectFreelancer])
 
-  if (isLoading) {
+  // Avoid rendering protected pages until we have a profile (prevents brief flashes of forbidden pages + 403 spam).
+  if (isLoading || (user && !profile && !profileTimeout)) {
     return (
       <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">
         Loading...
+      </div>
+    )
+  }
+
+  if (user && !profile && profileTimeout) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3 px-6 text-center">
+        <div className="text-base font-medium">Could not load your profile.</div>
+        <div className="text-sm text-muted-foreground">
+          This can happen if the backend is unavailable or your session is stale.
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
+            onClick={() => refreshProfile()}
+          >
+            Retry
+          </button>
+          <button
+            type="button"
+            className="inline-flex h-9 items-center justify-center rounded-md border px-4 text-sm font-medium"
+            onClick={() => signOut()}
+          >
+            Sign out
+          </button>
+        </div>
       </div>
     )
   }

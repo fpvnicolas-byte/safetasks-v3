@@ -30,7 +30,7 @@ export async function login(formData: FormData) {
     password: formData.get('password') as string,
   }
 
-  const { error } = await supabase.auth.signInWithPassword(data)
+  const { data: signInData, error } = await supabase.auth.signInWithPassword(data)
 
   if (error) {
     return { error: error.message }
@@ -38,8 +38,39 @@ export async function login(formData: FormData) {
 
   revalidatePath('/', 'layout')
   const redirectTo = sanitizeRedirectTo(formData.get('redirect_to'))
-  // Default behavior: send to dashboard; AuthContext will redirect to onboarding if org is missing.
-  redirect(redirectTo || `/${locale}/dashboard`)
+  if (redirectTo) {
+    // If the caller provided an explicit redirect, respect it (route guards will still apply).
+    redirect(redirectTo)
+  }
+
+  // Default behavior: send freelancers to projects, everyone else to dashboard.
+  // This prevents a brief flash of /dashboard (and 403 spam) for freelancers on login.
+  const accessToken = signInData?.session?.access_token
+  const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || '').replace(/\/$/, '')
+
+  if (accessToken && backendUrl) {
+    try {
+      const response = await fetch(`${backendUrl}/api/v1/profiles/me`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        cache: 'no-store',
+      })
+
+      if (response.ok) {
+        const profile = await response.json()
+        const effectiveRole = profile?.effective_role || profile?.role_v2 || 'owner'
+        if (effectiveRole === 'freelancer') {
+          redirect(`/${locale}/projects`)
+        }
+      }
+    } catch {
+      // Ignore and fall back to dashboard.
+    }
+  }
+
+  // AuthContext will redirect to onboarding if org is missing.
+  redirect(`/${locale}/dashboard`)
 }
 
 export async function signup(formData: FormData) {
