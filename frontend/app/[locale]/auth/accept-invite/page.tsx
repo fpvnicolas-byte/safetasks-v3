@@ -125,16 +125,19 @@ export default function AcceptInvitePage() {
                 <Mail className="h-10 w-10 text-amber-300 mx-auto mb-2" />
                 <CardTitle>You&apos;ve Been Invited</CardTitle>
                 <CardDescription className="text-slate-400">
-                  Sign in or create an account to accept this invitation and join the team.
+                  Create an account to accept this invitation and join the team.
                 </CardDescription>
               </CardHeader>
               <CardFooter className="flex flex-col gap-3">
                 <Button asChild className="w-full bg-amber-300 text-slate-900 hover:bg-amber-200">
-                  <Link href={`/${locale}/auth/login${tokenParam}`}>Sign In</Link>
-                </Button>
-                <Button asChild variant="outline" className="w-full border-white/10 text-slate-100 hover:bg-slate-800">
                   <Link href={`/${locale}/auth/register${tokenParam}`}>Create Account</Link>
                 </Button>
+                <div className="text-sm text-center text-slate-400">
+                  Already have an account?{' '}
+                  <Link href={`/${locale}/auth/login${tokenParam}`} className="text-amber-300 hover:text-amber-200">
+                    Sign in
+                  </Link>
+                </div>
               </CardFooter>
             </>
           )}
