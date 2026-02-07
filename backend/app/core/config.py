@@ -136,6 +136,10 @@ class Settings(BaseSettings):
     STRIPE_CONNECT_CLIENT_ID: Optional[str] = None          # Stripe Connect OAuth client ID (ca_xxx)
     STRIPE_CONNECT_WEBHOOK_SECRET: Optional[str] = None      # Separate webhook secret for Connect events
 
+    # Invites
+    INVITE_EMAIL_ENABLED: bool = False
+    INVITE_TOKEN_EXPIRY_DAYS: int = 7
+
     # WhatsApp (Evolution API) - Optional, for future integration
     WHATSAPP_API_URL: Optional[str] = None
     WHATSAPP_API_KEY: Optional[str] = None

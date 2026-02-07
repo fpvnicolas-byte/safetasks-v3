@@ -1,0 +1,682 @@
+import hashlib
+import uuid
+from datetime import datetime, timezone, timedelta
+from urllib.parse import urlparse, parse_qs
+
+import pytest
+from fastapi import HTTPException
+from sqlalchemy import select, text
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+
+from app.core.config import settings
+from app.db.base import Base
+from app.models.access import ProjectAssignment
+from app.models.billing import OrganizationUsage
+from app.models.clients import Client
+from app.models.commercial import Supplier
+from app.models.invites import OrganizationInvite
+from app.models.organizations import Organization
+from app.models.profiles import Profile
+from app.models.projects import Project
+from app.schemas.access import ProjectAssignmentCreate
+from app.schemas.invites import ChangeRolePayload, InviteCreate
+from app.services import invite_service
+from app.api.v1.endpoints import project_assignments as project_assignments_endpoints
+from app.api.v1.endpoints import team as team_endpoints
+
+
+def _extract_token(invite_link: str) -> str:
+    parsed = urlparse(invite_link)
+    qs = parse_qs(parsed.query)
+    token_list = qs.get("token")
+    assert token_list and token_list[0]
+    return token_list[0]
+
+
+def _sha256(raw_token: str) -> str:
+    return hashlib.sha256(raw_token.encode()).hexdigest()
+
+
+async def _setup_engine():
+    engine = create_async_engine(settings.SQLALCHEMY_DATABASE_URI, echo=False)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+        # If the schema is older (migration not applied), this column may be missing.
+        # We add it so invite tests can validate supplier linking behavior.
+        result = await conn.execute(
+            text(
+                """
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                  AND table_name = 'suppliers'
+                  AND column_name = 'profile_id'
+                LIMIT 1
+                """
+            )
+        )
+        if result.first() is None:
+            await conn.execute(text("ALTER TABLE suppliers ADD COLUMN profile_id UUID NULL"))
+
+    return engine
+
+
+async def _truncate_core_tables(db: AsyncSession) -> None:
+    tables = [
+        "organization_invites",
+        "project_assignments",
+        "suppliers",
+        "projects",
+        "clients",
+        "profiles",
+        "organization_usage",
+        "organizations",
+    ]
+    quoted = ", ".join(f'"{name}"' for name in tables)
+    await db.execute(text(f"TRUNCATE TABLE {quoted} CASCADE"))
+    await db.commit()
+
+
+@pytest.fixture(scope="module")
+async def engine():
+    engine = await _setup_engine()
+    yield engine
+    await engine.dispose()
+
+
+@pytest.fixture
+async def db(engine):
+    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False, autoflush=False)
+    async with async_session() as session:
+        await _truncate_core_tables(session)
+        yield session
+        await _truncate_core_tables(session)
+
+
+async def _create_org(db: AsyncSession) -> Organization:
+    org = Organization(
+        id=uuid.uuid4(),
+        name="Test Org",
+        slug=f"test-org-{uuid.uuid4().hex[:8]}",
+    )
+    db.add(org)
+    await db.flush()
+    return org
+
+
+async def _create_profile(
+    db: AsyncSession,
+    *,
+    organization_id: uuid.UUID | None,
+    email: str,
+    role_v2: str | None,
+    role_legacy: str = "viewer",
+    is_master_owner: bool = False,
+    is_active: bool = True,
+) -> Profile:
+    profile = Profile(
+        id=uuid.uuid4(),
+        organization_id=organization_id,
+        email=email,
+        full_name=email.split("@")[0],
+        role=role_legacy,
+        role_v2=role_v2,
+        is_master_owner=is_master_owner,
+        is_active=is_active,
+    )
+    db.add(profile)
+    await db.flush()
+    return profile
+
+
+async def _create_client(db: AsyncSession, *, organization_id: uuid.UUID) -> Client:
+    client = Client(
+        id=uuid.uuid4(),
+        organization_id=organization_id,
+        name="Client Co",
+        email="client@example.com",
+    )
+    db.add(client)
+    await db.flush()
+    return client
+
+
+async def _create_project(db: AsyncSession, *, organization_id: uuid.UUID, client_id: uuid.UUID) -> Project:
+    project = Project(
+        id=uuid.uuid4(),
+        organization_id=organization_id,
+        client_id=client_id,
+        title="Test Project",
+        status="draft",
+    )
+    db.add(project)
+    await db.flush()
+    return project
+
+
+async def _create_supplier(db: AsyncSession, *, organization_id: uuid.UUID, category: str = "freelancer") -> Supplier:
+    supplier = Supplier(
+        id=uuid.uuid4(),
+        organization_id=organization_id,
+        name="Test Supplier",
+        category=category,
+        email="supplier@example.com",
+    )
+    db.add(supplier)
+    await db.flush()
+    return supplier
+
+
+@pytest.mark.asyncio
+async def test_create_invite_normalizes_email_and_hashes_token(db: AsyncSession):
+    org = await _create_org(db)
+    creator = await _create_profile(
+        db,
+        organization_id=org.id,
+        email="admin@example.com",
+        role_v2="admin",
+        role_legacy="admin",
+    )
+
+    resp = await invite_service.create_invite(
+        db=db,
+        org_id=org.id,
+        creator_profile=creator,
+        payload=InviteCreate(email="  Foo@Example.Com  ", role_v2="freelancer"),
+        frontend_url="https://frontend.test",
+    )
+
+    assert resp.invite.invited_email == "foo@example.com"
+    assert resp.invite.status == "pending"
+    assert resp.seat_warning is None
+
+    raw_token = _extract_token(resp.invite_link)
+    assert raw_token
+
+    invite = await db.get(OrganizationInvite, resp.invite.id)
+    assert invite is not None
+    assert invite.token_hash == _sha256(raw_token)
+    assert invite.token_hash != raw_token
+    assert len(invite.token_hash) == 64
+    assert invite.expires_at > datetime.now(timezone.utc)
+
+
+@pytest.mark.asyncio
+async def test_create_invite_rejects_self_invite(db: AsyncSession):
+    org = await _create_org(db)
+    creator = await _create_profile(
+        db,
+        organization_id=org.id,
+        email="admin@example.com",
+        role_v2="admin",
+        role_legacy="admin",
+    )
+
+    with pytest.raises(HTTPException) as exc:
+        await invite_service.create_invite(
+            db=db,
+            org_id=org.id,
+            creator_profile=creator,
+            payload=InviteCreate(email="Admin@Example.Com", role_v2="freelancer"),
+            frontend_url="https://frontend.test",
+        )
+    assert exc.value.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_create_invite_permission_matrix_admin_cannot_invite_admin(db: AsyncSession):
+    org = await _create_org(db)
+    creator = await _create_profile(
+        db,
+        organization_id=org.id,
+        email="admin@example.com",
+        role_v2="admin",
+        role_legacy="admin",
+    )
+
+    with pytest.raises(HTTPException) as exc:
+        await invite_service.create_invite(
+            db=db,
+            org_id=org.id,
+            creator_profile=creator,
+            payload=InviteCreate(email="newadmin@example.com", role_v2="admin"),
+            frontend_url="https://frontend.test",
+        )
+    assert exc.value.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_create_invite_duplicate_pending_and_reinvite_after_revoke(db: AsyncSession):
+    org = await _create_org(db)
+    creator = await _create_profile(
+        db,
+        organization_id=org.id,
+        email="admin@example.com",
+        role_v2="admin",
+        role_legacy="admin",
+    )
+
+    first = await invite_service.create_invite(
+        db=db,
+        org_id=org.id,
+        creator_profile=creator,
+        payload=InviteCreate(email="user@example.com", role_v2="freelancer"),
+        frontend_url="https://frontend.test",
+    )
+
+    with pytest.raises(HTTPException) as exc:
+        await invite_service.create_invite(
+            db=db,
+            org_id=org.id,
+            creator_profile=creator,
+            payload=InviteCreate(email="user@example.com", role_v2="freelancer"),
+            frontend_url="https://frontend.test",
+        )
+    assert exc.value.status_code == 409
+
+    await invite_service.revoke_invite(
+        db=db,
+        org_id=org.id,
+        invite_id=first.invite.id,
+        revoker_profile=creator,
+    )
+
+    reinvite = await invite_service.create_invite(
+        db=db,
+        org_id=org.id,
+        creator_profile=creator,
+        payload=InviteCreate(email="user@example.com", role_v2="freelancer"),
+        frontend_url="https://frontend.test",
+    )
+    assert reinvite.invite.id != first.invite.id
+
+
+@pytest.mark.asyncio
+async def test_accept_invite_happy_path_sets_roles_links_supplier_and_increments_usage(db: AsyncSession):
+    org = await _create_org(db)
+    # Seat lock row (exercise SELECT ... FOR UPDATE path).
+    db.add(OrganizationUsage(org_id=org.id, users_count=0))
+    await db.flush()
+
+    inviter = await _create_profile(
+        db,
+        organization_id=org.id,
+        email="admin@example.com",
+        role_v2="admin",
+        role_legacy="admin",
+    )
+    accepting = await _create_profile(
+        db,
+        organization_id=None,
+        email="User@Example.Com",
+        role_v2=None,
+        role_legacy="viewer",
+    )
+    supplier = await _create_supplier(db, organization_id=org.id, category="freelancer")
+
+    created = await invite_service.create_invite(
+        db=db,
+        org_id=org.id,
+        creator_profile=inviter,
+        payload=InviteCreate(email="user@example.com", role_v2="freelancer", supplier_id=supplier.id),
+        frontend_url="https://frontend.test",
+    )
+
+    raw_token = _extract_token(created.invite_link)
+    updated_profile = await invite_service.accept_invite(
+        db=db,
+        token=raw_token,
+        accepting_profile=accepting,
+    )
+    await db.commit()
+
+    assert updated_profile.organization_id == org.id
+    assert updated_profile.role_v2 == "freelancer"
+    assert updated_profile.role == "crew"
+
+    usage = await db.get(OrganizationUsage, org.id)
+    assert usage is not None
+    assert usage.users_count == 1
+
+    invite = await db.get(OrganizationInvite, created.invite.id)
+    assert invite is not None
+    assert invite.status == "accepted"
+    assert invite.accepted_by_id == accepting.id
+    assert invite.accepted_at is not None
+
+    supplier_refreshed = await db.get(Supplier, supplier.id)
+    assert supplier_refreshed is not None
+    assert supplier_refreshed.profile_id == accepting.id
+
+
+@pytest.mark.asyncio
+async def test_accept_invite_mismatched_email_403(db: AsyncSession):
+    org = await _create_org(db)
+    db.add(OrganizationUsage(org_id=org.id, users_count=0))
+    await db.flush()
+
+    inviter = await _create_profile(
+        db,
+        organization_id=org.id,
+        email="admin@example.com",
+        role_v2="admin",
+        role_legacy="admin",
+    )
+    accepting = await _create_profile(
+        db,
+        organization_id=None,
+        email="other@example.com",
+        role_v2=None,
+        role_legacy="viewer",
+    )
+
+    created = await invite_service.create_invite(
+        db=db,
+        org_id=org.id,
+        creator_profile=inviter,
+        payload=InviteCreate(email="invited@example.com", role_v2="freelancer"),
+        frontend_url="https://frontend.test",
+    )
+    raw_token = _extract_token(created.invite_link)
+
+    with pytest.raises(HTTPException) as exc:
+        await invite_service.accept_invite(
+            db=db,
+            token=raw_token,
+            accepting_profile=accepting,
+        )
+    assert exc.value.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_accept_invite_expired_marks_invite_expired_and_returns_410(db: AsyncSession):
+    org = await _create_org(db)
+    db.add(OrganizationUsage(org_id=org.id, users_count=0))
+    await db.flush()
+
+    inviter = await _create_profile(
+        db,
+        organization_id=org.id,
+        email="admin@example.com",
+        role_v2="admin",
+        role_legacy="admin",
+    )
+    accepting = await _create_profile(
+        db,
+        organization_id=None,
+        email="invited@example.com",
+        role_v2=None,
+        role_legacy="viewer",
+    )
+
+    created = await invite_service.create_invite(
+        db=db,
+        org_id=org.id,
+        creator_profile=inviter,
+        payload=InviteCreate(email="invited@example.com", role_v2="freelancer"),
+        frontend_url="https://frontend.test",
+    )
+    raw_token = _extract_token(created.invite_link)
+
+    invite = await db.get(OrganizationInvite, created.invite.id)
+    assert invite is not None
+    invite.expires_at = datetime.now(timezone.utc) - timedelta(days=1)
+    await db.flush()
+
+    with pytest.raises(HTTPException) as exc:
+        await invite_service.accept_invite(
+            db=db,
+            token=raw_token,
+            accepting_profile=accepting,
+        )
+    assert exc.value.status_code == 410
+
+    invite_after = await db.get(OrganizationInvite, created.invite.id)
+    assert invite_after is not None
+    assert invite_after.status == "expired"
+
+
+@pytest.mark.asyncio
+async def test_resend_invite_rotates_token_and_old_token_no_longer_works(db: AsyncSession):
+    org = await _create_org(db)
+    db.add(OrganizationUsage(org_id=org.id, users_count=0))
+    await db.flush()
+
+    inviter = await _create_profile(
+        db,
+        organization_id=org.id,
+        email="admin@example.com",
+        role_v2="admin",
+        role_legacy="admin",
+    )
+    accepting = await _create_profile(
+        db,
+        organization_id=None,
+        email="invited@example.com",
+        role_v2=None,
+        role_legacy="viewer",
+    )
+
+    created = await invite_service.create_invite(
+        db=db,
+        org_id=org.id,
+        creator_profile=inviter,
+        payload=InviteCreate(email="invited@example.com", role_v2="freelancer"),
+        frontend_url="https://frontend.test",
+    )
+    old_token = _extract_token(created.invite_link)
+
+    invite_before = await db.get(OrganizationInvite, created.invite.id)
+    assert invite_before is not None
+    old_hash = invite_before.token_hash
+
+    new_link = await invite_service.resend_invite(
+        db=db,
+        org_id=org.id,
+        invite_id=created.invite.id,
+        resender_profile=inviter,
+        frontend_url="https://frontend.test",
+    )
+    new_token = _extract_token(new_link)
+
+    invite_after = await db.get(OrganizationInvite, created.invite.id)
+    assert invite_after is not None
+    assert invite_after.token_hash != old_hash
+    assert invite_after.token_hash == _sha256(new_token)
+
+    with pytest.raises(HTTPException) as exc:
+        await invite_service.accept_invite(
+            db=db,
+            token=old_token,
+            accepting_profile=accepting,
+        )
+    assert exc.value.status_code == 404
+
+    await invite_service.accept_invite(
+        db=db,
+        token=new_token,
+        accepting_profile=accepting,
+    )
+
+
+@pytest.mark.asyncio
+async def test_team_list_members_filters_inactive_and_returns_effective_role(db: AsyncSession):
+    org = await _create_org(db)
+    await _create_profile(
+        db,
+        organization_id=org.id,
+        email="active@example.com",
+        role_v2="producer",
+        role_legacy="manager",
+        is_active=True,
+    )
+    await _create_profile(
+        db,
+        organization_id=org.id,
+        email="inactive@example.com",
+        role_v2="finance",
+        role_legacy="viewer",
+        is_active=False,
+    )
+
+    members = await team_endpoints.list_members(organization_id=org.id, db=db)
+    assert len(members) == 1
+    assert members[0].email == "active@example.com"
+    assert members[0].effective_role == "producer"
+
+
+@pytest.mark.asyncio
+async def test_team_change_role_removes_assignments_when_switching_from_freelancer(db: AsyncSession):
+    org = await _create_org(db)
+    owner = await _create_profile(
+        db,
+        organization_id=org.id,
+        email="owner@example.com",
+        role_v2="owner",
+        role_legacy="admin",
+        is_master_owner=True,
+    )
+
+    freelancer = await _create_profile(
+        db,
+        organization_id=org.id,
+        email="freelancer@example.com",
+        role_v2="freelancer",
+        role_legacy="crew",
+    )
+
+    client = await _create_client(db, organization_id=org.id)
+    project = await _create_project(db, organization_id=org.id, client_id=client.id)
+    assignment = ProjectAssignment(id=uuid.uuid4(), project_id=project.id, user_id=freelancer.id)
+    db.add(assignment)
+    await db.flush()
+
+    result = await team_endpoints.change_member_role(
+        profile_id=freelancer.id,
+        payload=ChangeRolePayload(role_v2="producer"),
+        organization_id=org.id,
+        profile=owner,
+        db=db,
+    )
+    assert result["new_role"] == "producer"
+
+    remaining = await db.execute(
+        select(ProjectAssignment).where(ProjectAssignment.user_id == freelancer.id)
+    )
+    assert remaining.scalars().all() == []
+
+
+@pytest.mark.asyncio
+async def test_team_remove_member_resets_profile_deletes_assignments_and_decrements_usage(db: AsyncSession):
+    org = await _create_org(db)
+    db.add(OrganizationUsage(org_id=org.id, users_count=2))
+    await db.flush()
+
+    admin = await _create_profile(
+        db,
+        organization_id=org.id,
+        email="admin@example.com",
+        role_v2="admin",
+        role_legacy="admin",
+    )
+    target = await _create_profile(
+        db,
+        organization_id=org.id,
+        email="freelancer@example.com",
+        role_v2="freelancer",
+        role_legacy="crew",
+    )
+
+    client = await _create_client(db, organization_id=org.id)
+    project = await _create_project(db, organization_id=org.id, client_id=client.id)
+    db.add(ProjectAssignment(id=uuid.uuid4(), project_id=project.id, user_id=target.id))
+    await db.flush()
+
+    resp = await team_endpoints.remove_member(
+        profile_id=target.id,
+        organization_id=org.id,
+        profile=admin,
+        db=db,
+    )
+    assert resp["detail"] == "Member removed."
+
+    target_after = await db.get(Profile, target.id)
+    assert target_after is not None
+    assert target_after.organization_id is None
+    assert target_after.role_v2 is None
+    assert target_after.role == "viewer"
+
+    usage = await db.get(OrganizationUsage, org.id)
+    assert usage is not None
+    assert usage.users_count == 1
+
+    remaining = await db.execute(select(ProjectAssignment).where(ProjectAssignment.user_id == target.id))
+    assert remaining.scalars().all() == []
+
+
+@pytest.mark.asyncio
+async def test_project_assignments_reject_non_freelancer_and_supports_crud(db: AsyncSession):
+    org = await _create_org(db)
+
+    freelancer = await _create_profile(
+        db,
+        organization_id=org.id,
+        email="freelancer@example.com",
+        role_v2="freelancer",
+        role_legacy="crew",
+    )
+    non_freelancer = await _create_profile(
+        db,
+        organization_id=org.id,
+        email="producer@example.com",
+        role_v2="producer",
+        role_legacy="manager",
+    )
+
+    client = await _create_client(db, organization_id=org.id)
+    project = await _create_project(db, organization_id=org.id, client_id=client.id)
+
+    with pytest.raises(HTTPException) as exc:
+        await project_assignments_endpoints.assign_user_to_project(
+            assignment_in=ProjectAssignmentCreate(project_id=project.id, user_id=non_freelancer.id),
+            organization_id=org.id,
+            db=db,
+        )
+    assert exc.value.status_code == 400
+
+    created = await project_assignments_endpoints.assign_user_to_project(
+        assignment_in=ProjectAssignmentCreate(project_id=project.id, user_id=freelancer.id),
+        organization_id=org.id,
+        db=db,
+    )
+    assert created.project_id == project.id
+    assert created.user_id == freelancer.id
+
+    # Duplicate should be 409
+    with pytest.raises(HTTPException) as dup_exc:
+        await project_assignments_endpoints.assign_user_to_project(
+            assignment_in=ProjectAssignmentCreate(project_id=project.id, user_id=freelancer.id),
+            organization_id=org.id,
+            db=db,
+        )
+    assert dup_exc.value.status_code == 409
+
+    listed = await project_assignments_endpoints.list_assignments(
+        project_id=project.id,
+        organization_id=org.id,
+        db=db,
+    )
+    assert len(listed) == 1
+    assert listed[0].id == created.id
+
+    await project_assignments_endpoints.remove_assignment(
+        assignment_id=created.id,
+        organization_id=org.id,
+        db=db,
+    )
+    await db.flush()
+
+    after = await db.execute(select(ProjectAssignment).where(ProjectAssignment.id == created.id))
+    assert after.scalar_one_or_none() is None

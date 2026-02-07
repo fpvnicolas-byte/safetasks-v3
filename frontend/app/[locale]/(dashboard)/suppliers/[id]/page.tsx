@@ -10,19 +10,23 @@ import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Pencil, Trash2, ArrowLeft, Briefcase, Mail, Phone, MapPin, FileText, DollarSign } from 'lucide-react'
+import { Pencil, Trash2, ArrowLeft, Briefcase, Mail, Phone, MapPin, FileText, DollarSign, UserPlus, Copy, Check, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { getSupplierCategoryDisplayName, formatCurrency } from '@/types'
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
+import { useCreateInvite } from '@/lib/api/hooks'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { toast } from 'sonner'
 
 export default function SupplierDetailPage() {
   const params = useParams()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { organizationId } = useAuth()
+  const { organizationId, profile } = useAuth()
   const supplierId = params.id as string
   const t = useTranslations('suppliers')
+  const effectiveRole = profile?.effective_role || ''
 
   // Get dates from URL parameters
   const urlDateFrom = searchParams.get('date_from') || ''
@@ -37,6 +41,12 @@ export default function SupplierDetailPage() {
 
   // Delete dialog state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+
+  // Invite freelancer state
+  const createInvite = useCreateInvite()
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
+  const [inviteLink, setInviteLink] = useState('')
+  const [inviteCopied, setInviteCopied] = useState(false)
 
   const { data: supplier, isLoading, error } = useSupplier(supplierId, organizationId || undefined)
   const deleteSupplier = useDeleteSupplier()
@@ -107,6 +117,39 @@ export default function SupplierDetailPage() {
     }
   }
 
+  const canInviteFreelancer =
+    supplier?.category === 'freelancer' &&
+    supplier?.profile_id === null &&
+    ['owner', 'admin', 'producer'].includes(effectiveRole)
+
+  const handleInviteFreelancer = async () => {
+    if (!supplier?.email) {
+      toast.error('This supplier has no email. Add an email before inviting.')
+      return
+    }
+    try {
+      const result = await createInvite.mutateAsync({
+        email: supplier.email,
+        role_v2: 'freelancer',
+        supplier_id: supplier.id,
+      })
+      setInviteLink(result.invite_link)
+      setInviteDialogOpen(true)
+      if (result.seat_warning) {
+        toast.warning(result.seat_warning)
+      }
+    } catch (err: any) {
+      const status = err?.statusCode
+      if (status === 409) {
+        toast.error('An invite is already pending for this email')
+      } else if (status === 402) {
+        toast.error('Seat limit reached — upgrade your plan')
+      } else {
+        toast.error(err?.message || 'Failed to create invite')
+      }
+    }
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <ConfirmDeleteDialog
@@ -128,6 +171,16 @@ export default function SupplierDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
+          {canInviteFreelancer && (
+            <Button variant="outline" onClick={handleInviteFreelancer} disabled={createInvite.isPending}>
+              {createInvite.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <UserPlus className="mr-2 h-4 w-4" />
+              )}
+              Invite to Platform
+            </Button>
+          )}
           <Button asChild variant="outline">
             <Link href={`/suppliers/${supplierId}/edit`}>
               <Pencil className="mr-2 h-4 w-4" />
@@ -312,6 +365,43 @@ export default function SupplierDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Invite Freelancer Dialog */}
+      <Dialog open={inviteDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          setInviteDialogOpen(false)
+          setInviteLink('')
+          setInviteCopied(false)
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Invite Link Created</DialogTitle>
+            <DialogDescription>
+              Share this link with {supplier?.name} to invite them to the platform.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2">
+            <Input value={inviteLink} readOnly className="flex-1 text-xs" />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={async () => {
+                await navigator.clipboard.writeText(inviteLink)
+                setInviteCopied(true)
+                setTimeout(() => setInviteCopied(false), 2000)
+              }}
+            >
+              {inviteCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            </Button>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => { setInviteDialogOpen(false); setInviteLink(''); setInviteCopied(false) }}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

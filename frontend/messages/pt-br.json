@@ -237,6 +237,7 @@
     "storage": "Armazenamento",
     "ai": "Recursos de IA",
     "notifications": "Notificações",
+    "team": "Equipe",
     "settings": "Configurações"
   },
   "header": {
@@ -3355,5 +3356,78 @@
     "ctaPrimary": "Fazer upgrade",
     "ctaSecondary": "Ver preços",
     "timeFallback": "em breve"
+  },
+  "projectAssignments": {
+    "title": "Acesso ao Projeto",
+    "description": "Atribua freelancers para conceder acesso a este projeto.",
+    "assignFreelancer": "Atribuir Freelancer",
+    "modalTitle": "Atribuir Freelancer",
+    "modalDescription": "Selecione um freelancer da sua equipe.",
+    "selectPlaceholder": "Selecione um freelancer",
+    "assign": "Atribuir",
+    "remove": "Remover",
+    "empty": "Nenhum freelancer foi atribuído a este projeto ainda.",
+    "noAvailableFreelancers": "Nenhum freelancer disponível para atribuir.",
+    "confirmRemove": "Remover acesso de {name}?",
+    "table": {
+      "headers": {
+        "name": "Nome",
+        "email": "Email",
+        "assignedAt": "Atribuído em",
+        "actions": "Ações"
+      }
+    },
+    "toast": {
+      "assigned": "Freelancer atribuído",
+      "removed": "Acesso removido"
+    },
+    "errors": {
+      "alreadyAssigned": "Este freelancer já está atribuído",
+      "assignFailed": "Falha ao atribuir freelancer",
+      "removeFailed": "Falha ao remover atribuição"
+    }
+  },
+  "team": {
+    "title": "Equipe",
+    "description": "Gerencie os membros da sua organização e convites",
+    "inviteMember": "Convidar Membro",
+    "activeMembers": "Membros Ativos",
+    "activeMembersDescription": "Pessoas que fazem parte da sua organização",
+    "pendingInvites": "Convites Pendentes",
+    "pendingInvitesDescription": "Convites aguardando aceitação",
+    "columnName": "Nome",
+    "columnEmail": "Email",
+    "columnRole": "Função",
+    "columnJoined": "Entrou em",
+    "columnActions": "Ações",
+    "columnSent": "Enviado",
+    "columnExpires": "Expira",
+    "remove": "Remover",
+    "removeMember": "Remover Membro",
+    "removeConfirm": "Tem certeza que deseja remover {name} da organização? O acesso será revogado imediatamente.",
+    "resend": "Reenviar",
+    "revoke": "Revogar",
+    "inviteModalTitle": "Convidar membro da equipe",
+    "inviteModalDescription": "Envie um convite para entrar na sua organização",
+    "inviteLinkReady": "Compartilhe este link com a pessoa que você está convidando:",
+    "emailLabel": "Endereço de email",
+    "emailPlaceholder": "colega@exemplo.com",
+    "roleLabel": "Função",
+    "selectRole": "Selecione uma função",
+    "sendInvite": "Enviar Convite",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "inviteCreated": "Convite criado com sucesso",
+    "inviteAlreadyPending": "Já existe um convite pendente para este email",
+    "seatLimitReached": "Limite de vagas atingido — faça upgrade do seu plano",
+    "inviteError": "Falha ao criar convite",
+    "inviteResent": "Convite reenviado — link copiado para a área de transferência",
+    "resendError": "Falha ao reenviar convite",
+    "inviteRevoked": "Convite revogado",
+    "revokeError": "Falha ao revogar convite",
+    "roleChanged": "Função atualizada com sucesso",
+    "roleChangeError": "Falha ao alterar função",
+    "memberRemoved": "Membro removido da organização",
+    "removeError": "Falha ao remover membro"
   }
 }

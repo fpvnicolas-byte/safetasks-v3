@@ -9,6 +9,7 @@ import {
   DollarSign,
   Film,
   Users,
+  UsersRound,
   Settings,
   Calendar,
   Briefcase,
@@ -17,20 +18,26 @@ import {
 } from 'lucide-react'
 import { LocaleLink } from '@/components/LocaleLink'
 import { useTranslations } from 'next-intl'
+import { useAuth } from '@/contexts/AuthContext'
 
-const navigation = [
-  { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { key: 'ai', href: '/ai', icon: Sparkles },
-  { key: 'projects', href: '/projects', icon: FolderOpen },
-  { key: 'proposals', href: '/proposals', icon: FileText },
-  { key: 'callSheets', href: '/call-sheets', icon: FileText },
-  { key: 'financials', href: '/financials', icon: DollarSign },
-  { key: 'shootingDays', href: '/shooting-days', icon: Calendar },
-  { key: 'production', href: '/production', icon: Film },
-  { key: 'inventory', href: '/inventory/items', icon: Box },
-  { key: 'clients', href: '/clients', icon: Users },
-  { key: 'suppliers', href: '/suppliers', icon: Briefcase },
-  { key: 'settings', href: '/settings', icon: Settings },
+type Role = 'owner' | 'admin' | 'producer' | 'finance' | 'freelancer'
+
+const ALL_ROLES: Role[] = ['owner', 'admin', 'producer', 'finance', 'freelancer']
+
+const navigation: { key: string; href: string; icon: typeof LayoutDashboard; roles: Role[] }[] = [
+  { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ALL_ROLES },
+  { key: 'ai', href: '/ai', icon: Sparkles, roles: ['owner', 'admin', 'producer'] },
+  { key: 'projects', href: '/projects', icon: FolderOpen, roles: ['owner', 'admin', 'producer', 'freelancer'] },
+  { key: 'proposals', href: '/proposals', icon: FileText, roles: ['owner', 'admin', 'producer'] },
+  { key: 'callSheets', href: '/call-sheets', icon: FileText, roles: ['owner', 'admin', 'producer'] },
+  { key: 'financials', href: '/financials', icon: DollarSign, roles: ['owner', 'admin', 'finance'] },
+  { key: 'shootingDays', href: '/shooting-days', icon: Calendar, roles: ['owner', 'admin', 'producer'] },
+  { key: 'production', href: '/production', icon: Film, roles: ['owner', 'admin', 'producer'] },
+  { key: 'inventory', href: '/inventory/items', icon: Box, roles: ['owner', 'admin', 'producer'] },
+  { key: 'clients', href: '/clients', icon: Users, roles: ['owner', 'admin', 'producer'] },
+  { key: 'suppliers', href: '/suppliers', icon: Briefcase, roles: ['owner', 'admin', 'producer'] },
+  { key: 'team', href: '/team', icon: UsersRound, roles: ['owner', 'admin', 'producer'] },
+  { key: 'settings', href: '/settings', icon: Settings, roles: ALL_ROLES },
 ]
 
 interface MobileNavProps {
@@ -41,6 +48,11 @@ interface MobileNavProps {
 export function MobileNav({ isOpen, onClose }: MobileNavProps) {
   const t = useTranslations('navigation')
   const pathname = usePathname()
+  const { profile } = useAuth()
+
+  const effectiveRole = (profile?.effective_role || profile?.role_v2 || 'owner') as Role
+
+  const visibleNav = navigation.filter((item) => item.roles.includes(effectiveRole))
 
   return (
     <>
@@ -66,7 +78,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
           </div>
 
           <nav className="space-y-1">
-            {navigation.map((item) => {
+            {visibleNav.map((item) => {
               const isActive = pathname.startsWith(item.href)
               return (
                 <LocaleLink
@@ -75,7 +87,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
                   onClick={onClose}
                   className={cn(
                     'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors w-full',
-                    'min-h-[44px] min-w-[44px] p-3', // Touch target optimization
+                    'min-h-[44px] min-w-[44px] p-3',
                     isActive
                       ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                       : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground'

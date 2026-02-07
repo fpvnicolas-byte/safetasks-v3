@@ -237,6 +237,7 @@
     "storage": "Storage",
     "ai": "AI Features",
     "notifications": "Notifications",
+    "team": "Team",
     "settings": "Settings"
   },
   "header": {
@@ -3355,5 +3356,78 @@
     "ctaPrimary": "Upgrade now",
     "ctaSecondary": "View pricing",
     "timeFallback": "soon"
+  },
+  "projectAssignments": {
+    "title": "Project Access",
+    "description": "Assign freelancers to grant them access to this project.",
+    "assignFreelancer": "Assign Freelancer",
+    "modalTitle": "Assign Freelancer",
+    "modalDescription": "Select a freelancer from your organization team.",
+    "selectPlaceholder": "Select a freelancer",
+    "assign": "Assign",
+    "remove": "Remove",
+    "empty": "No freelancers are assigned to this project yet.",
+    "noAvailableFreelancers": "No available freelancers to assign.",
+    "confirmRemove": "Remove access for {name}?",
+    "table": {
+      "headers": {
+        "name": "Name",
+        "email": "Email",
+        "assignedAt": "Assigned",
+        "actions": "Actions"
+      }
+    },
+    "toast": {
+      "assigned": "Freelancer assigned",
+      "removed": "Access removed"
+    },
+    "errors": {
+      "alreadyAssigned": "This freelancer is already assigned",
+      "assignFailed": "Failed to assign freelancer",
+      "removeFailed": "Failed to remove assignment"
+    }
+  },
+  "team": {
+    "title": "Team",
+    "description": "Manage your organization members and invitations",
+    "inviteMember": "Invite Member",
+    "activeMembers": "Active Members",
+    "activeMembersDescription": "People who are part of your organization",
+    "pendingInvites": "Pending Invites",
+    "pendingInvitesDescription": "Invitations waiting to be accepted",
+    "columnName": "Name",
+    "columnEmail": "Email",
+    "columnRole": "Role",
+    "columnJoined": "Joined",
+    "columnActions": "Actions",
+    "columnSent": "Sent",
+    "columnExpires": "Expires",
+    "remove": "Remove",
+    "removeMember": "Remove Member",
+    "removeConfirm": "Are you sure you want to remove {name} from the organization? They will lose access immediately.",
+    "resend": "Resend",
+    "revoke": "Revoke",
+    "inviteModalTitle": "Invite a team member",
+    "inviteModalDescription": "Send an invitation to join your organization",
+    "inviteLinkReady": "Share this link with the person you're inviting:",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "colleague@example.com",
+    "roleLabel": "Role",
+    "selectRole": "Select a role",
+    "sendInvite": "Send Invite",
+    "cancel": "Cancel",
+    "close": "Close",
+    "inviteCreated": "Invite created successfully",
+    "inviteAlreadyPending": "An invite is already pending for this email",
+    "seatLimitReached": "Seat limit reached — upgrade your plan",
+    "inviteError": "Failed to create invite",
+    "inviteResent": "Invite resent — link copied to clipboard",
+    "resendError": "Failed to resend invite",
+    "inviteRevoked": "Invite revoked",
+    "revokeError": "Failed to revoke invite",
+    "roleChanged": "Role updated successfully",
+    "roleChangeError": "Failed to change role",
+    "memberRemoved": "Member removed from organization",
+    "removeError": "Failed to remove member"
   }
 }

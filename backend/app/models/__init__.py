@@ -4,6 +4,7 @@ from .call_sheets import CallSheet
 from .clients import Client
 from .cloud import GoogleDriveCredentials, CloudSyncStatus, ProjectDriveFolder
 from .commercial import Supplier
+from .invites import OrganizationInvite
 from .financial import TaxTypeEnum, InvoiceStatusEnum, InvoicePaymentMethodEnum, TaxTable, Invoice, InvoiceItem
 from .inventory import MaintenanceTypeEnum, HealthStatusEnum, KitItem, MaintenanceLog, KitItemUsageLog
 from .kits import Kit
@@ -65,4 +66,5 @@ __all__ = [
     "OrganizationUsage",
     "BillingEvent",
     "ProjectAssignment",
+    "OrganizationInvite",
 ]

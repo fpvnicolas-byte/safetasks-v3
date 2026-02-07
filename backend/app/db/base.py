@@ -31,5 +31,6 @@ from app.models import (
     MaintenanceLog,
     KitItemUsageLog,
     TaxTable,
-    Invoice
+    Invoice,
+    OrganizationInvite,
 )

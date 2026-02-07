@@ -638,6 +638,7 @@ export interface Supplier {
   bank_info: Record<string, unknown> | null // JSONB
   specialties: string[] | null // Array of specialties
   notes: string | null
+  profile_id: UUID | null
   is_active: boolean
   created_at: ISODateTime
   updated_at: ISODateTime

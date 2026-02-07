@@ -109,9 +109,9 @@ async def assign_user_to_project(
         )
 
     # Check existing assignment
-    existing_query = select(ProjectAssignment).where(
-        ProjectAssignment.project_id == assignment_in.project_id,
-        ProjectAssignment.user_id == assignment_in.user_id
+    existing_query = select(ProjectAssignmentModel).where(
+        ProjectAssignmentModel.project_id == assignment_in.project_id,
+        ProjectAssignmentModel.user_id == assignment_in.user_id
     )
     existing_result = await db.execute(existing_query)
     if existing_result.scalar_one_or_none():

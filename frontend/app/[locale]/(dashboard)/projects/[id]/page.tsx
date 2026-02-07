@@ -23,6 +23,7 @@ import { ErrorDialog } from '@/components/ui/error-dialog'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { ProjectExpensesTab } from '@/components/projects/ProjectExpensesTab'
 import { TeamTab } from '@/components/projects/TeamTab'
+import { ProjectAssignmentsCard } from '@/components/projects/ProjectAssignmentsCard'
 
 export default function ProjectDetailPage() {
   const t = useTranslations('projects')
@@ -30,11 +31,8 @@ export default function ProjectDetailPage() {
   const locale = useLocale()
   const params = useParams()
   const router = useRouter()
-  const { organizationId, profile } = useAuth()
+  const { organizationId } = useAuth()
   const projectId = params.id as string
-
-  // Check if user is admin or owner
-  const isAdmin = profile?.effective_role === 'admin' || profile?.effective_role === 'owner' || profile?.is_master_owner === true
 
   const { data: project, isLoading, error } = useProject(projectId, organizationId || undefined)
   const { data: stats } = useProjectStats(projectId)
@@ -286,7 +284,10 @@ export default function ProjectDetailPage() {
         </TabsContent>
 
         <TabsContent value="team">
-          <TeamTab projectId={projectId} />
+          <div className="space-y-6">
+            <TeamTab projectId={projectId} />
+            <ProjectAssignmentsCard projectId={projectId} />
+          </div>
         </TabsContent>
 
         <TabsContent value="financials">

@@ -10,6 +10,7 @@ import {
   DollarSign,
   Film,
   Users,
+  UsersRound,
   Settings,
   Calendar,
   Briefcase,
@@ -18,26 +19,36 @@ import {
 } from 'lucide-react'
 
 import { useTranslations } from 'next-intl'
+import { useAuth } from '@/contexts/AuthContext'
 
-const navigation = [
-  { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { key: 'ai', href: '/ai', icon: Sparkles },
-  { key: 'projects', href: '/projects', icon: FolderOpen },
-  { key: 'proposals', href: '/proposals', icon: FileText },
+type Role = 'owner' | 'admin' | 'producer' | 'finance' | 'freelancer'
 
-  { key: 'financials', href: '/financials', icon: DollarSign },
-  { key: 'shootingDays', href: '/shooting-days', icon: Calendar },
-  { key: 'production', href: '/production', icon: Film },
-  { key: 'inventory', href: '/inventory/items', icon: Box },
-  { key: 'clients', href: '/clients', icon: Users },
-  { key: 'stakeholders', href: '/stakeholders', icon: Users },
-  { key: 'suppliers', href: '/suppliers', icon: Briefcase },
-  { key: 'settings', href: '/settings', icon: Settings },
+const ALL_ROLES: Role[] = ['owner', 'admin', 'producer', 'finance', 'freelancer']
+
+const navigation: { key: string; href: string; icon: typeof LayoutDashboard; roles: Role[] }[] = [
+  { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ALL_ROLES },
+  { key: 'ai', href: '/ai', icon: Sparkles, roles: ['owner', 'admin', 'producer'] },
+  { key: 'projects', href: '/projects', icon: FolderOpen, roles: ['owner', 'admin', 'producer', 'freelancer'] },
+  { key: 'proposals', href: '/proposals', icon: FileText, roles: ['owner', 'admin', 'producer'] },
+  { key: 'financials', href: '/financials', icon: DollarSign, roles: ['owner', 'admin', 'finance'] },
+  { key: 'shootingDays', href: '/shooting-days', icon: Calendar, roles: ['owner', 'admin', 'producer'] },
+  { key: 'production', href: '/production', icon: Film, roles: ['owner', 'admin', 'producer'] },
+  { key: 'inventory', href: '/inventory/items', icon: Box, roles: ['owner', 'admin', 'producer'] },
+  { key: 'clients', href: '/clients', icon: Users, roles: ['owner', 'admin', 'producer'] },
+  { key: 'stakeholders', href: '/stakeholders', icon: Users, roles: ['owner', 'admin', 'producer'] },
+  { key: 'suppliers', href: '/suppliers', icon: Briefcase, roles: ['owner', 'admin', 'producer'] },
+  { key: 'team', href: '/team', icon: UsersRound, roles: ['owner', 'admin', 'producer'] },
+  { key: 'settings', href: '/settings', icon: Settings, roles: ALL_ROLES },
 ]
 
 export function Sidebar() {
   const t = useTranslations('navigation')
   const pathname = usePathname()
+  const { profile } = useAuth()
+
+  const effectiveRole = (profile?.effective_role || profile?.role_v2 || 'owner') as Role
+
+  const visibleNav = navigation.filter((item) => item.roles.includes(effectiveRole))
 
   return (
     <div className="hidden md:block fixed left-0 top-0 z-40 h-screen w-4 group/sidebar">
@@ -51,7 +62,7 @@ export function Sidebar() {
             <h2 className="text-lg font-semibold">Menu</h2>
           </div>
           <nav className="space-y-1 h-full overflow-y-auto">
-            {navigation.map((item) => {
+            {visibleNav.map((item) => {
               const isActive = pathname.startsWith(item.href)
               return (
                 <LocaleLink

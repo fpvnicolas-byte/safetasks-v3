@@ -33,6 +33,9 @@ class Supplier(Base):
     phone = Column(String)
     address = Column(TEXT)
 
+    # Link to profile when a freelancer accepts an invite
+    profile_id = Column(UUID(as_uuid=True), ForeignKey("profiles.id"), nullable=True)
+
     # Payment information (JSONB for flexibility)
     bank_info = Column(JSONB)  # {"bank": "123", "agency": "4567", "account": "890123", "pix_key": "email@domain.com"}
 
