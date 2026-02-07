@@ -1,4 +1,5 @@
 import hashlib
+import os
 import uuid
 from datetime import datetime, timezone, timedelta
 from urllib.parse import urlparse, parse_qs
@@ -8,6 +9,7 @@ from fastapi import HTTPException
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import NullPool
 
 from app.core.config import settings
 from app.db.base import Base
@@ -26,6 +28,26 @@ from app.api.v1.endpoints import project_assignments as project_assignments_endp
 from app.api.v1.endpoints import team as team_endpoints
 
 
+def _database_uri() -> str:
+    """
+    Prefer TEST_DATABASE_URI for tests (so local dev config doesn't need to change).
+    Falls back to the app's assembled SQLALCHEMY_DATABASE_URI.
+    """
+    return os.environ.get("TEST_DATABASE_URI") or settings.SQLALCHEMY_DATABASE_URI
+
+
+def _asyncpg_connect_args() -> dict:
+    """
+    Match our app's asyncpg settings (PgBouncer transaction pool mode safe).
+    Supabase pooler will error if prepared statements are cached/reused.
+    """
+    return {
+        "prepared_statement_cache_size": 0,
+        "prepared_statement_name_func": lambda: f"__asyncpg_{uuid.uuid4()}__",
+        "statement_cache_size": 0,
+    }
+
+
 def _extract_token(invite_link: str) -> str:
     parsed = urlparse(invite_link)
     qs = parse_qs(parsed.query)
@@ -38,32 +60,34 @@ def _sha256(raw_token: str) -> str:
     return hashlib.sha256(raw_token.encode()).hexdigest()
 
 
-async def _setup_engine():
-    engine = create_async_engine(settings.SQLALCHEMY_DATABASE_URI, echo=False)
+async def _setup_engine(*, schema: str):
+    engine = create_async_engine(
+        _database_uri(),
+        echo=False,
+        connect_args=_asyncpg_connect_args(),
+        # Avoid cross-event-loop connection reuse when pytest creates one loop per test.
+        poolclass=NullPool,
+    )
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        # Keep all setup on the same sync-conn used by create_all, otherwise
+        # search_path can be lost depending on how the async wrapper executes.
+        def _create_schema_and_tables(sync_conn):
+            sync_conn.exec_driver_sql(f'CREATE SCHEMA IF NOT EXISTS "{schema}"')
+            sync_conn.exec_driver_sql(f'SET search_path TO "{schema}", public')
+            # If this DB already has tables in public, SQLAlchemy's checkfirst
+            # can incorrectly skip creating them in our isolated schema.
+            Base.metadata.create_all(sync_conn, checkfirst=False)
 
-        # If the schema is older (migration not applied), this column may be missing.
-        # We add it so invite tests can validate supplier linking behavior.
-        result = await conn.execute(
-            text(
-                """
-                SELECT 1
-                FROM information_schema.columns
-                WHERE table_schema = 'public'
-                  AND table_name = 'suppliers'
-                  AND column_name = 'profile_id'
-                LIMIT 1
-                """
-            )
-        )
-        if result.first() is None:
-            await conn.execute(text("ALTER TABLE suppliers ADD COLUMN profile_id UUID NULL"))
+        await conn.run_sync(_create_schema_and_tables)
 
     return engine
 
 
-async def _truncate_core_tables(db: AsyncSession) -> None:
+async def _truncate_core_tables(db: AsyncSession, *, schema: str) -> None:
+    # If a test raised after a DB error, the session may need a rollback
+    # before we can run any cleanup statements.
+    await db.rollback()
+
     tables = [
         "organization_invites",
         "project_assignments",
@@ -74,25 +98,46 @@ async def _truncate_core_tables(db: AsyncSession) -> None:
         "organization_usage",
         "organizations",
     ]
-    quoted = ", ".join(f'"{name}"' for name in tables)
-    await db.execute(text(f"TRUNCATE TABLE {quoted} CASCADE"))
-    await db.commit()
+    quoted = ", ".join(f'"{schema}"."{name}"' for name in tables)
+
+    try:
+        # Fail fast instead of hanging if something holds locks (e.g. shared DB).
+        await db.execute(text("SET LOCAL lock_timeout = '5s'"))
+        await db.execute(text("SET LOCAL statement_timeout = '30s'"))
+
+        await db.execute(text(f"TRUNCATE TABLE {quoted} CASCADE"))
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 async def engine():
-    engine = await _setup_engine()
-    yield engine
-    await engine.dispose()
+    schema = f"pytest_{uuid.uuid4().hex}"
+    engine = await _setup_engine(schema=schema)
+    try:
+        yield engine, schema
+    finally:
+        async with engine.begin() as conn:
+            await conn.execute(text(f'DROP SCHEMA IF EXISTS "{schema}" CASCADE'))
+        await engine.dispose()
 
 
 @pytest.fixture
 async def db(engine):
-    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False, autoflush=False)
+    engine_obj, schema = engine
+    async_session = sessionmaker(engine_obj, class_=AsyncSession, expire_on_commit=False, autoflush=False)
     async with async_session() as session:
-        await _truncate_core_tables(session)
+        await _truncate_core_tables(session, schema=schema)
+
+        # Ensure all SQL in this test resolves to our isolated schema.
+        # Use SET LOCAL so this is safe even with PgBouncer transaction pooling.
+        await session.execute(text(f'SET LOCAL search_path TO "{schema}", public'))
         yield session
-        await _truncate_core_tables(session)
+
+        await session.rollback()
+        await _truncate_core_tables(session, schema=schema)
 
 
 async def _create_org(db: AsyncSession) -> Organization:
