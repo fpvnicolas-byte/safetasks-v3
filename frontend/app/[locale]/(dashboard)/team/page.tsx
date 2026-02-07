@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import {
   useTeamMembers,
@@ -107,6 +107,12 @@ export default function TeamPage() {
   const [inviteRole, setInviteRole] = useState('')
   const [inviteLink, setInviteLink] = useState('')
   const [copied, setCopied] = useState(false)
+  const [resendLinkOpen, setResendLinkOpen] = useState(false)
+  const [resendLink, setResendLink] = useState('')
+  const [resendCopied, setResendCopied] = useState(false)
+  const [resendTargetEmail, setResendTargetEmail] = useState('')
+  const [resendTargetId, setResendTargetId] = useState<string | null>(null)
+  const isResendingRef = useRef(false)
   const [removeTarget, setRemoveTarget] = useState<TeamMember | null>(null)
   const [isRemoving, setIsRemoving] = useState(false)
 
@@ -138,13 +144,30 @@ export default function TeamPage() {
     }
   }
 
-  const handleResend = async (inviteId: string) => {
+  const handleResend = async (invite: InviteOut) => {
+    if (isResendingRef.current) return
+    isResendingRef.current = true
+    setResendTargetId(invite.id)
     try {
-      const result = await resendInvite.mutateAsync(inviteId)
-      await navigator.clipboard.writeText(result.invite_link)
+      const result = await resendInvite.mutateAsync(invite.id)
+      setResendLink(result.invite_link)
+      setResendTargetEmail(invite.invited_email)
+      setResendCopied(false)
+      setResendLinkOpen(true)
+
+      try {
+        await navigator.clipboard.writeText(result.invite_link)
+        setResendCopied(true)
+      } catch {
+        // Clipboard can fail on some browsers/contexts; the link is still shown in the dialog.
+      }
+
       toast.success(t('inviteResent'))
     } catch (err: any) {
       toast.error(err?.message || t('resendError'))
+    } finally {
+      isResendingRef.current = false
+      setResendTargetId(null)
     }
   }
 
@@ -184,6 +207,12 @@ export default function TeamPage() {
     await navigator.clipboard.writeText(link)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const copyResendLink = async (link: string) => {
+    await navigator.clipboard.writeText(link)
+    setResendCopied(true)
+    setTimeout(() => setResendCopied(false), 2000)
   }
 
   const resetInviteModal = () => {
@@ -368,10 +397,15 @@ export default function TeamPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleResend(invite.id)}
+                        onClick={() => handleResend(invite)}
+                        disabled={resendInvite.isPending || resendTargetId === invite.id}
                       >
-                        <RotateCw className="h-3 w-3 mr-1" />
-                        {t('resend')}
+                        {resendInvite.isPending && resendTargetId === invite.id ? (
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                        ) : (
+                          <RotateCw className="h-3 w-3 mr-1" />
+                        )}
+                        {resendInvite.isPending && resendTargetId === invite.id ? t('resending') : t('resend')}
                       </Button>
                       <Button
                         variant="ghost"
@@ -390,6 +424,47 @@ export default function TeamPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Resend Link Modal */}
+      <Dialog
+        open={resendLinkOpen}
+        onOpenChange={(open) => {
+          setResendLinkOpen(open)
+          if (!open) {
+            setResendLink('')
+            setResendCopied(false)
+            setResendTargetEmail('')
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('resendLinkTitle')}</DialogTitle>
+            <DialogDescription>
+              {t('resendLinkDescription', { email: resendTargetEmail })}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Input value={resendLink} readOnly className="flex-1 text-xs" />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => copyResendLink(resendLink)}
+                disabled={!resendLink}
+              >
+                {resendCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">{t('resendLinkNote')}</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResendLinkOpen(false)}>
+              {t('close')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Invite Modal */}
       <Dialog open={inviteOpen} onOpenChange={(open) => { if (!open) resetInviteModal() }}>

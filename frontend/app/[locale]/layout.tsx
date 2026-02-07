@@ -2,6 +2,7 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import { BillingProvider } from '@/contexts/BillingContext'
 import { QueryProvider } from '@/lib/api/query-provider'
 import { ThemeProvider } from '@/components/theme-provider'
+import { Toaster } from '@/components/ui/sonner'
 import { NextIntlClientProvider } from 'next-intl'
 import { notFound } from 'next/navigation'
 import { locales, isValidLocale, defaultLocale, type Locale } from '@/i18n/config'
@@ -65,7 +66,10 @@ export default async function LocaleLayout({
           >
             <QueryProvider>
               <AuthProvider>
-                <BillingProvider>{children}</BillingProvider>
+                <BillingProvider>
+                  {children}
+                  <Toaster />
+                </BillingProvider>
               </AuthProvider>
             </QueryProvider>
           </ThemeProvider>
