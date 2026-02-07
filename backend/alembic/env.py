@@ -9,6 +9,7 @@ from alembic import context
 
 import sys
 import os
+from uuid import uuid4
 
 # Add root directory to path to find 'app' module
 sys.path.append(os.getcwd())
@@ -58,7 +59,12 @@ async def run_async_migrations() -> None:
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
-        connect_args={"statement_cache_size": 0},
+        connect_args={
+            # PgBouncer transaction pooling is not compatible with prepared statement caching.
+            "prepared_statement_cache_size": 0,
+            "prepared_statement_name_func": lambda: f"__asyncpg_{uuid4()}__",
+            "statement_cache_size": 0,
+        },
     )
 
     async with connectable.connect() as connection:

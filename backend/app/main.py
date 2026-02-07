@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import List
 
 from fastapi import FastAPI, Request
@@ -11,6 +12,7 @@ from slowapi.middleware import SlowAPIMiddleware
 
 from app.core.config import settings
 from app.api.v1.api import api_router
+from app.db.session import get_db_metrics, reset_db_metrics, restore_db_metrics
 
 # Configure logging
 logging.basicConfig(
@@ -66,12 +68,27 @@ app = FastAPI(
 # Add logging middleware 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    print(f"DEBUG_PATH_CHECK: {request.method} {request.url.path}", flush=True)
+    start_time = time.perf_counter()
+    db_tokens = reset_db_metrics()
     try:
         response = await call_next(request)
     except Exception:
         logger.exception("Unhandled exception on %s %s", request.method, request.url.path)
         response = JSONResponse(status_code=500, content={"detail": "Internal server error"})
+    finally:
+        try:
+            if settings.ENABLE_SERVER_TIMING and response is not None:
+                total_ms = (time.perf_counter() - start_time) * 1000.0
+                db_ms, db_q = get_db_metrics()
+                response.headers["Server-Timing"] = ", ".join(
+                    [
+                        f"app;dur={total_ms:.1f}",
+                        f"db;dur={db_ms:.1f}",
+                        f'dbq;desc=\"queries\";dur={db_q}',
+                    ]
+                )
+        finally:
+            restore_db_metrics(db_tokens)
     return response
 
 # Add rate limiting middleware

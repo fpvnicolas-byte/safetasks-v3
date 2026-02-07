@@ -1,15 +1,17 @@
+import asyncio
+import contextvars
 import logging
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Dict, Any, Optional
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
+from cachetools import TTLCache
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_, text, case
-from sqlalchemy.sql import extract
+from sqlalchemy import select, func, and_, case
 
-from app.models.organizations import Organization
+from app.core.config import settings
 from app.models.projects import Project
 from app.models.transactions import Transaction
 from app.models.inventory import KitItem
@@ -20,6 +22,20 @@ logger = logging.getLogger(__name__)
 # Default timezone - can be made configurable per organization
 DEFAULT_TIMEZONE = ZoneInfo("America/Sao_Paulo")
 
+# Dashboard cache (in-process). Used only by AnalyticsService.get_executive_dashboard.
+_dashboard_cache_hit: contextvars.ContextVar = contextvars.ContextVar("dashboard_cache_hit", default=None)
+
+
+def get_dashboard_cache_status() -> Optional[str]:
+    """Return 'HIT'/'MISS' for the current request context when caching is used."""
+    hit = _dashboard_cache_hit.get()
+    if hit is None:
+        return None
+    return "HIT" if hit else "MISS"
+
+
+ACTIVE_PROJECT_STATUSES = {"draft", "pre-production", "production", "post-production"}
+
 
 class AnalyticsService:
     """
@@ -28,7 +44,15 @@ class AnalyticsService:
     """
 
     def __init__(self):
-        pass
+        ttl = int(getattr(settings, "DASHBOARD_CACHE_TTL_SECONDS", 0) or 0)
+        maxsize = int(getattr(settings, "DASHBOARD_CACHE_MAXSIZE", 0) or 0)
+        if ttl > 0 and maxsize > 0:
+            self._dashboard_cache = TTLCache(maxsize=maxsize, ttl=ttl)
+        else:
+            self._dashboard_cache = None
+
+        # Per-key lock to avoid thundering herds on cache misses.
+        self._dashboard_locks: dict[tuple[UUID, int], asyncio.Lock] = {}
 
     async def get_executive_dashboard(
         self,
@@ -47,6 +71,42 @@ class AnalyticsService:
         Returns:
             Executive dashboard data
         """
+        cache = self._dashboard_cache
+        ttl = int(getattr(settings, "DASHBOARD_CACHE_TTL_SECONDS", 0) or 0)
+        months_back = int(months_back)
+
+        if cache is None or ttl <= 0:
+            _dashboard_cache_hit.set(None)
+            return await self._compute_executive_dashboard(organization_id, db, months_back=months_back)
+
+        cache_key = (organization_id, months_back)
+        cached = cache.get(cache_key)
+        if cached is not None:
+            _dashboard_cache_hit.set(True)
+            return cached
+
+        lock = self._dashboard_locks.get(cache_key)
+        if lock is None:
+            lock = asyncio.Lock()
+            self._dashboard_locks[cache_key] = lock
+
+        async with lock:
+            cached = cache.get(cache_key)
+            if cached is not None:
+                _dashboard_cache_hit.set(True)
+                return cached
+
+            data = await self._compute_executive_dashboard(organization_id, db, months_back=months_back)
+            cache[cache_key] = data
+            _dashboard_cache_hit.set(False)
+            return data
+
+    async def _compute_executive_dashboard(
+        self,
+        organization_id: UUID,
+        db: AsyncSession,
+        months_back: int = 12,
+    ) -> Dict[str, Any]:
         # Calculate date range using timezone-aware datetime
         end_date = datetime.now(DEFAULT_TIMEZONE)
         start_date = end_date - timedelta(days=30 * months_back)
@@ -77,86 +137,58 @@ class AnalyticsService:
     ) -> Dict[str, Any]:
         """Calculate financial metrics for the dashboard."""
 
-        # Get current date in the organization's timezone
         now = datetime.now(DEFAULT_TIMEZONE)
         today = now.date()
+        month_start = today.replace(day=1)
+        year_start = today.replace(month=1, day=1)
+        tomorrow = today + timedelta(days=1)
 
-        # Get current month transactions (from 1st to today, inclusive)
-        current_month_start = today.replace(day=1)
-        current_month_end = today  # Include today's transactions
-
-        # Revenue and expenses for current month (entire month)
-        monthly_query = select(
+        # One index-friendly query: filter on date range and compute MTD/YTD via CASE.
+        query = select(
+            func.sum(
+                case(
+                    (and_(Transaction.type == "income", Transaction.transaction_date >= month_start), Transaction.amount_cents),
+                    else_=0,
+                )
+            ).label("revenue_mtd_cents"),
+            func.sum(
+                case(
+                    (and_(Transaction.type == "expense", Transaction.transaction_date >= month_start), Transaction.amount_cents),
+                    else_=0,
+                )
+            ).label("expenses_mtd_cents"),
             func.sum(
                 case(
                     (Transaction.type == "income", Transaction.amount_cents),
-                    else_=0
-                )
-            ).label("revenue_cents"),
-            func.sum(
-                case(
-                    (Transaction.type == "expense", Transaction.amount_cents),
-                    else_=0
-                )
-            ).label("expenses_cents")
-        ).where(
-            and_(
-                Transaction.organization_id == organization_id,
-                Transaction.payment_status.in_(("approved", "paid")),
-                Transaction.category != "internal_transfer",
-                extract('year', Transaction.transaction_date) == today.year,
-                extract('month', Transaction.transaction_date) == today.month
-            )
-        )
-
-        monthly_result = await db.execute(monthly_query)
-        monthly_row = monthly_result.first()
-
-        revenue_mtd = monthly_row.revenue_cents or 0
-        expenses_mtd = monthly_row.expenses_cents or 0
-        net_profit_mtd = revenue_mtd - expenses_mtd
-
-        logger.info(
-            f"MTD Financial Metrics for org {organization_id}: "
-            f"Revenue: {revenue_mtd}, Expenses: {expenses_mtd}, "
-            f"Month: {today.month}/{today.year}"
-        )
-
-        # Year-to-date calculations (entire current year)
-        ytd_query = select(
-            func.sum(
-                case(
-                    (Transaction.type == "income", Transaction.amount_cents),
-                    else_=0
+                    else_=0,
                 )
             ).label("revenue_ytd_cents"),
             func.sum(
                 case(
                     (Transaction.type == "expense", Transaction.amount_cents),
-                    else_=0
+                    else_=0,
                 )
-            ).label("expenses_ytd_cents")
+            ).label("expenses_ytd_cents"),
         ).where(
             and_(
                 Transaction.organization_id == organization_id,
                 Transaction.payment_status.in_(("approved", "paid")),
                 Transaction.category != "internal_transfer",
-                extract('year', Transaction.transaction_date) == today.year
+                Transaction.transaction_date >= year_start,
+                Transaction.transaction_date < tomorrow,
             )
         )
 
-        ytd_result = await db.execute(ytd_query)
-        ytd_row = ytd_result.first()
+        result = await db.execute(query)
+        row = result.first()
 
-        revenue_ytd = ytd_row.revenue_ytd_cents or 0
-        expenses_ytd = ytd_row.expenses_ytd_cents or 0
+        revenue_mtd = (row.revenue_mtd_cents or 0) if row else 0
+        expenses_mtd = (row.expenses_mtd_cents or 0) if row else 0
+        net_profit_mtd = revenue_mtd - expenses_mtd
+
+        revenue_ytd = (row.revenue_ytd_cents or 0) if row else 0
+        expenses_ytd = (row.expenses_ytd_cents or 0) if row else 0
         net_profit_ytd = revenue_ytd - expenses_ytd
-
-        logger.info(
-            f"YTD Financial Metrics for org {organization_id}: "
-            f"Revenue: {revenue_ytd}, Expenses: {expenses_ytd}, "
-            f"Year: {today.year}"
-        )
 
         # Cash flow projection (simple - can be enhanced with more complex logic)
         cash_flow_projection = revenue_ytd - expenses_ytd
@@ -187,35 +219,20 @@ class AnalyticsService:
     async def _get_production_metrics(self, organization_id: UUID, db: AsyncSession) -> Dict[str, Any]:
         """Calculate production metrics for the dashboard."""
 
-        # Active projects (not completed or cancelled)
-        active_projects_query = select(func.count(Project.id)).where(
-            and_(
-                Project.organization_id == organization_id,
-                Project.status.in_(["planning", "pre_production", "production", "post_production"])
-            )
+        # Single grouped query for status breakdown.
+        status_query = (
+            select(Project.status, func.count(Project.id).label("count"))
+            .where(Project.organization_id == organization_id)
+            .group_by(Project.status)
         )
-
-        active_projects_result = await db.execute(active_projects_query)
-        active_projects_count = active_projects_result.scalar() or 0
-
-        # Total projects
-        total_projects_query = select(func.count(Project.id)).where(
-            Project.organization_id == organization_id
-        )
-
-        total_projects_result = await db.execute(total_projects_query)
-        total_projects_count = total_projects_result.scalar() or 0
-
-        # Projects by status
-        status_query = select(
-            Project.status,
-            func.count(Project.id).label("count")
-        ).where(
-            Project.organization_id == organization_id
-        ).group_by(Project.status)
 
         status_result = await db.execute(status_query)
         projects_by_status = {row.status: row.count for row in status_result}
+
+        total_projects_count = sum(projects_by_status.values()) if projects_by_status else 0
+        active_projects_count = sum(
+            count for status, count in projects_by_status.items() if status in ACTIVE_PROJECT_STATUSES
+        )
 
         # Pending call sheets for the week (next 7 days)
         # This would need to be implemented based on your call sheet scheduling
@@ -239,47 +256,27 @@ class AnalyticsService:
     async def _get_inventory_metrics(self, organization_id: UUID, db: AsyncSession) -> Dict[str, Any]:
         """Calculate inventory health metrics for the dashboard."""
 
-        # Total items
-        total_items_query = select(func.count(KitItem.id)).where(
-            KitItem.organization_id == organization_id
+        health_query = (
+            select(
+                KitItem.health_status,
+                func.count(KitItem.id).label("count"),
+                func.sum(KitItem.current_usage_hours).label("usage_hours"),
+            )
+            .where(KitItem.organization_id == organization_id)
+            .group_by(KitItem.health_status)
         )
 
-        total_items_result = await db.execute(total_items_query)
-        total_items = total_items_result.scalar() or 0
-
-        # Items by health status
-        health_query = select(
-            KitItem.health_status,
-            func.count(KitItem.id).label("count")
-        ).where(
-            KitItem.organization_id == organization_id
-        ).group_by(KitItem.health_status)
-
         health_result = await db.execute(health_query)
-        items_by_health = {row.health_status: row.count for row in health_result}
+        rows = health_result.all()
+
+        total_items = sum((row.count or 0) for row in rows) if rows else 0
+        items_by_health = {row.health_status: row.count for row in rows}
 
         # Items needing service (health status indicates problems)
         critical_items = items_by_health.get("broken", 0) + items_by_health.get("needs_service", 0)
 
-        # Maintenance overdue (items not maintained in last 50 hours of usage)
-        # This is a simplified calculation - in practice, you'd compare against maintenance intervals
-        maintenance_overdue_query = select(func.count(KitItem.id)).where(
-            and_(
-                KitItem.organization_id == organization_id,
-                KitItem.health_status.in_(["needs_service", "broken"])
-            )
-        )
-
-        maintenance_overdue_result = await db.execute(maintenance_overdue_query)
-        maintenance_overdue = maintenance_overdue_result.scalar() or 0
-
         # Equipment utilization rate
-        total_usage_hours_query = select(func.sum(KitItem.current_usage_hours)).where(
-            KitItem.organization_id == organization_id
-        )
-
-        total_usage_result = await db.execute(total_usage_hours_query)
-        total_usage_hours = total_usage_result.scalar() or 0
+        total_usage_hours = sum((row.usage_hours or 0) for row in rows) if rows else 0
 
         # Calculate utilization rate (simplified - could be time-based)
         utilization_rate = min(100.0, (total_usage_hours / max(total_items * 100, 1)) * 100)
@@ -301,7 +298,7 @@ class AnalyticsService:
             "total_items": total_items,
             "items_by_health": items_by_health,
             "items_needing_service": critical_items,
-            "maintenance_overdue": maintenance_overdue,
+            "maintenance_overdue": critical_items,
             "equipment_utilization_rate": utilization_rate,
             "maintenance_cost_cents": maintenance_cost_cents,
             "maintenance_cost_brl": maintenance_cost_cents / 100,
@@ -311,53 +308,28 @@ class AnalyticsService:
     async def _get_cloud_metrics(self, organization_id: UUID, db: AsyncSession) -> Dict[str, Any]:
         """Calculate cloud sync metrics for the dashboard."""
 
-        # Total sync operations
-        total_syncs_query = select(func.count(CloudSyncStatus.id)).where(
-            CloudSyncStatus.organization_id == organization_id
-        )
+        thirty_days_ago = datetime.now(DEFAULT_TIMEZONE) - timedelta(days=30)
 
-        total_syncs_result = await db.execute(total_syncs_query)
-        total_syncs = total_syncs_result.scalar() or 0
+        query = select(
+            func.count(CloudSyncStatus.id).label("total_syncs"),
+            func.sum(case((CloudSyncStatus.sync_status == "completed", 1), else_=0)).label("successful_syncs"),
+            func.sum(case((CloudSyncStatus.sync_status == "failed", 1), else_=0)).label("failed_syncs"),
+            func.sum(case((CloudSyncStatus.sync_started_at >= thirty_days_ago, 1), else_=0)).label("recent_syncs"),
+        ).where(CloudSyncStatus.organization_id == organization_id)
 
-        # Successful syncs
-        successful_syncs_query = select(func.count(CloudSyncStatus.id)).where(
-            and_(
-                CloudSyncStatus.organization_id == organization_id,
-                CloudSyncStatus.sync_status == "completed"
-            )
-        )
+        result = await db.execute(query)
+        row = result.first()
 
-        successful_syncs_result = await db.execute(successful_syncs_query)
-        successful_syncs = successful_syncs_result.scalar() or 0
-
-        # Failed syncs
-        failed_syncs_query = select(func.count(CloudSyncStatus.id)).where(
-            and_(
-                CloudSyncStatus.organization_id == organization_id,
-                CloudSyncStatus.sync_status == "failed"
-            )
-        )
-
-        failed_syncs_result = await db.execute(failed_syncs_query)
-        failed_syncs = failed_syncs_result.scalar() or 0
+        total_syncs = (row.total_syncs or 0) if row else 0
+        successful_syncs = (row.successful_syncs or 0) if row else 0
+        failed_syncs = (row.failed_syncs or 0) if row else 0
+        recent_syncs = (row.recent_syncs or 0) if row else 0
 
         # Success rate
         success_rate = (successful_syncs / max(total_syncs, 1)) * 100
 
         # Storage used (simplified - would need actual file size tracking)
         storage_used_gb = total_syncs * 0.1  # Rough estimate: 100MB per sync
-
-        # Recent sync activity (last 30 days)
-        thirty_days_ago = datetime.now(DEFAULT_TIMEZONE) - timedelta(days=30)
-        recent_syncs_query = select(func.count(CloudSyncStatus.id)).where(
-            and_(
-                CloudSyncStatus.organization_id == organization_id,
-                CloudSyncStatus.sync_started_at >= thirty_days_ago
-            )
-        )
-
-        recent_syncs_result = await db.execute(recent_syncs_query)
-        recent_syncs = recent_syncs_result.scalar() or 0
 
         return {
             "total_sync_operations": total_syncs,
@@ -378,68 +350,45 @@ class AnalyticsService:
     ) -> Dict[str, Any]:
         """Calculate trends data for charts and visualizations."""
 
-        # Monthly revenue/expense trends
-        monthly_trends = []
+        monthly_trends: list[dict[str, Any]] = []
 
-        # Calculate the start month based on months_back parameter
-        today = datetime.now(DEFAULT_TIMEZONE).date()
+        start_d = start_date.date() if isinstance(start_date, datetime) else start_date
+        end_d = end_date.date() if isinstance(end_date, datetime) else end_date
 
-        for i in range(12):
-            # Calculate month boundaries properly
-            if i == 0:
-                month_start = start_date.date() if hasattr(start_date, 'date') else start_date
-                if not isinstance(month_start, type(today)):
-                    month_start = today.replace(day=1) - timedelta(days=365)
-            else:
-                # Move to next month
-                month_start = (month_start.replace(day=1) + timedelta(days=32)).replace(day=1)
-
-            # Calculate last day of the month
-            next_month = (month_start.replace(day=1) + timedelta(days=32)).replace(day=1)
-            month_end = next_month - timedelta(days=1)
-
-            # Don't query future months
-            if month_start > today:
-                break
-
-            month_query = select(
-                extract('month', Transaction.transaction_date).label('month'),
-                extract('year', Transaction.transaction_date).label('year'),
-                func.sum(
-                    case(
-                        (Transaction.type == "income", Transaction.amount_cents),
-                        else_=0
-                    )
-                ).label("revenue_cents"),
-                func.sum(
-                    case(
-                        (Transaction.type == "expense", Transaction.amount_cents),
-                        else_=0
-                    )
-                ).label("expenses_cents")
-            ).where(
+        month_bucket = func.date_trunc("month", Transaction.transaction_date).label("month")
+        query = (
+            select(
+                month_bucket,
+                func.sum(case((Transaction.type == "income", Transaction.amount_cents), else_=0)).label("revenue_cents"),
+                func.sum(case((Transaction.type == "expense", Transaction.amount_cents), else_=0)).label("expenses_cents"),
+            )
+            .where(
                 and_(
                     Transaction.organization_id == organization_id,
                     Transaction.payment_status.in_(("approved", "paid")),
                     Transaction.category != "internal_transfer",
-                    Transaction.transaction_date >= month_start,
-                    Transaction.transaction_date <= month_end
+                    Transaction.transaction_date >= start_d,
+                    Transaction.transaction_date <= end_d,
                 )
-            ).group_by(
-                extract('month', Transaction.transaction_date),
-                extract('year', Transaction.transaction_date)
             )
+            .group_by(month_bucket)
+            .order_by(month_bucket)
+        )
 
-            month_result = await db.execute(month_query)
-            month_data = month_result.first()
-
-            if month_data:
-                monthly_trends.append({
-                    "month": f"{int(month_data.year)}-{int(month_data.month):02d}",
-                    "revenue_cents": month_data.revenue_cents or 0,
-                    "expenses_cents": month_data.expenses_cents or 0,
-                    "net_profit_cents": (month_data.revenue_cents or 0) - (month_data.expenses_cents or 0)
-                })
+        result = await db.execute(query)
+        for row in result.all():
+            month_dt = row.month
+            month_str = month_dt.strftime("%Y-%m") if hasattr(month_dt, "strftime") else str(month_dt)
+            revenue_cents = row.revenue_cents or 0
+            expenses_cents = row.expenses_cents or 0
+            monthly_trends.append(
+                {
+                    "month": month_str,
+                    "revenue_cents": revenue_cents,
+                    "expenses_cents": expenses_cents,
+                    "net_profit_cents": revenue_cents - expenses_cents,
+                }
+            )
 
         return {
             "monthly_financial_trends": monthly_trends,

@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     
     # Logging
     LOG_LEVEL: str = "INFO"
+    ENABLE_SERVER_TIMING: bool = False
+    # Log SQL statements slower than this threshold (in ms). 0 disables.
+    LOG_SLOW_QUERIES_MS: int = 0
     
     # CORS
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
@@ -52,6 +55,19 @@ class Settings(BaseSettings):
     
     DATABASE_URL: Optional[str] = None
     SQLALCHEMY_DATABASE_URI: Optional[str] = None
+
+    # SQLAlchemy client-side pooling (safe to use with PgBouncer transaction mode)
+    DB_POOL_SIZE: int = 5
+    DB_MAX_OVERFLOW: int = 10
+    DB_POOL_TIMEOUT_SECONDS: int = 30
+    DB_POOL_RECYCLE_SECONDS: int = 1800
+    DB_POOL_PRE_PING: bool = True
+    # When set, passed through to asyncpg's `ssl` parameter (e.g. false for railway.internal).
+    DB_SSL: Optional[bool] = None
+
+    # Executive dashboard cache (in-process)
+    DASHBOARD_CACHE_TTL_SECONDS: int = 60
+    DASHBOARD_CACHE_MAXSIZE: int = 512
 
     @classmethod
     def _normalize_async_db_url(cls, url: str) -> str:

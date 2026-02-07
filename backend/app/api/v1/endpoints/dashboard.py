@@ -1,10 +1,11 @@
 from typing import Dict, Any
 from uuid import UUID
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 
 from app.api.deps import get_current_profile, require_admin_producer_or_finance
+from app.core.config import settings
 from app.db.session import get_db
-from app.services.analytics import analytics_service
+from app.services.analytics import analytics_service, get_dashboard_cache_status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
@@ -12,6 +13,7 @@ router = APIRouter()
 
 @router.get("/executive", response_model=Dict[str, Any], dependencies=[Depends(require_admin_producer_or_finance)])
 async def get_executive_dashboard(
+    response: Response,
     months_back: int = Query(12, ge=1, le=24, description="Number of months to analyze"),
     profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
@@ -40,11 +42,17 @@ async def get_executive_dashboard(
         months_back=months_back
     )
 
+    if settings.ENABLE_SERVER_TIMING:
+        cache_status = get_dashboard_cache_status()
+        if cache_status:
+            response.headers["X-Dashboard-Cache"] = cache_status
+
     return dashboard_data
 
 
 @router.get("/executive/financial", response_model=Dict[str, Any], dependencies=[Depends(require_admin_producer_or_finance)])
 async def get_financial_dashboard(
+    response: Response,
     profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
@@ -61,11 +69,17 @@ async def get_financial_dashboard(
         months_back=1
     )
 
+    if settings.ENABLE_SERVER_TIMING:
+        cache_status = get_dashboard_cache_status()
+        if cache_status:
+            response.headers["X-Dashboard-Cache"] = cache_status
+
     return full_dashboard["financial"]
 
 
 @router.get("/executive/production", response_model=Dict[str, Any], dependencies=[Depends(require_admin_producer_or_finance)])
 async def get_production_dashboard(
+    response: Response,
     profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
@@ -82,11 +96,17 @@ async def get_production_dashboard(
         months_back=1
     )
 
+    if settings.ENABLE_SERVER_TIMING:
+        cache_status = get_dashboard_cache_status()
+        if cache_status:
+            response.headers["X-Dashboard-Cache"] = cache_status
+
     return full_dashboard["production"]
 
 
 @router.get("/executive/inventory", response_model=Dict[str, Any], dependencies=[Depends(require_admin_producer_or_finance)])
 async def get_inventory_dashboard(
+    response: Response,
     profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
@@ -103,11 +123,17 @@ async def get_inventory_dashboard(
         months_back=1
     )
 
+    if settings.ENABLE_SERVER_TIMING:
+        cache_status = get_dashboard_cache_status()
+        if cache_status:
+            response.headers["X-Dashboard-Cache"] = cache_status
+
     return full_dashboard["inventory"]
 
 
 @router.get("/executive/cloud", response_model=Dict[str, Any], dependencies=[Depends(require_admin_producer_or_finance)])
 async def get_cloud_dashboard(
+    response: Response,
     profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
@@ -123,5 +149,10 @@ async def get_cloud_dashboard(
         db=db,
         months_back=1
     )
+
+    if settings.ENABLE_SERVER_TIMING:
+        cache_status = get_dashboard_cache_status()
+        if cache_status:
+            response.headers["X-Dashboard-Cache"] = cache_status
 
     return full_dashboard["cloud"]
