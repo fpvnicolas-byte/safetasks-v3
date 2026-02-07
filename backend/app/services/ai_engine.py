@@ -2,7 +2,7 @@ import json
 import logging
 import time
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Union
 from uuid import UUID
 
@@ -62,7 +62,7 @@ class AIEngineService:
                         "model": "gemini-2.0-flash",
                         "api_key_configured": bool(settings.GEMINI_API_KEY),
                         "service_status": "active",
-                        "timestamp": datetime.utcnow().isoformat()
+                        "timestamp": datetime.now(timezone.utc).isoformat()
                     }
                 )
                 
@@ -73,7 +73,7 @@ class AIEngineService:
                         "error_type": type(e).__name__,
                         "error_message": str(e),
                         "service_status": "inactive",
-                        "timestamp": datetime.utcnow().isoformat()
+                        "timestamp": datetime.now(timezone.utc).isoformat()
                     }
                 )
                 self.is_active = False
@@ -83,7 +83,7 @@ class AIEngineService:
                 extra={
                     "api_key_configured": False,
                     "service_status": "inactive",
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             )
 
@@ -119,7 +119,7 @@ class AIEngineService:
                 "project_id": str(project_id) if project_id else None,
                 "script_length": len(script_content),
                 "model": "gemini-2.0-flash",
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
         )
         
@@ -133,7 +133,7 @@ class AIEngineService:
                     "organization_id": str(organization_id),
                     "service_status": "inactive",
                     "error_type": "service_unavailable",
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             )
             return {
@@ -248,7 +248,7 @@ class AIEngineService:
                     "total_requests": self._request_count,
                     "error_rate": f"{(self._error_count / self._request_count) * 100:.2f}%" if self._request_count > 0 else "0.00%"
                 },
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
 
             # Success logging with performance metrics
@@ -263,7 +263,7 @@ class AIEngineService:
                     "scenes_found": len(analysis_result.get('scenes', [])),
                     "locations_found": len(analysis_result.get('locations', [])),
                     "content_hash": content_hash[:16],
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             )
             
@@ -281,7 +281,7 @@ class AIEngineService:
                     "error_message": str(e),
                     "response_preview": result_text[:200] if 'result_text' in locals() else "N/A",
                     "processing_time_ms": int((time.time() - start_time) * 1000),
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             )
             return {
@@ -304,7 +304,7 @@ class AIEngineService:
                     "error_type": type(e).__name__,
                     "error_message": str(e),
                     "processing_time_ms": int((time.time() - start_time) * 1000),
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             )
             return {
@@ -344,7 +344,7 @@ class AIEngineService:
                     "organization_id": str(organization_id),
                     "service_status": "inactive",
                     "error_type": "service_unavailable",
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             )
             return {
@@ -453,7 +453,7 @@ class AIEngineService:
                     "total_requests": self._request_count,
                     "error_rate": f"{(self._error_count / self._request_count) * 100:.2f}%" if self._request_count > 0 else "0.00%"
                 },
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
 
             # Success logging with detailed metrics
@@ -468,7 +468,7 @@ class AIEngineService:
                     "scheduling_considerations_count": len(suggestions.get('scheduling_considerations', [])),
                     "budget_considerations_count": len(suggestions.get('budget_considerations', [])),
                     "content_metrics": content_metrics,
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             )
             
@@ -485,7 +485,7 @@ class AIEngineService:
                     "error_message": str(e),
                     "response_preview": result_text[:200] if 'result_text' in locals() else "N/A",
                     "processing_time_ms": int((time.time() - start_time) * 1000),
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             )
             return {
@@ -504,7 +504,7 @@ class AIEngineService:
                     "error_type": type(e).__name__,
                     "error_message": str(e),
                     "processing_time_ms": int((time.time() - start_time) * 1000),
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             )
             return {
@@ -644,7 +644,7 @@ Focus on actionable suggestions that help production planning and logistics.
                     "organization_id": str(organization_id),
                     "service_status": "inactive",
                     "error_type": "service_unavailable",
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             )
             return {
@@ -730,7 +730,7 @@ Focus on actionable suggestions that help production planning and logistics.
                     "api_response_ms": int(api_response_time * 1000),
                     "parsing_ms": int(parse_time * 1000)
                 },
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
 
             # Success logging
@@ -741,7 +741,7 @@ Focus on actionable suggestions that help production planning and logistics.
                     "organization_id": str(organization_id),
                     "processing_time_ms": int(processing_time * 1000),
                     "estimated_total": estimation.get('estimated_budget_cents'),
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             )
             
@@ -757,7 +757,7 @@ Focus on actionable suggestions that help production planning and logistics.
                     "error_type": type(e).__name__,
                     "error_message": str(e),
                     "processing_time_ms": int((time.time() - start_time) * 1000),
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             )
             return {
@@ -887,7 +887,7 @@ Focus on actionable suggestions that help production planning and logistics.
                 "is_active": self.is_active,
                 "model_configured": bool(self.model),
                 "api_key_configured": bool(settings.GEMINI_API_KEY),
-                "last_health_check": datetime.utcnow().isoformat()
+                "last_health_check": datetime.now(timezone.utc).isoformat()
             },
             "performance_metrics": {
                 "total_requests": self._request_count,
@@ -916,7 +916,7 @@ Focus on actionable suggestions that help production planning and logistics.
                 "error_rate_percent": round(error_rate, 2),
                 "total_requests": self._request_count,
                 "average_processing_time_ms": round(avg_processing_time * 1000, 2),
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
         )
         
@@ -1031,7 +1031,7 @@ Focus on actionable suggestions that help production planning and logistics.
                     "details": {
                         "api_key_configured": False,
                         "validation_time_ms": int((time.time() - validation_start) * 1000),
-                        "timestamp": datetime.utcnow().isoformat()
+                        "timestamp": datetime.now(timezone.utc).isoformat()
                     }
                 }
             
@@ -1054,7 +1054,7 @@ Focus on actionable suggestions that help production planning and logistics.
                 extra={
                     "validation_time_ms": int(validation_time * 1000),
                     "model": "gemini-2.0-flash",
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             )
             
@@ -1065,7 +1065,7 @@ Focus on actionable suggestions that help production planning and logistics.
                     "api_key_configured": True,
                     "model_accessible": True,
                     "validation_time_ms": int(validation_time * 1000),
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             }
             
@@ -1079,7 +1079,7 @@ Focus on actionable suggestions that help production planning and logistics.
                     "error_type": type(e).__name__,
                     "error_message": str(e),
                     "validation_time_ms": int(validation_time * 1000),
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             )
             
@@ -1090,7 +1090,7 @@ Focus on actionable suggestions that help production planning and logistics.
                     "api_key_configured": bool(settings.GEMINI_API_KEY),
                     "model_accessible": False,
                     "validation_time_ms": int(validation_time * 1000),
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             }
 

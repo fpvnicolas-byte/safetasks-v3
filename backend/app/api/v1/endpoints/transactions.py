@@ -33,7 +33,7 @@ async def get_transactions(
     limit: int = Query(100, ge=1, le=1000),
     bank_account_id: UUID = None,
     project_id: UUID = None,
-    type: str = Query(None, regex="^(income|expense)$"),
+    type: str = Query(None, pattern="^(income|expense)$"),
     category: str = None,
 ) -> List[TransactionWithRelations]:
     """

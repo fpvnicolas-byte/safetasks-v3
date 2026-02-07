@@ -2,7 +2,7 @@
 import logging
 from typing import Optional
 from uuid import UUID
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import stripe
 from sqlalchemy import select
@@ -63,7 +63,7 @@ async def setup_trial_for_organization(
     organization.plan = "professional"
     organization.subscription_status = "trialing"
     organization.billing_status = "trial_active"
-    organization.trial_ends_at = datetime.utcnow() + timedelta(days=7)
+    organization.trial_ends_at = datetime.now(timezone.utc) + timedelta(days=7)
 
     # Create Stripe customer
     customer_id = await create_stripe_customer(
@@ -187,7 +187,7 @@ async def record_billing_event(
         stripe_event_id=stripe_event_id,
         event_type=event_type,
         status=status_value,
-        received_at=datetime.utcnow()
+        received_at=datetime.now(timezone.utc)
     )
     db.add(event)
     await db.flush()
@@ -198,14 +198,14 @@ async def record_billing_event(
 async def mark_event_processed(db: AsyncSession, event: BillingEvent) -> None:
     """Mark billing event as successfully processed."""
     event.status = "processed"
-    event.processed_at = datetime.utcnow()
+    event.processed_at = datetime.now(timezone.utc)
     db.add(event)
 
 
 async def mark_event_failed(db: AsyncSession, event: BillingEvent) -> None:
     """Mark billing event as failed."""
     event.status = "failed"
-    event.processed_at = datetime.utcnow()
+    event.processed_at = datetime.now(timezone.utc)
     db.add(event)
 
 

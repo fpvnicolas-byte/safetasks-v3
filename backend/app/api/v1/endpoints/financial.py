@@ -201,7 +201,7 @@ async def get_invoices(
     limit: int = Query(100, ge=1, le=1000),
     client_id: UUID = None,
     project_id: UUID = None,
-    status: str = Query(None, regex="^(draft|sent|paid|overdue|cancelled)$"),
+    status: str = Query(None, pattern="^(draft|sent|paid|overdue|cancelled)$"),
 ) -> List[InvoiceWithItems]:
     """
     Get all invoices for the current user's organization with client and project details.

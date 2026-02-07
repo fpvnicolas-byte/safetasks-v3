@@ -3,7 +3,6 @@ import uuid
 from typing import Optional, Dict, Any
 from pathlib import Path
 
-from supabase import create_client, Client
 from app.core.config import settings
 
 
@@ -12,7 +11,7 @@ class StorageService:
 
     def __init__(self):
         # Lazy initialization - only check environment variables when needed
-        self._supabase: Optional[Client] = None
+        self._supabase: Optional[Any] = None
         self._initialized = False
 
         # Bucket configurations
@@ -29,13 +28,23 @@ class StorageService:
             }
         }
 
-    def _get_supabase_client(self) -> Client:
+    def _get_supabase_client(self) -> Any:
         """Get or create Supabase client with lazy initialization."""
         if not self._initialized:
             if not settings.SUPABASE_URL or not settings.SUPABASE_KEY:
                 raise ValueError(
                     "SUPABASE_URL and SUPABASE_KEY must be set in environment variables"
                 )
+
+            # Avoid import-time deprecation noise from third-party deps during app startup.
+            import warnings
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore",
+                    message=r"The `gotrue` package is deprecated.*",
+                    category=DeprecationWarning,
+                )
+                from supabase import create_client
 
             self._supabase = create_client(
                 supabase_url=settings.SUPABASE_URL,

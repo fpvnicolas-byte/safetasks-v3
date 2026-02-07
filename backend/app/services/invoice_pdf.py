@@ -12,7 +12,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import Optional, Any, Dict, List
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timezone
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -280,7 +280,7 @@ class InvoicePDFService:
             "client": client,
             "items": items,
             "logo_url": self._get_logo_path(organization),
-            "generated_at": datetime.utcnow().isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
             "locale": locale,
             "t": translations,
             "translate_status": lambda s: self._translate_status(s, locale),

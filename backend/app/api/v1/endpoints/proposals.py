@@ -32,7 +32,7 @@ async def get_proposals(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     client_id: UUID = None,
-    status: str = Query(None, regex="^(draft|sent|approved|rejected|expired)$"),
+    status: str = Query(None, pattern="^(draft|sent|approved|rejected|expired)$"),
 ) -> List[Proposal]:
     """
     Get all proposals for the current user's organization.

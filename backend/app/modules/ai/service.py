@@ -9,7 +9,7 @@ from sqlalchemy import select, func, and_, Integer
 from app.services.base import BaseService
 from app.models.ai import ScriptAnalysis, AiSuggestion, AiRecommendation, AiUsageLog
 from uuid import UUID
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, List, Optional
 
 
@@ -170,7 +170,7 @@ class AiUsageLogService(BaseService[AiUsageLog, Any, Any]):
         days: int = 30
     ) -> float:
         """Calculate AI service success rate for an organization."""
-        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
         
         # Count total and successful requests
         query = select(
@@ -199,7 +199,7 @@ class AiUsageLogService(BaseService[AiUsageLog, Any, Any]):
         days: int = 30
     ) -> Dict[str, Any]:
         """Get comprehensive usage statistics for an organization."""
-        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
         
         query = select(
             func.count(AiUsageLog.id).label('total_requests'),

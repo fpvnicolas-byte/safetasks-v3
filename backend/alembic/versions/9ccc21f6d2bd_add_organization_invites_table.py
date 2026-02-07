@@ -1,6 +1,6 @@
 """add_organization_invites_table_and_supplier_profile_id
 
-Revision ID: a1b2c3d4e5f6
+Revision ID: 9ccc21f6d2bd
 Revises: 5bd342bc298d
 Create Date: 2026-02-07 12:00:00.000000
 
@@ -13,7 +13,7 @@ from sqlalchemy.dialects import postgresql
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'a1b2c3d4e5f6'
+revision: str = '9ccc21f6d2bd'
 down_revision: Union[str, None] = '5bd342bc298d'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

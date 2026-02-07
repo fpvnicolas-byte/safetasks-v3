@@ -1,5 +1,5 @@
 from typing import List, Union, Optional, Dict, Any
-from pydantic import AnyHttpUrl, validator
+from pydantic import AnyHttpUrl, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -28,7 +28,8 @@ class Settings(BaseSettings):
     # CORS
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
 
-    @validator("API_V1_STR", pre=True)
+    @field_validator("API_V1_STR", mode="before")
+    @classmethod
     def validate_api_v1_str(cls, v: str) -> str:
         if v:
             # Strip quotes which might differ between local .env and injected env vars
@@ -38,7 +39,8 @@ class Settings(BaseSettings):
             return cleaned
         return v
 
-    @validator("BACKEND_CORS_ORIGINS", pre=True)
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
@@ -80,20 +82,21 @@ class Settings(BaseSettings):
             return cleaned.replace("postgres://", "postgresql+asyncpg://", 1)
         return cleaned
 
-    @validator("SQLALCHEMY_DATABASE_URI", pre=True)
-    def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
+    @field_validator("SQLALCHEMY_DATABASE_URI", mode="before")
+    @classmethod
+    def assemble_db_connection(cls, v: Optional[str], info: ValidationInfo) -> Any:
         if isinstance(v, str):
             return cls._normalize_async_db_url(v)
 
-        database_url = values.get("DATABASE_URL")
+        database_url = info.data.get("DATABASE_URL")
         if isinstance(database_url, str) and database_url:
             return cls._normalize_async_db_url(database_url)
         
-        user = values.get("POSTGRES_USER")
-        password = values.get("POSTGRES_PASSWORD")
-        server = values.get("POSTGRES_SERVER")
-        port = values.get("POSTGRES_PORT")
-        db = values.get("POSTGRES_DB")
+        user = info.data.get("POSTGRES_USER")
+        password = info.data.get("POSTGRES_PASSWORD")
+        server = info.data.get("POSTGRES_SERVER")
+        port = info.data.get("POSTGRES_PORT")
+        db = info.data.get("POSTGRES_DB")
         
         uri = f"postgresql+asyncpg://{user}:{password}@{server}:{port}/{db}"
         return uri

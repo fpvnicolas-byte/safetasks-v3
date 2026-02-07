@@ -164,7 +164,7 @@ class InvoiceCreate(BaseModel):
     client_id: UUID
     project_id: Optional[UUID] = None
     proposal_id: Optional[UUID] = None
-    items: List[InvoiceItemCreate] = Field(min_items=1)
+    items: List[InvoiceItemCreate] = Field(min_length=1)
     due_date: date
     description: Optional[str] = None
     notes: Optional[str] = None

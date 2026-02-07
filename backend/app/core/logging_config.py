@@ -13,7 +13,7 @@ import logging
 import logging.config
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any
 
 from app.core.config import settings
@@ -217,7 +217,7 @@ def setup_ai_service_logger() -> None:
             record.content_hash = getattr(record, 'content_hash', 'N/A')
             record.model = getattr(record, 'model', 'gemini-2.0-flash')
             record.analysis_type = getattr(record, 'analysis_type', 'N/A')
-            record.timestamp = getattr(record, 'timestamp', datetime.utcnow().isoformat())
+            record.timestamp = getattr(record, 'timestamp', datetime.now(timezone.utc).isoformat())
             return True
     
     ai_logger.addFilter(AIServiceFilter())
@@ -238,7 +238,7 @@ def setup_security_logger() -> None:
             record.resource = getattr(record, 'resource', 'N/A')
             record.status = getattr(record, 'status', 'N/A')
             record.details = getattr(record, 'details', 'N/A')
-            record.timestamp = getattr(record, 'timestamp', datetime.utcnow().isoformat())
+            record.timestamp = getattr(record, 'timestamp', datetime.now(timezone.utc).isoformat())
             return True
     
     security_logger.addFilter(SecurityFilter())
@@ -260,7 +260,7 @@ def setup_performance_logger() -> None:
             record.total_requests = getattr(record, 'total_requests', 0)
             record.error_rate = getattr(record, 'error_rate', '0.00%')
             record.service_status = getattr(record, 'service_status', 'unknown')
-            record.timestamp = getattr(record, 'timestamp', datetime.utcnow().isoformat())
+            record.timestamp = getattr(record, 'timestamp', datetime.now(timezone.utc).isoformat())
             return True
     
     perf_logger.addFilter(PerformanceFilter())
@@ -297,7 +297,7 @@ def log_ai_request(
             "content_hash": content_hash[:16] if content_hash else "N/A",
             "model": model,
             "analysis_type": analysis_type,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             **kwargs
         }
     )
@@ -325,7 +325,7 @@ def log_ai_error(
             "processing_time_ms": processing_time_ms,
             "content_hash": content_hash[:16] if content_hash else "N/A",
             "model": model,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             **kwargs
         }
     )
@@ -347,7 +347,7 @@ def log_performance_metric(
             "metric_name": metric_name,
             "metric_value": metric_value,
             "request_id": request_id,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             **kwargs
         }
     )
@@ -377,7 +377,7 @@ def log_security_event(
             "resource": resource,
             "status": status,
             "details": details,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             **kwargs
         }
     )
