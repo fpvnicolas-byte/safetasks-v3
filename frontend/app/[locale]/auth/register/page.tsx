@@ -180,7 +180,7 @@ export default function RegisterPage() {
                 />
               </div>
             </CardContent>
-            <CardFooter className="flex flex-col space-y-4">
+            <CardFooter className="flex flex-col space-y-4 pt-6">
               <Button type="submit" className="w-full bg-amber-300 text-slate-900 hover:bg-amber-200" disabled={isLoading}>
                 {isLoading ? t('creatingAccount') : t('createAccount')}
               </Button>
