@@ -183,8 +183,16 @@ class ApiClient {
           }
         } else if (response.status === 429) {
           error.message = 'Too many requests. Please try again later.'
-        } else if (response.status >= 500) {
+        } else if (response.status === 500) {
+          // Avoid leaking potentially sensitive internal details by default.
           error.message = 'Server error. Please try again later.'
+        } else if (response.status >= 500) {
+          // For non-500 server errors (e.g. 502/503), backend "detail" is often user-actionable.
+          if (typeof errorDetail === 'string' && errorDetail.trim().length > 0) {
+            error.message = errorDetail
+          } else {
+            error.message = 'Server error. Please try again later.'
+          }
         }
 
         throw error

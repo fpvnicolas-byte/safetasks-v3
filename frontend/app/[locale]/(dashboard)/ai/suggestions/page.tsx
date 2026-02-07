@@ -57,7 +57,7 @@ export default function AiSuggestionsPage() {
       toast.success(tCommon('actionSuccess'))
       console.log('Budget estimation:', result)
     } catch (error: any) {
-      toast.error(tCommon('actionError', { message: 'Failed to generate budget estimation' }))
+      toast.error(tCommon('actionError', { message: error?.message || 'Failed to generate budget estimation' }))
       console.error('Budget estimation error:', error)
     }
   }
@@ -77,7 +77,7 @@ export default function AiSuggestionsPage() {
       toast.success(tCommon('actionSuccess'))
       console.log('Call sheet suggestions:', result)
     } catch (error: any) {
-      toast.error(tCommon('actionError', { message: 'Failed to generate call sheet suggestions' }))
+      toast.error(tCommon('actionError', { message: error?.message || 'Failed to generate call sheet suggestions' }))
       console.error('Call sheet generation error:', error)
     }
   }

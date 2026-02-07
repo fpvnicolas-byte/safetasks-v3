@@ -1,6 +1,7 @@
 import json
 import logging
 import time
+import asyncio
 import hashlib
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Union
@@ -23,7 +24,7 @@ logger = get_logger("app.services.ai_engine")
 # AI Service Configuration Constants
 MAX_SCRIPT_LENGTH = 50000  # Maximum characters for script content
 MAX_RESPONSE_TOKENS = 4096  # Maximum tokens for AI response
-TIMEOUT_SECONDS = 30  # Request timeout in seconds
+TIMEOUT_SECONDS = 60  # Request timeout in seconds
 MAX_RETRY_ATTEMPTS = 3  # Maximum retry attempts for failed requests
 
 
@@ -92,7 +93,8 @@ class AIEngineService:
         *,
         organization_id: UUID,
         script_content: str,
-        project_id: Optional[UUID] = None
+        project_id: Optional[UUID] = None,
+        analysis_type: str = "full",
     ) -> Dict[str, Any]:
         """
         Analyze script content and extract production elements.
@@ -106,6 +108,7 @@ class AIEngineService:
         """
         start_time = time.time()
         request_id = hashlib.md5(f"{organization_id}_{project_id}_{start_time}".encode()).hexdigest()[:16]
+        analysis_type = analysis_type if analysis_type in ("full", "characters", "scenes", "locations") else "full"
         
         # Increment request counter
         self._request_count += 1
@@ -118,6 +121,7 @@ class AIEngineService:
                 "organization_id": str(organization_id),
                 "project_id": str(project_id) if project_id else None,
                 "script_length": len(script_content),
+                "analysis_type": analysis_type,
                 "model": "gemini-2.0-flash",
                 "timestamp": datetime.now(timezone.utc).isoformat()
             }
@@ -168,7 +172,7 @@ class AIEngineService:
             content_hash = hashlib.sha256(clean_content.encode()).hexdigest()
             
             # Create the analysis prompt with monitoring
-            prompt = self._build_script_analysis_prompt(clean_content, project_id)
+            prompt = self._build_script_analysis_prompt(clean_content, project_id, analysis_type=analysis_type)
             
             # Performance monitoring
             prompt_build_time = time.time() - start_time
@@ -185,13 +189,22 @@ class AIEngineService:
 
             # Call Gemini API with comprehensive monitoring
             api_start_time = time.time()
-            response = await self.model.generate_content_async(
-                prompt,
-                generation_config=genai.types.GenerationConfig(
-                    temperature=0.1,  # Low temperature for consistent analysis
-                    max_output_tokens=MAX_RESPONSE_TOKENS,
-                    response_mime_type="application/json"
-                )
+            max_output_tokens = MAX_RESPONSE_TOKENS
+            if analysis_type in ("characters", "locations"):
+                max_output_tokens = 2048
+            elif analysis_type == "scenes":
+                max_output_tokens = 3072
+
+            response = await asyncio.wait_for(
+                self.model.generate_content_async(
+                    prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        temperature=0.1,  # Low temperature for consistent analysis
+                        max_output_tokens=max_output_tokens,
+                        response_mime_type="application/json",
+                    ),
+                ),
+                timeout=TIMEOUT_SECONDS,
             )
             
             api_response_time = time.time() - api_start_time
@@ -268,6 +281,29 @@ class AIEngineService:
             )
             
             return analysis_result
+
+        except asyncio.TimeoutError:
+            self._error_count += 1
+            logger.error(
+                "AI script analysis timed out",
+                extra={
+                    "request_id": request_id,
+                    "organization_id": str(organization_id),
+                    "project_id": str(project_id) if project_id else None,
+                    "analysis_type": analysis_type,
+                    "timeout_seconds": TIMEOUT_SECONDS,
+                    "processing_time_ms": int((time.time() - start_time) * 1000),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                },
+            )
+            return {
+                "error": f"AI request timed out after {TIMEOUT_SECONDS}s",
+                "scenes": [],
+                "characters": [],
+                "locations": [],
+                "request_id": request_id,
+                "processing_time_ms": int((time.time() - start_time) * 1000),
+            }
 
         except json.JSONDecodeError as e:
             self._error_count += 1
@@ -398,13 +434,16 @@ class AIEngineService:
 
             # Call Gemini API with monitoring
             api_start_time = time.time()
-            response = await self.model.generate_content_async(
-                prompt,
-                generation_config=genai.types.GenerationConfig(
-                    temperature=0.2,  # Slightly higher temperature for creative suggestions
-                    max_output_tokens=3000,
-                    response_mime_type="application/json"
-                )
+            response = await asyncio.wait_for(
+                self.model.generate_content_async(
+                    prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        temperature=0.2,  # Slightly higher temperature for creative suggestions
+                        max_output_tokens=3000,
+                        response_mime_type="application/json",
+                    ),
+                ),
+                timeout=TIMEOUT_SECONDS,
             )
             
             api_response_time = time.time() - api_start_time
@@ -474,6 +513,24 @@ class AIEngineService:
             
             return suggestions
 
+        except asyncio.TimeoutError:
+            self._error_count += 1
+            logger.error(
+                "AI production suggestions request timed out",
+                extra={
+                    "request_id": request_id,
+                    "organization_id": str(organization_id),
+                    "timeout_seconds": TIMEOUT_SECONDS,
+                    "processing_time_ms": int((time.time() - start_time) * 1000),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                },
+            )
+            return {
+                "error": f"AI request timed out after {TIMEOUT_SECONDS}s",
+                "request_id": request_id,
+                "processing_time_ms": int((time.time() - start_time) * 1000),
+            }
+
         except json.JSONDecodeError as e:
             self._error_count += 1
             logger.error(
@@ -513,58 +570,76 @@ class AIEngineService:
                 "processing_time_ms": int((time.time() - start_time) * 1000)
             }
 
-    def _build_script_analysis_prompt(self, script_content: str, project_id: Optional[UUID]) -> str:
+    def _build_script_analysis_prompt(
+        self,
+        script_content: str,
+        project_id: Optional[UUID],
+        *,
+        analysis_type: str = "full",
+    ) -> str:
         """Build the prompt for script analysis."""
-        return f"""
-Analyze this film script and extract key production elements. Focus on practical information needed for production planning.
+        focus_instructions = {
+            "full": "Provide a balanced, end-to-end breakdown.",
+            "characters": "Focus on extracting CHARACTERS only. Keep other arrays empty.",
+            "scenes": "Focus on extracting SCENES only. Keep other arrays empty.",
+            "locations": "Focus on extracting LOCATIONS only. Keep other arrays empty.",
+        }.get(analysis_type, "Provide a balanced, end-to-end breakdown.")
 
-Script Content:
-{script_content[:10000]}  # Limit content length
+        return f"""
+Analyze this film script and extract key production elements for production planning.
+
+Important:
+- Return ONLY valid JSON (no markdown, no commentary).
+- Always include the keys: characters, locations, scenes, suggested_equipment, production_notes.
+- {focus_instructions}
+- Keep the output concise and bounded: max 30 characters, 25 locations, 50 scenes, 8 equipment categories, 10 production notes.
+- Keep descriptions under 20 words.
+
+Script Content (excerpt):
+{script_content[:10000]}
 
 Return a JSON object with the following structure:
 {{
-    "characters": [
-        {{
-            "name": "Character Name",
-            "description": "Brief description",
-            "scenes_present": [1, 5, 10],
-            "importance": "main/secondary/extra"
-        }}
-    ],
-    "locations": [
-        {{
-            "name": "Location Name",
-            "description": "Setting description",
-            "scenes": [2, 7],
-            "day_night": "day/night/interior",
-            "special_requirements": ["permits needed", "special equipment"]
-        }}
-    ],
-    "scenes": [
-        {{
-            "number": 1,
-            "heading": "INT. LOCATION - DAY",
-            "description": "Scene description",
-            "characters": ["Character A", "Character B"],
-            "estimated_time": "5 minutes",
-            "complexity": "low/medium/high"
-        }}
-    ],
-    "suggested_equipment": [
-        {{
-            "category": "camera",
-            "items": ["ARRI ALEXA", "Tripod", "Stabilizer"],
-            "reasoning": "Based on scene requirements"
-        }}
-    ],
-    "production_notes": [
-        "Key logistical considerations",
-        "Special requirements",
-        "Budget considerations"
-    ]
+  "characters": [
+    {{
+      "name": "Character Name",
+      "description": "Brief description",
+      "scenes_present": [1, 5, 10],
+      "importance": "main/secondary/extra"
+    }}
+  ],
+  "locations": [
+    {{
+      "name": "Location Name",
+      "description": "Setting description",
+      "scenes": [2, 7],
+      "day_night": "day/night/interior",
+      "special_requirements": ["permits needed", "special equipment"]
+    }}
+  ],
+  "scenes": [
+    {{
+      "number": 1,
+      "heading": "INT. LOCATION - DAY",
+      "description": "Scene description",
+      "characters": ["Character A", "Character B"],
+      "estimated_time": "5 minutes",
+      "complexity": "low/medium/high"
+    }}
+  ],
+  "suggested_equipment": [
+    {{
+      "category": "camera",
+      "items": ["ARRI ALEXA", "Tripod", "Stabilizer"],
+      "reasoning": "Based on scene requirements"
+    }}
+  ],
+  "production_notes": [
+    "Key logistical considerations",
+    "Special requirements",
+    "Budget considerations"
+  ]
 }}
-
-Be specific and practical. Focus on elements that impact production scheduling, equipment needs, and logistics.
 """
 
     def _build_production_suggestions_prompt(self, script_analysis: Dict[str, Any], project_context: Optional[Dict[str, Any]]) -> str:
@@ -682,13 +757,16 @@ Focus on actionable suggestions that help production planning and logistics.
 
             # Call Gemini API with monitoring
             api_start_time = time.time()
-            response = await self.model.generate_content_async(
-                prompt,
-                generation_config=genai.types.GenerationConfig(
-                    temperature=0.2,
-                    max_output_tokens=2000,
-                    response_mime_type="application/json"
-                )
+            response = await asyncio.wait_for(
+                self.model.generate_content_async(
+                    prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        temperature=0.2,
+                        max_output_tokens=2000,
+                        response_mime_type="application/json",
+                    ),
+                ),
+                timeout=TIMEOUT_SECONDS,
             )
             
             api_response_time = time.time() - api_start_time
@@ -746,6 +824,24 @@ Focus on actionable suggestions that help production planning and logistics.
             )
             
             return estimation
+
+        except asyncio.TimeoutError:
+            self._error_count += 1
+            logger.error(
+                "AI budget estimation request timed out",
+                extra={
+                    "request_id": request_id,
+                    "organization_id": str(organization_id),
+                    "timeout_seconds": TIMEOUT_SECONDS,
+                    "processing_time_ms": int((time.time() - start_time) * 1000),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                },
+            )
+            return {
+                "error": f"AI request timed out after {TIMEOUT_SECONDS}s",
+                "request_id": request_id,
+                "processing_time_ms": int((time.time() - start_time) * 1000),
+            }
 
         except Exception as e:
             self._error_count += 1

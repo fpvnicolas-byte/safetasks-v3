@@ -59,7 +59,7 @@ export default function AiCallSheetSuggestionsPage() {
       toast.success(tCommon('actionSuccess'))
       console.log('Call sheet suggestions result:', result)
     } catch (error: any) {
-      toast.error(tCommon('actionError', { message: 'Failed to generate call sheet suggestions' }))
+      toast.error(tCommon('actionError', { message: error?.message || 'Failed to generate call sheet suggestions' }))
       console.error('Call sheet suggestions error:', error)
     }
   }
@@ -216,10 +216,10 @@ export default function AiCallSheetSuggestionsPage() {
                 value={scriptText}
                 onChange={(e) => setScriptText(e.target.value)}
                 className="min-h-[200px]"
-                maxLength={12000}
+                maxLength={10000}
               />
               <div className="text-sm text-muted-foreground">
-                {scriptText.length}/12000 characters
+                {scriptText.length}/10000 characters
               </div>
             </div>
 

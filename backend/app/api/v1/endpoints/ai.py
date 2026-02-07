@@ -409,6 +409,7 @@ async def estimate_budget(
     """
     Generate AI-powered budget estimation for a project.
     """
+    start_time = time.time()
     try:
         # Validate project ownership
         from app.modules.commercial.service import project_service
@@ -430,8 +431,16 @@ async def estimate_budget(
             estimation_type=request.estimation_type,
             project_context={"project_id": str(request.project_id)}
         )
+
+        # ai_engine_service returns {"error": "..."} on failures/timeouts.
+        if isinstance(result, dict) and result.get("error"):
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=str(result["error"]),
+            )
         
         # Log successful usage
+        processing_time_ms = int((time.time() - start_time) * 1000)
         await ai_usage_log_service.log_request(
             db=db,
             organization_id=organization_id,
@@ -440,6 +449,7 @@ async def estimate_budget(
             endpoint="/api/v1/ai/budget-estimation",
             token_count=len(request.script_content.split()) * 2,
             cost_cents=int(len(request.script_content.split()) * 0.0005),
+            processing_time_ms=processing_time_ms,
             success=True
         )
 
@@ -453,7 +463,33 @@ async def estimate_budget(
             "risk_factors": result.get("risk_factors", []),
             "recommendations": result.get("recommendations", [])
         }
+
+    except HTTPException as e:
+        processing_time_ms = int((time.time() - start_time) * 1000)
+        await ai_usage_log_service.log_request(
+            db=db,
+            organization_id=organization_id,
+            project_id=request.project_id,
+            request_type="budget_estimation",
+            endpoint="/api/v1/ai/budget-estimation",
+            processing_time_ms=processing_time_ms,
+            success=False,
+            error_message=str(e.detail),
+        )
+        raise
+
     except Exception as e:
+        processing_time_ms = int((time.time() - start_time) * 1000)
+        await ai_usage_log_service.log_request(
+            db=db,
+            organization_id=organization_id,
+            project_id=request.project_id,
+            request_type="budget_estimation",
+            endpoint="/api/v1/ai/budget-estimation",
+            processing_time_ms=processing_time_ms,
+            success=False,
+            error_message=str(e),
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to estimate budget: {str(e)}"
@@ -470,6 +506,7 @@ async def generate_call_sheet_suggestions(
     """
     Generate AI-powered call sheet suggestions for a project.
     """
+    start_time = time.time()
     try:
         # Validate project ownership
         from app.modules.commercial.service import project_service
@@ -496,6 +533,11 @@ async def generate_call_sheet_suggestions(
                 script_content=request.script_content,
                 project_id=request.project_id
             )
+            if isinstance(analysis_result, dict) and analysis_result.get("error"):
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail=str(analysis_result["error"]),
+                )
             analysis_data = analysis_result
         else:
             # 2. Fallback: look for existing analysis in DB
@@ -508,14 +550,39 @@ async def generate_call_sheet_suggestions(
             if latest_analysis and latest_analysis.analysis_result:
                 analysis_data = latest_analysis.analysis_result
 
+        if not analysis_data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No script analysis available. Provide script_content or run script analysis first.",
+            )
+
         # Generate suggestions based on the analysis data (new or existing)
         suggestions = await ai_engine_service.suggest_production_elements(
             organization_id=organization_id,
             script_analysis=analysis_data,
             project_context={"project_id": str(request.project_id)}
         )
+        if isinstance(suggestions, dict) and suggestions.get("error"):
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=str(suggestions["error"]),
+            )
 
         call_sheet_data = suggestions.get("call_sheet_suggestions", [])
+
+        # Log successful usage
+        processing_time_ms = int((time.time() - start_time) * 1000)
+        await ai_usage_log_service.log_request(
+            db=db,
+            organization_id=organization_id,
+            project_id=request.project_id,
+            request_type="call_sheet_suggestion",
+            endpoint="/api/v1/ai/call-sheet-suggestions",
+            token_count=len(request.script_content.split()) * 4,  # analysis + suggestions (rough)
+            cost_cents=int(len(request.script_content.split()) * 0.001),  # rough
+            processing_time_ms=processing_time_ms,
+            success=True,
+        )
         
         return {
             "message": "Call sheet suggestions generated",
@@ -529,7 +596,33 @@ async def generate_call_sheet_suggestions(
             "equipment_needed": call_sheet_data[0].get("equipment_needed") if call_sheet_data else [],
             "estimated_duration": call_sheet_data[0].get("estimated_duration") if call_sheet_data else "N/A"
         }
+
+    except HTTPException as e:
+        processing_time_ms = int((time.time() - start_time) * 1000)
+        await ai_usage_log_service.log_request(
+            db=db,
+            organization_id=organization_id,
+            project_id=request.project_id,
+            request_type="call_sheet_suggestion",
+            endpoint="/api/v1/ai/call-sheet-suggestions",
+            processing_time_ms=processing_time_ms,
+            success=False,
+            error_message=str(e.detail),
+        )
+        raise
+
     except Exception as e:
+        processing_time_ms = int((time.time() - start_time) * 1000)
+        await ai_usage_log_service.log_request(
+            db=db,
+            organization_id=organization_id,
+            project_id=request.project_id,
+            request_type="call_sheet_suggestion",
+            endpoint="/api/v1/ai/call-sheet-suggestions",
+            processing_time_ms=processing_time_ms,
+            success=False,
+            error_message=str(e),
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to generate call sheet suggestions: {str(e)}"
@@ -566,8 +659,16 @@ async def analyze_script_content(
         analysis_result = await ai_engine_service.analyze_script_content(
             organization_id=organization_id,
             script_content=request.script_content,
-            project_id=request.project_id
+            project_id=request.project_id,
+            analysis_type=request.analysis_type,
         )
+
+        # ai_engine_service returns a structured dict with "error" on failures/timeouts.
+        if isinstance(analysis_result, dict) and analysis_result.get("error"):
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=str(analysis_result["error"]),
+            )
 
         # Save script analysis to database
         saved_analysis = await script_analysis_service.create_from_ai_result(
@@ -664,6 +765,21 @@ async def analyze_script_content(
             "result": analysis_result,
             "analysis_id": str(saved_analysis.id)
         }
+
+    except HTTPException as e:
+        # Log failed usage
+        processing_time_ms = int((time.time() - start_time) * 1000)
+        await ai_usage_log_service.log_request(
+            db=db,
+            organization_id=organization_id,
+            project_id=request.project_id,
+            request_type="script_analysis",
+            endpoint="/api/v1/ai/script-analysis",
+            processing_time_ms=processing_time_ms,
+            success=False,
+            error_message=str(e.detail),
+        )
+        raise
 
     except Exception as e:
         # Log failed usage

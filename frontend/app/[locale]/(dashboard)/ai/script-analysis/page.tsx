@@ -244,10 +244,10 @@ export default function AiScriptAnalysisPage() {
                 value={scriptText}
                 onChange={(e) => setScriptText(e.target.value)}
                 className="min-h-[250px]"
-                maxLength={15000}
+                maxLength={10000}
               />
               <div className="text-sm text-muted-foreground">
-                {t('scriptInput.charCount', { current: scriptText.length, max: 15000 })}
+                {t('scriptInput.charCount', { current: scriptText.length, max: 10000 })}
               </div>
             </div>
 

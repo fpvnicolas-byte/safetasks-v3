@@ -67,7 +67,10 @@ export function useAnalyzeScript() {
 export function useAiBudgetEstimation() {
   return useMutation({
     mutationFn: async (params: { project_id: string; estimation_type: string; script_content: string }) => {
-      const result = await apiClient.post<AiBudgetEstimation>('/api/v1/ai/budget-estimation', params)
+      const result = await apiClient.post<AiBudgetEstimation>('/api/v1/ai/budget-estimation', params, {
+        // Budget estimation can take longer than our default API timeout.
+        timeout: 120000,
+      })
       return result
     }
   })
@@ -76,7 +79,10 @@ export function useAiBudgetEstimation() {
 export function useAiCallSheetSuggestions() {
   return useMutation({
     mutationFn: async (params: { project_id: string; suggestion_type: string; script_content: string }) => {
-      const result = await apiClient.post<AiCallSheetSuggestion>('/api/v1/ai/call-sheet-suggestions', params)
+      const result = await apiClient.post<AiCallSheetSuggestion>('/api/v1/ai/call-sheet-suggestions', params, {
+        // Calls can include multiple AI steps (analysis + suggestions).
+        timeout: 120000,
+      })
       return result
     }
   })
@@ -85,7 +91,10 @@ export function useAiCallSheetSuggestions() {
 export function useAiScriptAnalysis() {
   return useMutation({
     mutationFn: async (params: { project_id: string; analysis_type: string; script_content: string }) => {
-      const result = await apiClient.post<AiAnalysisResponse>('/api/v1/ai/script-analysis', params)
+      const result = await apiClient.post<AiAnalysisResponse>('/api/v1/ai/script-analysis', params, {
+        // Script analysis is often the slowest AI endpoint; avoid client-side abort at 30s.
+        timeout: 120000,
+      })
       return result
     }
   })
