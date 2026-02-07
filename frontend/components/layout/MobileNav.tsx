@@ -27,7 +27,7 @@ const ALL_ROLES: Role[] = ['owner', 'admin', 'producer', 'finance', 'freelancer'
 const navigation: { key: string; href: string; icon: typeof LayoutDashboard; roles: Role[] }[] = [
   { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['owner', 'admin', 'producer', 'finance'] },
   { key: 'ai', href: '/ai', icon: Sparkles, roles: ['owner', 'admin', 'producer'] },
-  { key: 'projects', href: '/projects', icon: FolderOpen, roles: ['owner', 'admin', 'producer', 'freelancer'] },
+  { key: 'projects', href: '/projects', icon: FolderOpen, roles: ['owner', 'admin', 'producer', 'finance', 'freelancer'] },
   { key: 'proposals', href: '/proposals', icon: FileText, roles: ['owner', 'admin', 'producer'] },
   { key: 'callSheets', href: '/call-sheets', icon: FileText, roles: ['owner', 'admin', 'producer'] },
   { key: 'financials', href: '/financials', icon: DollarSign, roles: ['owner', 'admin', 'finance'] },

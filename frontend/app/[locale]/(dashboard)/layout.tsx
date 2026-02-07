@@ -80,6 +80,20 @@ export default function DashboardLayout({
     return false
   }, [effectiveRole, isLoading, pathWithoutLocale, profile])
 
+  const shouldRedirectFinance = useMemo(() => {
+    if (isLoading) return false
+    if (!profile) return false
+    if (effectiveRole !== 'finance') return false
+
+    const path = pathWithoutLocale || '/'
+
+    // Finance can view projects, but should not access create/edit routes.
+    if (path === '/projects/new' || path.startsWith('/projects/new/')) return true
+    if (/^\/projects\/[^/]+\/edit(\/|$)/.test(path)) return true
+
+    return false
+  }, [effectiveRole, isLoading, pathWithoutLocale, profile])
+
   const [profileTimeout, setProfileTimeout] = useState(false)
 
   useEffect(() => {
@@ -96,6 +110,12 @@ export default function DashboardLayout({
       router.replace(`/${locale}/projects`)
     }
   }, [locale, router, shouldRedirectFreelancer])
+
+  useEffect(() => {
+    if (shouldRedirectFinance) {
+      router.replace(`/${locale}/projects`)
+    }
+  }, [locale, router, shouldRedirectFinance])
 
   // Avoid rendering protected pages until we have a profile (prevents brief flashes of forbidden pages + 403 spam).
   if (isLoading || (user && !profile && !profileTimeout)) {
@@ -134,6 +154,14 @@ export default function DashboardLayout({
   }
 
   if (shouldRedirectFreelancer) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">
+        Redirecting...
+      </div>
+    )
+  }
+
+  if (shouldRedirectFinance) {
     return (
       <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">
         Redirecting...

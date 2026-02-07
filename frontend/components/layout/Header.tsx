@@ -41,7 +41,7 @@ export function Header({ onSidebarToggle }: HeaderProps) {
 
   const desktopNav = [
     { key: 'dashboard', href: '/dashboard', roles: ['owner', 'admin', 'producer', 'finance'] },
-    { key: 'projects', href: '/projects', roles: ['owner', 'admin', 'producer', 'freelancer'] },
+    { key: 'projects', href: '/projects', roles: ['owner', 'admin', 'producer', 'finance', 'freelancer'] },
     { key: 'callSheets', href: '/call-sheets', roles: ['owner', 'admin', 'producer'] },
     { key: 'financials', href: '/financials', roles: ['owner', 'admin', 'finance'] },
   ] satisfies Array<{ key: string; href: string; roles: Role[] }>
