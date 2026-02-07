@@ -3,11 +3,11 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { defaultLocale, locales } from '@/i18n/config'
+import { getValidLocale } from '@/i18n/config'
 
 function normalizeLocale(raw: FormDataEntryValue | null): string {
-  const value = typeof raw === 'string' ? raw : ''
-  return locales.includes(value as any) ? value : defaultLocale
+  const value = typeof raw === 'string' ? raw : undefined
+  return getValidLocale(value)
 }
 
 function sanitizeRedirectTo(raw: FormDataEntryValue | null): string | null {
@@ -56,6 +56,7 @@ export async function signup(formData: FormData) {
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '')
+  const callbackPath = `/${locale}/auth/callback?next=${encodeURIComponent(redirectTo)}`
 
   const { data: signUpData, error } = await supabase.auth.signUp({
     email: formData.get('email') as string,
@@ -63,7 +64,7 @@ export async function signup(formData: FormData) {
     options: {
       data: userMetadata,
       // If email confirmation is enabled, ensure the user lands back on the intended flow.
-      ...(appUrl ? { emailRedirectTo: `${appUrl}${redirectTo}` } : {}),
+      ...(appUrl ? { emailRedirectTo: `${appUrl}${callbackPath}` } : {}),
     },
   })
 

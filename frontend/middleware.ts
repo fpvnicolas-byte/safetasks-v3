@@ -83,7 +83,7 @@ export async function middleware(request: NextRequest) {
   // Redirect authenticated users from auth pages
   // NOTE: Some auth routes must remain accessible even when authenticated
   // (e.g. accepting an invite before the user belongs to an organization).
-  const authRoutesAllowedWhenLoggedIn = ['/auth/accept-invite']
+  const authRoutesAllowedWhenLoggedIn = ['/auth/accept-invite', '/auth/callback']
   const isAuthRoute = pathWithoutLocale.startsWith('/auth/')
   const isAllowedAuthRoute = authRoutesAllowedWhenLoggedIn.some((route) =>
     pathWithoutLocale.startsWith(route)
