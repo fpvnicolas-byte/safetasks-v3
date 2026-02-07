@@ -81,7 +81,15 @@ export async function middleware(request: NextRequest) {
   }
 
   // Redirect authenticated users from auth pages
-  if (user && pathWithoutLocale.startsWith('/auth/')) {
+  // NOTE: Some auth routes must remain accessible even when authenticated
+  // (e.g. accepting an invite before the user belongs to an organization).
+  const authRoutesAllowedWhenLoggedIn = ['/auth/accept-invite']
+  const isAuthRoute = pathWithoutLocale.startsWith('/auth/')
+  const isAllowedAuthRoute = authRoutesAllowedWhenLoggedIn.some((route) =>
+    pathWithoutLocale.startsWith(route)
+  )
+
+  if (user && isAuthRoute && !isAllowedAuthRoute) {
     const localeMatch = pathname.match(localePattern)?.[1];
     const locale = localeMatch || defaultLocale;
     const url = request.nextUrl.clone()

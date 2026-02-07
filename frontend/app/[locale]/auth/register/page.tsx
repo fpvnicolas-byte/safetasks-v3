@@ -8,10 +8,21 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import Link from 'next/link'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
+import { useSearchParams } from 'next/navigation'
 
 export default function RegisterPage() {
   const t = useTranslations('auth.register')
+  const locale = useLocale()
+  const basePath = `/${locale}`
+  const searchParams = useSearchParams()
+  const token = searchParams.get('token')
+  const isInvite = !!token
+  const redirectTo = token ? `${basePath}/auth/accept-invite?token=${token}` : `${basePath}/onboarding`
+  const query = new URLSearchParams()
+  if (token) query.set('token', token)
+  const queryString = query.toString()
+  const querySuffix = queryString ? `?${queryString}` : ''
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [password, setPassword] = useState('')
@@ -92,6 +103,8 @@ export default function RegisterPage() {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
+              <input type="hidden" name="locale" value={locale} />
+              <input type="hidden" name="redirect_to" value={redirectTo} />
               <div className="space-y-2">
                 <Label htmlFor="full_name" className="text-slate-200">{t('fullName')}</Label>
                 <Input
@@ -103,17 +116,22 @@ export default function RegisterPage() {
                   className="border-white/10 bg-slate-950/60 text-slate-100 placeholder:text-slate-500 focus-visible:ring-amber-300"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="company_name" className="text-slate-200">Company Name</Label>
-                <Input
-                  id="company_name"
-                  name="company_name"
-                  type="text"
-                  placeholder="Your production company"
-                  required
-                  className="border-white/10 bg-slate-950/60 text-slate-100 placeholder:text-slate-500 focus-visible:ring-amber-300"
-                />
-              </div>
+              {!isInvite ? (
+                <div className="space-y-2">
+                  <Label htmlFor="company_name" className="text-slate-200">Company Name</Label>
+                  <Input
+                    id="company_name"
+                    name="company_name"
+                    type="text"
+                    placeholder="Your production company"
+                    required
+                    className="border-white/10 bg-slate-950/60 text-slate-100 placeholder:text-slate-500 focus-visible:ring-amber-300"
+                  />
+                </div>
+              ) : (
+                // Keep a consistent payload shape for the server action.
+                <input type="hidden" name="company_name" value="" />
+              )}
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-slate-200">{t('email')}</Label>
                 <Input
@@ -168,7 +186,7 @@ export default function RegisterPage() {
               </Button>
               <div className="text-sm text-center text-slate-400">
                 {t('alreadyHaveAccount')}{' '}
-                <Link href="/auth/login" className="text-amber-300 hover:text-amber-200">
+                <Link href={`${basePath}/auth/login${querySuffix}`} className="text-amber-300 hover:text-amber-200">
                   {t('signIn')}
                 </Link>
               </div>

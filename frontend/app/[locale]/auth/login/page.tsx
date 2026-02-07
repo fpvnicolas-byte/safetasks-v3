@@ -10,11 +10,21 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
+import { useSearchParams } from 'next/navigation'
 
 export default function LoginPage() {
   const t = useTranslations('auth.login')
   const locale = useLocale()
   const basePath = `/${locale}`
+  const searchParams = useSearchParams()
+  const token = searchParams.get('token')
+  const redirectParam = searchParams.get('redirect')
+  const redirectTo = redirectParam || (token ? `${basePath}/auth/accept-invite?token=${token}` : '')
+  const query = new URLSearchParams()
+  if (token) query.set('token', token)
+  if (redirectParam) query.set('redirect', redirectParam)
+  const queryString = query.toString()
+  const querySuffix = queryString ? `?${queryString}` : ''
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -63,6 +73,8 @@ export default function LoginPage() {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
+              <input type="hidden" name="locale" value={locale} />
+              {redirectTo ? <input type="hidden" name="redirect_to" value={redirectTo} /> : null}
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-slate-200">{t('email')}</Label>
                 <Input
@@ -90,10 +102,10 @@ export default function LoginPage() {
                 {isLoading ? t('signingIn') : t('signIn')}
               </Button>
               <div className="flex justify-between w-full text-sm text-slate-400">
-                <Link href="/auth/register" className="text-amber-300 hover:text-amber-200">
+                <Link href={`${basePath}/auth/register${querySuffix}`} className="text-amber-300 hover:text-amber-200">
                   {t('createAccount')}
                 </Link>
-                <Link href="/auth/forgot-password" className="text-amber-300 hover:text-amber-200">
+                <Link href={`${basePath}/auth/forgot-password${querySuffix}`} className="text-amber-300 hover:text-amber-200">
                   {t('forgotPassword')}
                 </Link>
               </div>
