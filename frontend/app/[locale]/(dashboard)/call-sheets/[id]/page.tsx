@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation'
 import { useCallSheet } from '@/lib/api/hooks'
 import { apiClient } from '@/lib/api/client'
+import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -30,6 +31,14 @@ export default function CallSheetDetailPage() {
   const callSheetId = params.id as string
   const t = useTranslations('callSheets.detail')
   const tCommon = useTranslations('common')
+  const { profile } = useAuth()
+
+  const effectiveRole = profile?.effective_role || profile?.role_v2 || 'owner'
+  const canManage =
+    profile?.is_master_owner === true ||
+    effectiveRole === 'owner' ||
+    effectiveRole === 'admin' ||
+    effectiveRole === 'producer'
 
   const { data: callSheet, isLoading, error } = useCallSheet(callSheetId)
   const queryClient = useQueryClient()
@@ -90,21 +99,23 @@ export default function CallSheetDetailPage() {
             {shootDate} • {callSheet.location}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline">
-            <Link href={`/${locale}/call-sheets/${callSheetId}/edit`}>
-              <Edit className="mr-2 h-4 w-4" />
-              {tCommon('edit')}
-            </Link>
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={requestDelete}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            {tCommon('delete')}
-          </Button>
-        </div>
+        {canManage && (
+          <div className="flex gap-2">
+            <Button asChild variant="outline">
+              <Link href={`/${locale}/call-sheets/${callSheetId}/edit`}>
+                <Edit className="mr-2 h-4 w-4" />
+                {tCommon('edit')}
+              </Link>
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={requestDelete}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              {tCommon('delete')}
+            </Button>
+          </div>
+        )}
       </div>
 
       <ConfirmDeleteDialog

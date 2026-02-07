@@ -23,9 +23,15 @@ const statusVariant: Record<ProjectStatus, 'info' | 'secondary' | 'success' | 'w
 
 export default function ProjectsPage() {
   const t = useTranslations('projects')
-  const tCommon = useTranslations('common')
   const locale = useLocale()
-  const { organizationId, isLoading: isLoadingOrg } = useAuth()
+  const { organizationId, isLoading: isLoadingOrg, profile } = useAuth()
+  const effectiveRole = profile?.effective_role || profile?.role_v2 || 'owner'
+  const isFreelancer = effectiveRole === 'freelancer'
+  const canCreateProject =
+    profile?.is_master_owner === true ||
+    effectiveRole === 'owner' ||
+    effectiveRole === 'admin' ||
+    effectiveRole === 'producer'
 
   const { data: projects, isLoading, error } = useProjects(organizationId || undefined)
 
@@ -64,12 +70,14 @@ export default function ProjectsPage() {
               {t('description')}
             </p>
           </div>
-          <Button asChild>
-            <LocaleLink href="/projects/new">
-              <Plus className="mr-2 h-4 w-4" />
-              {t('newProject')}
-            </LocaleLink>
-          </Button>
+          {canCreateProject && (
+            <Button asChild>
+              <LocaleLink href="/projects/new">
+                <Plus className="mr-2 h-4 w-4" />
+                {t('newProject')}
+              </LocaleLink>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -104,10 +112,12 @@ export default function ProjectsPage() {
                           <span>{new Date(project.start_date).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
                         </div>
                       )}
-                      <div className="flex justify-between font-medium">
-                        <span className="text-muted-foreground">{t('budget')}:</span>
-                        <span>{formatCurrency(project.budget_total_cents)}</span>
-                      </div>
+                      {!isFreelancer && (
+                        <div className="flex justify-between font-medium">
+                          <span className="text-muted-foreground">{t('budget')}:</span>
+                          <span>{formatCurrency(project.budget_total_cents)}</span>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -128,12 +138,14 @@ export default function ProjectsPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 {t('emptyState.getStarted')}
               </p>
-              <Button asChild>
-                <LocaleLink href="/projects/new">
-                  <Plus className="mr-2 h-4 w-4" />
-                  {t('createProject')}
-                </LocaleLink>
-              </Button>
+              {canCreateProject && (
+                <Button asChild>
+                  <LocaleLink href="/projects/new">
+                    <Plus className="mr-2 h-4 w-4" />
+                    {t('createProject')}
+                  </LocaleLink>
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>

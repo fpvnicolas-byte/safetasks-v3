@@ -7,6 +7,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { locales, localeNames, type Locale } from '@/i18n/config'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function SettingsPage() {
   const t = useTranslations('settings')
@@ -15,6 +16,10 @@ export default function SettingsPage() {
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { profile } = useAuth()
+
+  const effectiveRole = profile?.effective_role || profile?.role_v2 || 'owner'
+  const isFreelancer = effectiveRole === 'freelancer'
 
   const buildLocalePath = (nextLocale: Locale) => {
     const segments = pathname.split('/')
@@ -48,26 +53,28 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Link href="/settings/organization">
-          <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-info/15 rounded-lg">
-                  <Building2 className="h-6 w-6 text-info" />
+        {!isFreelancer && (
+          <Link href="/settings/organization">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-info/15 rounded-lg">
+                    <Building2 className="h-6 w-6 text-info" />
+                  </div>
+                  <div>
+                    <CardTitle>{t('main.organization.title')}</CardTitle>
+                    <CardDescription>{t('main.organization.description')}</CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle>{t('main.organization.title')}</CardTitle>
-                  <CardDescription>{t('main.organization.description')}</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {t('main.organization.content')}
-              </p>
-            </CardContent>
-          </Card>
-        </Link>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  {t('main.organization.content')}
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
 
         <Link href="/settings/profile">
           <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
@@ -90,89 +97,97 @@ export default function SettingsPage() {
           </Card>
         </Link>
 
-        <Link href="/settings/google-drive">
-          <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-primary/15 rounded-lg">
-                  <Key className="h-6 w-6 text-primary" />
+        {!isFreelancer && (
+          <Link href="/settings/google-drive">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-primary/15 rounded-lg">
+                    <Key className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle>{t('main.googleDrive.title')}</CardTitle>
+                    <CardDescription>{t('main.googleDrive.description')}</CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle>{t('main.googleDrive.title')}</CardTitle>
-                  <CardDescription>{t('main.googleDrive.description')}</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {t('main.googleDrive.content')}
-              </p>
-            </CardContent>
-          </Card>
-        </Link>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  {t('main.googleDrive.content')}
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
 
-        <Link href="/settings/services">
-          <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-secondary/60 rounded-lg">
-                  <Briefcase className="h-6 w-6 text-secondary-foreground" />
+        {!isFreelancer && (
+          <Link href="/settings/services">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-secondary/60 rounded-lg">
+                    <Briefcase className="h-6 w-6 text-secondary-foreground" />
+                  </div>
+                  <div>
+                    <CardTitle>{t('main.services.title')}</CardTitle>
+                    <CardDescription>{t('main.services.description')}</CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle>{t('main.services.title')}</CardTitle>
-                  <CardDescription>{t('main.services.description')}</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {t('main.services.content')}
-              </p>
-            </CardContent>
-          </Card>
-        </Link>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  {t('main.services.content')}
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
 
-        <Link href="/settings/billing">
-          <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-primary/15 rounded-lg">
-                  <CreditCard className="h-6 w-6 text-primary" />
+        {!isFreelancer && (
+          <Link href="/settings/billing">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-primary/15 rounded-lg">
+                    <CreditCard className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle>Billing & Usage</CardTitle>
+                    <CardDescription>Manage subscription and usage</CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle>Billing & Usage</CardTitle>
-                  <CardDescription>Manage subscription and usage</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                View your current plan, usage limits, and upgrade options
-              </p>
-            </CardContent>
-          </Card>
-        </Link>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  View your current plan, usage limits, and upgrade options
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
 
-        <Link href="/settings/payment-methods">
-          <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-success/15 rounded-lg">
-                  <Wallet className="h-6 w-6 text-success" />
+        {!isFreelancer && (
+          <Link href="/settings/payment-methods">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-success/15 rounded-lg">
+                    <Wallet className="h-6 w-6 text-success" />
+                  </div>
+                  <div>
+                    <CardTitle>{t('main.paymentMethods.title')}</CardTitle>
+                    <CardDescription>{t('main.paymentMethods.description')}</CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle>{t('main.paymentMethods.title')}</CardTitle>
-                  <CardDescription>{t('main.paymentMethods.description')}</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {t('main.paymentMethods.content')}
-              </p>
-            </CardContent>
-          </Card>
-        </Link>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  {t('main.paymentMethods.content')}
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
 
         <Link href="/notifications">
           <Card className="hover:bg-muted/50 transition-colors cursor-pointer">

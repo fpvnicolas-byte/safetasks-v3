@@ -24,8 +24,10 @@ interface HeaderProps {
   onSidebarToggle: () => void
 }
 
+type Role = 'owner' | 'admin' | 'producer' | 'finance' | 'freelancer'
+
 export function Header({ onSidebarToggle }: HeaderProps) {
-  const { user, signOut } = useAuth()
+  const { user, signOut, profile } = useAuth()
   const t = useTranslations('navigation')
   const tHeader = useTranslations('header')
   const tCommon = useTranslations('common')
@@ -33,6 +35,18 @@ export function Header({ onSidebarToggle }: HeaderProps) {
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  const effectiveRole = (profile?.effective_role || profile?.role_v2 || 'owner') as Role
+  const homeHref = effectiveRole === 'freelancer' ? '/projects' : '/dashboard'
+
+  const desktopNav = [
+    { key: 'dashboard', href: '/dashboard', roles: ['owner', 'admin', 'producer', 'finance'] },
+    { key: 'projects', href: '/projects', roles: ['owner', 'admin', 'producer', 'freelancer'] },
+    { key: 'callSheets', href: '/call-sheets', roles: ['owner', 'admin', 'producer'] },
+    { key: 'financials', href: '/financials', roles: ['owner', 'admin', 'finance'] },
+  ] satisfies Array<{ key: string; href: string; roles: Role[] }>
+
+  const visibleDesktopNav = desktopNav.filter((item) => item.roles.includes(effectiveRole))
 
   const buildLocalePath = (nextLocale: Locale) => {
     const segments = pathname.split('/')
@@ -54,36 +68,21 @@ export function Header({ onSidebarToggle }: HeaderProps) {
   return (
     <header className="border-b">
       <div className="flex h-14 items-center px-4 gap-4 md:h-16">
-        <LocaleLink href="/dashboard" className="inline-flex font-display text-xl font-semibold tracking-tight md:text-2xl">
+        <LocaleLink href={homeHref} className="inline-flex font-display text-xl font-semibold tracking-tight md:text-2xl">
           <span className="md:hidden">SafeTasks</span>
           <span className="hidden md:inline">SafeTasks V3</span>
         </LocaleLink>
 
         <nav className="hidden md:flex gap-6 ml-6">
-          <LocaleLink
-            href="/dashboard"
-            className="text-sm font-medium transition-colors hover:text-primary"
-          >
-            {t('dashboard')}
-          </LocaleLink>
-          <LocaleLink
-            href="/projects"
-            className="text-sm font-medium transition-colors hover:text-primary"
-          >
-            {t('projects')}
-          </LocaleLink>
-          <LocaleLink
-            href="/call-sheets"
-            className="text-sm font-medium transition-colors hover:text-primary"
-          >
-            {t('callSheets')}
-          </LocaleLink>
-          <LocaleLink
-            href="/financials"
-            className="text-sm font-medium transition-colors hover:text-primary"
-          >
-            {t('financials')}
-          </LocaleLink>
+          {visibleDesktopNav.map((item) => (
+            <LocaleLink
+              key={item.key}
+              href={item.href}
+              className="text-sm font-medium transition-colors hover:text-primary"
+            >
+              {t(item.key)}
+            </LocaleLink>
+          ))}
         </nav>
 
         <div className="ml-auto flex items-center gap-2">

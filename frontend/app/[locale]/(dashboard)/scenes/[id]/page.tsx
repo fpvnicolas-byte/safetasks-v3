@@ -4,8 +4,9 @@ import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { useScene, useDeleteScene } from '@/lib/api/hooks'
+import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Pencil, Trash2, ArrowLeft } from 'lucide-react'
@@ -20,9 +21,18 @@ export default function SceneDetailPage() {
   const t = useTranslations('scenes.detail')
   const tCommon = useTranslations('common')
   const sceneId = params.id as string
+  const { profile } = useAuth()
+
+  const effectiveRole = profile?.effective_role || profile?.role_v2 || 'owner'
+  const canManage =
+    profile?.is_master_owner === true ||
+    effectiveRole === 'owner' ||
+    effectiveRole === 'admin' ||
+    effectiveRole === 'producer'
 
   const { data: scene, isLoading, error } = useScene(sceneId)
   const deleteScene = useDeleteScene()
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   if (isLoading) {
     return <DetailPageSkeleton />
@@ -35,8 +45,6 @@ export default function SceneDetailPage() {
       </Alert>
     )
   }
-
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   const handleDelete = async () => {
     try {
@@ -76,18 +84,20 @@ export default function SceneDetailPage() {
             <p className="text-muted-foreground">{scene.heading}</p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline">
-            <Link href={`/${locale}/scenes/${sceneId}/edit`}>
-              <Pencil className="mr-2 h-4 w-4" />
-              {tCommon('edit')}
-            </Link>
-          </Button>
-          <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)} disabled={deleteScene.isPending}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            {tCommon('delete')}
-          </Button>
-        </div>
+        {canManage && (
+          <div className="flex gap-2">
+            <Button asChild variant="outline">
+              <Link href={`/${locale}/scenes/${sceneId}/edit`}>
+                <Pencil className="mr-2 h-4 w-4" />
+                {tCommon('edit')}
+              </Link>
+            </Button>
+            <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)} disabled={deleteScene.isPending}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              {tCommon('delete')}
+            </Button>
+          </div>
+        )}
       </div>
 
       <Card>

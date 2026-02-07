@@ -5,7 +5,7 @@ import { useCallSheets, useDeleteCallSheet } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus, FileText, Search, Edit, Trash2, Calendar, Clock, MapPin, Eye, CloudRain } from 'lucide-react'
+import { Plus, FileText, Search, Edit, Trash2, Clock, MapPin, Eye, CloudRain } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { CallSheet, convertTimeToFormFormat } from '@/types'
@@ -17,11 +17,18 @@ import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
 
 function CallSheetsContent() {
-  const { organizationId } = useAuth()
+  const { organizationId, profile } = useAuth()
   const t = useTranslations('callSheets')
   const tCommon = useTranslations('common')
   const tFeedback = useTranslations('common.feedback')
   const [searchQuery, setSearchQuery] = useState('')
+
+  const effectiveRole = profile?.effective_role || profile?.role_v2 || 'owner'
+  const canManage =
+    profile?.is_master_owner === true ||
+    effectiveRole === 'owner' ||
+    effectiveRole === 'admin' ||
+    effectiveRole === 'producer'
 
   // Get all call sheets (no project filter initially)
   const { data: allCallSheets, isLoading, error } = useCallSheets(organizationId || '', undefined)
@@ -72,12 +79,14 @@ function CallSheetsContent() {
             {t('tab.description')}
           </p>
         </div>
-        <Button asChild>
-          <Link href="/call-sheets/new">
-            <Plus className="mr-2 h-4 w-4" />
-            {t('newCallSheet')}
-          </Link>
-        </Button>
+        {canManage && (
+          <Button asChild>
+            <Link href="/call-sheets/new">
+              <Plus className="mr-2 h-4 w-4" />
+              {t('newCallSheet')}
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* Search Filter */}
@@ -120,6 +129,7 @@ function CallSheetsContent() {
               key={sheet.id}
               callSheet={sheet}
               onDelete={() => confirmDelete(sheet.id)}
+              canManage={canManage}
             />
           ))}
         </div>
@@ -140,12 +150,14 @@ function CallSheetsContent() {
               <p className="text-sm text-muted-foreground mb-4">
                 {t('tab.empty.help')}
               </p>
-              <Button asChild>
-                <Link href="/call-sheets/new">
-                  <Plus className="mr-2 h-4 w-4" />
-                  {t('tab.empty.action')}
-                </Link>
-              </Button>
+              {canManage && (
+                <Button asChild>
+                  <Link href="/call-sheets/new">
+                    <Plus className="mr-2 h-4 w-4" />
+                    {t('tab.empty.action')}
+                  </Link>
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -175,9 +187,10 @@ function CallSheetsContent() {
 interface CallSheetCardProps {
   callSheet: CallSheet
   onDelete: () => void
+  canManage: boolean
 }
 
-function CallSheetCard({ callSheet, onDelete }: CallSheetCardProps) {
+function CallSheetCard({ callSheet, onDelete, canManage }: CallSheetCardProps) {
   const t = useTranslations('callSheets')
   const tCommon = useTranslations('common')
 
@@ -255,24 +268,28 @@ function CallSheetCard({ callSheet, onDelete }: CallSheetCardProps) {
               {tCommon('view')}
             </Link>
           </Button>
-          <Button asChild variant="outline" size="sm" className="flex-1">
-            <Link href={`/call-sheets/${callSheet.id}/edit`}>
-              <Edit className="mr-2 h-3 w-3" />
-              {tCommon('edit')}
-            </Link>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onDelete();
-            }}
-            className="text-destructive hover:text-destructive"
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
+          {canManage && (
+            <>
+              <Button asChild variant="outline" size="sm" className="flex-1">
+                <Link href={`/call-sheets/${callSheet.id}/edit`}>
+                  <Edit className="mr-2 h-3 w-3" />
+                  {tCommon('edit')}
+                </Link>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </Card>

@@ -13,8 +13,15 @@ import { useTranslations } from 'next-intl'
 
 export default function CharactersPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
-  const { organizationId } = useAuth()
+  const { organizationId, profile } = useAuth()
   const t = useTranslations('characters')
+
+  const effectiveRole = profile?.effective_role || profile?.role_v2 || 'owner'
+  const canManage =
+    profile?.is_master_owner === true ||
+    effectiveRole === 'owner' ||
+    effectiveRole === 'admin' ||
+    effectiveRole === 'producer'
 
   // Fetch projects for selection
   const { data: projects, isLoading: projectsLoading } = useProjects(organizationId || undefined)
@@ -35,12 +42,14 @@ export default function CharactersPage() {
               {t('description')}
             </p>
           </div>
-          <Button asChild disabled={!selectedProjectId}>
-            <Link href={selectedProjectId ? `/characters/new?project=${selectedProjectId}` : '#'}>
-              <Plus className="mr-2 h-4 w-4" />
-              {t('newCharacter')}
-            </Link>
-          </Button>
+          {canManage && (
+            <Button asChild disabled={!selectedProjectId}>
+              <Link href={selectedProjectId ? `/characters/new?project=${selectedProjectId}` : '#'}>
+                <Plus className="mr-2 h-4 w-4" />
+                {t('newCharacter')}
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -70,10 +79,15 @@ export default function CharactersPage() {
             </Select>
           ) : (
             <div className="text-sm text-muted-foreground">
-              {t('projectSelection.noProjects')}{' '}
-              <Link href="/projects/new" className="text-info hover:underline">
-                {t('projectSelection.createFirst')}
-              </Link>
+              {t('projectSelection.noProjects')}
+              {canManage && (
+                <>
+                  {' '}
+                  <Link href="/projects/new" className="text-info hover:underline">
+                    {t('projectSelection.createFirst')}
+                  </Link>
+                </>
+              )}
             </div>
           )}
         </CardContent>
@@ -127,12 +141,14 @@ export default function CharactersPage() {
                   <p className="text-sm text-muted-foreground mb-4">
                     {t('empty.helpText')}
                   </p>
-                  <Button asChild>
-                    <Link href={`/characters/new?project=${selectedProjectId}`}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      {t('addCharacter')}
-                    </Link>
-                  </Button>
+                  {canManage && (
+                    <Button asChild>
+                      <Link href={`/characters/new?project=${selectedProjectId}`}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        {t('addCharacter')}
+                      </Link>
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>

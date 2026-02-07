@@ -3,6 +3,7 @@
 import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useScenes, useDeleteScene } from '@/lib/api/hooks'
+import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -30,10 +31,18 @@ function ScenesContent() {
   const searchParams = useSearchParams()
   const projectId = searchParams.get('project') || ''
   const t = useTranslations('scenes')
+  const { profile } = useAuth()
 
   const [locationFilter, setLocationFilter] = useState<string | 'all'>('all')
   const [timeOfDayFilter, setTimeOfDayFilter] = useState<string | 'all'>('all')
   const [searchQuery, setSearchQuery] = useState('')
+
+  const effectiveRole = profile?.effective_role || profile?.role_v2 || 'owner'
+  const canManage =
+    profile?.is_master_owner === true ||
+    effectiveRole === 'owner' ||
+    effectiveRole === 'admin' ||
+    effectiveRole === 'producer'
 
   // Get scenes data
   const { data: allScenes, isLoading, error } = useScenes(projectId)
@@ -111,12 +120,14 @@ function ScenesContent() {
             {t('description')}
           </p>
         </div>
-        <Button asChild>
-          <Link href={`/scenes/new?project=${projectId}`}>
-            <Plus className="mr-2 h-4 w-4" />
-            {t('newScene')}
-          </Link>
-        </Button>
+        {canManage && (
+          <Button asChild>
+            <Link href={`/scenes/new?project=${projectId}`}>
+              <Plus className="mr-2 h-4 w-4" />
+              {t('newScene')}
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* Filters */}
@@ -197,6 +208,7 @@ function ScenesContent() {
               scene={scene}
               onDelete={() => setDeleteTarget({ id: scene.id, number: scene.scene_number.toString() })}
               t={t}
+              canManage={canManage}
             />
           ))}
         </div>
@@ -217,12 +229,14 @@ function ScenesContent() {
               <p className="text-sm text-muted-foreground mb-4">
                 {t('empty.helpText')}
               </p>
-              <Button asChild>
-                <Link href={`/scenes/new?project=${projectId}`}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  {t('empty.createFirst')}
-                </Link>
-              </Button>
+              {canManage && (
+                <Button asChild>
+                  <Link href={`/scenes/new?project=${projectId}`}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    {t('empty.createFirst')}
+                  </Link>
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -235,9 +249,10 @@ interface SceneCardProps {
   scene: Scene
   onDelete: () => void
   t: (key: string, values?: Record<string, string | number>) => string
+  canManage: boolean
 }
 
-function SceneCard({ scene, onDelete, t }: SceneCardProps) {
+function SceneCard({ scene, onDelete, t, canManage }: SceneCardProps) {
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader>
@@ -288,20 +303,24 @@ function SceneCard({ scene, onDelete, t }: SceneCardProps) {
               {t('list.view')}
             </Link>
           </Button>
-          <Button asChild variant="outline" size="sm" className="flex-1">
-            <Link href={`/scenes/${scene.id}/edit`}>
-              <Edit className="mr-2 h-3 w-3" />
-              {t('list.edit')}
-            </Link>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onDelete}
-            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
+          {canManage && (
+            <>
+              <Button asChild variant="outline" size="sm" className="flex-1">
+                <Link href={`/scenes/${scene.id}/edit`}>
+                  <Edit className="mr-2 h-3 w-3" />
+                  {t('list.edit')}
+                </Link>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onDelete}
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -20,7 +20,7 @@ export default function ShootingDayDetailPage() {
   const params = useParams()
   const router = useRouter()
   const locale = useLocale()
-  const { organizationId } = useAuth()
+  const { organizationId, profile } = useAuth()
   const shootingDayId = params.id as string
   const t = useTranslations('shootingDays.detail')
   const tCommon = useTranslations('common')
@@ -28,12 +28,26 @@ export default function ShootingDayDetailPage() {
   const [selectedScenes, setSelectedScenes] = useState<string[]>([])
   const [assignmentMessage, setAssignmentMessage] = useState<string>('')
 
+  const effectiveRole = profile?.effective_role || profile?.role_v2 || 'owner'
+  const canManage =
+    profile?.is_master_owner === true ||
+    effectiveRole === 'owner' ||
+    effectiveRole === 'admin' ||
+    effectiveRole === 'producer'
+
   const { data: shootingDay, isLoading, error } = useShootingDay(shootingDayId)
   const deleteShootingDay = useDeleteShootingDay(organizationId || '')
 
   // Fetch scenes for the project (once we know the project_id)
   const { data: allScenes } = useScenes(shootingDay?.project_id || '')
   const assignScenes = useAssignScenesToShootingDay(shootingDayId, organizationId || '')
+
+  const {
+    open: deleteOpen,
+    onOpenChange: setDeleteOpen,
+    askConfirmation: confirmDelete,
+    closeConfirmation: cancelDelete,
+  } = useConfirmDelete()
 
   if (isLoading) {
     return <div>{t('loading')}</div>
@@ -46,13 +60,6 @@ export default function ShootingDayDetailPage() {
       </Alert>
     )
   }
-
-  const {
-    open: deleteOpen,
-    onOpenChange: setDeleteOpen,
-    askConfirmation: confirmDelete,
-    closeConfirmation: cancelDelete,
-  } = useConfirmDelete()
 
   const handleDelete = async () => {
     try {
@@ -87,18 +94,20 @@ export default function ShootingDayDetailPage() {
             <p className="text-muted-foreground">{shootingDay.location_name}</p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline">
-            <Link href={`/${locale}/shooting-days/${shootingDayId}/edit`}>
-              <Pencil className="mr-2 h-4 w-4" />
-              {tCommon('edit')}
-            </Link>
-          </Button>
-          <Button variant="destructive" onClick={requestDelete}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            {tCommon('delete')}
-          </Button>
-        </div>
+        {canManage && (
+          <div className="flex gap-2">
+            <Button asChild variant="outline">
+              <Link href={`/${locale}/shooting-days/${shootingDayId}/edit`}>
+                <Pencil className="mr-2 h-4 w-4" />
+                {tCommon('edit')}
+              </Link>
+            </Button>
+            <Button variant="destructive" onClick={requestDelete}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              {tCommon('delete')}
+            </Button>
+          </div>
+        )}
       </div>
 
       <Badge variant="outline" className="text-base px-4 py-2">
@@ -190,62 +199,94 @@ export default function ShootingDayDetailPage() {
           )}
 
           {allScenes && allScenes.length > 0 ? (
-            <>
+            canManage ? (
+              <>
+                <div className="space-y-2">
+                  {allScenes.map((scene) => {
+                    const isAssigned = scene.shooting_day_id === shootingDayId
+                    const isSelected = selectedScenes.includes(scene.id)
+
+                    return (
+                      <div key={scene.id} className="flex items-start gap-3 p-3 border rounded-lg">
+                        <Checkbox
+                          id={`scene-${scene.id}`}
+                          checked={isSelected}
+                          onCheckedChange={(checked: boolean) => {
+                            if (checked) {
+                              setSelectedScenes([...selectedScenes, scene.id])
+                            } else {
+                              setSelectedScenes(selectedScenes.filter(id => id !== scene.id))
+                            }
+                          }}
+                        />
+                        <label htmlFor={`scene-${scene.id}`} className="flex-1 cursor-pointer">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{t('scene')} {scene.scene_number}</span>
+                            {isAssigned && (
+                              <Badge variant="secondary" className="text-xs">{t('currentlyAssigned')}</Badge>
+                            )}
+                          </div>
+                          <div className="text-sm text-muted-foreground line-clamp-1">
+                            {scene.heading}
+                          </div>
+                        </label>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                <Button
+                  onClick={async () => {
+                    try {
+                      setAssignmentMessage('')
+                      await assignScenes.mutateAsync(selectedScenes)
+                      setAssignmentMessage(t('assignSuccess', { count: selectedScenes.length }))
+                      setSelectedScenes([])
+                    } catch (err: unknown) {
+                      const error = err as Error
+                      setAssignmentMessage(t('assignError', { message: error.message }))
+                    }
+                  }}
+                  disabled={selectedScenes.length === 0 || assignScenes.isPending}
+                >
+                  <Film className="mr-2 h-4 w-4" />
+                  {assignScenes.isPending ? t('assigning') : t('assignScenes', { count: selectedScenes.length })}
+                </Button>
+              </>
+            ) : (
               <div className="space-y-2">
-                {allScenes.map((scene) => {
-                  const isAssigned = scene.shooting_day_id === shootingDayId
-                  const isSelected = selectedScenes.includes(scene.id)
-
-                  return (
-                    <div key={scene.id} className="flex items-start gap-3 p-3 border rounded-lg">
-                      <Checkbox
-                        id={`scene-${scene.id}`}
-                        checked={isSelected}
-                        onCheckedChange={(checked: boolean) => {
-                          if (checked) {
-                            setSelectedScenes([...selectedScenes, scene.id])
-                          } else {
-                            setSelectedScenes(selectedScenes.filter(id => id !== scene.id))
-                          }
-                        }}
-                      />
-                      <label htmlFor={`scene-${scene.id}`} className="flex-1 cursor-pointer">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{t('scene')} {scene.scene_number}</span>
-                          {isAssigned && (
-                            <Badge variant="secondary" className="text-xs">{t('currentlyAssigned')}</Badge>
-                          )}
+                {allScenes.filter((scene) => scene.shooting_day_id === shootingDayId).length > 0 ? (
+                  allScenes
+                    .filter((scene) => scene.shooting_day_id === shootingDayId)
+                    .map((scene) => (
+                      <div key={scene.id} className="flex items-start gap-3 p-3 border rounded-lg">
+                        <div className="mt-0.5">
+                          <Badge variant="secondary" className="text-xs">
+                            {t('scene')} {scene.scene_number}
+                          </Badge>
                         </div>
-                        <div className="text-sm text-muted-foreground line-clamp-1">
-                          {scene.heading}
+                        <div className="flex-1">
+                          <div className="text-sm font-medium">{scene.heading}</div>
+                          <div className="text-xs text-muted-foreground line-clamp-2">{scene.description}</div>
                         </div>
-                      </label>
-                    </div>
-                  )
-                })}
+                      </div>
+                    ))
+                ) : (
+                  <div className="text-sm text-muted-foreground">{t('noScenesAssigned')}</div>
+                )}
               </div>
-
-              <Button
-                onClick={async () => {
-                  try {
-                    setAssignmentMessage('')
-                    await assignScenes.mutateAsync(selectedScenes)
-                    setAssignmentMessage(t('assignSuccess', { count: selectedScenes.length }))
-                    setSelectedScenes([])
-                  } catch (err: unknown) {
-                    const error = err as Error
-                    setAssignmentMessage(t('assignError', { message: error.message }))
-                  }
-                }}
-                disabled={selectedScenes.length === 0 || assignScenes.isPending}
-              >
-                <Film className="mr-2 h-4 w-4" />
-                {assignScenes.isPending ? t('assigning') : t('assignScenes', { count: selectedScenes.length })}
-              </Button>
-            </>
+            )
           ) : (
             <div className="text-sm text-muted-foreground">
-              {t('noScenes')} <Link href={`/${locale}/scenes/new?project=${shootingDay.project_id}`} className="text-primary hover:underline">{t('createScene')}</Link>
+              {t('noScenes')}
+              {canManage && (
+                <>
+                  {' '}
+                  <Link href={`/${locale}/scenes/new?project=${shootingDay.project_id}`} className="text-primary hover:underline">
+                    {t('createScene')}
+                  </Link>
+                </>
+              )}
             </div>
           )}
         </CardContent>

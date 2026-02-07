@@ -671,6 +671,7 @@
       "productionNotes": "Notas de Produção",
       "sceneAssignment": "Atribuição de Cenas",
       "sceneAssignmentDescription": "Atribuir cenas a este dia de filmagem",
+      "noScenesAssigned": "Nenhuma cena atribuída a este dia de filmagem ainda.",
       "scene": "Cena",
       "currentlyAssigned": "Atualmente Atribuída",
       "assign": "Atribuir",

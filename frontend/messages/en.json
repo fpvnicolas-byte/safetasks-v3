@@ -671,6 +671,7 @@
       "productionNotes": "Production Notes",
       "sceneAssignment": "Scene Assignment",
       "sceneAssignmentDescription": "Assign scenes to this shooting day",
+      "noScenesAssigned": "No scenes assigned to this shooting day yet.",
       "scene": "Scene",
       "currentlyAssigned": "Currently Assigned",
       "assign": "Assign",

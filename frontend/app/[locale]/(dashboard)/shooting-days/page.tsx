@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Search, Edit, Trash2, Calendar, Clock, MapPin, Eye } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, Clock, MapPin, Eye } from 'lucide-react'
 import Link from 'next/link'
 import { ShootingDay, convertTimeToFormFormat } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
@@ -20,11 +20,18 @@ import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
 function ShootingDaysContent() {
   const searchParams = useSearchParams()
   const projectId = searchParams.get('project') || ''
-  const { organizationId } = useAuth()
+  const { organizationId, profile } = useAuth()
   const locale = useLocale()
   const t = useTranslations('shootingDays')
 
   const [searchQuery, setSearchQuery] = useState('')
+
+  const effectiveRole = profile?.effective_role || profile?.role_v2 || 'owner'
+  const canManage =
+    profile?.is_master_owner === true ||
+    effectiveRole === 'owner' ||
+    effectiveRole === 'admin' ||
+    effectiveRole === 'producer'
 
   // Get shooting days data
   const { data: allShootingDays, isLoading, error } = useShootingDays(organizationId || '', projectId || undefined)
@@ -76,7 +83,7 @@ function ShootingDaysContent() {
             {t('description')}
           </p>
         </div>
-        {projectId && (
+        {projectId && canManage && (
           <Button asChild>
             <Link href={`/shooting-days/new?project=${projectId}`}>
               <Plus className="mr-2 h-4 w-4" />
@@ -128,6 +135,7 @@ function ShootingDaysContent() {
               onDelete={() => confirmDelete(day.id, day.date)}
               t={t}
               locale={locale}
+              canManage={canManage}
             />
           ))}
         </div>
@@ -171,9 +179,10 @@ interface ShootingDayCardProps {
   onDelete: () => void
   t: (key: string, values?: Record<string, string | number>) => string
   locale: string
+  canManage: boolean
 }
 
-function ShootingDayCard({ shootingDay, onDelete, t, locale }: ShootingDayCardProps) {
+function ShootingDayCard({ shootingDay, onDelete, t, locale, canManage }: ShootingDayCardProps) {
   const formattedDate = new Date(shootingDay.date).toLocaleDateString(locale, {
     weekday: 'long',
     year: 'numeric',
@@ -231,7 +240,7 @@ function ShootingDayCard({ shootingDay, onDelete, t, locale }: ShootingDayCardPr
 
           {shootingDay.notes && (
             <p className="text-xs text-muted-foreground line-clamp-2 italic">
-              "{shootingDay.notes}"
+              &ldquo;{shootingDay.notes}&rdquo;
             </p>
           )}
         </CardContent>
@@ -245,24 +254,28 @@ function ShootingDayCard({ shootingDay, onDelete, t, locale }: ShootingDayCardPr
               {t('list.view')}
             </Link>
           </Button>
-          <Button asChild variant="outline" size="sm" className="flex-1">
-            <Link href={`/shooting-days/${shootingDay.id}/edit`}>
-              <Edit className="mr-2 h-3 w-3" />
-              {t('list.edit')}
-            </Link>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onDelete();
-            }}
-            className="text-destructive hover:text-destructive"
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
+          {canManage && (
+            <>
+              <Button asChild variant="outline" size="sm" className="flex-1">
+                <Link href={`/shooting-days/${shootingDay.id}/edit`}>
+                  <Edit className="mr-2 h-3 w-3" />
+                  {t('list.edit')}
+                </Link>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </Card>

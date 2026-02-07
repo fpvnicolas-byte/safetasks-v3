@@ -17,13 +17,20 @@ interface ShootingDaysTabProps {
 }
 
 export function ShootingDaysTab({ projectId }: ShootingDaysTabProps) {
-  const { organizationId } = useAuth()
+  const { organizationId, profile } = useAuth()
   const { data: shootingDays, isLoading, error } = useShootingDays(organizationId || '', projectId)
   const deleteShootingDay = useDeleteShootingDay(organizationId || '')
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const t = useTranslations('shootingDays')
   const tCommon = useTranslations('common')
   const locale = useLocale()
+
+  const effectiveRole = profile?.effective_role || profile?.role_v2 || 'owner'
+  const canManage =
+    profile?.is_master_owner === true ||
+    effectiveRole === 'owner' ||
+    effectiveRole === 'admin' ||
+    effectiveRole === 'producer'
 
   async function handleDelete(shootingDayId: string) {
     if (!confirm(t('tab.deleteConfirm'))) {
@@ -62,12 +69,14 @@ export function ShootingDaysTab({ projectId }: ShootingDaysTabProps) {
             {t('tab.description')}
           </p>
         </div>
-        <Button asChild size="sm">
-          <Link href={`/shooting-days/new?project=${projectId}`}>
-            <Plus className="mr-2 h-4 w-4" />
-            {t('newShootingDay')}
-          </Link>
-        </Button>
+        {canManage && (
+          <Button asChild size="sm">
+            <Link href={`/shooting-days/new?project=${projectId}`}>
+              <Plus className="mr-2 h-4 w-4" />
+              {t('newShootingDay')}
+            </Link>
+          </Button>
+        )}
       </div>
 
       {sortedShootingDays.length > 0 ? (
@@ -81,6 +90,7 @@ export function ShootingDaysTab({ projectId }: ShootingDaysTabProps) {
               t={t}
               tCommon={tCommon}
               locale={locale}
+              canManage={canManage}
             />
           ))}
         </div>
@@ -98,12 +108,14 @@ export function ShootingDaysTab({ projectId }: ShootingDaysTabProps) {
               <p className="text-sm text-muted-foreground mb-4">
                 {t('tab.empty.help')}
               </p>
-              <Button asChild>
-                <Link href={`/shooting-days/new?project=${projectId}`}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  {t('tab.empty.action')}
-                </Link>
-              </Button>
+              {canManage && (
+                <Button asChild>
+                  <Link href={`/shooting-days/new?project=${projectId}`}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    {t('tab.empty.action')}
+                  </Link>
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -119,9 +131,10 @@ interface ShootingDayCardProps {
   t: (key: string) => string
   tCommon: (key: string) => string
   locale: string
+  canManage: boolean
 }
 
-function ShootingDayCard({ shootingDay, onDelete, isDeleting, t, tCommon, locale }: ShootingDayCardProps) {
+function ShootingDayCard({ shootingDay, onDelete, isDeleting, t, tCommon, locale, canManage }: ShootingDayCardProps) {
   const formattedDate = new Date(shootingDay.date).toLocaleDateString(locale, {
     weekday: 'short',
     month: 'short',
@@ -228,21 +241,25 @@ function ShootingDayCard({ shootingDay, onDelete, isDeleting, t, tCommon, locale
               {tCommon('view')}
             </Link>
           </Button>
-          <Button asChild variant="outline" size="sm" className="flex-1">
-            <Link href={`/shooting-days/${shootingDay.id}/edit`}>
-              <Edit className="mr-2 h-3 w-3" />
-              {tCommon('edit')}
-            </Link>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onDelete(shootingDay.id)}
-            disabled={isDeleting}
-            className="text-destructive hover:text-destructive"
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
+          {canManage && (
+            <>
+              <Button asChild variant="outline" size="sm" className="flex-1">
+                <Link href={`/shooting-days/${shootingDay.id}/edit`}>
+                  <Edit className="mr-2 h-3 w-3" />
+                  {tCommon('edit')}
+                </Link>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onDelete(shootingDay.id)}
+                disabled={isDeleting}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </>
+          )}
         </div>
       </CardContent>
     </Card>

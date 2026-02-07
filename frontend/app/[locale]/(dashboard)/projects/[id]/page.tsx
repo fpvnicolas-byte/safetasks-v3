@@ -31,8 +31,22 @@ export default function ProjectDetailPage() {
   const locale = useLocale()
   const params = useParams()
   const router = useRouter()
-  const { organizationId } = useAuth()
+  const { organizationId, profile } = useAuth()
   const projectId = params.id as string
+
+  const effectiveRole = profile?.effective_role || profile?.role_v2 || 'owner'
+  const isFreelancer = effectiveRole === 'freelancer'
+  const canManage =
+    profile?.is_master_owner === true ||
+    effectiveRole === 'owner' ||
+    effectiveRole === 'admin' ||
+    effectiveRole === 'producer'
+  const canViewFinancials =
+    profile?.is_master_owner === true ||
+    effectiveRole === 'owner' ||
+    effectiveRole === 'admin' ||
+    effectiveRole === 'producer' ||
+    effectiveRole === 'finance'
 
   const { data: project, isLoading, error } = useProject(projectId, organizationId || undefined)
   const { data: stats } = useProjectStats(projectId)
@@ -166,22 +180,24 @@ export default function ProjectDetailPage() {
             {t('details.created')} {new Date(project.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline">
-            <LocaleLink href={`/projects/${projectId}/edit`}>
-              <Edit className="mr-2 h-4 w-4" />
-              {t('details.edit')}
-            </LocaleLink>
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={requestDelete}
-            disabled={deleteProject.isPending}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            {t('details.delete')}
-          </Button>
-        </div>
+        {canManage && (
+          <div className="flex gap-2">
+            <Button asChild variant="outline">
+              <LocaleLink href={`/projects/${projectId}/edit`}>
+                <Edit className="mr-2 h-4 w-4" />
+                {t('details.edit')}
+              </LocaleLink>
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={requestDelete}
+              disabled={deleteProject.isPending}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              {t('details.delete')}
+            </Button>
+          </div>
+        )}
       </div>
 
 
@@ -197,17 +213,19 @@ export default function ProjectDetailPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('budget')}</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(project.budget_total_cents)}
-            </div>
-          </CardContent>
-        </Card>
+        {canViewFinancials && !isFreelancer && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{t('budget')}</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {formatCurrency(project.budget_total_cents)}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
 
 
@@ -228,10 +246,16 @@ export default function ProjectDetailPage() {
         <TabsList className="flex flex-wrap sm:inline-flex w-full sm:w-auto !h-auto gap-1 p-1.5 mb-3">
           <TabsTrigger value="details" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[30%] sm:min-w-0">{t('details.tabs.details')}</TabsTrigger>
           <TabsTrigger value="shooting-days" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[30%] sm:min-w-0">{t('details.tabs.shootingDays')}</TabsTrigger>
-          <TabsTrigger value="team" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[30%] sm:min-w-0">{t('details.team.title')}</TabsTrigger>
-          <TabsTrigger value="financials" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[30%] sm:min-w-0">{t('details.tabs.financials')}</TabsTrigger>
+          {canManage && (
+            <TabsTrigger value="team" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[30%] sm:min-w-0">{t('details.team.title')}</TabsTrigger>
+          )}
+          {canViewFinancials && !isFreelancer && (
+            <TabsTrigger value="financials" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[30%] sm:min-w-0">{t('details.tabs.financials')}</TabsTrigger>
+          )}
           <TabsTrigger value="production" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[30%] sm:min-w-0">{t('details.tabs.production')}</TabsTrigger>
-          <TabsTrigger value="files" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[30%] sm:min-w-0">{t('details.tabs.files')}</TabsTrigger>
+          {!isFreelancer && (
+            <TabsTrigger value="files" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[30%] sm:min-w-0">{t('details.tabs.files')}</TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="details" className="space-y-4">
@@ -283,16 +307,20 @@ export default function ProjectDetailPage() {
           <ShootingDaysTab projectId={projectId} />
         </TabsContent>
 
-        <TabsContent value="team">
-          <div className="space-y-6">
-            <TeamTab projectId={projectId} />
-            <ProjectAssignmentsCard projectId={projectId} />
-          </div>
-        </TabsContent>
+        {canManage && (
+          <TabsContent value="team">
+            <div className="space-y-6">
+              <TeamTab projectId={projectId} />
+              <ProjectAssignmentsCard projectId={projectId} />
+            </div>
+          </TabsContent>
+        )}
 
-        <TabsContent value="financials">
-          <ProjectExpensesTab projectId={projectId} project={project} />
-        </TabsContent>
+        {canViewFinancials && !isFreelancer && (
+          <TabsContent value="financials">
+            <ProjectExpensesTab projectId={projectId} project={project} />
+          </TabsContent>
+        )}
 
         <TabsContent value="production">
           <div className="space-y-6">
@@ -315,11 +343,13 @@ export default function ProjectDetailPage() {
                         {t('details.production.viewAllScenes')}
                       </LocaleLink>
                     </Button>
-                    <Button asChild className="w-full justify-start">
-                      <LocaleLink href={`/scenes/new?project=${projectId}`}>
-                        {t('details.production.createNewScene')}
-                      </LocaleLink>
-                    </Button>
+                    {canManage && (
+                      <Button asChild className="w-full justify-start">
+                        <LocaleLink href={`/scenes/new?project=${projectId}`}>
+                          {t('details.production.createNewScene')}
+                        </LocaleLink>
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -342,11 +372,13 @@ export default function ProjectDetailPage() {
                         {t('details.production.viewAllCharacters')}
                       </LocaleLink>
                     </Button>
-                    <Button asChild className="w-full justify-start">
-                      <LocaleLink href={`/characters/new?project=${projectId}`}>
-                        {t('details.production.createNewCharacter')}
-                      </LocaleLink>
-                    </Button>
+                    {canManage && (
+                      <Button asChild className="w-full justify-start">
+                        <LocaleLink href={`/characters/new?project=${projectId}`}>
+                          {t('details.production.createNewCharacter')}
+                        </LocaleLink>
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -369,11 +401,13 @@ export default function ProjectDetailPage() {
                         {t('details.production.viewAllShootingDays')}
                       </LocaleLink>
                     </Button>
-                    <Button asChild className="w-full justify-start">
-                      <LocaleLink href={`/shooting-days/new?project=${projectId}`}>
-                        {t('details.production.scheduleNewDay')}
-                      </LocaleLink>
-                    </Button>
+                    {canManage && (
+                      <Button asChild className="w-full justify-start">
+                        <LocaleLink href={`/shooting-days/new?project=${projectId}`}>
+                          {t('details.production.scheduleNewDay')}
+                        </LocaleLink>
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -414,7 +448,8 @@ export default function ProjectDetailPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="files" className="space-y-6">
+        {!isFreelancer && (
+          <TabsContent value="files" className="space-y-6">
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
@@ -514,7 +549,8 @@ export default function ProjectDetailPage() {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
+          </TabsContent>
+        )}
       </Tabs>
 
       <ConfirmDeleteDialog

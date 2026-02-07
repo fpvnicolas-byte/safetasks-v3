@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { useCharacter, useDeleteCharacter } from '@/lib/api/hooks'
+import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -19,9 +20,24 @@ export default function CharacterDetailPage() {
   const t = useTranslations('characters.detail')
   const tCommon = useTranslations('common')
   const characterId = params.id as string
+  const { profile } = useAuth()
+
+  const effectiveRole = profile?.effective_role || profile?.role_v2 || 'owner'
+  const canManage =
+    profile?.is_master_owner === true ||
+    effectiveRole === 'owner' ||
+    effectiveRole === 'admin' ||
+    effectiveRole === 'producer'
 
   const { data: character, isLoading, error } = useCharacter(characterId)
   const deleteCharacter = useDeleteCharacter()
+
+  const {
+    open: deleteOpen,
+    onOpenChange: setDeleteOpen,
+    askConfirmation: confirmDelete,
+    closeConfirmation: cancelDelete
+  } = useConfirmDelete()
 
   if (isLoading) {
     return <DetailPageSkeleton />
@@ -34,13 +50,6 @@ export default function CharacterDetailPage() {
       </Alert>
     )
   }
-
-  const {
-    open: deleteOpen,
-    onOpenChange: setDeleteOpen,
-    askConfirmation: confirmDelete,
-    closeConfirmation: cancelDelete
-  } = useConfirmDelete()
 
   const handleDelete = async () => {
     try {
@@ -70,18 +79,20 @@ export default function CharacterDetailPage() {
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline">
-            <Link href={`/${locale}/characters/${characterId}/edit`}>
-              <Pencil className="mr-2 h-4 w-4" />
-              {tCommon('edit')}
-            </Link>
-          </Button>
-          <Button variant="destructive" onClick={requestDelete}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            {tCommon('delete')}
-          </Button>
-        </div>
+        {canManage && (
+          <div className="flex gap-2">
+            <Button asChild variant="outline">
+              <Link href={`/${locale}/characters/${characterId}/edit`}>
+                <Pencil className="mr-2 h-4 w-4" />
+                {tCommon('edit')}
+              </Link>
+            </Button>
+            <Button variant="destructive" onClick={requestDelete}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              {tCommon('delete')}
+            </Button>
+          </div>
+        )}
       </div>
 
       <Card>
