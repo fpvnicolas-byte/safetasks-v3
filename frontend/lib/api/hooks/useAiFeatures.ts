@@ -47,6 +47,22 @@ export function useAiRecommendations(projectId: string) {
   })
 }
 
+export function useDeleteAiAnalysis() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: { analysis_id: string; project_id: string }) => {
+      const result = await apiClient.delete(`/api/v1/ai/analysis/${params.analysis_id}`)
+      return result
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['ai-analysis'] })
+      queryClient.invalidateQueries({ queryKey: ['ai-suggestions', variables.project_id] })
+      queryClient.invalidateQueries({ queryKey: ['ai-recommendations', variables.project_id] })
+    }
+  })
+}
+
 export function useAnalyzeScript() {
   const queryClient = useQueryClient()
 

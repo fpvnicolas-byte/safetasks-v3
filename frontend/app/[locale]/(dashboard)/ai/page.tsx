@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { useAiAnalysis, useAiSuggestions, useAiRecommendations, useAnalyzeScript } from '@/lib/api/hooks/useAiFeatures'
+import { useAiAnalysis, useAiSuggestions, useAiRecommendations, useAnalyzeScript, useDeleteAiAnalysis } from '@/lib/api/hooks/useAiFeatures'
 import { useProjects } from '@/lib/api/hooks/useProjects'
 import { apiClient } from '@/lib/api/client'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -22,7 +22,8 @@ import {
   Calendar,
   AlertCircle,
   Loader2,
-  CheckCircle
+  CheckCircle,
+  Trash2
 } from 'lucide-react'
 import type { AiSuggestion, AiRecommendation, ScriptAnalysis } from '@/types'
 import { toast } from 'sonner'
@@ -34,11 +35,12 @@ export default function AiFeaturesPage() {
   const tCommonLabels = useTranslations('common')
   const locale = useLocale()
   const router = useRouter()
-  const { user, organizationId } = useAuth()
+  const { organizationId } = useAuth()
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [scriptText, setScriptText] = useState<string>('')
   const [analysisType, setAnalysisType] = useState<string>('full')
+  const [deletingAnalysisId, setDeletingAnalysisId] = useState<string | null>(null)
 
   // Queries
   const { data: analyses, isLoading: isLoadingAnalyses } = useAiAnalysis(organizationId!)
@@ -46,11 +48,22 @@ export default function AiFeaturesPage() {
   const { data: recommendations, isLoading: isLoadingRecommendations } = useAiRecommendations(selectedProjectId)
   const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId || undefined)
   const { mutateAsync: analyzeScript, isPending: isAnalyzing } = useAnalyzeScript()
+  const { mutateAsync: deleteAnalysis } = useDeleteAiAnalysis()
   const [usageData, setUsageData] = useState<{
     usage: { ai_credits: number }
     limits: { ai_credits: number | null }
   } | null>(null)
   const [isUsageLoading, setIsUsageLoading] = useState(false)
+
+  const getErrorMessage = (error: unknown): string => {
+    if (error instanceof Error) return error.message
+    if (typeof error === 'string') return error
+    if (error && typeof error === 'object' && 'message' in error) {
+      const maybeMessage = (error as { message?: unknown }).message
+      if (typeof maybeMessage === 'string') return maybeMessage
+    }
+    return ''
+  }
 
   const handleScriptAnalysis = async () => {
     if (!selectedProjectId) {
@@ -71,9 +84,29 @@ export default function AiFeaturesPage() {
       })
       toast.success(tFeedback('actionSuccess'))
       setScriptText('')
-    } catch (error: any) {
-      toast.error(tFeedback('actionError', { message: error?.message || 'Failed to start script analysis' }))
+    } catch (error: unknown) {
+      const message = getErrorMessage(error)
+      toast.error(tFeedback('actionError', { message: message || 'Failed to start script analysis' }))
       console.error('Script analysis error:', error)
+    }
+  }
+
+  const handleDeleteAnalysis = async (analysis: ScriptAnalysis) => {
+    const ok = window.confirm(
+      'Delete this analysis and its generated suggestions/recommendations? This cannot be undone.'
+    )
+    if (!ok) return
+
+    try {
+      setDeletingAnalysisId(analysis.id)
+      await deleteAnalysis({ analysis_id: analysis.id, project_id: analysis.project_id })
+      toast.success(tFeedback('actionSuccess'))
+    } catch (error: unknown) {
+      const message = getErrorMessage(error)
+      toast.error(tFeedback('actionError', { message: message || 'Failed to delete analysis' }))
+      console.error('Delete analysis error:', error)
+    } finally {
+      setDeletingAnalysisId(null)
     }
   }
 
@@ -613,8 +646,23 @@ export default function AiFeaturesPage() {
                           {Math.round(analysis.confidence * 100)}%
                         </Badge>
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        {new Date(analysis.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm text-muted-foreground">
+                          {new Date(analysis.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteAnalysis(analysis)}
+                          disabled={deletingAnalysisId === analysis.id}
+                        >
+                          {deletingAnalysisId === analysis.id ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="mr-2 h-4 w-4" />
+                          )}
+                          {tCommonLabels('delete')}
+                        </Button>
                       </div>
                     </div>
                     <CardTitle>{t('lists.analysisTitle')}</CardTitle>

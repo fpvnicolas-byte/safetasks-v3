@@ -11,6 +11,7 @@ class ScriptAnalysisRequest(BaseModel):
     project_id: UUID = Field(..., description="Project ID")
     analysis_type: str = Field(..., description="Type of analysis: full, characters, scenes, or locations")
     script_content: str = Field(..., description="Script content to analyze")
+    force_new: bool = Field(False, description="If true, force a new analysis even if identical content was already analyzed")
 
 
 class BudgetEstimationRequest(BaseModel):
@@ -30,4 +31,3 @@ class CallSheetSuggestionRequest(BaseModel):
 class TextAnalysisRequest(BaseModel):
     """Request schema for text analysis"""
     text: str = Field(..., description="Text content to analyze")
-

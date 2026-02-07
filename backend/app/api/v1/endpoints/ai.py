@@ -1,8 +1,10 @@
 from typing import Dict, Any, List
 from uuid import UUID
+from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete
+import hashlib
 import time
 
 from app.api.deps import (
@@ -293,6 +295,79 @@ async def get_ai_analysis(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get AI analysis: {str(e)}"
         )
+
+
+@router.delete("/analysis/{analysis_id}", dependencies=[Depends(require_owner_admin_or_producer)])
+async def delete_ai_analysis(
+    analysis_id: UUID,
+    organization_id: UUID = Depends(get_organization_from_profile),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """
+    Delete a script analysis and (best-effort) delete suggestions and recommendations created for that analysis.
+
+    Notes:
+    - Suggestions/recommendations are currently keyed by project_id, not analysis_id.
+      We therefore delete rows in the time-slice [analysis.created_at, next_analysis.created_at) for that project.
+    """
+    query = select(ScriptAnalysis).where(
+        ScriptAnalysis.id == analysis_id,
+        ScriptAnalysis.organization_id == organization_id,
+    )
+    result = await db.execute(query)
+    analysis = result.scalar_one_or_none()
+    if not analysis:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Analysis not found",
+        )
+
+    # Find the next analysis for this project to bound deletions.
+    next_query = (
+        select(ScriptAnalysis.created_at)
+        .where(
+            ScriptAnalysis.organization_id == organization_id,
+            ScriptAnalysis.project_id == analysis.project_id,
+            ScriptAnalysis.created_at > analysis.created_at,
+        )
+        .order_by(ScriptAnalysis.created_at.asc())
+        .limit(1)
+    )
+    next_result = await db.execute(next_query)
+    next_created_at = next_result.scalar_one_or_none()
+
+    # Delete derived suggestions/recommendations for the analysis time-slice.
+    # If this is the latest analysis for the project, bound the deletion window to reduce accidental data loss.
+    # Suggestions/recommendations are created immediately after saving the analysis, so 10 minutes is generous.
+    if next_created_at is None:
+        next_created_at = analysis.created_at + timedelta(minutes=10)
+
+    suggestion_filters = [
+        AiSuggestion.organization_id == organization_id,
+        AiSuggestion.project_id == analysis.project_id,
+        AiSuggestion.created_at >= analysis.created_at,
+    ]
+    recommendation_filters = [
+        AiRecommendation.organization_id == organization_id,
+        AiRecommendation.project_id == analysis.project_id,
+        AiRecommendation.created_at >= analysis.created_at,
+    ]
+    suggestion_filters.append(AiSuggestion.created_at < next_created_at)
+    recommendation_filters.append(AiRecommendation.created_at < next_created_at)
+
+    deleted_suggestions = await db.execute(delete(AiSuggestion).where(*suggestion_filters))
+    deleted_recommendations = await db.execute(delete(AiRecommendation).where(*recommendation_filters))
+    await db.execute(delete(ScriptAnalysis).where(ScriptAnalysis.id == analysis_id))
+
+    await db.commit()
+
+    return {
+        "message": "Analysis deleted",
+        "analysis_id": str(analysis_id),
+        "project_id": str(analysis.project_id),
+        "deleted_suggestions_count": int(getattr(deleted_suggestions, "rowcount", 0) or 0),
+        "deleted_recommendations_count": int(getattr(deleted_recommendations, "rowcount", 0) or 0),
+    }
 
 
 @router.get("/suggestions/{project_id}", dependencies=[Depends(require_owner_admin_or_producer)])
@@ -644,12 +719,48 @@ async def analyze_script_content(
     try:
         # Validate project ownership
         from app.modules.commercial.service import project_service
+
         project = await project_service.get(db=db, organization_id=organization_id, id=request.project_id)
         if not project:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Project not found"
+                detail="Project not found",
             )
+
+        clean_content = (request.script_content or "").strip()
+        if not clean_content:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Script content is empty",
+            )
+
+        # Deduplicate identical analyses to avoid duplicated suggestions/recommendations.
+        if len(clean_content) > 50000:
+            clean_content = clean_content[:50000]
+        content_hash = hashlib.sha256(clean_content.encode()).hexdigest()
+        if not request.force_new:
+            duplicate_query = (
+                select(ScriptAnalysis)
+                .where(
+                    ScriptAnalysis.organization_id == organization_id,
+                    ScriptAnalysis.project_id == request.project_id,
+                    ScriptAnalysis.analysis_type == request.analysis_type,
+                    ScriptAnalysis.analysis_result["metadata"]["content_hash"].as_string() == content_hash,
+                )
+                .order_by(ScriptAnalysis.created_at.desc())
+                .limit(1)
+            )
+            duplicate_result = await db.execute(duplicate_query)
+            duplicate_analysis = duplicate_result.scalar_one_or_none()
+            if duplicate_analysis:
+                return {
+                    "message": "Script analysis already exists for this content",
+                    "project_id": str(request.project_id),
+                    "analysis_type": request.analysis_type,
+                    "result": duplicate_analysis.analysis_result,
+                    "analysis_id": str(duplicate_analysis.id),
+                    "deduplicated": True,
+                }
 
         organization = await get_organization_record(profile, db)
         await ensure_ai_credits(db, organization, credits_to_add=1)
@@ -678,70 +789,70 @@ async def analyze_script_content(
             script_text=request.script_content[:5000],  # Limit stored text
             analysis_result=analysis_result,
             analysis_type=request.analysis_type,
-            confidence=analysis_result.get('confidence', 0.85),
+            confidence=analysis_result.get("confidence", 0.85),
             token_count=len(request.script_content.split()) * 2,  # Rough estimate
-            cost_cents=int(len(request.script_content.split()) * 0.0005)  # Rough cost estimate
+            cost_cents=int(len(request.script_content.split()) * 0.0005),  # Rough cost estimate
         )
 
         # Extract and save suggestions if present in the analysis
-        suggestions_data = analysis_result.get('production_notes', [])
+        suggestions_data = analysis_result.get("production_notes", [])
         if suggestions_data and isinstance(suggestions_data, list):
-            for idx, suggestion_text in enumerate(suggestions_data[:10]):  # Limit to 10
+            for suggestion_text in suggestions_data[:10]:  # Limit to 10
                 if isinstance(suggestion_text, str):
                     await ai_suggestion_service.create_from_ai_result(
                         db=db,
                         organization_id=organization_id,
                         project_id=request.project_id,
-                        suggestion_type='logistics',  # Changed from 'production' to match DB constraint
+                        suggestion_type="logistics",  # Changed from 'production' to match DB constraint
                         suggestion_text=suggestion_text,
                         confidence=0.75,
-                        priority='medium',
-                        related_scenes=[]
+                        priority="medium",
+                        related_scenes=[],
                     )
 
         # Create recommendations from analysis results
         # Equipment recommendations
-        equipment_data = analysis_result.get('suggested_equipment', [])
+        equipment_data = analysis_result.get("suggested_equipment", [])
         if equipment_data and isinstance(equipment_data, list) and len(equipment_data) > 0:
-            equipment_list = [eq.get('item', str(eq)) if isinstance(eq, dict) else str(eq) for eq in equipment_data[:5]]
+            equipment_list = [eq.get("item", str(eq)) if isinstance(eq, dict) else str(eq) for eq in equipment_data[:5]]
             await ai_recommendation_service.create_from_ai_result(
                 db=db,
                 organization_id=organization_id,
                 project_id=request.project_id,
-                recommendation_type='equipment',
-                title='Equipment Recommendations',
+                recommendation_type="equipment",
+                title="Equipment Recommendations",
                 description=f'Based on script analysis, the following equipment is recommended: {", ".join(equipment_list)}',
                 confidence=0.80,
-                priority='high',
-                action_items=equipment_list
+                priority="high",
+                action_items=equipment_list,
             )
 
         # Schedule recommendations based on scenes
-        scenes_data = analysis_result.get('scenes', [])
+        scenes_data = analysis_result.get("scenes", [])
         if scenes_data and isinstance(scenes_data, list) and len(scenes_data) > 0:
             scene_count = len(scenes_data)
             locations = set()
             for scene in scenes_data:
-                if isinstance(scene, dict) and 'location' in scene:
-                    locations.add(scene['location'])
-            
+                if isinstance(scene, dict) and "location" in scene:
+                    locations.add(scene["location"])
+
             action_items = [
-                f'Plan for {scene_count} scenes',
-                f'Coordinate {len(locations)} unique locations',
-                'Schedule location permits',
-                'Plan crew and talent availability'
+                f"Plan for {scene_count} scenes",
+                f"Coordinate {len(locations)} unique locations",
+                "Schedule location permits",
+                "Plan crew and talent availability",
             ]
-            
+
             await ai_recommendation_service.create_from_ai_result(
                 db=db,
                 organization_id=organization_id,
                 project_id=request.project_id,
-                recommendation_type='schedule',
-                title='Production Schedule Recommendations',
-                description=f'Your script contains {scene_count} scenes across {len(locations)} locations. Proper scheduling will be critical for efficiency.',
+                recommendation_type="schedule",
+                title="Production Schedule Recommendations",
+                description=f"Your script contains {scene_count} scenes across {len(locations)} locations. Proper scheduling will be critical for efficiency.",
                 confidence=0.85,
-                priority='high',
-                action_items=action_items
+                priority="high",
+                action_items=action_items,
             )
 
         # Log successful usage
@@ -755,7 +866,7 @@ async def analyze_script_content(
             token_count=len(request.script_content.split()) * 2,
             cost_cents=int(len(request.script_content.split()) * 0.0005),
             processing_time_ms=processing_time_ms,
-            success=True
+            success=True,
         )
 
         return {
@@ -763,11 +874,10 @@ async def analyze_script_content(
             "project_id": str(request.project_id),
             "analysis_type": request.analysis_type,
             "result": analysis_result,
-            "analysis_id": str(saved_analysis.id)
+            "analysis_id": str(saved_analysis.id),
         }
 
     except HTTPException as e:
-        # Log failed usage
         processing_time_ms = int((time.time() - start_time) * 1000)
         await ai_usage_log_service.log_request(
             db=db,
@@ -792,12 +902,12 @@ async def analyze_script_content(
             endpoint="/api/v1/ai/script-analysis",
             processing_time_ms=processing_time_ms,
             success=False,
-            error_message=str(e)
+            error_message=str(e),
         )
-        
+
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Script analysis failed: {str(e)}"
+            detail=f"Script analysis failed: {str(e)}",
         )
 
 
