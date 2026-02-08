@@ -57,12 +57,12 @@ export default function ProjectDetailPage() {
 
   // Separate state for each file type
   const [scripts, setScripts] = useState<FileUploadResponse[]>([])
-  const [callSheets, setCallSheets] = useState<FileUploadResponse[]>([])
+  const [shootingDayFiles, setShootingDayFiles] = useState<FileUploadResponse[]>([])
   const [media, setMedia] = useState<FileUploadResponse[]>([])
 
   // File persistence hooks
   const { data: scriptFiles = [] } = useFiles('scripts', organizationId || undefined)
-  const { data: callSheetFiles = [] } = useFiles('call-sheets', organizationId || undefined)
+  const { data: shootingDayFilesData = [] } = useFiles('shooting-days', organizationId || undefined)
   const { data: mediaFiles = [] } = useFiles('media', organizationId || undefined)
 
   // Initialize scripts with existing files
@@ -82,10 +82,10 @@ export default function ProjectDetailPage() {
     }
   }, [scriptFiles])
 
-  // Initialize call sheets with existing files
+  // Initialize shooting day files with existing files
   useEffect(() => {
-    if (callSheetFiles.length > 0) {
-      const converted: FileUploadResponse[] = callSheetFiles.map(file => ({
+    if (shootingDayFilesData.length > 0) {
+      const converted: FileUploadResponse[] = shootingDayFilesData.map(file => ({
         file_path: file.path,
         bucket: file.bucket,
         access_url: file.is_public
@@ -95,9 +95,9 @@ export default function ProjectDetailPage() {
         size_bytes: file.size || 0,
         content_type: 'application/pdf',
       }))
-      setCallSheets(converted)
+      setShootingDayFiles(converted)
     }
-  }, [callSheetFiles])
+  }, [shootingDayFilesData])
 
   // Initialize media with existing files
   useEffect(() => {
@@ -121,9 +121,9 @@ export default function ProjectDetailPage() {
     setScripts((prev) => [...prev, result])
   }
 
-  // Handle upload complete for call sheets
-  const handleCallSheetUploadComplete = (result: FileUploadResponse) => {
-    setCallSheets((prev) => [...prev, result])
+  // Handle upload complete for shooting days
+  const handleShootingDayUploadComplete = (result: FileUploadResponse) => {
+    setShootingDayFiles((prev) => [...prev, result])
   }
 
   // Handle upload complete for media
@@ -136,8 +136,8 @@ export default function ProjectDetailPage() {
     setScripts((prev) => prev.filter((f) => f.file_path !== filePath))
   }
 
-  const handleCallSheetDeleted = (filePath: string) => {
-    setCallSheets((prev) => prev.filter((f) => f.file_path !== filePath))
+  const handleShootingDayDeleted = (filePath: string) => {
+    setShootingDayFiles((prev) => prev.filter((f) => f.file_path !== filePath))
   }
 
   const handleMediaDeleted = (filePath: string) => {
@@ -450,105 +450,105 @@ export default function ProjectDetailPage() {
 
         {!isFreelancer && (
           <TabsContent value="files" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <FolderOpen className="h-5 w-5 text-muted-foreground" />
-                <CardTitle>{t('details.files.scripts')}</CardTitle>
-              </div>
-              <CardDescription>
-                {t('details.files.scriptsDescription')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <FileUploadZone
-                module="scripts"
-                accept={{
-                  'application/pdf': ['.pdf'],
-                  'application/msword': ['.doc'],
-                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-                  'text/plain': ['.txt'],
-                }}
-                maxSize={25}
-                onUploadComplete={handleScriptUploadComplete}
-              />
-
-              {scripts.length > 0 && (
-                <div className="pt-4">
-                  <FileList
-                    files={scripts}
-                    onFileDeleted={handleScriptDeleted}
-                  />
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <FolderOpen className="h-5 w-5 text-muted-foreground" />
+                  <CardTitle>{t('details.files.scripts')}</CardTitle>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                <CardDescription>
+                  {t('details.files.scriptsDescription')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FileUploadZone
+                  module="scripts"
+                  accept={{
+                    'application/pdf': ['.pdf'],
+                    'application/msword': ['.doc'],
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+                    'text/plain': ['.txt'],
+                  }}
+                  maxSize={25}
+                  onUploadComplete={handleScriptUploadComplete}
+                />
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-muted-foreground" />
-                <CardTitle>{t('details.files.callSheetsDocuments')}</CardTitle>
-              </div>
-              <CardDescription>
-                {t('details.files.callSheetsDescription')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <FileUploadZone
-                module="call-sheets"
-                accept={{
-                  'application/pdf': ['.pdf'],
-                  'application/msword': ['.doc'],
-                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-                }}
-                maxSize={25}
-                onUploadComplete={handleCallSheetUploadComplete}
-              />
+                {scripts.length > 0 && (
+                  <div className="pt-4">
+                    <FileList
+                      files={scripts}
+                      onFileDeleted={handleScriptDeleted}
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-              {callSheets.length > 0 && (
-                <div className="pt-4">
-                  <FileList
-                    files={callSheets}
-                    onFileDeleted={handleCallSheetDeleted}
-                  />
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-muted-foreground" />
+                  <CardTitle>{t('details.files.shootingDaysDocuments')}</CardTitle>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                <CardDescription>
+                  {t('details.files.shootingDaysDescription')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FileUploadZone
+                  module="shooting-days"
+                  accept={{
+                    'application/pdf': ['.pdf'],
+                    'application/msword': ['.doc'],
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+                  }}
+                  maxSize={25}
+                  onUploadComplete={handleShootingDayUploadComplete}
+                />
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Film className="h-5 w-5 text-muted-foreground" />
-                <CardTitle>{t('details.files.mediaFiles')}</CardTitle>
-              </div>
-              <CardDescription>
-                {t('details.files.mediaDescription')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <FileUploadZone
-                module="media"
-                accept={{
-                  'image/*': ['.png', '.jpg', '.jpeg', '.webp'],
-                  'video/*': ['.mp4', '.mov', '.avi'],
-                  'application/pdf': ['.pdf'],
-                }}
-                maxSize={100}
-                onUploadComplete={handleMediaUploadComplete}
-              />
+                {shootingDayFiles.length > 0 && (
+                  <div className="pt-4">
+                    <FileList
+                      files={shootingDayFiles}
+                      onFileDeleted={handleShootingDayDeleted}
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-              {media.length > 0 && (
-                <div className="pt-4">
-                  <FileList
-                    files={media}
-                    onFileDeleted={handleMediaDeleted}
-                  />
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Film className="h-5 w-5 text-muted-foreground" />
+                  <CardTitle>{t('details.files.mediaFiles')}</CardTitle>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                <CardDescription>
+                  {t('details.files.mediaDescription')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FileUploadZone
+                  module="media"
+                  accept={{
+                    'image/*': ['.png', '.jpg', '.jpeg', '.webp'],
+                    'video/*': ['.mp4', '.mov', '.avi'],
+                    'application/pdf': ['.pdf'],
+                  }}
+                  maxSize={100}
+                  onUploadComplete={handleMediaUploadComplete}
+                />
+
+                {media.length > 0 && (
+                  <div className="pt-4">
+                    <FileList
+                      files={media}
+                      onFileDeleted={handleMediaDeleted}
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         )}
       </Tabs>

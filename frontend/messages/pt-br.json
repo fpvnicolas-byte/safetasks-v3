@@ -490,8 +490,8 @@
       "files": {
         "scripts": "Roteiros",
         "scriptsDescription": "Envie arquivos de roteiro, rascunhos e revisões",
-        "callSheetsDocuments": "Ordens do Dia e Documentos de Produção",
-        "callSheetsDescription": "Envie ordens do dia, cronogramas e documentos de produção",
+        "shootingDaysDocuments": "Documentos de Dias de Filmagem",
+        "shootingDaysDescription": "Envie cronogramas de dias de filmagem e documentos de produção",
         "mediaFiles": "Arquivos de Mídia",
         "mediaDescription": "Envie imagens, vídeos e outros recursos de mídia"
       },

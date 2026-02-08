@@ -20,12 +20,6 @@ export default function ProductionPage() {
         </div>
         <div className="flex gap-2">
           <Button asChild>
-            <Link href="/call-sheets/new">
-              <Plus className="mr-2 h-4 w-4" />
-              {t('newCallSheet')}
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
             <Link href="/shooting-days/new">
               <Calendar className="mr-2 h-4 w-4" />
               {t('newShootingDay')}
@@ -35,28 +29,6 @@ export default function ProductionPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              {t('callSheets.title')}
-            </CardTitle>
-            <CardDescription>
-              {t('callSheets.description')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Button asChild variant="outline" className="w-full justify-start">
-                <Link href="/call-sheets">{t('callSheets.viewAll')}</Link>
-              </Button>
-              <Button asChild className="w-full justify-start">
-                <Link href="/call-sheets/new">{t('callSheets.createNew')}</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

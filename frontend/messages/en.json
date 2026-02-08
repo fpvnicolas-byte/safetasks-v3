@@ -490,8 +490,8 @@
       "files": {
         "scripts": "Scripts",
         "scriptsDescription": "Upload script files, drafts, and revisions",
-        "callSheetsDocuments": "Call Sheets & Production Documents",
-        "callSheetsDescription": "Upload call sheets, schedules, and production documents",
+        "shootingDaysDocuments": "Shooting Days Documents",
+        "shootingDaysDescription": "Upload shooting day schedules and production documents",
         "mediaFiles": "Media Files",
         "mediaDescription": "Upload images, videos, and other media assets"
       },

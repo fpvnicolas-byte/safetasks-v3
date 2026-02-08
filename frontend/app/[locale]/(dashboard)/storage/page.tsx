@@ -33,7 +33,7 @@ export default function StoragePage() {
           <TabsTrigger value="kits">Kits</TabsTrigger>
           <TabsTrigger value="proposals">Proposals</TabsTrigger>
           <TabsTrigger value="scripts">Scripts</TabsTrigger>
-          <TabsTrigger value="call-sheets">Call Sheets</TabsTrigger>
+          <TabsTrigger value="shooting-days">Shooting Days</TabsTrigger>
         </TabsList>
 
         <TabsContent value="kits" className="space-y-6">
@@ -118,17 +118,17 @@ export default function StoragePage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="call-sheets" className="space-y-6">
+        <TabsContent value="shooting-days" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Call Sheet Documents</CardTitle>
+              <CardTitle>Shooting Day Documents</CardTitle>
               <CardDescription>
-                Upload call sheets and related files
+                Upload shooting day schedules and related files
               </CardDescription>
             </CardHeader>
             <CardContent>
               <FileUploadZone
-                module="call-sheets"
+                module="shooting-days"
                 accept={{
                   'application/pdf': ['.pdf'],
                   'application/msword': ['.doc'],

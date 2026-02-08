@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
 
 interface FileUploadZoneProps {
-  module: string // kits, scripts, call-sheets, proposals
+  module: string // kits, scripts, shooting-days, proposals
   entityId?: string // Optional entity ID (e.g., proposalId)
   accept?: Record<string, string[]>
   maxSize?: number // In MB

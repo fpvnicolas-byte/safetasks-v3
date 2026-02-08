@@ -60,7 +60,6 @@ export default function DashboardLayout({
     if (path === '/projects/new' || path.startsWith('/projects/new/')) return true
     if (/^\/projects\/[^/]+\/edit(\/|$)/.test(path)) return true
 
-    if (/^\/call-sheets\/[^/]+\/edit(\/|$)/.test(path)) return true
 
     if (path === '/shooting-days/new' || path.startsWith('/shooting-days/new/')) return true
     if (/^\/shooting-days\/[^/]+\/edit(\/|$)/.test(path)) return true
