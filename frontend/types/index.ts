@@ -1094,61 +1094,6 @@ export interface ServiceEquipmentResponse {
   created_at: ISODateTime
 }
 
-/**
- * Call Sheet Form Data
- * Note: HTML time inputs provide HH:MM, must be converted to HH:MM:SS before sending to backend
- */
-  project_id: string // UUID of the project
-  shooting_day: string // Will be converted to ISO date
-  status?: CallSheetStatus
-
-  // Location
-  location: string
-  location_address?: string
-  parking_info?: string
-
-  // Times (HTML inputs are HH:MM, convert to HH:MM:SS)
-  crew_call?: string
-  on_set?: string
-  lunch_time?: string
-  wrap_time?: string
-
-  // Production
-  weather?: string
-  notes?: string
-  hospital_info?: string
-}
-
-  project_id: UUID
-  shooting_day: ISODate
-  status?: CallSheetStatus
-  location?: string
-  location_address?: string
-  parking_info?: string
-  crew_call?: TimeString
-  on_set?: TimeString
-  lunch_time?: TimeString
-  wrap_time?: TimeString
-  weather?: string
-  notes?: string
-  hospital_info?: string
-}
-
-  project_id?: UUID
-  shooting_day?: ISODate
-  status?: CallSheetStatus
-  location?: string
-  location_address?: string
-  parking_info?: string
-  crew_call?: TimeString
-  on_set?: TimeString
-  lunch_time?: TimeString
-  wrap_time?: TimeString
-  weather?: string
-  notes?: string
-  hospital_info?: string
-}
-
 
 export interface SceneCreate {
   project_id: UUID
