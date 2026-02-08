@@ -20,7 +20,6 @@ from app.api.deps import (
 from app.db.session import get_db
 from app.models.access import ProjectAssignment as ProjectAssignmentModel
 from app.models.ai import AiRecommendation, AiSuggestion, AiUsageLog, ScriptAnalysis
-from app.models.call_sheets import CallSheet as CallSheetModel
 from app.models.clients import Client as ClientModel
 from app.models.cloud import CloudSyncStatus as CloudSyncStatusModel, ProjectDriveFolder as ProjectDriveFolderModel
 from app.models.commercial import Stakeholder as StakeholderModel
@@ -322,7 +321,6 @@ async def delete_project(
         await db.execute(delete(SceneModel).where(SceneModel.project_id == project_id))
         await db.execute(delete(CharacterModel).where(CharacterModel.project_id == project_id))
         await db.execute(delete(ShootingDayModel).where(ShootingDayModel.project_id == project_id))
-        await db.execute(delete(CallSheetModel).where(CallSheetModel.project_id == project_id))
         await db.execute(delete(StakeholderModel).where(StakeholderModel.project_id == project_id))
         await db.execute(delete(ProjectDriveFolderModel).where(ProjectDriveFolderModel.project_id == project_id))
 
