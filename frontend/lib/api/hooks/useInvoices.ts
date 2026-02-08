@@ -129,6 +129,25 @@ export function useUpdateInvoiceItem(invoiceId: string, itemId: string) {
   })
 }
 
+export function useSendInvoiceEmail(organizationId?: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ invoiceId, data }: {
+      invoiceId: string
+      data: { recipient_email: string; subject: string; message: string }
+    }) => {
+      const url = organizationId
+        ? `/api/v1/financial/invoices/${invoiceId}/send-email?organization_id=${organizationId}`
+        : `/api/v1/financial/invoices/${invoiceId}/send-email`
+      return apiClient.post(url, data)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [INVOICES_KEY] })
+    },
+  })
+}
+
 export function useDeleteInvoiceItem(invoiceId: string) {
   const queryClient = useQueryClient()
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { useInvoice, useDeleteInvoice, useUpdateInvoice } from '@/lib/api/hooks'
+import { useInvoice, useDeleteInvoice, useUpdateInvoice, useSendInvoiceEmail } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 // Tooltip imports retained for potential future use
@@ -47,6 +48,7 @@ export default function InvoiceDetailPage() {
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isSendEmailOpen, setIsSendEmailOpen] = useState(false)
 
   // PDF Generation State
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
@@ -265,7 +267,7 @@ export default function InvoiceDetailPage() {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => setIsSendEmailOpen(true)}>
             <Mail className="mr-2 h-4 w-4" />
             {t('actions.sendEmail')}
           </Button>
@@ -460,7 +462,7 @@ export default function InvoiceDetailPage() {
               <CardTitle>{t('actions.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button className="w-full" variant="outline">
+              <Button className="w-full" variant="outline" onClick={() => setIsSendEmailOpen(true)}>
                 <Mail className="mr-2 h-4 w-4" />
                 {t('actions.sendToClient')}
               </Button>
@@ -495,7 +497,129 @@ export default function InvoiceDetailPage() {
           )}
         </div>
       </div>
+
+      <SendEmailDialog
+        open={isSendEmailOpen}
+        onOpenChange={setIsSendEmailOpen}
+        invoiceId={invoiceId}
+        invoiceNumber={invoice.invoice_number}
+        organizationId={organizationId || undefined}
+        clientEmail={invoice.client?.email}
+      />
     </div>
+  )
+}
+
+// Send Email Dialog Component
+interface SendEmailDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  invoiceId: string
+  invoiceNumber: string
+  organizationId?: string
+  clientEmail?: string
+}
+
+function SendEmailDialog({ open, onOpenChange, invoiceId, invoiceNumber, organizationId, clientEmail }: SendEmailDialogProps) {
+  const t = useTranslations('financials.pages.invoiceDetail')
+  const tCommon = useTranslations('common')
+  const sendEmail = useSendInvoiceEmail(organizationId)
+
+  const defaultSubject = t('sendEmailDialog.defaultSubject', { number: invoiceNumber })
+  const defaultMessage = t('sendEmailDialog.defaultMessage', { number: invoiceNumber })
+
+  const [recipientEmail, setRecipientEmail] = useState(clientEmail || '')
+  const [subject, setSubject] = useState(defaultSubject)
+  const [message, setMessage] = useState(defaultMessage)
+
+  // Reset form when dialog opens
+  const handleOpenChange = (value: boolean) => {
+    if (value) {
+      setRecipientEmail(clientEmail || '')
+      setSubject(defaultSubject)
+      setMessage(defaultMessage)
+    }
+    onOpenChange(value)
+  }
+
+  const handleSend = async () => {
+    try {
+      await sendEmail.mutateAsync({
+        invoiceId,
+        data: { recipient_email: recipientEmail, subject, message },
+      })
+      toast.success(t('sendEmailDialog.success'))
+      onOpenChange(false)
+    } catch (error: any) {
+      toast.error(error.message || t('sendEmailDialog.error'))
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>{t('sendEmailDialog.title')}</DialogTitle>
+          <DialogDescription>{t('sendEmailDialog.description')}</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="recipient_email">{t('sendEmailDialog.fields.recipientEmail')}</Label>
+            <Input
+              id="recipient_email"
+              type="email"
+              value={recipientEmail}
+              onChange={(e) => setRecipientEmail(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email_subject">{t('sendEmailDialog.fields.subject')}</Label>
+            <Input
+              id="email_subject"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email_message">{t('sendEmailDialog.fields.message')}</Label>
+            <Textarea
+              id="email_message"
+              rows={6}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              required
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            {tCommon('cancel')}
+          </Button>
+          <Button
+            onClick={handleSend}
+            disabled={sendEmail.isPending || !recipientEmail || !subject || !message}
+          >
+            {sendEmail.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {t('sendEmailDialog.sending')}
+              </>
+            ) : (
+              <>
+                <Mail className="mr-2 h-4 w-4" />
+                {t('sendEmailDialog.send')}
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 

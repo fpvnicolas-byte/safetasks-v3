@@ -1635,6 +1635,21 @@
           "setupStripe": "Set up Stripe Connect →",
           "checkoutStatus": "Checkout Status"
         },
+        "sendEmailDialog": {
+          "title": "Send Invoice Email",
+          "description": "Send this invoice as a PDF attachment to the recipient.",
+          "fields": {
+            "recipientEmail": "Recipient Email",
+            "subject": "Subject",
+            "message": "Message"
+          },
+          "defaultSubject": "Invoice #{number}",
+          "defaultMessage": "Hello,\n\nPlease find attached the invoice #{number}.\n\nIf you have any questions, please don't hesitate to reach out.\n\nBest regards",
+          "send": "Send Email",
+          "sending": "Sending...",
+          "success": "Invoice email sent successfully",
+          "error": "Failed to send invoice email"
+        },
         "errors": {
           "load": "Error loading invoice: {message}",
           "notFound": "Invoice not found",

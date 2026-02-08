@@ -1635,6 +1635,21 @@
           "setupStripe": "Configurar Stripe Connect →",
           "checkoutStatus": "Status do Checkout"
         },
+        "sendEmailDialog": {
+          "title": "Enviar Fatura por Email",
+          "description": "Envie esta fatura como anexo PDF para o destinatário.",
+          "fields": {
+            "recipientEmail": "Email do Destinatário",
+            "subject": "Assunto",
+            "message": "Mensagem"
+          },
+          "defaultSubject": "Fatura #{number}",
+          "defaultMessage": "Olá,\n\nSegue em anexo a fatura #{number}.\n\nCaso tenha alguma dúvida, não hesite em entrar em contato.\n\nAtenciosamente",
+          "send": "Enviar Email",
+          "sending": "Enviando...",
+          "success": "Email da fatura enviado com sucesso",
+          "error": "Falha ao enviar email da fatura"
+        },
         "errors": {
           "load": "Erro ao carregar fatura: {message}",
           "notFound": "Fatura não encontrada",

@@ -143,6 +143,10 @@ class Settings(BaseSettings):
     INVITE_EMAIL_ENABLED: bool = False
     INVITE_TOKEN_EXPIRY_DAYS: int = 7
 
+    # Resend (for invoice emails)
+    RESEND_API_KEY: Optional[str] = None
+    RESEND_FROM_EMAIL: Optional[str] = None
+
     # WhatsApp (Evolution API) - Optional, for future integration
     WHATSAPP_API_URL: Optional[str] = None
     WHATSAPP_API_KEY: Optional[str] = None

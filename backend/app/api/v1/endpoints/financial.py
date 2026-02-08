@@ -1020,3 +1020,122 @@ async def preview_invoice_pdf(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"HTML rendering failed: {str(e)}"
         )
+
+
+# ── Send Invoice Email ──────────────────────────────────────────────
+
+from pydantic import BaseModel, EmailStr
+
+
+class SendInvoiceEmailRequest(BaseModel):
+    recipient_email: EmailStr
+    subject: str
+    message: str
+
+
+@router.post(
+    "/invoices/{invoice_id}/send-email",
+    dependencies=[Depends(require_admin_producer_or_finance)]
+)
+async def send_invoice_email(
+    invoice_id: UUID,
+    body: SendInvoiceEmailRequest,
+    organization_id: UUID = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Send an invoice to the recipient via email with PDF attached.
+    If the invoice is in 'draft' status, it will be updated to 'sent'.
+    """
+    from app.services.invoice_pdf import invoice_pdf_service
+    from app.services.email_service import send_invoice_email as _send_email
+    from sqlalchemy.orm import selectinload
+    from app.models.financial import Invoice as InvoiceModel
+    from sqlalchemy import select as sa_select
+    from app.models.organizations import Organization
+
+    # Get invoice with items and client
+    invoice = await invoice_service.get(
+        db=db,
+        organization_id=organization_id,
+        id=invoice_id,
+        options=[
+            selectinload(InvoiceModel.items),
+            selectinload(InvoiceModel.client),
+        ]
+    )
+
+    if not invoice:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invoice not found"
+        )
+
+    # Get organization for PDF generation
+    org_result = await db.execute(
+        sa_select(Organization).where(Organization.id == organization_id)
+    )
+    organization = org_result.scalar_one_or_none()
+
+    if not organization:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organization not found"
+        )
+
+    try:
+        # Generate PDF bytes
+        pdf_bytes = await invoice_pdf_service.generate_pdf(
+            invoice=invoice,
+            organization=organization,
+            client=invoice.client,
+            items=list(invoice.items) if invoice.items else [],
+            locale="pt-BR"
+        )
+
+        pdf_filename = f"invoice_{invoice.invoice_number}.pdf"
+
+        # Build email HTML body
+        html_body = f"""
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+            <p>{body.message.replace(chr(10), '<br>')}</p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+            <p style="color: #888; font-size: 12px;">
+                This email was sent via SafeTasks. The invoice PDF is attached.
+            </p>
+        </div>
+        """
+
+        # Send via Resend
+        _send_email(
+            to=body.recipient_email,
+            subject=body.subject,
+            html_body=html_body,
+            pdf_bytes=pdf_bytes,
+            pdf_filename=pdf_filename,
+        )
+
+        # Update status to "sent" if currently "draft"
+        if invoice.status == "draft":
+            await invoice_service.update(
+                db=db,
+                organization_id=organization_id,
+                id=invoice_id,
+                obj_in={"status": "sent"},
+            )
+
+        return {
+            "status": "sent",
+            "recipient_email": body.recipient_email,
+        }
+
+    except RuntimeError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to send invoice email: {str(e)}"
+        )
