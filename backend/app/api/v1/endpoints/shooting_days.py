@@ -77,6 +77,10 @@ async def create_shooting_day(
             organization_id=organization_id,
             obj_in=shooting_day_in
         )
+        # Eagerly load the project relationship to avoid async lazy-load errors during serialization
+        await db.refresh(shooting_day, attribute_names=["project"])
+        if shooting_day.project:
+            await db.refresh(shooting_day.project, attribute_names=["client"])
         return shooting_day
     except ValueError as e:
         raise HTTPException(
@@ -98,7 +102,10 @@ async def get_shooting_day(
     shooting_day = await shooting_day_service.get(
         db=db,
         organization_id=organization_id,
-        id=shooting_day_id
+        id=shooting_day_id,
+        options=[
+            selectinload(shooting_day_service.model.project).selectinload(shooting_day_service.model.project.property.mapper.class_.client)
+        ]
     )
 
     if not shooting_day:
@@ -141,6 +148,9 @@ async def update_shooting_day(
                 detail="Shooting day not found"
             )
 
+        await db.refresh(shooting_day, attribute_names=["project"])
+        if shooting_day.project:
+            await db.refresh(shooting_day.project, attribute_names=["client"])
         return shooting_day
     except ValueError as e:
         raise HTTPException(
@@ -175,6 +185,9 @@ async def delete_shooting_day(
             detail="Shooting day not found"
         )
 
+    await db.refresh(shooting_day, attribute_names=["project"])
+    if shooting_day.project:
+        await db.refresh(shooting_day.project, attribute_names=["client"])
     return shooting_day
 
 
