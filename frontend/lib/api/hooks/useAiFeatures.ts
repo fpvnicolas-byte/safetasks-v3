@@ -7,7 +7,7 @@ import {
   AiRecommendation,
   ScriptAnalysis,
   AiBudgetEstimation,
-  AiCallSheetSuggestion
+  AiShootingDaySuggestion
 } from '@/types'
 
 export function useAiAnalysis(organizationId: string) {
@@ -96,10 +96,10 @@ export function useAiBudgetEstimation() {
   })
 }
 
-export function useAiCallSheetSuggestions() {
+export function useAiShootingDaySuggestions() {
   return useMutation({
     mutationFn: async (params: { project_id: string; suggestion_type: string; script_content: string }) => {
-      const result = await apiClient.post<AiCallSheetSuggestion>('/api/v1/ai/call-sheet-suggestions', params, {
+      const result = await apiClient.post<AiShootingDaySuggestion>('/api/v1/ai/shooting-day-suggestions', params, {
         // Calls can include multiple AI steps (analysis + suggestions).
         timeout: 120000,
       })
