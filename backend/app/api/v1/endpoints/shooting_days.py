@@ -145,11 +145,10 @@ async def get_shooting_day(
         ))
 
     # Create the response with enriched data
-    return ShootingDayDetail(
-        **shooting_day.__dict__,
-        scenes=shooting_day.scenes,
-        crew_assignments=crew_assignments
-    )
+    sd_dict = {k: v for k, v in shooting_day.__dict__.items() if not k.startswith('_')}
+    sd_dict['scenes'] = shooting_day.scenes
+    sd_dict['crew_assignments'] = crew_assignments
+    return ShootingDayDetail(**sd_dict)
 
 
 @router.put(
