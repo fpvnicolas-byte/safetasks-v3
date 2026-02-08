@@ -1,4 +1,5 @@
 import os
+from uuid import uuid4
 
 import pytest
 from sqlalchemy import text
@@ -13,7 +14,15 @@ async def _truncate_public_schema():
         yield
         return
 
-    engine = create_async_engine(uri, echo=False)
+    engine = create_async_engine(
+        uri,
+        echo=False,
+        connect_args={
+            "prepared_statement_cache_size": 0,
+            "prepared_statement_name_func": lambda: f"__asyncpg_{uuid4()}__",
+            "statement_cache_size": 0,
+        },
+    )
     async with engine.begin() as conn:
         result = await conn.execute(
             text("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")

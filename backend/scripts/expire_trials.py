@@ -10,7 +10,7 @@ Example cron job (runs at midnight):
 """
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 async def expire_trials() -> None:
     """Find and expire trials that have ended."""
     async with SessionLocal() as db:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         # Find orgs with expired trials
         query = select(Organization).where(

@@ -139,10 +139,29 @@ async def create_checkout_session(
             detail="Organization does not have a Stripe customer"
         )
 
+    # Validate price_id belongs to a known plan
+    plan = await get_plan_by_price_id(db, price_id)
+    if not plan:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid plan selected"
+        )
+
+    # Prevent duplicate subscriptions - if org already has an active subscription,
+    # they should use the Stripe billing portal to change plans
+    if organization.stripe_subscription_id and organization.billing_status == "active":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Organization already has an active subscription. Use the billing portal to change plans."
+        )
+
     try:
         session = stripe.checkout.Session.create(
             customer=organization.stripe_customer_id,
-            payment_method_types=["card"],
+            payment_method_types=["card", "boleto"],
+            payment_method_options={
+                "boleto": {"expires_after_days": 3},
+            },
             line_items=[{
                 "price": price_id,
                 "quantity": 1,
@@ -420,7 +439,7 @@ async def handle_subscription_trial_will_end(db: AsyncSession, event_data: dict)
         return
 
     if trial_end:
-        org.trial_ends_at = datetime.utcfromtimestamp(trial_end)
+        org.trial_ends_at = datetime.fromtimestamp(trial_end, tz=timezone.utc)
         db.add(org)
         logger.info(f"Trial will end for org {org.id} at {org.trial_ends_at}")
 

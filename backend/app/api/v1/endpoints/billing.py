@@ -1,6 +1,6 @@
 """Billing and Stripe webhook endpoints."""
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
 
@@ -126,8 +126,11 @@ async def stripe_webhook(
         logger.error(f"Failed to process event {event_id}: {e}", exc_info=True)
         await billing_service.mark_event_failed(db, billing_event)
         await db.commit()
-        # Return 200 anyway so Stripe doesn't retry
-        return {"status": "error", "message": str(e)}
+        # Return 500 so Stripe retries the event
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Webhook processing failed"
+        )
 
 
 @router.post("/create-checkout-session", response_model=CheckoutSessionResponse, dependencies=[Depends(require_billing_read())])
@@ -362,4 +365,4 @@ def _build_subscription_info(subscription: stripe.Subscription) -> SubscriptionI
 def _timestamp_to_datetime(value: Optional[int]) -> Optional[datetime]:
     if value is None:
         return None
-    return datetime.utcfromtimestamp(value)
+    return datetime.fromtimestamp(value, tz=timezone.utc)

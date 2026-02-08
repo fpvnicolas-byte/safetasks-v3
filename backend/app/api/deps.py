@@ -1,5 +1,6 @@
 from typing import Optional
 from uuid import UUID
+from datetime import datetime, timezone
 from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -356,6 +357,17 @@ def require_billing_active():
                 status_code=status.HTTP_402_PAYMENT_REQUIRED,
                 detail="Billing is not active. Please update payment to continue."
             )
+
+        # Real-time trial expiration check - don't rely solely on cron job
+        if status_value == "trial_active" and organization.trial_ends_at:
+            if organization.trial_ends_at <= datetime.now(timezone.utc):
+                organization.billing_status = "trial_ended"
+                db.add(organization)
+                await db.commit()
+                raise HTTPException(
+                    status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                    detail="Your trial has expired. Please select a plan to continue."
+                )
 
         return profile
 
