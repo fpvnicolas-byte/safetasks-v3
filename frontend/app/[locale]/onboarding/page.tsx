@@ -65,15 +65,15 @@ export default function OnboardingPage() {
 
   if (authLoading && !profile) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Loading...</CardTitle>
             <CardDescription>Checking your organization status</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
-              <div className="h-full w-1/3 bg-slate-400 animate-pulse" />
+            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+              <div className="h-full w-1/3 bg-primary/50 animate-pulse" />
             </div>
           </CardContent>
         </Card>
@@ -82,7 +82,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50">
+    <div className="flex min-h-screen items-center justify-center bg-background">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Welcome to SafeTasks</CardTitle>
