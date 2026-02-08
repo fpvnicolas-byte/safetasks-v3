@@ -38,11 +38,11 @@ export default function ClientsPage() {
   const [isDeleting, setIsDeleting] = useState(false)
 
   const handleDeleteClient = async () => {
-    if (!deleteTarget) return
+    if (!deleteTarget || !organizationId) return
 
     setIsDeleting(true)
     try {
-      await deleteClient.mutateAsync(deleteTarget.id)
+      await deleteClient.mutateAsync({ clientId: deleteTarget.id, organizationId })
       setDeleteTarget(null)
     } catch (err: unknown) {
       const error = err as Error

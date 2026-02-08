@@ -3,6 +3,7 @@
 import { use } from 'react'
 import { useRouter } from 'next/navigation'
 import { useClient, useDeleteClient } from '@/lib/api/hooks'
+import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -16,16 +17,17 @@ export default function ClientViewPage({ params }: { params: Promise<{ id: strin
   const resolvedParams = use(params)
   const router = useRouter()
   const t = useTranslations('clients')
-  const { data: client, isLoading, error } = useClient(resolvedParams.id)
+  const { organizationId } = useAuth()
+  const { data: client, isLoading, error } = useClient(resolvedParams.id, organizationId || undefined)
   const deleteClient = useDeleteClient()
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   const handleDelete = async () => {
-    if (!client) return
+    if (!client || !organizationId) return
 
     try {
-      await deleteClient.mutateAsync(client.id)
+      await deleteClient.mutateAsync({ clientId: client.id, organizationId })
       router.push('/clients')
     } catch (err: unknown) {
       const error = err as Error

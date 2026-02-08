@@ -3,6 +3,7 @@
 import { use, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useClient, useUpdateClient } from '@/lib/api/hooks'
+import { useAuth } from '@/contexts/AuthContext'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,7 +17,8 @@ import Link from 'next/link'
 export default function EditClientPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const router = useRouter()
-  const { data: client, isLoading: clientLoading } = useClient(resolvedParams.id)
+  const { organizationId } = useAuth()
+  const { data: client, isLoading: clientLoading } = useClient(resolvedParams.id, organizationId || undefined)
   const updateClient = useUpdateClient()
 
   const [formData, setFormData] = useState({
@@ -65,6 +67,11 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
       return
     }
 
+    if (!organizationId) {
+      showError(new Error('Organization not found. Please refresh and try again.'), 'Error Updating Client')
+      return
+    }
+
     try {
       const clientData = {
         name: formData.name.trim(),
@@ -77,6 +84,7 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
       await updateClient.mutateAsync({
         clientId: resolvedParams.id,
         data: clientData,
+        organizationId,
       })
       router.push(`/clients/${resolvedParams.id}`)
     } catch (err: any) {

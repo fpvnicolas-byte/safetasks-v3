@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCreateClient } from '@/lib/api/hooks'
+import { useAuth } from '@/contexts/AuthContext'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,6 +15,7 @@ import Link from 'next/link'
 
 export default function NewClientPage() {
   const router = useRouter()
+  const { organizationId } = useAuth()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -48,13 +50,18 @@ export default function NewClientPage() {
       return
     }
 
+    if (!organizationId) {
+      showError(new Error('Organization not found. Please refresh and try again.'), 'Error Creating Client')
+      return
+    }
+
     try {
       const clientData = {
         name: formData.name.trim(),
         email: formData.email.trim() || undefined,
         document: formData.document.trim() || undefined,
         phone: formData.phone.trim() || undefined,
-        organization_id: '4384a92c-df41-444b-b34d-6c80e7820486', // Hardcoded for testing
+        organization_id: organizationId,
       }
 
       await createClient.mutateAsync(clientData)
