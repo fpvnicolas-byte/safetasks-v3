@@ -34,7 +34,7 @@ export default function AiRecommendationsPage() {
   const t = useTranslations('ai')
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
-  const [recommendationType, setRecommendationType] = useState<'call_sheet' | 'budget' | 'schedule' | 'equipment' | 'all'>('all')
+  const [recommendationType, setRecommendationType] = useState<'shooting_day' | 'budget' | 'schedule' | 'equipment' | 'all'>('all')
 
   // Queries
   const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId || undefined)
@@ -57,7 +57,7 @@ export default function AiRecommendationsPage() {
 
   const getRecommendationIcon = (type: string) => {
     switch (type) {
-      case 'call_sheet': return <Calendar className="h-4 w-4" />
+      case 'shooting_day': return <Calendar className="h-4 w-4" />
       case 'budget': return <DollarSign className="h-4 w-4" />
       case 'schedule': return <Clock className="h-4 w-4" />
       case 'equipment': return <FileText className="h-4 w-4" />
@@ -148,10 +148,10 @@ export default function AiRecommendationsPage() {
           <CardContent className="space-y-6">
             {/* Project Selection */}
             <div className="space-y-2">
-              <Label htmlFor="project">{t('callSheetSuggestions.settings.projectLabel')}</Label>
+              <Label htmlFor="project">{t('shootingDaySuggestions.settings.projectLabel')}</Label>
               <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
                 <SelectTrigger id="project">
-                  <SelectValue placeholder={t('callSheetSuggestions.settings.selectProjectPlaceholder')} />
+                  <SelectValue placeholder={t('shootingDaySuggestions.settings.selectProjectPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {isLoadingProjects ? (
@@ -172,13 +172,13 @@ export default function AiRecommendationsPage() {
             {/* Recommendation Type Filter */}
             <div className="space-y-2">
               <Label htmlFor="recommendation-type">{t('recommendations.filter.typeLabel')}</Label>
-              <Select value={recommendationType} onValueChange={(value) => setRecommendationType(value as 'call_sheet' | 'budget' | 'schedule' | 'equipment' | 'all')}>
+              <Select value={recommendationType} onValueChange={(value) => setRecommendationType(value as 'shooting_day' | 'budget' | 'schedule' | 'equipment' | 'all')}>
                 <SelectTrigger id="recommendation-type">
                   <SelectValue placeholder={t('recommendations.filter.typePlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t('recommendations.filter.types.all')}</SelectItem>
-                  <SelectItem value="call_sheet">{t('recommendations.filter.types.callSheet')}</SelectItem>
+                  <SelectItem value="shooting_day">{t('recommendations.filter.types.shootingDay')}</SelectItem>
                   <SelectItem value="budget">{t('recommendations.filter.types.budget')}</SelectItem>
                   <SelectItem value="schedule">{t('recommendations.filter.types.schedule')}</SelectItem>
                   <SelectItem value="equipment">{t('recommendations.filter.types.equipment')}</SelectItem>

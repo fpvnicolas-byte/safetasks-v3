@@ -59,7 +59,7 @@ class GoogleDriveService:
                 organization_id=organization_id,
                 auto_sync_enabled=True,
                 sync_on_proposal_approval=True,
-                sync_on_call_sheet_finalized=True
+                sync_on_shooting_day_finalized=True
             )
             db.add(creds_record)
             await db.commit()
@@ -198,7 +198,7 @@ class GoogleDriveService:
         # Create subfolders
         subfolders = {
             'scripts': 'Scripts',
-            'call_sheets': 'Call Sheets',
+            'shooting_days': 'Shooting Days',
             'media': 'Media'
         }
 
@@ -250,7 +250,7 @@ class GoogleDriveService:
         folder_mapping = {
             'proposals': project_folders.scripts_folder_id,
             'scripts': project_folders.scripts_folder_id,
-            'call_sheets': project_folders.call_sheets_folder_id,
+            'shooting_days': project_folders.shooting_days_folder_id,
             'media': project_folders.media_folder_id
         }
 

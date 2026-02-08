@@ -40,7 +40,7 @@ export default function AiSuggestionsPage() {
   const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId || undefined)
   const { data: suggestions, isLoading: isLoadingSuggestions } = useAiSuggestions(selectedProjectId)
   const { mutateAsync: generateBudgetEstimation, isPending: isGeneratingBudget } = useAiBudgetEstimation()
-  const { mutateAsync: generateCallSheet, isPending: isGeneratingCallSheet } = useAiShootingDaySuggestions()
+  const { mutateAsync: generateShootingDay, isPending: isGeneratingShootingDay } = useAiShootingDaySuggestions()
 
   const handleGenerateBudget = async () => {
     if (!selectedProjectId) {
@@ -62,23 +62,23 @@ export default function AiSuggestionsPage() {
     }
   }
 
-  const handleGenerateCallSheet = async () => {
+  const handleGenerateShootingDay = async () => {
     if (!selectedProjectId) {
       toast.error(tCommon('selectProject'))
       return
     }
 
     try {
-      const result = await generateCallSheet({
+      const result = await generateShootingDay({
         project_id: selectedProjectId,
         suggestion_type: 'optimized',
         script_content: 'Generated from suggestions page'
       })
       toast.success(tCommon('actionSuccess'))
-      console.log('Call sheet suggestions:', result)
+      console.log('Shooting day suggestions:', result)
     } catch (error: any) {
-      toast.error(tCommon('actionError', { message: error?.message || 'Failed to generate call sheet suggestions' }))
-      console.error('Call sheet generation error:', error)
+      toast.error(tCommon('actionError', { message: error?.message || 'Failed to generate shooting day suggestions' }))
+      console.error('Shooting day generation error:', error)
     }
   }
 
@@ -142,10 +142,10 @@ export default function AiSuggestionsPage() {
           <CardContent className="space-y-6">
             {/* Project Selection */}
             <div className="space-y-2">
-              <Label htmlFor="project">{t('callSheetSuggestions.settings.projectLabel')}</Label>
+              <Label htmlFor="project">{t('shootingDaySuggestions.settings.projectLabel')}</Label>
               <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
                 <SelectTrigger id="project">
-                  <SelectValue placeholder={t('callSheetSuggestions.settings.selectProjectPlaceholder')} />
+                  <SelectValue placeholder={t('shootingDaySuggestions.settings.selectProjectPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {isLoadingProjects ? (
@@ -207,10 +207,10 @@ export default function AiSuggestionsPage() {
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={handleGenerateCallSheet}
-                  disabled={isGeneratingCallSheet || !selectedProjectId}
+                  onClick={handleGenerateShootingDay}
+                  disabled={isGeneratingShootingDay || !selectedProjectId}
                 >
-                  {isGeneratingCallSheet ? (
+                  {isGeneratingShootingDay ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       {t('actions.generating')}
@@ -371,8 +371,8 @@ export default function AiSuggestionsPage() {
                     </Button>
                     <Button
                       variant="outline"
-                      onClick={handleGenerateCallSheet}
-                      disabled={isGeneratingCallSheet}
+                      onClick={handleGenerateShootingDay}
+                      disabled={isGeneratingShootingDay}
                     >
                       <Calendar className="mr-2 h-4 w-4" />
                       {t('actions.generateScheduleSuggestions')}

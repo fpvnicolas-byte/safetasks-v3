@@ -69,7 +69,7 @@ def infer_suggestion_type(text: str) -> str:
     schedule_keywords = [
         "schedule",
         "scheduling",
-        "call sheet",
+        "shooting day",
         "timeline",
         "availability",
         "overtime",
@@ -707,7 +707,7 @@ async def generate_shooting_day_suggestions(
         await ensure_ai_credits(db, organization, credits_to_add=1)
         await increment_ai_usage(db, organization.id, credits_added=1)
 
-        # Generate real call sheet suggestions
+        # Generate real shooting day suggestions
         
         # Determine source data for suggestions
         analysis_data = {}
@@ -754,7 +754,7 @@ async def generate_shooting_day_suggestions(
                 detail=str(suggestions["error"]),
             )
 
-        call_sheet_data = suggestions.get("call_sheet_suggestions", [])
+        shooting_day_data = suggestions.get("shooting_day_suggestions", [])
 
         # Log successful usage
         processing_time_ms = int((time.time() - start_time) * 1000)
@@ -774,13 +774,13 @@ async def generate_shooting_day_suggestions(
             "message": "Shooting day suggestions generated",
             "project_id": str(request.project_id),
             "suggestion_type": request.suggestion_type,
-            "suggestions": call_sheet_data,
+            "suggestions": shooting_day_data,
             # Flatten the first suggestion details for immediate display if needed
-            "day": call_sheet_data[0].get("day") if call_sheet_data else 1,
-            "suggested_scenes": call_sheet_data[0].get("suggested_scenes") if call_sheet_data else [],
-            "crew_needed": call_sheet_data[0].get("crew_needed") if call_sheet_data else [],
-            "equipment_needed": call_sheet_data[0].get("equipment_needed") if call_sheet_data else [],
-            "estimated_duration": call_sheet_data[0].get("estimated_duration") if call_sheet_data else "N/A"
+            "day": shooting_day_data[0].get("day") if shooting_day_data else 1,
+            "suggested_scenes": shooting_day_data[0].get("suggested_scenes") if shooting_day_data else [],
+            "crew_needed": shooting_day_data[0].get("crew_needed") if shooting_day_data else [],
+            "equipment_needed": shooting_day_data[0].get("equipment_needed") if shooting_day_data else [],
+            "estimated_duration": shooting_day_data[0].get("estimated_duration") if shooting_day_data else "N/A"
         }
 
     except HTTPException as e:
@@ -811,7 +811,7 @@ async def generate_shooting_day_suggestions(
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate call sheet suggestions: {str(e)}"
+            detail=f"Failed to generate shooting day suggestions: {str(e)}"
         )
 
 

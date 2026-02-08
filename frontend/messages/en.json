@@ -155,8 +155,8 @@
         "title": "Record Transaction",
         "desc": "Log income or expense"
       },
-      "callSheet": {
-        "title": "Call Sheet",
+      "shootingDay": {
+        "title": "Shooting Day",
         "desc": "Create production schedule"
       },
       "addEquipment": {
@@ -218,7 +218,6 @@
     "dashboard": "Dashboard",
     "projects": "Projects",
     "production": "Production",
-    "callSheets": "Call Sheets",
     "shootingDays": "Shooting Days",
     "scenes": "Scenes",
     "characters": "Characters",
@@ -347,7 +346,6 @@
       "projectInformation": "Project Information",
       "tabs": {
         "details": "Details",
-        "callSheets": "Call Sheets",
         "shootingDays": "Shooting Days",
         "financials": "Financials",
         "production": "Production",
@@ -484,7 +482,7 @@
         "scenesCreated": "Scenes Created",
         "charactersDefined": "Characters Defined",
         "shootingDaysCount": "Shooting Days",
-        "callSheetsCount": "Call Sheets",
+        "shootingDaysScheduled": "Shooting Days",
         "getStartedMessage": "Start by creating scenes and characters, then schedule shooting days to organize your production."
       },
       "files": {
@@ -503,100 +501,7 @@
       }
     }
   },
-  "callSheets": {
-    "title": "Call Sheets",
-    "newCallSheet": "New Call Sheet",
-    "createCallSheet": "Create Call Sheet",
-    "editCallSheet": "Edit Call Sheet",
-    "shootDate": "Shoot Date",
-    "callTime": "Call Time",
-    "location": "Location",
-    "sceneNumber": "Scene Number",
-    "cast": "Cast",
-    "crew": "Crew",
-    "equipment": "Equipment",
-    "notes": "Notes",
-    "noCallSheets": "No call sheets found",
-    "tab": {
-      "description": "Manage shooting day schedules and logistics",
-      "loading": "Loading call sheets...",
-      "error": "Error loading call sheets: {message}",
-      "deleteConfirm": "Are you sure you want to delete this call sheet?",
-      "empty": {
-        "title": "No Call Sheets Yet",
-        "description": "Create your first call sheet to organize shooting schedules",
-        "help": "Call sheets help coordinate crew, talent, and logistics for each shooting day",
-        "action": "Create First Call Sheet"
-      },
-      "card": {
-        "title": "Call Sheet",
-        "crewCall": "Crew Call",
-        "onSet": "On Set",
-        "weather": "Weather:"
-      }
-    },
-    "detail": {
-      "title": "Call Sheet",
-      "loading": "Loading call sheet...",
-      "error": "Error loading call sheet: {message}",
-      "notFound": "Call sheet not found",
-      "deleteConfirm": "Are you sure you want to delete this call sheet? This action cannot be undone.",
-      "created": "Created",
-      "callTimes": "Call Times",
-      "crewCall": "Crew Call",
-      "onSet": "On Set",
-      "lunch": "Lunch",
-      "wrap": "Wrap",
-      "location": "Location",
-      "weather": "Weather",
-      "emergencyInfo": "Emergency Information",
-      "productionNotes": "Production Notes",
-      "status": {
-        "draft": "Draft",
-        "confirmed": "Confirmed",
-        "completed": "Completed"
-      },
-      "deleteError": "Failed to delete call sheet"
-    },
-    "edit": {
-      "title": "Edit Call Sheet",
-      "description": "Update call sheet details for {date}",
-      "loading": "Loading call sheet...",
-      "error": "Error loading call sheet: {message}",
-      "notFound": "Call sheet not found",
-      "basicInfo": "Basic Information",
-      "shootingDay": "Shooting Day *",
-      "status": "Status *",
-      "selectStatus": "Select status",
-      "statusConfirmed": "Confirmed",
-      "callTimes": "Call Times",
-      "crewCall": "Crew Call Time *",
-      "crewCallHelp": "HTML time inputs use HH:MM, will be converted to HH:MM:SS for backend",
-      "onSet": "On Set Time *",
-      "lunch": "Lunch Time *",
-      "wrap": "Wrap Time",
-      "location": "Location",
-      "locationName": "Location Name *",
-      "locationPlaceholder": "Studio A",
-      "locationAddress": "Location Address",
-      "locationAddressPlaceholder": "123 Film Street, Los Angeles, CA 90001",
-      "parking": "Parking Information",
-      "parkingPlaceholder": "Parking details and instructions...",
-      "weather": "Weather Forecast",
-      "weatherPlaceholder": "Sunny, 75°F",
-      "safety": "🚨 Safety & Emergency",
-      "hospital": "Nearest Hospital/Emergency Contact *",
-      "hospitalPlaceholder": "Hospital name, address, phone number, and directions...",
-      "hospitalHelp": "Required for professional call sheets - critical emergency information",
-      "notes": "Production Notes",
-      "notesPlaceholder": "Additional production notes...",
-      "updating": "Updating...",
-      "update": "Update Call Sheet",
-      "errors": {
-        "updateTitle": "Error Updating Call Sheet"
-      }
-    }
-  },
+  "_callSheets_deprecated": "Merged into shootingDays",
   "shootingDays": {
     "title": "Shooting Days",
     "description": "Schedule and manage production shooting days",
@@ -729,7 +634,7 @@
       "scheduleDetails": "Schedule Details",
       "shootingDate": "Shooting Date *",
       "generalCallTime": "General Call Time *",
-      "generalCallTimeHelp": "General crew call time (Call Sheet)",
+      "generalCallTimeHelp": "General crew call time for the shooting day",
       "shootingCall": "Shooting Call (On Set)",
       "shootingCallHelp": "When shooting actually begins",
       "lunchTime": "Lunch Time",
@@ -2272,14 +2177,7 @@
     "progress": "Progress",
     "timeline": "Timeline",
     "milestones": "Milestones",
-    "newCallSheet": "New Call Sheet",
     "newShootingDay": "New Shooting Day",
-    "callSheets": {
-      "title": "Call Sheets",
-      "description": "Create and manage daily call sheets for your productions",
-      "viewAll": "View All Call Sheets",
-      "createNew": "Create New Call Sheet"
-    },
     "shootingDays": {
       "title": "Shooting Days",
       "description": "Schedule and organize your shooting days",
@@ -2543,9 +2441,9 @@
           "label": "Sync on proposal approval",
           "description": "Sync proposal files when approved"
         },
-        "callSheetSync": {
-          "label": "Sync on call sheet finalized",
-          "description": "Sync call sheets when finalized"
+        "shootingDaySync": {
+          "label": "Sync on shooting day finalized",
+          "description": "Sync shooting day files when finalized"
         }
       },
       "dangerZone": {
@@ -2772,7 +2670,7 @@
     "modules": {
       "production": {
         "title": "Projects and breakdowns",
-        "description": "Scenes, characters, shooting days and call sheets linked to each production."
+        "description": "Scenes, characters, and shooting days linked to each production."
       },
       "scheduling": {
         "title": "Scheduling and crew",
@@ -2792,7 +2690,7 @@
       },
       "ai": {
         "title": "AI production assist",
-        "description": "Script analysis, call sheet suggestions and smarter estimates."
+        "description": "Script analysis, shooting day suggestions and smarter estimates."
       }
     },
     "workflow": {
@@ -2802,7 +2700,7 @@
       },
       "step2": {
         "title": "Production",
-        "description": "Call sheets, crew, locations, schedules and live updates."
+        "description": "Shooting days, crew, locations, schedules and live updates."
       },
       "step3": {
         "title": "Post-production",
@@ -2993,9 +2891,9 @@
         "title": "Budget Estimation",
         "desc": "Get AI-powered budget estimates based on script analysis"
       },
-      "callSheet": {
-        "title": "Call Sheet Suggestions",
-        "desc": "Generate optimized shooting schedules and call sheets"
+      "shootingDay": {
+        "title": "Shooting Day Suggestions",
+        "desc": "Generate optimized shooting schedules and shooting days"
       }
     },
     "analysisForm": {
@@ -3056,12 +2954,12 @@
       "recommendations": "No recommendations available. Analyze a script to get AI recommendations.",
       "analyses": "No script analyses available. Start a script analysis to see results."
     },
-    "callSheetSuggestions": {
-      "pageTitle": "AI Call Sheet Suggestions",
-      "pageSubtitle": "Generate optimized shooting schedules and call sheets",
+    "shootingDaySuggestions": {
+      "pageTitle": "AI Shooting Day Suggestions",
+      "pageSubtitle": "Generate optimized shooting schedules and shooting days",
       "settings": {
         "title": "Suggestion Settings",
-        "description": "Configure your call sheet suggestion parameters",
+        "description": "Configure your shooting day suggestion parameters",
         "projectLabel": "Project",
         "selectProjectPlaceholder": "Select a project",
         "suggestionTypeLabel": "Suggestion Type",
@@ -3088,9 +2986,9 @@
       },
       "scriptAnalysis": {
         "title": "Script Analysis",
-        "description": "Paste your script text below for AI analysis and call sheet optimization",
+        "description": "Paste your script text below for AI analysis and shooting day optimization",
         "label": "Script Text",
-        "placeholder": "Paste your script text here... The AI will analyze scenes, locations, cast requirements, and generate optimized call sheet suggestions."
+        "placeholder": "Paste your script text here... The AI will analyze scenes, locations, cast requirements, and generate optimized shooting day suggestions."
       },
       "tips": {
         "title": "Suggestion Tips",
@@ -3102,7 +3000,7 @@
       },
       "analysisPreview": {
         "title": "Analysis Preview",
-        "description": "AI will analyze this script for call sheet optimization",
+        "description": "AI will analyze this script for shooting day optimization",
         "estimatedScenes": "Estimated scenes",
         "estimatedCharacters": "Estimated characters",
         "estimatedLocations": "Estimated locations",
@@ -3119,7 +3017,7 @@
         "typePlaceholder": "Filter by type",
         "types": {
           "all": "All Types",
-          "callSheet": "Call Sheet",
+          "shootingDay": "Shooting Day",
           "budget": "Budget",
           "schedule": "Schedule",
           "equipment": "Equipment"
@@ -3223,9 +3121,9 @@
     },
     "actions": {
       "generateBudget": "Generate Budget",
-      "generateCallSheet": "Generate Call Sheet",
+      "generateShootingDay": "Generate Shooting Day",
       "generatingBudget": "Generating Budget...",
-      "generatingCallSheet": "Generating Call Sheet...",
+      "generatingShootingDay": "Generating Shooting Day...",
       "viewAiDashboard": "View AI Dashboard",
       "backToDashboard": "Back to AI Dashboard",
       "viewShootingDays": "View Shooting Days",

@@ -36,7 +36,7 @@ export default function AiShootingDaySuggestionsPage() {
 
   // Queries
   const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId || undefined)
-  const { mutateAsync: generateCallSheetSuggestions, isPending: isGenerating } = useAiShootingDaySuggestions()
+  const { mutateAsync: generateShootingDaySuggestions, isPending: isGenerating } = useAiShootingDaySuggestions()
 
   const handleGenerateSuggestions = async () => {
     if (!selectedProjectId) {
@@ -50,27 +50,27 @@ export default function AiShootingDaySuggestionsPage() {
     }
 
     try {
-      const result = await generateCallSheetSuggestions({
+      const result = await generateShootingDaySuggestions({
         project_id: selectedProjectId,
         suggestion_type: suggestionType,
         script_content: scriptText
       })
 
       toast.success(tCommon('actionSuccess'))
-      console.log('Call sheet suggestions result:', result)
+      console.log('Shooting day suggestions result:', result)
     } catch (error: any) {
-      toast.error(tCommon('actionError', { message: error?.message || 'Failed to generate call sheet suggestions' }))
-      console.error('Call sheet suggestions error:', error)
+      toast.error(tCommon('actionError', { message: error?.message || 'Failed to generate shooting day suggestions' }))
+      console.error('Shooting day suggestions error:', error)
     }
   }
 
   const getSuggestionDescription = (type: string) => {
     switch (type) {
-      case 'optimized': return t('callSheetSuggestions.settings.descriptions.optimized')
-      case 'weather': return t('callSheetSuggestions.settings.descriptions.weather')
-      case 'cast': return t('callSheetSuggestions.settings.descriptions.cast')
-      case 'location': return t('callSheetSuggestions.settings.descriptions.location')
-      default: return t('callSheetSuggestions.settings.descriptions.optimized')
+      case 'optimized': return t('shootingDaySuggestions.settings.descriptions.optimized')
+      case 'weather': return t('shootingDaySuggestions.settings.descriptions.weather')
+      case 'cast': return t('shootingDaySuggestions.settings.descriptions.cast')
+      case 'location': return t('shootingDaySuggestions.settings.descriptions.location')
+      default: return t('shootingDaySuggestions.settings.descriptions.optimized')
     }
   }
 
@@ -78,9 +78,9 @@ export default function AiShootingDaySuggestionsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight font-display">{t('callSheetSuggestions.pageTitle')}</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('shootingDaySuggestions.pageTitle')}</h1>
           <p className="text-muted-foreground">
-            {t('callSheetSuggestions.pageSubtitle')}
+            {t('shootingDaySuggestions.pageSubtitle')}
           </p>
         </div>
         <div className="flex gap-2">
@@ -103,18 +103,18 @@ export default function AiShootingDaySuggestionsPage() {
         {/* Controls */}
         <Card className="lg:col-span-1">
           <CardHeader>
-            <CardTitle>{t('callSheetSuggestions.settings.title')}</CardTitle>
+            <CardTitle>{t('shootingDaySuggestions.settings.title')}</CardTitle>
             <CardDescription>
-              {t('callSheetSuggestions.settings.description')}
+              {t('shootingDaySuggestions.settings.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Project Selection */}
             <div className="space-y-2">
-              <Label htmlFor="project">{t('callSheetSuggestions.settings.projectLabel')}</Label>
+              <Label htmlFor="project">{t('shootingDaySuggestions.settings.projectLabel')}</Label>
               <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
                 <SelectTrigger id="project">
-                  <SelectValue placeholder={t('callSheetSuggestions.settings.selectProjectPlaceholder')} />
+                  <SelectValue placeholder={t('shootingDaySuggestions.settings.selectProjectPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {isLoadingProjects ? (
@@ -134,16 +134,16 @@ export default function AiShootingDaySuggestionsPage() {
 
             {/* Suggestion Type */}
             <div className="space-y-2">
-              <Label htmlFor="suggestion-type">{t('callSheetSuggestions.settings.suggestionTypeLabel')}</Label>
+              <Label htmlFor="suggestion-type">{t('shootingDaySuggestions.settings.suggestionTypeLabel')}</Label>
               <Select value={suggestionType} onValueChange={(value) => setSuggestionType(value as 'optimized' | 'weather' | 'cast' | 'location')}>
                 <SelectTrigger id="suggestion-type">
-                  <SelectValue placeholder={t('callSheetSuggestions.settings.selectTypePlaceholder')} />
+                  <SelectValue placeholder={t('shootingDaySuggestions.settings.selectTypePlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="optimized">{t('callSheetSuggestions.settings.types.optimized')}</SelectItem>
-                  <SelectItem value="weather">{t('callSheetSuggestions.settings.types.weather')}</SelectItem>
-                  <SelectItem value="cast">{t('callSheetSuggestions.settings.types.cast')}</SelectItem>
-                  <SelectItem value="location">{t('callSheetSuggestions.settings.types.location')}</SelectItem>
+                  <SelectItem value="optimized">{t('shootingDaySuggestions.settings.types.optimized')}</SelectItem>
+                  <SelectItem value="weather">{t('shootingDaySuggestions.settings.types.weather')}</SelectItem>
+                  <SelectItem value="cast">{t('shootingDaySuggestions.settings.types.cast')}</SelectItem>
+                  <SelectItem value="location">{t('shootingDaySuggestions.settings.types.location')}</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-sm text-muted-foreground">
@@ -153,23 +153,23 @@ export default function AiShootingDaySuggestionsPage() {
 
             {/* Suggestion Features */}
             <div className="space-y-3">
-              <h4 className="font-semibold">{t('callSheetSuggestions.features.title')}</h4>
+              <h4 className="font-semibold">{t('shootingDaySuggestions.features.title')}</h4>
               <div className="space-y-2 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  <span>{t('callSheetSuggestions.features.sequencing')}</span>
+                  <span>{t('shootingDaySuggestions.features.sequencing')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  <span>{t('callSheetSuggestions.features.timeEfficient')}</span>
+                  <span>{t('shootingDaySuggestions.features.timeEfficient')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4" />
-                  <span>{t('callSheetSuggestions.features.castCrew')}</span>
+                  <span>{t('shootingDaySuggestions.features.castCrew')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
-                  <span>{t('callSheetSuggestions.features.locationBased')}</span>
+                  <span>{t('shootingDaySuggestions.features.locationBased')}</span>
                 </div>
               </div>
             </div>
@@ -202,17 +202,17 @@ export default function AiShootingDaySuggestionsPage() {
         {/* Script Input */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>{t('callSheetSuggestions.scriptAnalysis.title')}</CardTitle>
+            <CardTitle>{t('shootingDaySuggestions.scriptAnalysis.title')}</CardTitle>
             <CardDescription>
-              {t('callSheetSuggestions.scriptAnalysis.description')}
+              {t('shootingDaySuggestions.scriptAnalysis.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="script-input">{t('callSheetSuggestions.scriptAnalysis.label')}</Label>
+              <Label htmlFor="script-input">{t('shootingDaySuggestions.scriptAnalysis.label')}</Label>
               <Textarea
                 id="script-input"
-                placeholder={t('callSheetSuggestions.scriptAnalysis.placeholder')}
+                placeholder={t('shootingDaySuggestions.scriptAnalysis.placeholder')}
                 value={scriptText}
                 onChange={(e) => setScriptText(e.target.value)}
                 className="min-h-[200px]"
@@ -252,13 +252,13 @@ export default function AiShootingDaySuggestionsPage() {
 
             {/* Suggestion Tips */}
             <div className="bg-info/10 p-4 rounded-lg">
-              <h4 className="font-semibold text-info mb-2">{t('callSheetSuggestions.tips.title')}</h4>
+              <h4 className="font-semibold text-info mb-2">{t('shootingDaySuggestions.tips.title')}</h4>
               <ul className="text-sm text-info-foreground space-y-1">
-                <li>• {t('callSheetSuggestions.tips.location')}</li>
-                <li>• {t('callSheetSuggestions.tips.cast')}</li>
-                <li>• {t('callSheetSuggestions.tips.weather')}</li>
-                <li>• {t('callSheetSuggestions.tips.optimized')}</li>
-                <li>• {t('callSheetSuggestions.tips.weatherAware')}</li>
+                <li>• {t('shootingDaySuggestions.tips.location')}</li>
+                <li>• {t('shootingDaySuggestions.tips.cast')}</li>
+                <li>• {t('shootingDaySuggestions.tips.weather')}</li>
+                <li>• {t('shootingDaySuggestions.tips.optimized')}</li>
+                <li>• {t('shootingDaySuggestions.tips.weatherAware')}</li>
               </ul>
             </div>
           </CardContent>
@@ -269,9 +269,9 @@ export default function AiShootingDaySuggestionsPage() {
       {scriptText.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>{t('callSheetSuggestions.analysisPreview.title')}</CardTitle>
+            <CardTitle>{t('shootingDaySuggestions.analysisPreview.title')}</CardTitle>
             <CardDescription>
-              {t('callSheetSuggestions.analysisPreview.description')}
+              {t('shootingDaySuggestions.analysisPreview.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -282,7 +282,7 @@ export default function AiShootingDaySuggestionsPage() {
                   <span className="text-sm font-medium">Scenes</span>
                 </div>
                 <div className="text-2xl font-bold">{scriptText.match(/INT\.|EXT\./g)?.length || 0}</div>
-                <div className="text-xs text-muted-foreground">{t('callSheetSuggestions.analysisPreview.estimatedScenes')}</div>
+                <div className="text-xs text-muted-foreground">{t('shootingDaySuggestions.analysisPreview.estimatedScenes')}</div>
               </div>
 
               <div className="bg-muted/60 p-4 rounded-lg">
@@ -291,7 +291,7 @@ export default function AiShootingDaySuggestionsPage() {
                   <span className="text-sm font-medium">Characters</span>
                 </div>
                 <div className="text-2xl font-bold">{scriptText.match(/\b[A-Z][A-Z\s]+\b/g)?.length || 0}</div>
-                <div className="text-xs text-muted-foreground">{t('callSheetSuggestions.analysisPreview.estimatedCharacters')}</div>
+                <div className="text-xs text-muted-foreground">{t('shootingDaySuggestions.analysisPreview.estimatedCharacters')}</div>
               </div>
 
               <div className="bg-muted/60 p-4 rounded-lg">
@@ -300,16 +300,16 @@ export default function AiShootingDaySuggestionsPage() {
                   <span className="text-sm font-medium">Locations</span>
                 </div>
                 <div className="text-2xl font-bold">{scriptText.match(/INT\. [A-Z]|EXT\. [A-Z]/g)?.length || 0}</div>
-                <div className="text-xs text-muted-foreground">{t('callSheetSuggestions.analysisPreview.estimatedLocations')}</div>
+                <div className="text-xs text-muted-foreground">{t('shootingDaySuggestions.analysisPreview.estimatedLocations')}</div>
               </div>
 
               <div className="bg-muted/60 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Target className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">{t('callSheetSuggestions.settings.suggestionTypeLabel')}</span>
+                  <span className="text-sm font-medium">{t('shootingDaySuggestions.settings.suggestionTypeLabel')}</span>
                 </div>
                 <div className="text-2xl font-bold capitalize">{suggestionType}</div>
-                <div className="text-xs text-muted-foreground">{t('callSheetSuggestions.analysisPreview.selectedType')}</div>
+                <div className="text-xs text-muted-foreground">{t('shootingDaySuggestions.analysisPreview.selectedType')}</div>
               </div>
             </div>
           </CardContent>

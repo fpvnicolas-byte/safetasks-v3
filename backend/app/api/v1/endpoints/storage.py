@@ -31,7 +31,7 @@ router = APIRouter()
 async def upload_file(
     organization_id: UUID = Depends(get_organization_from_profile),
     profile=Depends(get_current_profile),
-    module: str = Form(..., description="Module name: kits, scripts, call-sheets, proposals"),
+    module: str = Form(..., description="Module name: kits, scripts, shooting-days, proposals"),
     entity_id: Optional[str] = Form(None, description="Optional entity ID for sub-folder organization (e.g., proposal_id)"),
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),

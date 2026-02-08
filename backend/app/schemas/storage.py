@@ -5,7 +5,7 @@ from typing import Optional, Dict, Any
 
 class FileUploadRequest(BaseModel):
     """Schema for file upload request."""
-    module: str  # kits, scripts, call-sheets, proposals
+    module: str  # kits, scripts, shooting-days, proposals
     filename: str
 
     model_config = ConfigDict(from_attributes=True)

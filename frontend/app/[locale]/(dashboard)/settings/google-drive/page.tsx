@@ -55,7 +55,7 @@ export default function GoogleDriveSettingsPage() {
         service_account_key: parsedJson,
         auto_sync_enabled: true,
         sync_on_proposal_approval: true,
-        sync_on_call_sheet_finalized: true,
+        sync_on_shooting_day_finalized: true,
       })
 
       setServiceAccountJson('')
@@ -309,18 +309,18 @@ export default function GoogleDriveSettingsPage() {
 
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="sync-callsheets">
-                  {t('syncSettings.callSheetSync.label')}
+                <Label htmlFor="sync-shooting-days">
+                  {t('syncSettings.shootingDaySync.label')}
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  {t('syncSettings.callSheetSync.description')}
+                  {t('syncSettings.shootingDaySync.description')}
                 </p>
               </div>
               <Switch
-                id="sync-callsheets"
-                checked={credentials.sync_on_call_sheet_finalized}
+                id="sync-shooting-days"
+                checked={credentials.sync_on_shooting_day_finalized}
                 onCheckedChange={(checked) =>
-                  handleToggle('sync_on_call_sheet_finalized', checked)
+                  handleToggle('sync_on_shooting_day_finalized', checked)
                 }
                 disabled={updateDrive.isPending}
               />

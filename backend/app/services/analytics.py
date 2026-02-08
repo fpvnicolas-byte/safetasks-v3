@@ -234,10 +234,10 @@ class AnalyticsService:
             count for status, count in projects_by_status.items() if status in ACTIVE_PROJECT_STATUSES
         )
 
-        # Pending call sheets for the week (next 7 days)
-        # This would need to be implemented based on your call sheet scheduling
+        # Pending shooting days for the week (next 7 days)
+        # This would need to be implemented based on your shooting day scheduling
         # For now, return a placeholder
-        pending_call_sheets = 0
+        pending_shooting_days = 0
 
         # Production efficiency metrics
         avg_project_duration_days = 45  # Placeholder - could be calculated from actual data
@@ -246,7 +246,7 @@ class AnalyticsService:
             "active_projects": active_projects_count,
             "total_projects": total_projects_count,
             "projects_by_status": projects_by_status,
-            "pending_call_sheets_this_week": pending_call_sheets,
+            "pending_shooting_days_this_week": pending_shooting_days,
             "production_efficiency": {
                 "avg_project_duration_days": avg_project_duration_days,
                 "on_time_delivery_rate": 85.0  # Placeholder percentage

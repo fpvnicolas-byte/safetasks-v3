@@ -102,13 +102,13 @@ async def test_google_drive_authentication():
                 service_account_key=mock_service_account,
                 auto_sync_enabled=True,
                 sync_on_proposal_approval=True,
-                sync_on_call_sheet_finalized=True
+                sync_on_shooting_day_finalized=True
             )
 
             # In a real implementation, this would save the credentials
             # For testing, we'll simulate the setup
             print("✅ Service Account credentials configured")
-            print("✅ Auto-sync enabled for proposals and call sheets")
+            print("✅ Auto-sync enabled for proposals and shooting days")
             print("✅ Organization-level Google Drive access granted")
 
             print("\n✅ GOOGLE DRIVE AUTHENTICATION: Credentials configured successfully!")
@@ -158,10 +158,10 @@ async def test_folder_hierarchy_creation():
                     "url": "https://drive.google.com/drive/folders/mock_scripts_789",
                     "name": "Scripts"
                 },
-                "call_sheets_folder": {
-                    "id": "mock_call_sheets_101",
-                    "url": "https://drive.google.com/drive/folders/mock_call_sheets_101",
-                    "name": "Call Sheets"
+                "shooting_days_folder": {
+                    "id": "mock_shooting_days_101",
+                    "url": "https://drive.google.com/drive/folders/mock_shooting_days_101",
+                    "name": "Shooting Days"
                 },
                 "media_folder": {
                     "id": "mock_media_202",
@@ -201,10 +201,10 @@ async def test_file_synchronization():
                     "description": "Initial project proposal document"
                 },
                 {
-                    "file_name": "Day1_Call_Sheet.pdf",
-                    "module": "call_sheets",
+                    "file_name": "Day1_Shooting_Day.pdf",
+                    "module": "shooting_days",
                     "file_size": 1536000,  # 1.5MB
-                    "description": "First day call sheet with crew details"
+                    "description": "First day shooting day with crew details"
                 },
                 {
                     "file_name": "Script_Final_v2.1.pdf",
@@ -288,19 +288,19 @@ async def test_automation_triggers():
     # Simulate sync operation
     print("   Status: Synced successfully")
 
-    # Test Call Sheet Finalization Trigger
-    print("\n📞 TRIGGER 2: Call Sheet Finalization Sync")
-    call_sheet_trigger = {
-        "event": "call_sheet_finalized",
-        "call_sheet_id": "call_sheet_789",
+    # Test Shooting Day Finalization Trigger
+    print("\n📞 TRIGGER 2: Shooting Day Finalization Sync")
+    shooting_day_trigger = {
+        "event": "shooting_day_finalized",
+        "shooting_day_id": "shooting_day_789",
         "project_id": "project_456",
-        "file_name": "Call_Sheet_Day1_Final.pdf",
+        "file_name": "Shooting_Day_Day1_Final.pdf",
         "auto_sync": True
     }
 
-    print("✅ Call sheet finalized - auto-sync triggered")
-    print(f"   File: {call_sheet_trigger['file_name']}")
-    print("   Destination: Call Sheets folder in Google Drive")
+    print("✅ Shooting day finalized - auto-sync triggered")
+    print(f"   File: {shooting_day_trigger['file_name']}")
+    print("   Destination: Shooting Days folder in Google Drive")
     # Simulate sync operation
     print("   Status: Synced successfully")
 
@@ -309,7 +309,7 @@ async def test_automation_triggers():
     manual_sync_trigger = {
         "event": "manual_sync_request",
         "project_id": "project_456",
-        "modules": ["proposals", "call_sheets", "scripts", "media"],
+        "modules": ["proposals", "shooting_days", "scripts", "media"],
         "user_initiated": True
     }
 
@@ -339,10 +339,10 @@ async def test_sync_monitoring_and_alerts():
         "pending_syncs": 0,
         "recent_syncs": [
             {
-                "file_name": "Call_Sheet_Day2.pdf",
+                "file_name": "Shooting_Day_Day2.pdf",
                 "status": "completed",
                 "synced_at": "2024-01-15T14:30:00Z",
-                "module": "call_sheets"
+                "module": "shooting_days"
             },
             {
                 "file_name": "BTS_Footage_Day1.mp4",
@@ -423,7 +423,7 @@ async def main():
     print("✅ Google Drive Authentication: Service Account setup successful")
     print("✅ Folder Hierarchy: SafeTasks_V3/{Org}/{Project}/{Module} structure")
     print("✅ File Synchronization: Automatic upload from Supabase to Drive")
-    print("✅ Automation Triggers: Proposal approval and call sheet sync")
+    print("✅ Automation Triggers: Proposal approval and shooting day sync")
     print("✅ Sync Monitoring: Real-time status tracking and alerts")
     print("\n🎬 Ready for seamless production file management!")
     print("=" * 80)

@@ -89,7 +89,7 @@ class AiRecommendation(Base):
     """
     AI-Generated Production Recommendations
     
-    Stores high-priority AI recommendations for call sheets, budgets,
+    Stores high-priority AI recommendations for shooting days, budgets,
     schedules, and equipment planning.
     """
     __tablename__ = "ai_recommendations"
@@ -99,7 +99,7 @@ class AiRecommendation(Base):
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False)
     
     # Recommendation details
-    recommendation_type = Column(String, nullable=False)  # call_sheet, budget, schedule, equipment
+    recommendation_type = Column(String, nullable=False)  # shooting_day, budget, schedule, equipment
     title = Column(String, nullable=False)
     description = Column(Text, nullable=False)
     
@@ -120,7 +120,7 @@ class AiRecommendation(Base):
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     
     __table_args__ = (
-        CheckConstraint("recommendation_type IN ('call_sheet', 'budget', 'schedule', 'equipment')"),
+        CheckConstraint("recommendation_type IN ('shooting_day', 'budget', 'schedule', 'equipment')"),
         CheckConstraint("priority IN ('low', 'medium', 'high')"),
         CheckConstraint("confidence >= 0 AND confidence <= 1"),
     )
@@ -140,7 +140,7 @@ class AiUsageLog(Base):
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"))  # Optional
     
     # Request details
-    request_type = Column(String, nullable=False)  # script_analysis, budget_estimation, call_sheet_suggestion, etc.
+    request_type = Column(String, nullable=False)  # script_analysis, budget_estimation, shooting_day_suggestion, etc.
     endpoint = Column(String)  # API endpoint called
     
     # Cost tracking
@@ -158,5 +158,5 @@ class AiUsageLog(Base):
     timestamp = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     
     __table_args__ = (
-        CheckConstraint("request_type IN ('script_analysis', 'budget_estimation', 'call_sheet_suggestion', 'text_analysis', 'other')"),
+        CheckConstraint("request_type IN ('script_analysis', 'budget_estimation', 'shooting_day_suggestion', 'text_analysis', 'other')"),
     )

@@ -265,11 +265,11 @@ export default function AiFeaturesPage() {
                 onClick={() => router.push('/ai/shooting-day-suggestions')}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm">{t('quickActions.callSheet.title')}</CardTitle>
+                    <CardTitle className="text-sm">{t('quickActions.shootingDay.title')}</CardTitle>
                     <Calendar className="h-8 w-8 text-warning-foreground" />
                   </div>
                   <CardDescription>
-                    {t('quickActions.callSheet.desc')}
+                    {t('quickActions.shootingDay.desc')}
                   </CardDescription>
                 </CardHeader>
               </Card>

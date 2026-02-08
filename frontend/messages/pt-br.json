@@ -155,8 +155,8 @@
         "title": "Registrar Transação",
         "desc": "Registrar receita ou despesa"
       },
-      "callSheet": {
-        "title": "Ordem do Dia",
+      "shootingDay": {
+        "title": "Dia de Filmagem",
         "desc": "Criar cronograma de produção"
       },
       "addEquipment": {
@@ -218,7 +218,6 @@
     "dashboard": "Painel",
     "projects": "Projetos",
     "production": "Produção",
-    "callSheets": "Ordens do Dia",
     "shootingDays": "Dias de Filmagem",
     "scenes": "Cenas",
     "characters": "Personagens",
@@ -347,7 +346,6 @@
       "projectInformation": "Informações do Projeto",
       "tabs": {
         "details": "Detalhes",
-        "callSheets": "Ordens do Dia",
         "shootingDays": "Dias de Filmagem",
         "financials": "Financeiro",
         "production": "Produção",
@@ -484,7 +482,7 @@
         "scenesCreated": "Cenas Criadas",
         "charactersDefined": "Personagens Definidos",
         "shootingDaysCount": "Dias de Filmagem",
-        "callSheetsCount": "Ordens do Dia",
+        "shootingDaysScheduled": "Dias de Filmagem Agendados",
         "getStartedMessage": "Comece criando cenas e personagens, depois agende dias de filmagem para organizar sua produção."
       },
       "files": {
@@ -503,100 +501,7 @@
       }
     }
   },
-  "callSheets": {
-    "title": "Ordens do Dia",
-    "newCallSheet": "Nova Ordem do Dia",
-    "createCallSheet": "Criar Ordem do Dia",
-    "editCallSheet": "Editar Ordem do Dia",
-    "shootDate": "Data de Filmagem",
-    "callTime": "Horário de Chamada",
-    "location": "Localização",
-    "sceneNumber": "Número da Cena",
-    "cast": "Elenco",
-    "crew": "Equipe",
-    "equipment": "Equipamento",
-    "notes": "Observações",
-    "noCallSheets": "Nenhuma ordem do dia encontrada",
-    "tab": {
-      "description": "Gerencie cronogramas de filmagem e logística",
-      "loading": "Carregando ordens do dia...",
-      "error": "Erro ao carregar ordens do dia: {message}",
-      "deleteConfirm": "Tem certeza que deseja excluir esta ordem do dia?",
-      "empty": {
-        "title": "Nenhuma Ordem do Dia",
-        "description": "Crie sua primeira ordem do dia para organizar os cronogramas de filmagem",
-        "help": "As ordens do dia ajudam a coordenar equipe, elenco e logística para cada dia de filmagem",
-        "action": "Criar Primeira Ordem do Dia"
-      },
-      "card": {
-        "title": "Ordem do Dia",
-        "crewCall": "Chamada da Equipe",
-        "onSet": "No Set",
-        "weather": "Clima:"
-      }
-    },
-    "detail": {
-      "title": "Ordem do Dia",
-      "loading": "Carregando ordem do dia...",
-      "error": "Erro ao carregar ordem do dia: {message}",
-      "notFound": "Ordem do dia não encontrada",
-      "deleteConfirm": "Tem certeza que deseja excluir esta ordem do dia? Esta ação não pode ser desfeita.",
-      "created": "Criado em",
-      "callTimes": "Horários de Chamada",
-      "crewCall": "Chamada da Equipe",
-      "onSet": "No Set",
-      "lunch": "Almoço",
-      "wrap": "Encerramento",
-      "location": "Localização",
-      "weather": "Clima",
-      "emergencyInfo": "Informação de Emergência",
-      "productionNotes": "Notas de Produção",
-      "status": {
-        "draft": "Rascunho",
-        "confirmed": "Confirmado",
-        "completed": "Concluído"
-      },
-      "deleteError": "Falha ao excluir ordem do dia"
-    },
-    "edit": {
-      "title": "Editar Ordem do Dia",
-      "description": "Atualizar detalhes da ordem do dia para {date}",
-      "loading": "Carregando ordem do dia...",
-      "error": "Erro ao carregar ordem do dia: {message}",
-      "notFound": "Ordem do dia não encontrada",
-      "basicInfo": "Informações Básicas",
-      "shootingDay": "Dia de Filmagem *",
-      "status": "Status *",
-      "selectStatus": "Selecionar status",
-      "statusConfirmed": "Confirmado",
-      "callTimes": "Horários de Chamada",
-      "crewCall": "Chamada da Equipe *",
-      "crewCallHelp": "Inputs de hora usam HH:MM, será convertido para HH:MM:SS para o backend",
-      "onSet": "No Set *",
-      "lunch": "Almoço *",
-      "wrap": "Encerramento",
-      "location": "Localização",
-      "locationName": "Nome do Local *",
-      "locationPlaceholder": "Estúdio A",
-      "locationAddress": "Endereço do Local",
-      "locationAddressPlaceholder": "Rua do Filme, 123, São Paulo, SP",
-      "parking": "Informações de Estacionamento",
-      "parkingPlaceholder": "Detalhes e instruções de estacionamento...",
-      "weather": "Previsão do Tempo",
-      "weatherPlaceholder": "Ensolarado, 25°C",
-      "safety": "🚨 Segurança e Emergência",
-      "hospital": "Hospital Mais Próximo/Contato de Emergência *",
-      "hospitalPlaceholder": "Nome do hospital, endereço, telefone e direções...",
-      "hospitalHelp": "Obrigatório para ordens do dia profissionais - informação crítica de emergência",
-      "notes": "Notas de Produção",
-      "notesPlaceholder": "Notas adicionais de produção...",
-      "updating": "Atualizando...",
-      "update": "Atualizar Ordem do Dia",
-      "errors": {
-        "updateTitle": "Erro ao Atualizar Ordem do Dia"
-      }
-    }
-  },
+  "_callSheets_deprecated": "Merged into shootingDays",
   "shootingDays": {
     "title": "Dias de Filmagem",
     "description": "Agende e gerencie dias de filmagem da produção",
@@ -729,7 +634,7 @@
       "scheduleDetails": "Detalhes do Cronograma",
       "shootingDate": "Data de Filmagem *",
       "generalCallTime": "Horário Geral de Chamada *",
-      "generalCallTimeHelp": "Horário geral de chamada da equipe (Ordem do Dia)",
+      "generalCallTimeHelp": "Horário geral de chamada da equipe (Dia de Filmagem)",
       "shootingCall": "Início da Filmagem (No Set)",
       "shootingCallHelp": "Quando a filmagem realmente começa",
       "lunchTime": "Horário de Almoço",
@@ -2272,14 +2177,7 @@
     "progress": "Progresso",
     "timeline": "Linha do Tempo",
     "milestones": "Marcos",
-    "newCallSheet": "Novo Call Sheet",
     "newShootingDay": "Novo Dia de Filmagem",
-    "callSheets": {
-      "title": "Call Sheets",
-      "description": "Crie e gerencie call sheets diários para suas produções",
-      "viewAll": "Ver Todos os Call Sheets",
-      "createNew": "Criar Novo Call Sheet"
-    },
     "shootingDays": {
       "title": "Dias de Filmagem",
       "description": "Agende e organize seus dias de filmagem",
@@ -2543,9 +2441,9 @@
           "label": "Sincronizar ao aprovar proposta",
           "description": "Sincronizar arquivos de proposta quando aprovados"
         },
-        "callSheetSync": {
-          "label": "Sincronizar ao finalizar boletim",
-          "description": "Sincronizar boletins quando finalizados"
+        "shootingDaySync": {
+          "label": "Sincronizar ao finalizar dia de filmagem",
+          "description": "Sincronizar dias de filmagem quando finalizados"
         }
       },
       "dangerZone": {
@@ -2772,7 +2670,7 @@
     "modules": {
       "production": {
         "title": "Projetos e breakdowns",
-        "description": "Cenas, personagens, diárias e ordens do dia conectadas à produção."
+        "description": "Cenas, personagens, diárias e dias de filmagem conectados à produção."
       },
       "scheduling": {
         "title": "Agenda e equipe",
@@ -2792,7 +2690,7 @@
       },
       "ai": {
         "title": "Assistente de produção com IA",
-        "description": "Análise de roteiro, sugestões de ordem do dia e estimativas melhores."
+        "description": "Análise de roteiro, sugestões de dia de filmagem e estimativas melhores."
       }
     },
     "workflow": {
@@ -2993,9 +2891,9 @@
         "title": "Estimativa de Orçamento",
         "desc": "Obtenha estimativas de orçamento baseadas em IA a partir da análise do roteiro"
       },
-      "callSheet": {
-        "title": "Sugestões de Ordem do Dia",
-        "desc": "Gere cronogramas de filmagem e ordens do dia otimizados"
+      "shootingDay": {
+        "title": "Sugestões de Dia de Filmagem",
+        "desc": "Gere cronogramas e dias de filmagem otimizados"
       }
     },
     "analysisForm": {
@@ -3056,12 +2954,12 @@
       "recommendations": "Nenhuma recomendação disponível. Analise um roteiro para obter recomendações de IA.",
       "analyses": "Nenhuma análise de roteiro disponível. Inicie uma análise de roteiro para ver os resultados."
     },
-    "callSheetSuggestions": {
-      "pageTitle": "Sugestões de Ordem do Dia com IA",
-      "pageSubtitle": "Gere cronogramas de filmagem e ordens do dia otimizados",
+    "shootingDaySuggestions": {
+      "pageTitle": "Sugestões de Dia de Filmagem com IA",
+      "pageSubtitle": "Gere cronogramas e dias de filmagem otimizados",
       "settings": {
         "title": "Configurações de Sugestão",
-        "description": "Configure seus parâmetros para sugestão de ordem do dia",
+        "description": "Configure seus parâmetros para sugestão de dia de filmagem",
         "projectLabel": "Projeto",
         "selectProjectPlaceholder": "Selecione um projeto",
         "suggestionTypeLabel": "Tipo de Sugestão",
@@ -3088,9 +2986,9 @@
       },
       "scriptAnalysis": {
         "title": "Análise de Roteiro",
-        "description": "Cole o texto do seu roteiro abaixo para análise de IA e otimização da ordem do dia",
+        "description": "Cole o texto do seu roteiro abaixo para análise de IA e otimização do dia de filmagem",
         "label": "Texto do Roteiro",
-        "placeholder": "Cole o texto do seu roteiro aqui... A IA analisará cenas, locais, requisitos de elenco e gerará sugestões otimizadas de ordem do dia."
+        "placeholder": "Cole o texto do seu roteiro aqui... A IA analisará cenas, locais, requisitos de elenco e gerará sugestões otimizadas de dia de filmagem."
       },
       "tips": {
         "title": "Dicas de Sugestão",
@@ -3102,7 +3000,7 @@
       },
       "analysisPreview": {
         "title": "Prévia da Análise",
-        "description": "A IA analisará este roteiro para otimização da ordem do dia",
+        "description": "A IA analisará este roteiro para otimização do dia de filmagem",
         "estimatedScenes": "Cenas estimadas",
         "estimatedCharacters": "Personagens estimados",
         "estimatedLocations": "Locais estimados",
@@ -3119,7 +3017,7 @@
         "typePlaceholder": "Filtrar por tipo",
         "types": {
           "all": "Todos os Tipos",
-          "callSheet": "Ordem do Dia",
+          "shootingDay": "Dia de Filmagem",
           "budget": "Orçamento",
           "schedule": "Cronograma",
           "equipment": "Equipamento"
@@ -3223,9 +3121,9 @@
     },
     "actions": {
       "generateBudget": "Gerar Orçamento",
-      "generateCallSheet": "Gerar Ordem do Dia",
+      "generateShootingDay": "Gerar Dia de Filmagem",
       "generatingBudget": "Gerando Orçamento...",
-      "generatingCallSheet": "Gerando Ordem do Dia...",
+      "generatingShootingDay": "Gerando Dia de Filmagem...",
       "viewAiDashboard": "Ver Painel de IA",
       "backToDashboard": "Voltar ao Painel de IA",
       "viewShootingDays": "Ver Dias de Filmagem",

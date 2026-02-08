@@ -126,7 +126,7 @@ export function useSyncFile() {
  *
  * await syncAll.mutateAsync({
  *   projectId: 'uuid',
- *   modules: ['scripts', 'call_sheets']
+ *   modules: ['scripts', 'shooting_days']
  * })
  */
 export function useSyncProjectFiles() {

@@ -23,7 +23,7 @@ class GoogleDriveCredentials(Base):
     # Settings
     auto_sync_enabled = Column(Boolean, default=True)
     sync_on_proposal_approval = Column(Boolean, default=True)
-    sync_on_call_sheet_finalized = Column(Boolean, default=True)
+    sync_on_shooting_day_finalized = Column(Boolean, default=True)
 
     # Metadata
     connected_at = Column(TIMESTAMP(timezone=True), nullable=True)
@@ -49,7 +49,7 @@ class CloudSyncStatus(Base):
 
     # Project context
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=True)
-    module = Column(String, nullable=True)  # proposals, call_sheets, scripts, etc.
+    module = Column(String, nullable=True)  # proposals, shooting_days, scripts, etc.
 
     # Cloud provider sync status
     provider = Column(String, nullable=False)  # google_drive, dropbox, etc.
@@ -85,8 +85,8 @@ class ProjectDriveFolder(Base):
     project_folder_url = Column(String, nullable=True)
     scripts_folder_id = Column(String, nullable=True)
     scripts_folder_url = Column(String, nullable=True)
-    call_sheets_folder_id = Column(String, nullable=True)
-    call_sheets_folder_url = Column(String, nullable=True)
+    shooting_days_folder_id = Column(String, nullable=True)
+    shooting_days_folder_url = Column(String, nullable=True)
     media_folder_id = Column(String, nullable=True)
     media_folder_url = Column(String, nullable=True)
 

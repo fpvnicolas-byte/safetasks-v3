@@ -100,7 +100,7 @@ export default function DesignSystemPage() {
         <CardContent className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Call Sheet Name</label>
+              <label className="text-sm font-medium">Shooting Day Name</label>
               <Input placeholder="Day 12 — Unit A" />
             </div>
             <div className="space-y-2">
@@ -179,7 +179,7 @@ export default function DesignSystemPage() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Finalize call sheet?</DialogTitle>
+                <DialogTitle>Finalize shooting day?</DialogTitle>
                 <DialogDescription>
                   This action locks the document and notifies the team.
                 </DialogDescription>
@@ -221,11 +221,11 @@ export default function DesignSystemPage() {
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-muted/40 px-6 py-10 text-center">
-            <div className="text-sm font-medium">No call sheets yet</div>
+            <div className="text-sm font-medium">No shooting days yet</div>
             <p className="text-sm text-muted-foreground mt-2">
-              Create the first call sheet to keep production aligned.
+              Create the first shooting day to keep production aligned.
             </p>
-            <Button className="mt-4">Create call sheet</Button>
+            <Button className="mt-4">Create shooting day</Button>
           </div>
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-muted/40 px-6 py-10 text-center">
             <div className="text-sm font-medium">No filters applied</div>
@@ -287,14 +287,14 @@ export default function DesignSystemPage() {
             </div>
             <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <div className="text-2xl font-bold font-display">Call Sheets</div>
+                <div className="text-2xl font-bold font-display">Shooting Days</div>
                 <p className="text-sm text-muted-foreground">
                   Daily production schedules and crew coordination.
                 </p>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline">Export</Button>
-                <Button>Create call sheet</Button>
+                <Button>Create shooting day</Button>
               </div>
             </div>
           </div>

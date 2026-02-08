@@ -221,7 +221,7 @@ async def test_ai_script_analysis():
             )
 
             print("✅ Production suggestions generated!")
-            print(f"   📋 Call sheet suggestions: {len(suggestions.get('call_sheet_suggestions', []))}")
+            print(f"   📋 Shooting day suggestions: {len(suggestions.get('shooting_day_suggestions', []))}")
             print(f"   📷 Equipment recommendations: {len(suggestions.get('equipment_recommendations', []))}")
 
             # Test 3: Validate content ownership

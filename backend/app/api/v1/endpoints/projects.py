@@ -342,7 +342,7 @@ async def delete_project(
             status_code=status.HTTP_409_CONFLICT,
             detail=(
                 "Project has related records that must be removed before deletion. "
-                "Delete linked items (e.g., call sheets, stakeholders, AI artifacts), "
+                "Delete linked items (e.g., shooting days, stakeholders, AI artifacts), "
                 "or archive the project instead."
             ),
         ) from exc

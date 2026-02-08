@@ -150,11 +150,13 @@ export interface ClientUpdate {
 }
 
 // ============================================================================
-// CALL SHEET TYPES
+// SHOOTING DAY TYPES (formerly Call Sheet)
 // ============================================================================
 
+// @deprecated - use ShootingDay status instead
 export type CallSheetStatus = 'draft' | 'confirmed' | 'completed'
 
+// @deprecated - merged into ShootingDay
 export interface CallSheet {
   id: UUID
   organization_id: UUID
@@ -192,6 +194,7 @@ export interface CallSheet {
   }
 }
 
+// @deprecated - merged into ShootingDay
 export interface CallSheetWithProject extends CallSheet {
   project: Project
 }
@@ -1262,7 +1265,7 @@ export interface AiRecommendation {
   id: UUID
   organization_id: UUID
   project_id: UUID
-  recommendation_type: 'call_sheet' | 'budget' | 'schedule' | 'equipment'
+  recommendation_type: 'shooting_day' | 'budget' | 'schedule' | 'equipment'
   title: string
   description: string
   confidence: number
@@ -1398,7 +1401,7 @@ export interface GoogleDriveCredentials {
   service_account_key: Record<string, unknown> | null
   auto_sync_enabled: boolean
   sync_on_proposal_approval: boolean
-  sync_on_call_sheet_finalized: boolean
+  sync_on_shooting_day_finalized: boolean
   root_folder_id: string | null
   root_folder_url: string | null
   connected_at: ISODateTime | null
@@ -1411,20 +1414,20 @@ export interface GoogleDriveCredentialsCreate {
   service_account_key: Record<string, unknown>
   auto_sync_enabled?: boolean
   sync_on_proposal_approval?: boolean
-  sync_on_call_sheet_finalized?: boolean
+  sync_on_shooting_day_finalized?: boolean
 }
 
 export interface GoogleDriveCredentialsUpdate {
   service_account_key?: Record<string, unknown>
   auto_sync_enabled?: boolean
   sync_on_proposal_approval?: boolean
-  sync_on_call_sheet_finalized?: boolean
+  sync_on_shooting_day_finalized?: boolean
 }
 
 export interface SyncFileRequest {
   file_id: UUID
   project_id: UUID
-  module: string // proposals, call_sheets, scripts, media
+  module: string // proposals, shooting_days, scripts, media
 }
 
 export interface SyncResult {
@@ -1440,7 +1443,7 @@ export interface SyncResult {
 }
 
 export interface ProjectSyncRequest {
-  modules?: string[] // proposals, call_sheets, scripts, media
+  modules?: string[] // proposals, shooting_days, scripts, media
 }
 
 export interface ProjectSyncResult {
@@ -1461,8 +1464,8 @@ export interface ProjectDriveFolder {
   project_folder_url: string | null
   scripts_folder_id: string | null
   scripts_folder_url: string | null
-  call_sheets_folder_id: string | null
-  call_sheets_folder_url: string | null
+  shooting_days_folder_id: string | null
+  shooting_days_folder_url: string | null
   media_folder_id: string | null
   media_folder_url: string | null
   created_at: ISODateTime
@@ -1500,7 +1503,7 @@ export interface ProductionMetrics {
   active_projects: number
   total_projects: number
   projects_by_status: Record<string, number>
-  pending_call_sheets_this_week: number
+  pending_shooting_days_this_week: number
   production_efficiency: {
     avg_project_duration_days: number
     on_time_delivery_rate: number

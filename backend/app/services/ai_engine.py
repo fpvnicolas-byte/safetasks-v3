@@ -455,7 +455,7 @@ class AIEngineService:
             parse_time = time.time() - parse_start_time
 
             # Validate response structure
-            required_suggestion_keys = ['call_sheet_suggestions', 'equipment_recommendations', 
+            required_suggestion_keys = ['shooting_day_suggestions', 'equipment_recommendations',
                                       'scheduling_considerations', 'budget_considerations']
             missing_suggestion_keys = [key for key in required_suggestion_keys if key not in suggestions]
             
@@ -502,7 +502,7 @@ class AIEngineService:
                     "request_id": request_id,
                     "organization_id": str(organization_id),
                     "processing_time_ms": int(processing_time * 1000),
-                    "call_sheet_suggestions_count": len(suggestions.get('call_sheet_suggestions', [])),
+                    "shooting_day_suggestions_count": len(suggestions.get('shooting_day_suggestions', [])),
                     "equipment_recommendations_count": len(suggestions.get('equipment_recommendations', [])),
                     "scheduling_considerations_count": len(suggestions.get('scheduling_considerations', [])),
                     "budget_considerations_count": len(suggestions.get('budget_considerations', [])),
@@ -658,7 +658,7 @@ Script Analysis:
 
 Return a JSON object with:
 {{
-    "call_sheet_suggestions": [
+    "shooting_day_suggestions": [
         {{
             "day": 1,
             "suggested_scenes": [1, 2, 3],

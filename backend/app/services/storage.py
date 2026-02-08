@@ -112,7 +112,7 @@ class StorageService:
 
         Args:
             organization_id: The organization ID for multi-tenancy
-            module: The module name (e.g., 'kits', 'scripts', 'call-sheets')
+            module: The module name (e.g., 'kits', 'scripts', 'shooting-days')
             filename: Original filename
             file_content: File content as bytes
             bucket: Storage bucket ('public-assets' or 'production-files')

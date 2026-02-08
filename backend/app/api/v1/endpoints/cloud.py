@@ -209,7 +209,7 @@ async def sync_project_files(
 ) -> ProjectSyncResult:
     """
     Sync all files for a project to Google Drive.
-    This operation syncs files from all modules (proposals, call_sheets, scripts, media).
+    This operation syncs files from all modules (proposals, shooting_days, scripts, media).
     """
     organization_id = profile.organization_id
     if sync_request is None:
@@ -327,10 +327,10 @@ async def get_project_drive_folders(
             "id": folders.scripts_folder_id,
             "url": folders.scripts_folder_url
         } if folders.scripts_folder_id else None,
-        "call_sheets_folder": {
-            "id": folders.call_sheets_folder_id,
-            "url": folders.call_sheets_folder_url
-        } if folders.call_sheets_folder_id else None,
+        "shooting_days_folder": {
+            "id": folders.shooting_days_folder_id,
+            "url": folders.shooting_days_folder_url
+        } if folders.shooting_days_folder_id else None,
         "media_folder": {
             "id": folders.media_folder_id,
             "url": folders.media_folder_url

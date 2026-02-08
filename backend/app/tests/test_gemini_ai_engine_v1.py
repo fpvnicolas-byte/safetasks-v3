@@ -155,7 +155,7 @@ async def test_gemini_production_suggestions():
         print("✅ Gemini production suggestions generated!")
 
         # Check for expected structure
-        expected_keys = ["call_sheet_suggestions", "equipment_recommendations",
+        expected_keys = ["shooting_day_suggestions", "equipment_recommendations",
                         "scheduling_considerations", "budget_considerations"]
 
         for key in expected_keys:
@@ -166,11 +166,11 @@ async def test_gemini_production_suggestions():
                 return False
 
         # Sample results
-        call_sheets = suggestions.get("call_sheet_suggestions", [])
+        shooting_days = suggestions.get("shooting_day_suggestions", [])
         equipment = suggestions.get("equipment_recommendations", [])
 
         print("\n📋 Suggestions Summary:")
-        print(f"   Call sheet suggestions: {len(call_sheets)}")
+        print(f"   Shooting day suggestions: {len(shooting_days)}")
         print(f"   Equipment recommendations: {len(equipment)}")
 
         print("✅ PRODUCTION SUGGESTIONS TEST: PASSED!")

@@ -117,7 +117,7 @@ async def test_rbac_permissions():
             "can_create_bank_accounts": True,
             "can_view_financial_stats": True,
             "can_create_clients": True,
-            "can_create_call_sheets": True,
+            "can_create_shooting_days": True,
             "can_delete_clients": True,
             "expected_message": "Full access granted"
         },
@@ -126,7 +126,7 @@ async def test_rbac_permissions():
             "can_create_bank_accounts": False,
             "can_view_financial_stats": False,
             "can_create_clients": True,
-            "can_create_call_sheets": True,
+            "can_create_shooting_days": True,
             "can_delete_clients": True,
             "expected_message": "Manager permissions working"
         },
@@ -135,7 +135,7 @@ async def test_rbac_permissions():
             "can_create_bank_accounts": False,
             "can_view_financial_stats": False,
             "can_create_clients": False,
-            "can_create_call_sheets": False,
+            "can_create_shooting_days": False,
             "can_delete_clients": False,
             "expected_message": "Crew read-only access working"
         },
@@ -144,7 +144,7 @@ async def test_rbac_permissions():
             "can_create_bank_accounts": False,
             "can_view_financial_stats": False,
             "can_create_clients": False,
-            "can_create_call_sheets": False,
+            "can_create_shooting_days": False,
             "can_delete_clients": False,
             "expected_message": "Viewer read-only access working"
         }
@@ -184,11 +184,11 @@ async def test_rbac_permissions():
                 else:
                     print("  ❌ Cannot create clients (expected)")
 
-                # Test call sheet management (admin + manager)
-                if permissions["can_create_call_sheets"]:
-                    print("  ✅ Can create/manage call sheets")
+                # Test shooting day management (admin + manager)
+                if permissions["can_create_shooting_days"]:
+                    print("  ✅ Can create/manage shooting days")
                 else:
-                    print("  ❌ Cannot create call sheets (crew read-only)")
+                    print("  ❌ Cannot create shooting days (crew read-only)")
 
                 # Test client deletion (admin + manager)
                 if permissions["can_delete_clients"]:

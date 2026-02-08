@@ -69,7 +69,7 @@ class CloudSyncService:
         Args:
             file_id: Supabase Storage file ID
             project_id: Project ID for folder organization
-            module: Module type (proposals, call_sheets, scripts, media)
+            module: Module type (proposals, shooting_days, scripts, media)
             db: Database session
 
         Returns:
@@ -173,7 +173,7 @@ class CloudSyncService:
             Sync results summary
         """
         if modules is None:
-            modules = ["proposals", "call_sheets", "scripts", "media"]
+            modules = ["proposals", "shooting_days", "scripts", "media"]
 
         # Get project information
         project = await self._get_project_info(project_id, db)

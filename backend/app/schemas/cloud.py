@@ -9,7 +9,7 @@ class GoogleDriveCredentialsBase(BaseModel):
     service_account_key: Optional[Dict[str, Any]] = None
     auto_sync_enabled: bool = True
     sync_on_proposal_approval: bool = True
-    sync_on_call_sheet_finalized: bool = True
+    sync_on_shooting_day_finalized: bool = True
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -36,7 +36,7 @@ class GoogleDriveCredentialsUpdate(BaseModel):
     service_account_key: Optional[Dict[str, Any]] = None
     auto_sync_enabled: Optional[bool] = None
     sync_on_proposal_approval: Optional[bool] = None
-    sync_on_call_sheet_finalized: Optional[bool] = None
+    sync_on_shooting_day_finalized: Optional[bool] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -84,8 +84,8 @@ class ProjectDriveFolder(ProjectDriveFolderBase):
     project_folder_url: Optional[str]
     scripts_folder_id: Optional[str]
     scripts_folder_url: Optional[str]
-    call_sheets_folder_id: Optional[str]
-    call_sheets_folder_url: Optional[str]
+    shooting_days_folder_id: Optional[str]
+    shooting_days_folder_url: Optional[str]
     media_folder_id: Optional[str]
     media_folder_url: Optional[str]
     created_at: datetime
@@ -96,7 +96,7 @@ class SyncFileRequest(BaseModel):
     """Schema for file sync request."""
     file_id: UUID
     project_id: UUID
-    module: str  # proposals, call_sheets, scripts, media
+    module: str  # proposals, shooting_days, scripts, media
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -118,7 +118,7 @@ class SyncResult(BaseModel):
 
 class ProjectSyncRequest(BaseModel):
     """Schema for project sync request."""
-    modules: Optional[List[str]] = None  # proposals, call_sheets, scripts, media
+    modules: Optional[List[str]] = None  # proposals, shooting_days, scripts, media
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -225,27 +225,27 @@ async def check_3_rbac_enforcement():
 
     async_session, org_a_id, org_b_id = await setup_test_organizations()
 
-    # Test Call Sheet permissions (simulated)
-    print("Testing Call Sheet RBAC...")
+    # Test Shooting Day permissions (simulated)
+    print("Testing Shooting Day RBAC...")
 
     # Crew user (role="crew") should be able to GET but not DELETE
     crew_permissions = {
-        "read_call_sheets": True,   # Crew can read
-        "create_call_sheets": False, # Only admin/manager
-        "update_call_sheets": False, # Only admin/manager
-        "delete_call_sheets": False  # Only admin/manager
+        "read_shooting_days": True,   # Crew can read
+        "create_shooting_days": False, # Only admin/manager
+        "update_shooting_days": False, # Only admin/manager
+        "delete_shooting_days": False  # Only admin/manager
     }
 
     # Admin user (role="admin") should be able to do everything
     admin_permissions = {
-        "read_call_sheets": True,
-        "create_call_sheets": True,
-        "update_call_sheets": True,
-        "delete_call_sheets": True
+        "read_shooting_days": True,
+        "create_shooting_days": True,
+        "update_shooting_days": True,
+        "delete_shooting_days": True
     }
 
     # Check the actual endpoint dependencies
-    from app.api.v1.endpoints.call_sheets import router
+    from app.api.v1.endpoints.shooting_days import router
 
     # Analyze router routes and their dependencies
     crew_blocked_endpoints = []
@@ -284,12 +284,12 @@ async def check_3_rbac_enforcement():
                     crew_blocked_endpoints.append(f"GET {path} (blocked for crew)")
 
     if len(crew_blocked_endpoints) == 0:
-        print("✅ PASS: RBAC correctly implemented for Call Sheets")
+        print("✅ PASS: RBAC correctly implemented for Shooting Days")
         print("   Crew can read, but cannot create/update/delete")
         print("   Admin/Manager have full access")
         return True
     else:
-        print("❌ FAIL: RBAC issues found in Call Sheet endpoints:")
+        print("❌ FAIL: RBAC issues found in Shooting Day endpoints:")
         for endpoint in crew_blocked_endpoints:
             print(f"   - {endpoint}")
         return False
