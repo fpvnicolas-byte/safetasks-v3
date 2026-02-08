@@ -932,6 +932,7 @@ async def analyze_script_content(
         # Create recommendations from analysis results
         # Equipment recommendations
         equipment_data = analysis_result.get("suggested_equipment", [])
+        equipment_list: list[str] = []
         if equipment_data and isinstance(equipment_data, list) and len(equipment_data) > 0:
             raw_items: list[str] = []
             for eq in equipment_data:
@@ -949,7 +950,6 @@ async def analyze_script_content(
                 elif isinstance(eq, str):
                     raw_items.append(eq)
 
-            equipment_list: list[str] = []
             seen_items: set[str] = set()
             for item in raw_items:
                 clean_item = item.strip()
