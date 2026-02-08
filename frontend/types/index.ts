@@ -1152,6 +1152,7 @@ export interface SceneFormData {
 }
 
 export interface SceneCreate {
+  project_id: UUID
   scene_number: number
   heading: string
   description: string

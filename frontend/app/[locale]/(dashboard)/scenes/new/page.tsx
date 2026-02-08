@@ -47,6 +47,7 @@ function NewSceneForm() {
       }
 
       const data = {
+        project_id: projectId,
         scene_number: sceneNumber, // INTEGER, not string
         heading: formData.get('heading') as string,
         description: formData.get('description') as string,
