@@ -30,7 +30,7 @@ from app.models.ai import ScriptAnalysis, AiSuggestion, AiRecommendation
 from app.api.v1.endpoints.ai_schemas import (
     ScriptAnalysisRequest,
     BudgetEstimationRequest,
-    CallSheetSuggestionRequest,
+    ShootingDaySuggestionRequest,
     TextAnalysisRequest
 )
 
@@ -682,15 +682,15 @@ async def estimate_budget(
         )
 
 
-@router.post("/call-sheet-suggestions", dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)])
-async def generate_call_sheet_suggestions(
-    request: CallSheetSuggestionRequest,
+@router.post("/shooting-day-suggestions", dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)])
+async def generate_shooting_day_suggestions(
+    request: ShootingDaySuggestionRequest,
     organization_id: UUID = Depends(get_current_organization),
     profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
     """
-    Generate AI-powered call sheet suggestions for a project.
+    Generate AI-powered shooting day suggestions for a project.
     """
     start_time = time.time()
     try:
@@ -762,8 +762,8 @@ async def generate_call_sheet_suggestions(
             db=db,
             organization_id=organization_id,
             project_id=request.project_id,
-            request_type="call_sheet_suggestion",
-            endpoint="/api/v1/ai/call-sheet-suggestions",
+            request_type="shooting_day_suggestion",
+            endpoint="/api/v1/ai/shooting-day-suggestions",
             token_count=len(request.script_content.split()) * 4,  # analysis + suggestions (rough)
             cost_cents=int(len(request.script_content.split()) * 0.001),  # rough
             processing_time_ms=processing_time_ms,
@@ -771,7 +771,7 @@ async def generate_call_sheet_suggestions(
         )
         
         return {
-            "message": "Call sheet suggestions generated",
+            "message": "Shooting day suggestions generated",
             "project_id": str(request.project_id),
             "suggestion_type": request.suggestion_type,
             "suggestions": call_sheet_data,
@@ -789,8 +789,8 @@ async def generate_call_sheet_suggestions(
             db=db,
             organization_id=organization_id,
             project_id=request.project_id,
-            request_type="call_sheet_suggestion",
-            endpoint="/api/v1/ai/call-sheet-suggestions",
+            request_type="shooting_day_suggestion",
+            endpoint="/api/v1/ai/shooting-day-suggestions",
             processing_time_ms=processing_time_ms,
             success=False,
             error_message=str(e.detail),
@@ -803,8 +803,8 @@ async def generate_call_sheet_suggestions(
             db=db,
             organization_id=organization_id,
             project_id=request.project_id,
-            request_type="call_sheet_suggestion",
-            endpoint="/api/v1/ai/call-sheet-suggestions",
+            request_type="shooting_day_suggestion",
+            endpoint="/api/v1/ai/shooting-day-suggestions",
             processing_time_ms=processing_time_ms,
             success=False,
             error_message=str(e),

@@ -29,7 +29,6 @@ const navigation: { key: string; href: string; icon: typeof LayoutDashboard; rol
   { key: 'ai', href: '/ai', icon: Sparkles, roles: ['owner', 'admin', 'producer'] },
   { key: 'projects', href: '/projects', icon: FolderOpen, roles: ['owner', 'admin', 'producer', 'finance', 'freelancer'] },
   { key: 'proposals', href: '/proposals', icon: FileText, roles: ['owner', 'admin', 'producer'] },
-  { key: 'callSheets', href: '/call-sheets', icon: FileText, roles: ['owner', 'admin', 'producer'] },
   { key: 'financials', href: '/financials', icon: DollarSign, roles: ['owner', 'admin', 'finance'] },
   { key: 'shootingDays', href: '/shooting-days', icon: Calendar, roles: ['owner', 'admin', 'producer'] },
   { key: 'production', href: '/production', icon: Film, roles: ['owner', 'admin', 'producer'] },

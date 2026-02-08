@@ -21,8 +21,8 @@ class BudgetEstimationRequest(BaseModel):
     script_content: str = Field(..., description="Script content to analyze")
 
 
-class CallSheetSuggestionRequest(BaseModel):
-    """Request schema for call sheet suggestions"""
+class ShootingDaySuggestionRequest(BaseModel):
+    """Request schema for shooting day suggestions"""
     project_id: UUID = Field(..., description="Project ID")
     suggestion_type: str = Field(..., description="Type of suggestion")
     script_content: str = Field(..., description="Script content to analyze")

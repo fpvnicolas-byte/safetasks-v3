@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
     organizations, clients, projects, bank_accounts, transactions,
-    kits, call_sheets, proposals, storage, notifications, ai,
+    kits, proposals, storage, notifications, ai,
     scenes, characters, shooting_days, production, financial,
     suppliers, stakeholders, inventory, cloud, dashboard, profiles,
     ai_monitoring, services, project_assignments, billing, whatsapp,
@@ -46,12 +46,6 @@ api_router.include_router(
     kits.router,
     prefix="/kits",
     tags=["kits"]
-)
-
-api_router.include_router(
-    call_sheets.router,
-    prefix="/call-sheets",
-    tags=["call_sheets"]
 )
 
 api_router.include_router(

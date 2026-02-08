@@ -43,8 +43,6 @@ export default function DashboardLayout({
     const isAllowed =
       path === '/projects' ||
       path.startsWith('/projects/') ||
-      path === '/call-sheets' ||
-      path.startsWith('/call-sheets/') ||
       path === '/shooting-days' ||
       path.startsWith('/shooting-days/') ||
       path === '/scenes' ||
@@ -62,7 +60,6 @@ export default function DashboardLayout({
     if (path === '/projects/new' || path.startsWith('/projects/new/')) return true
     if (/^\/projects\/[^/]+\/edit(\/|$)/.test(path)) return true
 
-    if (path === '/call-sheets/new' || path.startsWith('/call-sheets/new/')) return true
     if (/^\/call-sheets\/[^/]+\/edit(\/|$)/.test(path)) return true
 
     if (path === '/shooting-days/new' || path.startsWith('/shooting-days/new/')) return true

@@ -8,6 +8,7 @@ export interface TeamMember {
   email: string
   full_name: string | null
   avatar_url: string | null
+  phone: string | null
   effective_role: string
   is_master_owner: boolean
   created_at: string

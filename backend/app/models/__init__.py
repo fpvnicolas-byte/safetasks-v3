@@ -1,6 +1,5 @@
 # Import all models automatically detected
 from .bank_accounts import BankAccount
-from .call_sheets import CallSheet
 from .clients import Client
 from .cloud import GoogleDriveCredentials, CloudSyncStatus, ProjectDriveFolder
 from .commercial import Supplier
@@ -14,7 +13,7 @@ from .production import DayNightEnum, InternalExternalEnum, Scene, Character, Sc
 from .profiles import Profile
 from .projects import Project
 from .proposals import Proposal
-from .scheduling import ShootingDay
+from .scheduling import ShootingDay, ShootingDayCrewAssignment
 from .storage import StoredFile
 from .transactions import Transaction
 from .services import Service
@@ -25,7 +24,6 @@ from .access import ProjectAssignment
 
 __all__ = [
     "BankAccount",
-    "CallSheet",
     "Client",
     "GoogleDriveCredentials",
     "CloudSyncStatus",
@@ -54,6 +52,7 @@ __all__ = [
     "Project",
     "Proposal",
     "ShootingDay",
+    "ShootingDayCrewAssignment",
     "StoredFile",
     "Transaction",
     "Service",

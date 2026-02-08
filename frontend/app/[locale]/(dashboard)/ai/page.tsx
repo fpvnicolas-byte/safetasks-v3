@@ -262,7 +262,7 @@ export default function AiFeaturesPage() {
               </Card>
 
               <Card className="hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => router.push('/ai/call-sheet-suggestions')}>
+                onClick={() => router.push('/ai/shooting-day-suggestions')}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm">{t('quickActions.callSheet.title')}</CardTitle>

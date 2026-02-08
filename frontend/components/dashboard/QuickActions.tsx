@@ -39,11 +39,6 @@ export function QuickActions() {
       color: 'bg-primary/15 text-primary'
     },
     {
-      title: t('actions.callSheet.title'),
-      description: t('actions.callSheet.desc'),
-      icon: <Calendar className="h-5 w-5" />,
-      href: '/call-sheets/new',
-      color: 'bg-warning/20 text-warning-foreground'
     },
     {
       title: t('actions.addEquipment.title'),

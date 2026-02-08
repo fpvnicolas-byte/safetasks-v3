@@ -208,3 +208,46 @@ class AIScriptAnalysisCommit(BaseModel):
     analysis_data: dict  # The JSON result from AI analysis
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class CrewAssignmentCreate(BaseModel):
+    """Schema for creating a crew assignment."""
+    profile_id: UUID
+    production_function: str = Field(..., min_length=1)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CrewAssignmentUpdate(BaseModel):
+    """Schema for updating a crew assignment."""
+    production_function: str = Field(..., min_length=1)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CrewAssignmentOut(BaseModel):
+    """Schema for crew assignment response."""
+    id: UUID
+    profile_id: UUID
+    profile_name: Optional[str] = None
+    profile_email: Optional[str] = None
+    profile_phone: Optional[str] = None
+    production_function: str
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UnassignScenesRequest(BaseModel):
+    """Schema for unassigning scenes from a shooting day."""
+    scene_ids: List[UUID]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ShootingDayDetail(ShootingDay):
+    """Schema for detailed Shooting Day response with scenes and crew."""
+    scenes: List[Scene] = []
+    crew_assignments: List[CrewAssignmentOut] = []
+
+    model_config = ConfigDict(from_attributes=True)

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="{{ locale | default('pt-BR') }}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t.shooting_day }} - {{ project.title if project else '' }}</title>
+    <link rel="stylesheet" href="shooting_day.css">
+</head>
+
+<body>
+    <div class="shooting-day-document">
+        <!-- Header with Logo and Organization Info -->
+        <header class="shooting-day-header">
+            <div class="logo-section">
+                {% if logo_url %}
+                <img src="{{ logo_url }}" alt="{{ organization.name }}" class="organization-logo">
+                {% endif %}
+            </div>
+            <div class="organization-info">
+                <h1 class="organization-name">{{ organization.name }}</h1>
+                {% if organization.email %}
+                <p class="contact-item">{{ organization.email }}</p>
+                {% endif %}
+                {% if organization.phone %}
+                <p class="contact-item">{{ organization.phone }}</p>
+                {% endif %}
+            </div>
+        </header>
+
+        <!-- Shooting Day Title and Meta -->
+        <section class="shooting-day-meta">
+            <h2 class="shooting-day-title">{{ t.shooting_day }}</h2>
+            <div class="meta-grid">
+                <div class="meta-item">
+                    <span class="meta-label">{{ t.project }}</span>
+                    <span class="meta-value">{{ project.title if project else '-' }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">{{ t.date }}</span>
+                    <span class="meta-value">{{ shooting_day.date.strftime('%d/%m/%Y') if shooting_day.date else '-' }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">{{ t.status }}</span>
+                    <span class="meta-value status-{{ shooting_day.status.value if shooting_day.status.value is defined else shooting_day.status }}">{{ translate_status(shooting_day.status.value if shooting_day.status.value is defined else shooting_day.status) }}</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Schedule Section -->
+        <section class="schedule-section">
+            <h3 class="section-title">{{ t.schedule }}</h3>
+            <div class="schedule-grid">
+                <div class="schedule-item">
+                    <span class="schedule-label">{{ t.call_time }}</span>
+                    <span class="schedule-value">{{ shooting_day.call_time | format_time }}</span>
+                </div>
+                <div class="schedule-item">
+                    <span class="schedule-label">{{ t.on_set }}</span>
+                    <span class="schedule-value">{{ shooting_day.on_set | format_time }}</span>
+                </div>
+                <div class="schedule-item">
+                    <span class="schedule-label">{{ t.lunch_time }}</span>
+                    <span class="schedule-value">{{ shooting_day.lunch_time | format_time }}</span>
+                </div>
+                <div class="schedule-item">
+                    <span class="schedule-label">{{ t.wrap_time }}</span>
+                    <span class="schedule-value">{{ shooting_day.wrap_time | format_time }}</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Location Section -->
+        <section class="location-section">
+            <h3 class="section-title">{{ t.location }}</h3>
+            <div class="location-info">
+                {% if shooting_day.location_name %}
+                <div class="location-row">
+                    <span class="location-label">{{ t.location_name }}</span>
+                    <span class="location-value">{{ shooting_day.location_name }}</span>
+                </div>
+                {% endif %}
+                {% if shooting_day.location_address %}
+                <div class="location-row">
+                    <span class="location-label">{{ t.location_address }}</span>
+                    <span class="location-value">{{ shooting_day.location_address }}</span>
+                </div>
+                {% endif %}
+                {% if shooting_day.parking_info %}
+                <div class="location-row">
+                    <span class="location-label">{{ t.parking_info }}</span>
+                    <span class="location-value">{{ shooting_day.parking_info }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- Crew Section -->
+        {% if crew_assignments and crew_assignments | length > 0 %}
+        <section class="crew-section">
+            <h3 class="section-title">{{ t.crew }}</h3>
+            <table class="crew-table">
+                <thead>
+                    <tr>
+                        <th class="col-name">{{ t.name }}</th>
+                        <th class="col-function">{{ t.function }}</th>
+                        <th class="col-phone">{{ t.phone }}</th>
+                        <th class="col-email">{{ t.email }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for crew in crew_assignments %}
+                    <tr>
+                        <td class="crew-name">{{ crew.profile_name or '-' }}</td>
+                        <td class="crew-function">{{ crew.production_function }}</td>
+                        <td class="crew-phone">{{ crew.profile_phone or '-' }}</td>
+                        <td class="crew-email">{{ crew.profile_email or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        {% else %}
+        <section class="crew-section">
+            <h3 class="section-title">{{ t.crew }}</h3>
+            <div class="empty-state">
+                <p>{{ t.no_crew }}</p>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Scenes Section -->
+        {% if scenes and scenes | length > 0 %}
+        <section class="scenes-section">
+            <h3 class="section-title">{{ t.scenes }}</h3>
+            <table class="scenes-table">
+                <thead>
+                    <tr>
+                        <th class="col-scene-number">{{ t.scene_number }}</th>
+                        <th class="col-heading">{{ t.heading }}</th>
+                        <th class="col-int-ext">{{ t.int_ext }}</th>
+                        <th class="col-day-night">{{ t.day_night }}</th>
+                        <th class="col-time">{{ t.estimated_time }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scene in scenes %}
+                    <tr>
+                        <td class="scene-number">{{ scene.scene_number }}</td>
+                        <td class="scene-heading">{{ scene.heading }}</td>
+                        <td class="scene-int-ext">
+                            {% if scene.int_ext %}
+                            <span class="badge badge-{{ scene.int_ext.lower() }}">{{ translate_int_ext(scene.int_ext) }}</span>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td class="scene-day-night">
+                            {% if scene.day_night %}
+                            <span class="badge badge-{{ scene.day_night.lower() }}">{{ translate_day_night(scene.day_night) }}</span>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td class="scene-time">{{ scene.estimated_time or '-' }} {% if scene.estimated_time %}{{ t.minutes }}{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="total-time">
+                <span class="total-label">{{ t.total_estimated_time }}:</span>
+                <span class="total-value">{{ total_estimated_time }} {{ t.minutes }}</span>
+            </div>
+        </section>
+        {% else %}
+        <section class="scenes-section">
+            <h3 class="section-title">{{ t.scenes }}</h3>
+            <div class="empty-state">
+                <p>{{ t.no_scenes }}</p>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Safety and Notes Section -->
+        <section class="safety-section">
+            <h3 class="section-title">{{ t.safety }}</h3>
+            <div class="safety-info">
+                {% if shooting_day.hospital_info %}
+                <div class="safety-row">
+                    <span class="safety-label">{{ t.hospital_info }}</span>
+                    <span class="safety-value">{{ shooting_day.hospital_info }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- Production Notes -->
+        {% if shooting_day.notes %}
+        <section class="notes-section">
+            <h3 class="section-title">{{ t.production_notes }}</h3>
+            <div class="notes-content">
+                {{ shooting_day.notes }}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Footer -->
+        <footer class="shooting-day-footer">
+            <div class="footer-content">
+                <p class="generated-info">{{ t.generated_at }} {{ generated_at[:10] }}</p>
+                <p class="page-number">{{ t.page }} <span class="page"></span> {{ t.of }} <span class="topage"></span></p>
+            </div>
+        </footer>
+    </div>
+</body>
+
+</html>

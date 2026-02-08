@@ -38,6 +38,7 @@ class TeamMemberOut(BaseModel):
     email: str
     full_name: Optional[str] = None
     avatar_url: Optional[str] = None
+    phone: Optional[str] = None
     effective_role: str
     is_master_owner: bool
     created_at: datetime

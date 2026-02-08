@@ -10,7 +10,6 @@ from app.models import (
     Project,
     BankAccount,
     Transaction,
-    CallSheet,
     Kit,
     Proposal,
     StoredFile,

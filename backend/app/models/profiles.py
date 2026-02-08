@@ -22,6 +22,7 @@ class Profile(Base):
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True)
     full_name = Column(String)
     avatar_url = Column(String)
+    phone = Column(String, nullable=True)
     role = Column(String, default="viewer")  # admin, manager, crew, viewer
     role_v2 = Column(String, nullable=True)  # owner, admin, producer, finance, freelancer
     is_master_owner = Column(Boolean, default=False, nullable=False)

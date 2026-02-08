@@ -606,6 +606,21 @@ export interface ShootingDayWithScenes extends ShootingDay {
   scenes: Scene[]
 }
 
+export interface CrewAssignment {
+  id: UUID
+  profile_id: UUID
+  profile_name: string | null
+  profile_email: string | null
+  profile_phone: string | null
+  production_function: string
+  created_at: ISODateTime
+}
+
+export interface ShootingDayDetail extends ShootingDay {
+  scenes: Scene[]
+  crew_assignments: CrewAssignment[]
+}
+
 export interface ProjectBreakdown {
   project_id: UUID
   project_title: string
@@ -1083,7 +1098,6 @@ export interface ServiceEquipmentResponse {
  * Call Sheet Form Data
  * Note: HTML time inputs provide HH:MM, must be converted to HH:MM:SS before sending to backend
  */
-export interface CallSheetFormData {
   project_id: string // UUID of the project
   shooting_day: string // Will be converted to ISO date
   status?: CallSheetStatus
@@ -1105,7 +1119,6 @@ export interface CallSheetFormData {
   hospital_info?: string
 }
 
-export interface CallSheetCreate {
   project_id: UUID
   shooting_day: ISODate
   status?: CallSheetStatus
@@ -1121,7 +1134,6 @@ export interface CallSheetCreate {
   hospital_info?: string
 }
 
-export interface CallSheetUpdate {
   project_id?: UUID
   shooting_day?: ISODate
   status?: CallSheetStatus
@@ -1137,19 +1149,6 @@ export interface CallSheetUpdate {
   hospital_info?: string
 }
 
-/**
- * Scene Form Data
- * Note: Backend requires all fields, scene_number must be integer
- */
-export interface SceneFormData {
-  scene_number: number // Integer, gt=0
-  heading: string
-  description: string
-  day_night: DayNight
-  internal_external: InternalExternal
-  estimated_time_minutes: number // Required, gt=0
-  shooting_day_id?: string
-}
 
 export interface SceneCreate {
   project_id: UUID
@@ -1172,15 +1171,6 @@ export interface SceneUpdate {
   shooting_day_id?: UUID
 }
 
-/**
- * Character Form Data
- * Note: Backend requires description field (min_length=1)
- */
-export interface CharacterFormData {
-  name: string
-  description: string // Required!
-  actor_name?: string
-}
 
 export interface CharacterCreate {
   name: string
@@ -1195,23 +1185,6 @@ export interface CharacterUpdate {
   actor_name?: string
 }
 
-/**
- * Shooting Day Form Data
- */
-export interface ShootingDayFormData {
-  date: string // Will be converted to ISO date
-  status?: ShootingDayStatus
-  call_time: string // HTML time input HH:MM → convert to HH:MM:SS
-  on_set?: string
-  lunch_time?: string
-  wrap_time?: string // HTML time input HH:MM → convert to HH:MM:SS
-  location_name: string
-  location_address?: string
-  weather_forecast?: string
-  notes?: string
-  parking_info?: string
-  hospital_info?: string
-}
 
 export interface ShootingDayCreate {
   project_id: UUID // Required by backend service
@@ -1415,7 +1388,7 @@ export interface AiBudgetEstimation {
   created_at: ISODateTime
 }
 
-export interface AiCallSheetSuggestion {
+export interface AiShootingDaySuggestion {
   day: number
   suggested_scenes: number[]
   crew_needed: string[]

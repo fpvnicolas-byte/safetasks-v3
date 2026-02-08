@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProjects } from '@/lib/api/hooks/useProjects'
-import { useAiCallSheetSuggestions } from '@/lib/api/hooks/useAiFeatures'
+import { useAiShootingDaySuggestions } from '@/lib/api/hooks/useAiFeatures'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -22,9 +22,9 @@ import {
   Sparkles,
   Target
 } from 'lucide-react'
-import type { AiCallSheetSuggestion } from '@/types'
+import type { AiShootingDaySuggestion } from '@/types'
 
-export default function AiCallSheetSuggestionsPage() {
+export default function AiShootingDaySuggestionsPage() {
   const router = useRouter()
   const { user, organizationId } = useAuth()
   const tCommon = useTranslations('common.feedback')
@@ -36,7 +36,7 @@ export default function AiCallSheetSuggestionsPage() {
 
   // Queries
   const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId || undefined)
-  const { mutateAsync: generateCallSheetSuggestions, isPending: isGenerating } = useAiCallSheetSuggestions()
+  const { mutateAsync: generateCallSheetSuggestions, isPending: isGenerating } = useAiShootingDaySuggestions()
 
   const handleGenerateSuggestions = async () => {
     if (!selectedProjectId) {

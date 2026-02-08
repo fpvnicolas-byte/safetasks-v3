@@ -6,7 +6,9 @@ import {
   ShootingDayUpdate,
   ShootingDayFormData,
   convertTimeToBackendFormat,
-  ShootingDayWithScenes
+  ShootingDayWithScenes,
+  ShootingDayDetail,
+  CrewAssignment,
 } from '@/types'
 
 const SHOOTING_DAYS_KEY = 'shootingDays'
@@ -28,13 +30,13 @@ export function useShootingDays(organizationId: string, projectId?: string) {
 }
 
 /**
- * Get a single shooting day by ID
+ * Get a single shooting day by ID with scenes and crew
  * Backend route: GET /api/v1/shooting-days/{shootingDayId}
  */
 export function useShootingDay(shootingDayId: string) {
   return useQuery({
     queryKey: [SHOOTING_DAYS_KEY, shootingDayId],
-    queryFn: () => apiClient.get<ShootingDayWithScenes>(`/api/v1/shooting-days/${shootingDayId}`),
+    queryFn: () => apiClient.get<ShootingDayDetail>(`/api/v1/shooting-days/${shootingDayId}`),
     enabled: !!shootingDayId,
   })
 }
@@ -138,6 +140,90 @@ export function useAssignScenesToShootingDay(shootingDayId: string, organization
       queryClient.invalidateQueries({ queryKey: [SHOOTING_DAYS_KEY, organizationId] })
       // Also invalidate scenes list as their shooting_day_id might have changed
       queryClient.invalidateQueries({ queryKey: ['scenes'] })
+    },
+  })
+}
+
+/**
+ * Unassign scenes from a shooting day (bulk)
+ * Backend route: POST /api/v1/shooting-days/{shootingDayId}/unassign-scenes
+ */
+export function useUnassignScenes(shootingDayId: string, organizationId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (sceneIds: string[]) =>
+      apiClient.post(`/api/v1/shooting-days/${shootingDayId}/unassign-scenes`, { scene_ids: sceneIds }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [SHOOTING_DAYS_KEY, shootingDayId] })
+      queryClient.invalidateQueries({ queryKey: [SHOOTING_DAYS_KEY, organizationId] })
+      queryClient.invalidateQueries({ queryKey: ['scenes'] })
+    },
+  })
+}
+
+/**
+ * Get crew members for a shooting day
+ * Backend route: GET /api/v1/shooting-days/{shootingDayId}/crew
+ */
+export function useShootingDayCrew(shootingDayId: string) {
+  return useQuery({
+    queryKey: [SHOOTING_DAYS_KEY, shootingDayId, 'crew'],
+    queryFn: () => apiClient.get<CrewAssignment[]>(`/api/v1/shooting-days/${shootingDayId}/crew`),
+    enabled: !!shootingDayId,
+  })
+}
+
+/**
+ * Add a crew member to a shooting day
+ * Backend route: POST /api/v1/shooting-days/{shootingDayId}/crew
+ */
+export function useAddCrewMember(shootingDayId: string, organizationId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: { profile_id: string; production_function: string }) =>
+      apiClient.post<CrewAssignment>(`/api/v1/shooting-days/${shootingDayId}/crew`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [SHOOTING_DAYS_KEY, shootingDayId] })
+      queryClient.invalidateQueries({ queryKey: [SHOOTING_DAYS_KEY, shootingDayId, 'crew'] })
+    },
+  })
+}
+
+/**
+ * Update a crew member's production function
+ * Backend route: PUT /api/v1/shooting-days/{shootingDayId}/crew/{assignmentId}
+ */
+export function useUpdateCrewMember(shootingDayId: string, organizationId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ assignmentId, production_function }: { assignmentId: string; production_function: string }) =>
+      apiClient.put<CrewAssignment>(
+        `/api/v1/shooting-days/${shootingDayId}/crew/${assignmentId}`,
+        { production_function }
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [SHOOTING_DAYS_KEY, shootingDayId] })
+      queryClient.invalidateQueries({ queryKey: [SHOOTING_DAYS_KEY, shootingDayId, 'crew'] })
+    },
+  })
+}
+
+/**
+ * Remove a crew member from a shooting day
+ * Backend route: DELETE /api/v1/shooting-days/{shootingDayId}/crew/{assignmentId}
+ */
+export function useRemoveCrewMember(shootingDayId: string, organizationId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (assignmentId: string) =>
+      apiClient.delete(`/api/v1/shooting-days/${shootingDayId}/crew/${assignmentId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [SHOOTING_DAYS_KEY, shootingDayId] })
+      queryClient.invalidateQueries({ queryKey: [SHOOTING_DAYS_KEY, shootingDayId, 'crew'] })
     },
   })
 }
