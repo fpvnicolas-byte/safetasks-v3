@@ -101,7 +101,10 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         obj_in: UpdateSchemaType
     ) -> Optional[ModelType]:
         """Update a record, filtered by organization_id."""
-        obj_data = obj_in.dict(exclude_unset=True)
+        if isinstance(obj_in, dict):
+            obj_data = obj_in.copy()
+        else:
+            obj_data = obj_in.dict(exclude_unset=True)
 
         query = (
             update(self.model)
