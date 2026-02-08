@@ -39,8 +39,6 @@ export function QuickActions() {
       color: 'bg-primary/15 text-primary'
     },
     {
-    },
-    {
       title: t('actions.addEquipment.title'),
       description: t('actions.addEquipment.desc'),
       icon: <Package className="h-5 w-5" />,

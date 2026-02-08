@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProjects } from '@/lib/api/hooks/useProjects'
-import { useAiSuggestions, useAiBudgetEstimation, useAiCallSheetSuggestions } from '@/lib/api/hooks/useAiFeatures'
+import { useAiSuggestions, useAiBudgetEstimation, useAiShootingDaySuggestions } from '@/lib/api/hooks/useAiFeatures'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -40,7 +40,7 @@ export default function AiSuggestionsPage() {
   const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId || undefined)
   const { data: suggestions, isLoading: isLoadingSuggestions } = useAiSuggestions(selectedProjectId)
   const { mutateAsync: generateBudgetEstimation, isPending: isGeneratingBudget } = useAiBudgetEstimation()
-  const { mutateAsync: generateCallSheet, isPending: isGeneratingCallSheet } = useAiCallSheetSuggestions()
+  const { mutateAsync: generateCallSheet, isPending: isGeneratingCallSheet } = useAiShootingDaySuggestions()
 
   const handleGenerateBudget = async () => {
     if (!selectedProjectId) {
