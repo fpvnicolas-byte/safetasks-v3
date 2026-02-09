@@ -2258,6 +2258,11 @@
         "title": "Payment Methods",
         "description": "Accept online payments",
         "content": "Connect Stripe to accept credit card, PIX, and boleto payments"
+      },
+      "billing": {
+        "title": "Billing & Usage",
+        "description": "Manage subscription and usage",
+        "content": "View your current plan, usage limits, and upgrade options"
       }
     },
     "organizationPage": {

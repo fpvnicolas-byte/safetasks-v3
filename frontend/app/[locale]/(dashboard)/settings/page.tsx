@@ -152,14 +152,14 @@ export default function SettingsPage() {
                     <CreditCard className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <CardTitle>Billing & Usage</CardTitle>
-                    <CardDescription>Manage subscription and usage</CardDescription>
+                    <CardTitle>{t('main.billing.title')}</CardTitle>
+                    <CardDescription>{t('main.billing.description')}</CardDescription>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  View your current plan, usage limits, and upgrade options
+                  {t('main.billing.content')}
                 </p>
               </CardContent>
             </Card>
