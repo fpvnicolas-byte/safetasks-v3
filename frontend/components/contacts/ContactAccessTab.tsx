@@ -59,12 +59,16 @@ const ROLE_COLORS: Record<string, string> = {
   freelancer: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
 }
 
+// Roles that can be assigned when inviting
+const INVITE_ROLES = ['admin', 'producer', 'finance', 'freelancer']
+
 interface ContactAccessTabProps {
   contact: ContactDetail
 }
 
 export function ContactAccessTab({ contact }: ContactAccessTabProps) {
-  const t = useTranslations('contacts.detail')
+  const t = useTranslations('contacts')
+  const tAccess = useTranslations('contacts.access')
   const { profile } = useAuth()
   const effectiveRole = profile?.effective_role || ''
 
@@ -79,6 +83,7 @@ export function ContactAccessTab({ contact }: ContactAccessTabProps) {
   const [inviteLink, setInviteLink] = useState('')
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [selectedRole, setSelectedRole] = useState('freelancer')
 
   const hasTeamAccess = !!contact.team_info
   const hasPendingInvite = !!contact.pending_invite
@@ -88,9 +93,9 @@ export function ContactAccessTab({ contact }: ContactAccessTabProps) {
     if (!contact.team_info) return
     try {
       await changeRole.mutateAsync({ profileId: contact.team_info.profile_id, role_v2: newRole })
-      toast.success(t('roleChanged'))
+      toast.success(tAccess('roleChanged'))
     } catch (err: any) {
-      toast.error(err?.message || t('roleChangeError'))
+      toast.error(err?.message || tAccess('roleChangeError'))
     }
   }
 
@@ -100,9 +105,9 @@ export function ContactAccessTab({ contact }: ContactAccessTabProps) {
     try {
       await removeMember.mutateAsync(contact.team_info.profile_id)
       setRemoveConfirmOpen(false)
-      toast.success(t('accessRemoved'))
+      toast.success(tAccess('accessRemoved'))
     } catch (err: any) {
-      toast.error(err?.message || t('removeError'))
+      toast.error(err?.message || tAccess('removeError'))
     } finally {
       setIsRemoving(false)
     }
@@ -110,13 +115,13 @@ export function ContactAccessTab({ contact }: ContactAccessTabProps) {
 
   const handleInvite = async () => {
     if (!contact.email) {
-      toast.error(t('noEmailForInvite'))
+      toast.error(tAccess('noEmailForInvite'))
       return
     }
     try {
       const result = await createInvite.mutateAsync({
         email: contact.email,
-        role_v2: 'freelancer',
+        role_v2: selectedRole,
         supplier_id: contact.id,
       })
       setInviteLink(result.invite_link)
@@ -126,9 +131,9 @@ export function ContactAccessTab({ contact }: ContactAccessTabProps) {
       }
     } catch (err: any) {
       const status = err?.statusCode
-      if (status === 409) toast.error(t('inviteAlreadyPending'))
-      else if (status === 402) toast.error(t('seatLimitReached'))
-      else toast.error(err?.message || t('inviteError'))
+      if (status === 409) toast.error(tAccess('inviteAlreadyPending'))
+      else if (status === 402) toast.error(tAccess('seatLimitReached'))
+      else toast.error(err?.message || tAccess('inviteError'))
     }
   }
 
@@ -138,9 +143,9 @@ export function ContactAccessTab({ contact }: ContactAccessTabProps) {
       const result = await resendInvite.mutateAsync(contact.pending_invite.id)
       setInviteLink(result.invite_link)
       setInviteDialogOpen(true)
-      toast.success(t('inviteResent'))
+      toast.success(tAccess('inviteResent'))
     } catch (err: any) {
-      toast.error(err?.message || t('resendError'))
+      toast.error(err?.message || tAccess('resendError'))
     }
   }
 
@@ -148,9 +153,9 @@ export function ContactAccessTab({ contact }: ContactAccessTabProps) {
     if (!contact.pending_invite) return
     try {
       await revokeInvite.mutateAsync(contact.pending_invite.id)
-      toast.success(t('inviteRevoked'))
+      toast.success(tAccess('inviteRevoked'))
     } catch (err: any) {
-      toast.error(err?.message || t('revokeError'))
+      toast.error(err?.message || tAccess('revokeError'))
     }
   }
 
@@ -161,17 +166,17 @@ export function ContactAccessTab({ contact }: ContactAccessTabProps) {
         onOpenChange={setRemoveConfirmOpen}
         onConfirm={handleRemoveAccess}
         loading={isRemoving}
-        title={t('removeAccessTitle')}
-        description={t('removeAccessConfirm', { name: contact.name })}
+        title={tAccess('removeAccessTitle')}
+        description={tAccess('removeAccessDescription', { name: contact.name })}
       />
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            {t('platformAccess')}
+            {tAccess('title')}
           </CardTitle>
-          <CardDescription>{t('platformAccessDescription')}</CardDescription>
+          <CardDescription>{tAccess('description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {hasTeamAccess && contact.team_info ? (
@@ -212,7 +217,7 @@ export function ContactAccessTab({ contact }: ContactAccessTabProps) {
                       className="text-destructive"
                       onClick={() => setRemoveConfirmOpen(true)}
                     >
-                      {t('removeAccess')}
+                      {tAccess('removeAccess')}
                     </Button>
                   )}
                 </div>
@@ -222,12 +227,12 @@ export function ContactAccessTab({ contact }: ContactAccessTabProps) {
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 border rounded-lg border-yellow-200 dark:border-yellow-900">
                 <div className="space-y-1">
-                  <div className="font-medium">{t('pendingInvite')}</div>
+                  <div className="font-medium">{tAccess('pendingInvite')}</div>
                   <div className="text-sm text-muted-foreground">
-                    {t('inviteSentTo', { email: contact.pending_invite.invited_email })}
+                    {tAccess('pendingInviteDescription', { email: contact.pending_invite.invited_email })}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {t('expiresAt', { date: contact.pending_invite.expires_at || '' })}
+                    {tAccess('expiresAt')}: {contact.pending_invite.expires_at || ''}
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -237,7 +242,7 @@ export function ContactAccessTab({ contact }: ContactAccessTabProps) {
                     ) : (
                       <RotateCw className="mr-1 h-3 w-3" />
                     )}
-                    {t('resend')}
+                    {tAccess('resendInvite')}
                   </Button>
                   <Button
                     variant="ghost"
@@ -246,23 +251,41 @@ export function ContactAccessTab({ contact }: ContactAccessTabProps) {
                     onClick={handleRevokeInvite}
                   >
                     <XCircle className="mr-1 h-3 w-3" />
-                    {t('revoke')}
+                    {tAccess('revokeInvite')}
                   </Button>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground mb-4">{t('noAccess')}</p>
+            <div className="text-center py-8 space-y-4">
+              <p className="text-muted-foreground">{tAccess('noAccess')}</p>
+              <p className="text-sm text-muted-foreground">{tAccess('noAccessHelp')}</p>
               {canManage && (
-                <Button onClick={handleInvite} disabled={createInvite.isPending}>
-                  {createInvite.isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <UserPlus className="mr-2 h-4 w-4" />
-                  )}
-                  {t('inviteToPlatform')}
-                </Button>
+                <div className="flex flex-col items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">{tAccess('inviteForm.role')}:</span>
+                    <Select value={selectedRole} onValueChange={setSelectedRole}>
+                      <SelectTrigger className="w-[140px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {INVITE_ROLES.map((role) => (
+                          <SelectItem key={role} value={role}>
+                            {ROLE_LABELS[role]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={handleInvite} disabled={createInvite.isPending}>
+                    {createInvite.isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <UserPlus className="mr-2 h-4 w-4" />
+                    )}
+                    {tAccess('inviteToPlatform')}
+                  </Button>
+                </div>
               )}
             </div>
           )}
@@ -279,8 +302,8 @@ export function ContactAccessTab({ contact }: ContactAccessTabProps) {
       }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('inviteLinkTitle')}</DialogTitle>
-            <DialogDescription>{t('inviteLinkDescription', { name: contact.name })}</DialogDescription>
+            <DialogTitle>{tAccess('inviteLinkTitle')}</DialogTitle>
+            <DialogDescription>{tAccess('inviteLinkDescription', { name: contact.name })}</DialogDescription>
           </DialogHeader>
           <div className="flex gap-2">
             <Input value={inviteLink} readOnly className="flex-1 text-xs" />
@@ -298,7 +321,7 @@ export function ContactAccessTab({ contact }: ContactAccessTabProps) {
           </div>
           <DialogFooter>
             <Button onClick={() => { setInviteDialogOpen(false); setInviteLink(''); setCopied(false) }}>
-              {t('close')}
+              {tAccess('close')}
             </Button>
           </DialogFooter>
         </DialogContent>
