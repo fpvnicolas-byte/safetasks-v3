@@ -2258,6 +2258,11 @@
         "title": "Métodos de Pagamento",
         "description": "Aceitar pagamentos online",
         "content": "Conecte o Stripe para aceitar pagamentos via cartão, PIX e boleto"
+      },
+      "billing": {
+        "title": "Cobrança e Uso",
+        "description": "Gerenciar assinatura e uso",
+        "content": "Veja seu plano atual, limites de uso e opções de upgrade"
       }
     },
     "organizationPage": {
