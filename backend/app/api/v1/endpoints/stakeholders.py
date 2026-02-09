@@ -122,6 +122,9 @@ async def create_stakeholder(
 ):
     """Create a new stakeholder for a project.
 
+    If supplier_id is not provided, auto-creates a Supplier from the stakeholder's
+    name/email/phone with category='freelancer'.
+
     If the stakeholder has a rate configured and FINANCIAL_AUTOMATION_ENABLED is True,
     an expense transaction will be automatically created for the project.
 
@@ -129,6 +132,21 @@ async def create_stakeholder(
     Will reject if the expense would exceed the project budget.
     """
     from app.models.transactions import Transaction
+    from app.models.commercial import Supplier as SupplierModel
+
+    # Auto-create supplier if not provided
+    if not stakeholder_in.supplier_id:
+        new_supplier = SupplierModel(
+            organization_id=organization_id,
+            name=stakeholder_in.name,
+            category="freelancer",
+            email=stakeholder_in.email,
+            phone=stakeholder_in.phone,
+            is_active=True,
+        )
+        db.add(new_supplier)
+        await db.flush()
+        stakeholder_in.supplier_id = new_supplier.id
 
     # Pre-check: If stakeholder has a rate, ensure default bank account exists
     has_rate = (

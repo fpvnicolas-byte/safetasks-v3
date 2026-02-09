@@ -46,10 +46,10 @@ export function QuickActions() {
       color: 'bg-secondary/60 text-secondary-foreground'
     },
     {
-      title: t('actions.addStakeholder.title'),
-      description: t('actions.addStakeholder.desc'),
+      title: t('actions.addContact.title'),
+      description: t('actions.addContact.desc'),
       icon: <Users className="h-5 w-5" />,
-      href: '/stakeholders/new',
+      href: '/contacts/new',
       color: 'bg-accent text-accent-foreground'
     },
   ]

@@ -166,6 +166,10 @@
       "addStakeholder": {
         "title": "Add Stakeholder",
         "desc": "Add team member"
+      },
+      "addContact": {
+        "title": "Add Contact",
+        "desc": "Add a contact to your organization"
       }
     },
     "equipment": {
@@ -232,6 +236,7 @@
     "items": "Items",
     "stakeholders": "Stakeholders",
     "suppliers": "Suppliers",
+    "contacts": "Contacts",
     "proposals": "Proposals",
     "storage": "Storage",
     "ai": "AI Features",
@@ -3389,5 +3394,197 @@
     "roleChangeError": "Failed to change role",
     "memberRemoved": "Member removed from organization",
     "removeError": "Failed to remove member"
+  },
+  "contacts": {
+    "title": "Contacts",
+    "description": "Manage all your organization's contacts in one place",
+    "addContact": "Add Contact",
+    "editContact": "Edit Contact",
+    "viewContact": "View Contact",
+    "deleteContact": "Delete Contact",
+    "searchPlaceholder": "Search contacts by name, email, or phone...",
+    "noContactsTitle": "No Contacts Found",
+    "noContactsDescription": "Get started by adding your first contact",
+    "createFirst": "Create your first contact to manage suppliers, freelancers, and team members.",
+    "filters": {
+      "allCategories": "All Categories",
+      "allStatus": "All Status",
+      "platformActive": "Platform Active",
+      "platformInvited": "Invited",
+      "platformNone": "No Access"
+    },
+    "categories": {
+      "freelancer": "Freelancer",
+      "equipment_rental": "Equipment Rental",
+      "catering": "Catering",
+      "location": "Location",
+      "post_production": "Post Production",
+      "other": "Other"
+    },
+    "platformStatus": {
+      "none": "No Access",
+      "invited": "Invited",
+      "active": "Active"
+    },
+    "card": {
+      "projects": "Projects",
+      "totalSpent": "Total Spent",
+      "noEmail": "No email",
+      "noPhone": "No phone"
+    },
+    "detail": {
+      "title": "Contact Details",
+      "backToContacts": "Back to Contacts",
+      "editButton": "Edit",
+      "deleteButton": "Delete",
+      "deleteConfirm": "Are you sure you want to delete this contact? This action cannot be undone."
+    },
+    "tabs": {
+      "info": "Info",
+      "projects": "Projects",
+      "financials": "Financials",
+      "access": "Access"
+    },
+    "info": {
+      "title": "Contact Information",
+      "description": "Basic contact details and information",
+      "basicInfo": "Basic Information",
+      "category": "Category",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address",
+      "documentId": "Document ID",
+      "specialties": "Specialties",
+      "notes": "Notes",
+      "bankInfo": "Bank Information",
+      "bankName": "Bank Name",
+      "accountNumber": "Account Number",
+      "routingNumber": "Routing Number",
+      "pixKey": "PIX Key",
+      "noBankInfo": "No bank information provided"
+    },
+    "projects": {
+      "title": "Project Assignments",
+      "description": "Projects this contact is assigned to",
+      "assignToProject": "Assign to Project",
+      "noAssignments": "No project assignments yet",
+      "noAssignmentsHelp": "Assign this contact to a project to track their work and payments.",
+      "table": {
+        "project": "Project",
+        "role": "Role",
+        "status": "Status",
+        "rate": "Rate",
+        "bookingDates": "Booking Dates",
+        "paymentStatus": "Payment"
+      },
+      "paymentStatus": {
+        "pending": "Pending",
+        "partial": "Partial",
+        "paid": "Paid"
+      }
+    },
+    "financials": {
+      "title": "Financial Statement",
+      "description": "Transaction history and financial summary",
+      "dateRange": "Date Range",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "apply": "Apply",
+      "summary": "Summary",
+      "totalExpenses": "Total Expenses",
+      "transactionCount": "Transactions",
+      "noTransactions": "No transactions found for this period"
+    },
+    "access": {
+      "title": "Platform Access",
+      "description": "Manage this contact's access to the platform",
+      "currentStatus": "Current Status",
+      "noAccess": "This contact does not have platform access",
+      "noAccessHelp": "Invite them to the platform to give them access to projects and features based on their role.",
+      "inviteToPlatform": "Invite to Platform",
+      "pendingInvite": "Pending Invitation",
+      "pendingInviteDescription": "An invitation was sent to {email}",
+      "invitedAt": "Invited",
+      "expiresAt": "Expires",
+      "resendInvite": "Resend Invite",
+      "revokeInvite": "Revoke Invite",
+      "activeUser": "Active Platform User",
+      "activeUserDescription": "This contact has access to the platform",
+      "role": "Role",
+      "changeRole": "Change Role",
+      "removeAccess": "Remove Access",
+      "inviteForm": {
+        "title": "Invite to Platform",
+        "description": "Send an invitation email to give this contact platform access",
+        "email": "Email Address",
+        "role": "Role",
+        "selectRole": "Select a role",
+        "send": "Send Invitation",
+        "sending": "Sending..."
+      },
+      "roles": {
+        "owner": "Owner",
+        "admin": "Admin",
+        "producer": "Producer",
+        "finance": "Finance",
+        "freelancer": "Freelancer"
+      }
+    },
+    "assignDialog": {
+      "title": "Assign to Project",
+      "description": "Assign this contact to a project as a team member",
+      "selectProject": "Select Project",
+      "projectPlaceholder": "Choose a project",
+      "role": "Role",
+      "rolePlaceholder": "e.g., Director, Cameraman, Gaffer",
+      "rateType": "Rate Type",
+      "daily": "Daily",
+      "hourly": "Hourly",
+      "fixed": "Fixed",
+      "rateValue": "Rate Value",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "assign": "Assign",
+      "assigning": "Assigning...",
+      "success": "Contact assigned to project successfully",
+      "error": "Failed to assign contact to project"
+    },
+    "form": {
+      "createTitle": "Add New Contact",
+      "createDescription": "Add a new contact to your organization",
+      "editTitle": "Edit Contact",
+      "editDescription": "Update contact information",
+      "name": "Name",
+      "namePlaceholder": "Contact name",
+      "nameRequired": "Name is required",
+      "category": "Category",
+      "selectCategory": "Select category",
+      "email": "Email",
+      "emailPlaceholder": "email@example.com",
+      "phone": "Phone",
+      "phonePlaceholder": "+1 (555) 123-4567",
+      "address": "Address",
+      "addressPlaceholder": "Full address",
+      "documentId": "Document ID (Tax ID / CPF)",
+      "documentIdPlaceholder": "123.456.789-00",
+      "specialties": "Specialties",
+      "specialtiesPlaceholder": "Comma-separated list of skills",
+      "notes": "Notes",
+      "notesPlaceholder": "Additional notes about this contact...",
+      "bankInfo": "Bank Information",
+      "bankName": "Bank Name",
+      "bankNamePlaceholder": "Bank name",
+      "accountNumber": "Account Number",
+      "accountNumberPlaceholder": "Account number",
+      "routingNumber": "Routing Number",
+      "routingNumberPlaceholder": "Routing number",
+      "pixKey": "PIX Key",
+      "pixKeyPlaceholder": "PIX key",
+      "submit": "Save Contact",
+      "submitting": "Saving...",
+      "cancel": "Cancel",
+      "success": "Contact saved successfully",
+      "error": "Failed to save contact"
+    }
   }
 }

@@ -811,6 +811,76 @@ export interface StakeholderWithRateInfo extends Stakeholder {
 }
 
 // ============================================================================
+// CONTACT TYPES (Unified view)
+// ============================================================================
+
+export type PlatformStatus = 'none' | 'invited' | 'active'
+
+export interface Contact {
+  id: UUID
+  name: string
+  category: SupplierCategory
+  email: string | null
+  phone: string | null
+  document_id: string | null
+  is_active: boolean
+  specialties: string[] | null
+  notes: string | null
+  created_at: ISODateTime
+  project_count: number
+  total_spent_cents: number
+  platform_status: PlatformStatus
+  platform_role: string | null
+  profile_id: UUID | null
+}
+
+export interface ContactDetail extends Contact {
+  address: string | null
+  bank_info: Record<string, unknown> | null
+  assignments: ContactAssignment[]
+  team_info: ContactTeamInfo | null
+  pending_invite: ContactInviteInfo | null
+}
+
+export interface ContactAssignment {
+  id: UUID
+  project_id: UUID
+  project_title: string
+  role: string
+  status: StakeholderStatus
+  rate_type: RateType | null
+  rate_value_cents: number | null
+  booking_start_date: ISODate | null
+  booking_end_date: ISODate | null
+  is_active: boolean
+}
+
+export interface ContactTeamInfo {
+  profile_id: UUID
+  email: string
+  full_name: string | null
+  effective_role: string
+  is_master_owner: boolean
+  created_at: ISODateTime | null
+}
+
+export interface ContactInviteInfo {
+  id: UUID
+  invited_email: string
+  role_v2: string
+  status: string
+  expires_at: ISODateTime | null
+  created_at: ISODateTime | null
+}
+
+export interface ContactFilters {
+  search?: string
+  category?: SupplierCategory | 'all'
+  platform_status?: PlatformStatus | 'all'
+  active_only?: boolean
+}
+
+// ============================================================================
 // PROPOSAL TYPES
 // ============================================================================
 

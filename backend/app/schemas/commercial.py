@@ -199,3 +199,78 @@ class StakeholderWithRateInfo(Stakeholder):
     payment_status: str = "not_configured"  # 'not_configured', 'pending', 'partial', 'paid', 'overpaid'
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# Contact Schemas (Unified view of Suppliers with enriched data)
+class ContactOut(BaseModel):
+    """Unified contact view that combines supplier data with team and stakeholder info."""
+    id: UUID  # supplier.id
+    name: str
+    category: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    document_id: Optional[str] = None
+    is_active: bool = True
+    specialties: Optional[List[str]] = None
+    notes: Optional[str] = None
+    created_at: datetime
+    # Enriched data
+    project_count: int = 0  # COUNT of linked stakeholders
+    total_spent_cents: int = 0  # SUM of expense transactions
+    platform_status: str = "none"  # "none" | "invited" | "active"
+    platform_role: Optional[str] = None  # role_v2 if active
+    profile_id: Optional[UUID] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ContactAssignment(BaseModel):
+    """Project assignment info for a contact."""
+    stakeholder_id: UUID
+    project_id: UUID
+    project_name: str
+    role: str
+    status: str
+    rate_type: Optional[str] = None
+    rate_value_cents: Optional[int] = None
+    booking_start_date: Optional[date] = None
+    booking_end_date: Optional[date] = None
+    total_paid_cents: int = 0
+    pending_amount_cents: Optional[int] = None
+    payment_status: str = "not_configured"
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ContactTeamInfo(BaseModel):
+    """Platform access info for a contact."""
+    profile_id: UUID
+    role: str
+    email: str
+    is_active: bool = True
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ContactInviteInfo(BaseModel):
+    """Pending invite info for a contact."""
+    invite_id: UUID
+    email: str
+    role: str
+    created_at: datetime
+    expires_at: Optional[datetime] = None
+    status: str = "pending"
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ContactDetailOut(ContactOut):
+    """Full contact detail including assignments, team info, and invite status."""
+    address: Optional[str] = None
+    bank_info: Optional[Dict[str, Any]] = None
+    assignments: List[ContactAssignment] = []
+    team_info: Optional[ContactTeamInfo] = None
+    pending_invite: Optional[ContactInviteInfo] = None
+
+    model_config = ConfigDict(from_attributes=True)

@@ -35,9 +35,7 @@ const navigation: { key: string; href: string; icon: typeof LayoutDashboard; rol
   { key: 'production', href: '/production', icon: Film, roles: ['owner', 'admin', 'producer'] },
   { key: 'inventory', href: '/inventory/items', icon: Box, roles: ['owner', 'admin', 'producer'] },
   { key: 'clients', href: '/clients', icon: Users, roles: ['owner', 'admin', 'producer'] },
-  { key: 'stakeholders', href: '/stakeholders', icon: Users, roles: ['owner', 'admin', 'producer'] },
-  { key: 'suppliers', href: '/suppliers', icon: Briefcase, roles: ['owner', 'admin', 'producer'] },
-  { key: 'team', href: '/team', icon: UsersRound, roles: ['owner', 'admin', 'producer'] },
+  { key: 'contacts', href: '/contacts', icon: UsersRound, roles: ['owner', 'admin', 'producer'] },
   { key: 'settings', href: '/settings', icon: Settings, roles: ALL_ROLES },
 ]
 

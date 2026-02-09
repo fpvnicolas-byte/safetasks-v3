@@ -28,6 +28,36 @@ const nextConfig = {
       },
     ]
   },
+  async redirects() {
+    return [
+      // Redirect old stakeholders, suppliers, team routes to unified contacts page
+      {
+        source: '/:locale/stakeholders/:path*',
+        destination: '/:locale/contacts',
+        permanent: true,
+      },
+      {
+        source: '/:locale/stakeholders',
+        destination: '/:locale/contacts',
+        permanent: true,
+      },
+      {
+        source: '/:locale/suppliers/:path*',
+        destination: '/:locale/contacts',
+        permanent: true,
+      },
+      {
+        source: '/:locale/suppliers',
+        destination: '/:locale/contacts',
+        permanent: true,
+      },
+      {
+        source: '/:locale/team',
+        destination: '/:locale/contacts',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 export default withNextIntl(nextConfig)

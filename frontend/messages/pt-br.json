@@ -166,6 +166,10 @@
       "addStakeholder": {
         "title": "Adicionar Membro",
         "desc": "Adicionar membro da equipe"
+      },
+      "addContact": {
+        "title": "Adicionar Contato",
+        "desc": "Adicionar um contato à sua organização"
       }
     },
     "equipment": {
@@ -232,6 +236,7 @@
     "items": "Itens",
     "stakeholders": "Equipe",
     "suppliers": "Fornecedores",
+    "contacts": "Contatos",
     "proposals": "Propostas",
     "storage": "Armazenamento",
     "ai": "Recursos de IA",
@@ -3389,5 +3394,197 @@
     "roleChangeError": "Falha ao alterar função",
     "memberRemoved": "Membro removido da organização",
     "removeError": "Falha ao remover membro"
+  },
+  "contacts": {
+    "title": "Contatos",
+    "description": "Gerencie todos os contatos da sua organização em um só lugar",
+    "addContact": "Adicionar Contato",
+    "editContact": "Editar Contato",
+    "viewContact": "Ver Contato",
+    "deleteContact": "Excluir Contato",
+    "searchPlaceholder": "Buscar contatos por nome, email ou telefone...",
+    "noContactsTitle": "Nenhum Contato Encontrado",
+    "noContactsDescription": "Comece adicionando seu primeiro contato",
+    "createFirst": "Crie seu primeiro contato para gerenciar fornecedores, freelancers e membros da equipe.",
+    "filters": {
+      "allCategories": "Todas as Categorias",
+      "allStatus": "Todos os Status",
+      "platformActive": "Ativos na Plataforma",
+      "platformInvited": "Convidados",
+      "platformNone": "Sem Acesso"
+    },
+    "categories": {
+      "freelancer": "Freelancer",
+      "equipment_rental": "Aluguel de Equipamento",
+      "catering": "Catering",
+      "location": "Locação",
+      "post_production": "Pós-Produção",
+      "other": "Outro"
+    },
+    "platformStatus": {
+      "none": "Sem Acesso",
+      "invited": "Convidado",
+      "active": "Ativo"
+    },
+    "card": {
+      "projects": "Projetos",
+      "totalSpent": "Total Gasto",
+      "noEmail": "Sem email",
+      "noPhone": "Sem telefone"
+    },
+    "detail": {
+      "title": "Detalhes do Contato",
+      "backToContacts": "Voltar para Contatos",
+      "editButton": "Editar",
+      "deleteButton": "Excluir",
+      "deleteConfirm": "Tem certeza que deseja excluir este contato? Esta ação não pode ser desfeita."
+    },
+    "tabs": {
+      "info": "Info",
+      "projects": "Projetos",
+      "financials": "Financeiro",
+      "access": "Acesso"
+    },
+    "info": {
+      "title": "Informações do Contato",
+      "description": "Detalhes básicos e informações do contato",
+      "basicInfo": "Informações Básicas",
+      "category": "Categoria",
+      "email": "Email",
+      "phone": "Telefone",
+      "address": "Endereço",
+      "documentId": "Documento (CPF/CNPJ)",
+      "specialties": "Especialidades",
+      "notes": "Observações",
+      "bankInfo": "Informações Bancárias",
+      "bankName": "Nome do Banco",
+      "accountNumber": "Número da Conta",
+      "routingNumber": "Agência",
+      "pixKey": "Chave PIX",
+      "noBankInfo": "Nenhuma informação bancária fornecida"
+    },
+    "projects": {
+      "title": "Atribuições de Projetos",
+      "description": "Projetos aos quais este contato está atribuído",
+      "assignToProject": "Atribuir a Projeto",
+      "noAssignments": "Nenhuma atribuição de projeto ainda",
+      "noAssignmentsHelp": "Atribua este contato a um projeto para rastrear seu trabalho e pagamentos.",
+      "table": {
+        "project": "Projeto",
+        "role": "Função",
+        "status": "Status",
+        "rate": "Taxa",
+        "bookingDates": "Datas de Reserva",
+        "paymentStatus": "Pagamento"
+      },
+      "paymentStatus": {
+        "pending": "Pendente",
+        "partial": "Parcial",
+        "paid": "Pago"
+      }
+    },
+    "financials": {
+      "title": "Extrato Financeiro",
+      "description": "Histórico de transações e resumo financeiro",
+      "dateRange": "Período",
+      "startDate": "Data Inicial",
+      "endDate": "Data Final",
+      "apply": "Aplicar",
+      "summary": "Resumo",
+      "totalExpenses": "Total de Despesas",
+      "transactionCount": "Transações",
+      "noTransactions": "Nenhuma transação encontrada para este período"
+    },
+    "access": {
+      "title": "Acesso à Plataforma",
+      "description": "Gerencie o acesso deste contato à plataforma",
+      "currentStatus": "Status Atual",
+      "noAccess": "Este contato não tem acesso à plataforma",
+      "noAccessHelp": "Convide-o para a plataforma para dar acesso a projetos e recursos com base em sua função.",
+      "inviteToPlatform": "Convidar para Plataforma",
+      "pendingInvite": "Convite Pendente",
+      "pendingInviteDescription": "Um convite foi enviado para {email}",
+      "invitedAt": "Convidado em",
+      "expiresAt": "Expira em",
+      "resendInvite": "Reenviar Convite",
+      "revokeInvite": "Revogar Convite",
+      "activeUser": "Usuário Ativo da Plataforma",
+      "activeUserDescription": "Este contato tem acesso à plataforma",
+      "role": "Função",
+      "changeRole": "Alterar Função",
+      "removeAccess": "Remover Acesso",
+      "inviteForm": {
+        "title": "Convidar para Plataforma",
+        "description": "Envie um email de convite para dar acesso à plataforma a este contato",
+        "email": "Endereço de Email",
+        "role": "Função",
+        "selectRole": "Selecione uma função",
+        "send": "Enviar Convite",
+        "sending": "Enviando..."
+      },
+      "roles": {
+        "owner": "Proprietário",
+        "admin": "Administrador",
+        "producer": "Produtor",
+        "finance": "Financeiro",
+        "freelancer": "Freelancer"
+      }
+    },
+    "assignDialog": {
+      "title": "Atribuir a Projeto",
+      "description": "Atribua este contato a um projeto como membro da equipe",
+      "selectProject": "Selecionar Projeto",
+      "projectPlaceholder": "Escolha um projeto",
+      "role": "Função",
+      "rolePlaceholder": "ex: Diretor, Câmera, Eletricista",
+      "rateType": "Tipo de Taxa",
+      "daily": "Diária",
+      "hourly": "Por Hora",
+      "fixed": "Fixo",
+      "rateValue": "Valor da Taxa",
+      "startDate": "Data Inicial",
+      "endDate": "Data Final",
+      "assign": "Atribuir",
+      "assigning": "Atribuindo...",
+      "success": "Contato atribuído ao projeto com sucesso",
+      "error": "Falha ao atribuir contato ao projeto"
+    },
+    "form": {
+      "createTitle": "Adicionar Novo Contato",
+      "createDescription": "Adicione um novo contato à sua organização",
+      "editTitle": "Editar Contato",
+      "editDescription": "Atualizar informações do contato",
+      "name": "Nome",
+      "namePlaceholder": "Nome do contato",
+      "nameRequired": "Nome é obrigatório",
+      "category": "Categoria",
+      "selectCategory": "Selecione a categoria",
+      "email": "Email",
+      "emailPlaceholder": "email@exemplo.com",
+      "phone": "Telefone",
+      "phonePlaceholder": "+55 (11) 99999-9999",
+      "address": "Endereço",
+      "addressPlaceholder": "Endereço completo",
+      "documentId": "CPF/CNPJ",
+      "documentIdPlaceholder": "123.456.789-00",
+      "specialties": "Especialidades",
+      "specialtiesPlaceholder": "Lista separada por vírgulas de habilidades",
+      "notes": "Observações",
+      "notesPlaceholder": "Observações adicionais sobre este contato...",
+      "bankInfo": "Informações Bancárias",
+      "bankName": "Nome do Banco",
+      "bankNamePlaceholder": "Nome do banco",
+      "accountNumber": "Número da Conta",
+      "accountNumberPlaceholder": "Número da conta",
+      "routingNumber": "Agência",
+      "routingNumberPlaceholder": "Número da agência",
+      "pixKey": "Chave PIX",
+      "pixKeyPlaceholder": "Chave PIX",
+      "submit": "Salvar Contato",
+      "submitting": "Salvando...",
+      "cancel": "Cancelar",
+      "success": "Contato salvo com sucesso",
+      "error": "Falha ao salvar contato"
+    }
   }
 }

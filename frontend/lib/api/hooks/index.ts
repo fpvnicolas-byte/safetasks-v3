@@ -24,5 +24,6 @@ export * from './useStripeConnect'
 export * from './useInvites'
 export * from './useTeam'
 export * from './useProjectAssignments'
+export * from './useContacts'
 
 // Additional exports will be added in later phases

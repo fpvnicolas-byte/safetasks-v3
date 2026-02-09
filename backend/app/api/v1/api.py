@@ -6,7 +6,7 @@ from app.api.v1.endpoints import (
     scenes, characters, shooting_days, production, financial,
     suppliers, stakeholders, inventory, cloud, dashboard, profiles,
     ai_monitoring, services, project_assignments, billing, whatsapp,
-    stripe_connect, invites, team,
+    stripe_connect, invites, team, contacts,
 )
 
 api_router = APIRouter()
@@ -185,4 +185,10 @@ api_router.include_router(
     team.router,
     prefix="/team",
     tags=["team"]
+)
+
+api_router.include_router(
+    contacts.router,
+    prefix="/contacts",
+    tags=["contacts"]
 )
