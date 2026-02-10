@@ -15,7 +15,6 @@ from app.models import (
     StoredFile,
     Notification,
     GoogleDriveCredentials,
-    CloudSyncStatus,
     ProjectDriveFolder,
     Plan,
     Entitlement,

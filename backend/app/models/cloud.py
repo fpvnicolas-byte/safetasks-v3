@@ -36,43 +36,6 @@ class GoogleDriveCredentials(Base):
     )
 
 
-class CloudSyncStatus(Base):
-    __tablename__ = "cloud_sync_status"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
-
-    # File reference
-    file_id = Column(UUID(as_uuid=True), nullable=True)  # Supabase Storage file ID
-    file_path = Column(String, nullable=True)  # Internal storage path
-    file_name = Column(String, nullable=True)
-
-    # Project context
-    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"), nullable=True)
-    module = Column(String, nullable=True)  # proposals, shooting_days, scripts, etc.
-
-    # Cloud provider sync status
-    provider = Column(String, nullable=False)  # google_drive, dropbox, etc.
-    external_id = Column(String, nullable=True)  # Provider's file ID
-    external_url = Column(String, nullable=True)  # Provider's file URL
-
-    # Sync metadata
-    sync_status = Column(String, default="pending")  # pending, completed, failed, cancelled
-    sync_started_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    sync_completed_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    error_message = Column(TEXT, nullable=True)
-
-    # Versioning
-    file_version = Column(String, nullable=True)  # For tracking file updates
-
-    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
-
-    __table_args__ = (
-        {'schema': None}
-    )
-
-
 class ProjectDriveFolder(Base):
     __tablename__ = "project_drive_folders"
 

@@ -12,7 +12,7 @@ from google.auth.transport.requests import Request
 from googleapiclient.errors import HttpError
 
 from app.core.config import settings
-from app.models.cloud import GoogleDriveCredentials, ProjectDriveFolder, CloudSyncStatus
+from app.models.cloud import GoogleDriveCredentials, ProjectDriveFolder
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 

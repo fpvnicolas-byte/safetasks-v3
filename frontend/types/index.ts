@@ -1442,105 +1442,10 @@ export interface SignedUrlResponse {
   bucket: string
 }
 
-export interface CloudSyncRequest {
-  file_path: string
-  providers?: string[] // ['google_drive', 'dropbox', etc.]
-}
-
-export interface CloudSyncResponse {
-  file_path: string
-  organization_id: string
-  results: Record<string, unknown> // Provider-specific results
-}
-
-export interface SyncStatusResponse {
-  file_path: string
-  organization_id: string
-  sync_status: string
-  providers: string[]
-  last_sync: string | null
-}
-
 // ============================================================================
-// GOOGLE DRIVE & CLOUD SYNC TYPES
+// GOOGLE DRIVE & CLOUD TYPES (OAuth2 — will be added in Task 6)
+// See: docs/plans/2026-02-09-google-drive-oauth-redesign.md
 // ============================================================================
-
-export interface GoogleDriveCredentials {
-  id: UUID
-  organization_id: UUID
-  service_account_key: Record<string, unknown> | null
-  auto_sync_enabled: boolean
-  sync_on_proposal_approval: boolean
-  sync_on_shooting_day_finalized: boolean
-  root_folder_id: string | null
-  root_folder_url: string | null
-  connected_at: ISODateTime | null
-  last_sync_at: ISODateTime | null
-  created_at: ISODateTime
-  updated_at: ISODateTime
-}
-
-export interface GoogleDriveCredentialsCreate {
-  service_account_key: Record<string, unknown>
-  auto_sync_enabled?: boolean
-  sync_on_proposal_approval?: boolean
-  sync_on_shooting_day_finalized?: boolean
-}
-
-export interface GoogleDriveCredentialsUpdate {
-  service_account_key?: Record<string, unknown>
-  auto_sync_enabled?: boolean
-  sync_on_proposal_approval?: boolean
-  sync_on_shooting_day_finalized?: boolean
-}
-
-export interface SyncFileRequest {
-  file_id: UUID
-  project_id: UUID
-  module: string // proposals, shooting_days, scripts, media
-}
-
-export interface SyncResult {
-  sync_id: string
-  provider: string
-  status: string // completed, failed, pending
-  external_id: string | null
-  external_url: string | null
-  file_name: string | null
-  file_size: number | null
-  synced_at: string | null
-  error: string | null
-}
-
-export interface ProjectSyncRequest {
-  modules?: string[] // proposals, shooting_days, scripts, media
-}
-
-export interface ProjectSyncResult {
-  project_id: string
-  organization_id: string
-  modules_synced: string[]
-  sync_results: Record<string, unknown>[]
-  total_files: number
-  successful_syncs: number
-  failed_syncs: number
-}
-
-export interface ProjectDriveFolder {
-  id: UUID
-  organization_id: UUID
-  project_id: UUID
-  project_folder_id: string | null
-  project_folder_url: string | null
-  scripts_folder_id: string | null
-  scripts_folder_url: string | null
-  shooting_days_folder_id: string | null
-  shooting_days_folder_url: string | null
-  media_folder_id: string | null
-  media_folder_url: string | null
-  created_at: ISODateTime
-  updated_at: ISODateTime
-}
 
 // ============================================================================
 // ANALYTICS & DASHBOARD TYPES

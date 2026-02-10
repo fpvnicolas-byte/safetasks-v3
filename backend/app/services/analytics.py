@@ -15,8 +15,6 @@ from app.core.config import settings
 from app.models.projects import Project
 from app.models.transactions import Transaction
 from app.models.inventory import KitItem
-from app.models.cloud import CloudSyncStatus
-
 logger = logging.getLogger(__name__)
 
 # Default timezone - can be made configurable per organization
@@ -308,37 +306,24 @@ class AnalyticsService:
     async def _get_cloud_metrics(self, organization_id: UUID, db: AsyncSession) -> Dict[str, Any]:
         """Calculate cloud sync metrics for the dashboard."""
 
-        thirty_days_ago = datetime.now(DEFAULT_TIMEZONE) - timedelta(days=30)
-
-        query = select(
-            func.count(CloudSyncStatus.id).label("total_syncs"),
-            func.sum(case((CloudSyncStatus.sync_status == "completed", 1), else_=0)).label("successful_syncs"),
-            func.sum(case((CloudSyncStatus.sync_status == "failed", 1), else_=0)).label("failed_syncs"),
-            func.sum(case((CloudSyncStatus.sync_started_at >= thirty_days_ago, 1), else_=0)).label("recent_syncs"),
-        ).where(CloudSyncStatus.organization_id == organization_id)
-
-        result = await db.execute(query)
-        row = result.first()
-
-        total_syncs = (row.total_syncs or 0) if row else 0
-        successful_syncs = (row.successful_syncs or 0) if row else 0
-        failed_syncs = (row.failed_syncs or 0) if row else 0
-        recent_syncs = (row.recent_syncs or 0) if row else 0
-
-        # Success rate
-        success_rate = (successful_syncs / max(total_syncs, 1)) * 100
+        # TODO: Re-implement with CloudFileReference after Task 3 migration
+        total_syncs = 0
+        successful_syncs = 0
+        failed_syncs = 0
+        recent_syncs = 0
+        sync_success_rate = 0.0
 
         # Storage used (simplified - would need actual file size tracking)
-        storage_used_gb = total_syncs * 0.1  # Rough estimate: 100MB per sync
+        storage_used_gb = 0.0
 
         return {
             "total_sync_operations": total_syncs,
             "successful_syncs": successful_syncs,
             "failed_syncs": failed_syncs,
-            "sync_success_rate": success_rate,
+            "sync_success_rate": sync_success_rate,
             "estimated_storage_used_gb": storage_used_gb,
             "recent_sync_activity_30_days": recent_syncs,
-            "cloud_health_status": "healthy" if success_rate >= 95 else "warning" if success_rate >= 80 else "critical"
+            "cloud_health_status": "healthy" if sync_success_rate >= 95 else "warning" if sync_success_rate >= 80 else "critical"
         }
 
     async def _get_trends_data(

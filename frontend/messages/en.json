@@ -2416,69 +2416,29 @@
       }
     },
     "googleDrivePage": {
-      "title": "Google Drive Integration",
-      "description": "Connect your Google Drive to automatically sync production files",
-      "loading": "Loading...",
+      "title": "Google Drive",
+      "description": "Connect your Google Drive to store large files directly",
       "status": {
-        "title": "Connection Status",
-        "connected": "Google Drive is connected",
-        "notConnected": "Not connected to Google Drive",
-        "connectedBadge": "Connected",
-        "notConnectedBadge": "Not Connected",
-        "projectId": "Project ID:",
-        "connectedAt": "Connected:",
-        "lastSync": "Last Sync:",
-        "rootFolder": "Root Folder:",
-        "viewInDrive": "View in Drive",
-        "notCreatedYet": "Not created yet",
-        "never": "Never"
+        "connected": "Connected",
+        "notConnected": "Not Connected",
+        "connectedAs": "Connected as",
+        "connectedSince": "Connected since",
+        "rootFolder": "Root folder"
       },
-      "setup": {
-        "title": "Setup Google Drive",
-        "description": "Upload your Google Service Account JSON credentials to connect",
-        "howTo": {
-          "title": "How to get Service Account credentials",
-          "step1": "Go to Google Cloud Console",
-          "step2": "Create or select a project",
-          "step3": "Enable Google Drive API",
-          "step4": "Create a Service Account",
-          "step5": "Create and download JSON key",
-          "step6": "Share your Drive folder with the service account email"
-        },
-        "serviceAccountLabel": "Service Account JSON",
-        "serviceAccountPlaceholder": "Paste your service account JSON here...",
-        "invalidJson": "Invalid JSON format. Please paste valid JSON.",
-        "invalidFields": "Invalid service account JSON. Missing required fields.",
-        "setupFailed": "Setup failed",
-        "settingUp": "Setting up...",
-        "connectButton": "Connect Google Drive",
-        "setupError": "Setup Failed",
-        "setupErrorMessage": "Failed to connect Google Drive"
+      "connect": {
+        "title": "Connect Google Drive",
+        "description": "Sign in with Google to connect your Drive. Files uploaded to Google Drive will be stored in your account.",
+        "button": "Connect with Google",
+        "connecting": "Connecting..."
       },
-      "syncSettings": {
-        "title": "Sync Settings",
-        "description": "Configure when files should automatically sync to Google Drive",
-        "autoSync": {
-          "label": "Auto-sync enabled",
-          "description": "Automatically sync files when uploaded"
-        },
-        "proposalSync": {
-          "label": "Sync on proposal approval",
-          "description": "Sync proposal files when approved"
-        },
-        "shootingDaySync": {
-          "label": "Sync on shooting day finalized",
-          "description": "Sync shooting day files when finalized"
-        }
+      "disconnect": {
+        "title": "Disconnect Google Drive",
+        "description": "This will remove the connection. Files already uploaded to Google Drive will remain there.",
+        "button": "Disconnect",
+        "confirm": "Are you sure you want to disconnect Google Drive?"
       },
-      "dangerZone": {
-        "title": "Danger Zone",
-        "description": "Irreversible actions for your Google Drive integration",
-        "removeButton": "Remove Google Drive Integration",
-        "removing": "Removing...",
-        "removeConfirm": "Are you sure you want to remove Google Drive integration? This will not delete your files from Drive.",
-        "removeNote": "This will disconnect Google Drive but will not delete your files from Drive."
-      }
+      "success": "Google Drive connected successfully!",
+      "error": "Failed to connect Google Drive"
     },
     "billingPage": {
       "breadcrumb": "Settings / Billing & Usage",

@@ -21,7 +21,7 @@ from app.db.session import get_db
 from app.models.access import ProjectAssignment as ProjectAssignmentModel
 from app.models.ai import AiRecommendation, AiSuggestion, AiUsageLog, ScriptAnalysis
 from app.models.clients import Client as ClientModel
-from app.models.cloud import CloudSyncStatus as CloudSyncStatusModel, ProjectDriveFolder as ProjectDriveFolderModel
+from app.models.cloud import ProjectDriveFolder as ProjectDriveFolderModel
 from app.models.commercial import Stakeholder as StakeholderModel
 from app.models.financial import Invoice as InvoiceModel, InvoiceItem as InvoiceItemModel
 from app.models.production import Character as CharacterModel, Scene as SceneModel, SceneCharacter as SceneCharacterModel
@@ -280,11 +280,7 @@ async def delete_project(
             .where(ProposalModel.project_id == project_id)
             .values(project_id=None)
         )
-        await db.execute(
-            update(CloudSyncStatusModel)
-            .where(CloudSyncStatusModel.project_id == project_id)
-            .values(project_id=None)
-        )
+        # TODO: Nullify project_id on CloudFileReference records after Task 3 migration
         await db.execute(
             update(AiUsageLog)
             .where(AiUsageLog.project_id == project_id)

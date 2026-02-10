@@ -19,7 +19,6 @@ from app.models.bank_accounts import BankAccount
 from app.models.transactions import Transaction
 from app.models.inventory import KitItem
 from app.models.kits import Kit
-from app.models.cloud import CloudSyncStatus
 from app.services.analytics import analytics_service
 
 
@@ -176,20 +175,6 @@ async def setup_test_data():
                 max_usage_hours=1000.0
             )
             db.add(item)
-
-        # Create cloud sync records
-        sync_statuses = ["completed", "completed", "failed", "completed", "pending", "completed"]
-        for i, status in enumerate(sync_statuses):
-            sync_record = CloudSyncStatus(
-                organization_id=org_id,
-                provider="google_drive",
-                sync_status=status,
-                file_name=f"production_file_{i+1}.pdf",
-                sync_started_at=datetime.now() - timedelta(hours=i),
-                sync_completed_at=datetime.now() - timedelta(hours=i) if status == "completed" else None,
-                error_message="API quota exceeded" if status == "failed" else None
-            )
-            db.add(sync_record)
 
         await db.commit()
 

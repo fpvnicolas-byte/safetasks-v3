@@ -2416,69 +2416,29 @@
       }
     },
     "googleDrivePage": {
-      "title": "Integração com Google Drive",
-      "description": "Conecte seu Google Drive para sincronizar automaticamente arquivos de produção",
-      "loading": "Carregando...",
+      "title": "Google Drive",
+      "description": "Conecte seu Google Drive para armazenar arquivos grandes diretamente",
       "status": {
-        "title": "Status da Conexão",
-        "connected": "Google Drive está conectado",
-        "notConnected": "Não conectado ao Google Drive",
-        "connectedBadge": "Conectado",
-        "notConnectedBadge": "Não Conectado",
-        "projectId": "ID do Projeto:",
-        "connectedAt": "Conectado em:",
-        "lastSync": "Última Sincronização:",
-        "rootFolder": "Pasta Raiz:",
-        "viewInDrive": "Ver no Drive",
-        "notCreatedYet": "Ainda não criado",
-        "never": "Nunca"
+        "connected": "Conectado",
+        "notConnected": "Não Conectado",
+        "connectedAs": "Conectado como",
+        "connectedSince": "Conectado desde",
+        "rootFolder": "Pasta raiz"
       },
-      "setup": {
-        "title": "Configurar Google Drive",
-        "description": "Envie suas credenciais JSON da Conta de Serviço do Google para conectar",
-        "howTo": {
-          "title": "Como obter credenciais de Conta de Serviço",
-          "step1": "Vá para o Google Cloud Console",
-          "step2": "Crie ou selecione um projeto",
-          "step3": "Habilite a API do Google Drive",
-          "step4": "Crie uma Conta de Serviço",
-          "step5": "Crie e baixe a chave JSON",
-          "step6": "Compartilhe sua pasta do Drive com o e-mail da conta de serviço"
-        },
-        "serviceAccountLabel": "JSON da Conta de Serviço",
-        "serviceAccountPlaceholder": "Cole o JSON da sua conta de serviço aqui...",
-        "invalidJson": "Formato JSON inválido. Por favor, cole um JSON válido.",
-        "invalidFields": "JSON da conta de serviço inválido. Campos obrigatórios ausentes.",
-        "setupFailed": "Falha na configuração",
-        "settingUp": "Configurando...",
-        "connectButton": "Conectar Google Drive",
-        "setupError": "Falha na Configuração",
-        "setupErrorMessage": "Falha ao conectar Google Drive"
+      "connect": {
+        "title": "Conectar Google Drive",
+        "description": "Faça login com o Google para conectar seu Drive. Arquivos enviados ao Google Drive serão armazenados na sua conta.",
+        "button": "Conectar com Google",
+        "connecting": "Conectando..."
       },
-      "syncSettings": {
-        "title": "Configurações de Sincronização",
-        "description": "Configure quando os arquivos devem sincronizar automaticamente com o Google Drive",
-        "autoSync": {
-          "label": "Sincronização automática ativada",
-          "description": "Sincronizar arquivos automaticamente quando enviados"
-        },
-        "proposalSync": {
-          "label": "Sincronizar ao aprovar proposta",
-          "description": "Sincronizar arquivos de proposta quando aprovados"
-        },
-        "shootingDaySync": {
-          "label": "Sincronizar ao finalizar dia de filmagem",
-          "description": "Sincronizar dias de filmagem quando finalizados"
-        }
+      "disconnect": {
+        "title": "Desconectar Google Drive",
+        "description": "Isso removerá a conexão. Arquivos já enviados ao Google Drive permanecerão lá.",
+        "button": "Desconectar",
+        "confirm": "Tem certeza que deseja desconectar o Google Drive?"
       },
-      "dangerZone": {
-        "title": "Zona de Perigo",
-        "description": "Ações irreversíveis para sua integração com Google Drive",
-        "removeButton": "Remover Integração com Google Drive",
-        "removing": "Removendo...",
-        "removeConfirm": "Tem certeza de que deseja remover a integração com Google Drive? Isso não excluirá seus arquivos do Drive.",
-        "removeNote": "Isso desconectará o Google Drive, mas não excluirá seus arquivos do Drive."
-      }
+      "success": "Google Drive conectado com sucesso!",
+      "error": "Falha ao conectar Google Drive"
     },
     "billingPage": {
       "breadcrumb": "Configurações / Cobrança e Uso",
