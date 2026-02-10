@@ -2524,7 +2524,11 @@
       "noFilesYet": "Nenhum arquivo enviado ainda",
       "fileCount": "{count} {count, plural, =1 {arquivo} other {arquivos}}",
       "viewList": "Lista",
-      "viewGrid": "Grade"
+      "viewGrid": "Grade",
+      "storageDrive": "Armazenamento Google Drive",
+      "storageDriveDesc": "Salvar diretamente em {email}",
+      "uploadingDrive": "Enviando para o Drive...",
+      "googleDriveNoLimit": "Google Drive: envie até 10GB"
     }
   },
   "notifications": {

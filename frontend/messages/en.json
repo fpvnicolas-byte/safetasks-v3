@@ -2527,7 +2527,8 @@
       "viewGrid": "Grid",
       "storageDrive": "Google Drive Storage",
       "storageDriveDesc": "Save directly to {email}",
-      "uploadingDrive": "Uploading to Drive..."
+      "uploadingDrive": "Uploading to Drive...",
+      "googleDriveNoLimit": "Google Drive: upload up to 10GB"
     }
   },
   "notifications": {

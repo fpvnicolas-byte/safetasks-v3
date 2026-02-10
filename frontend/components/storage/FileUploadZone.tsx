@@ -64,6 +64,10 @@ export function FileUploadZone({
 
   const isDriveAvailable = driveStatus?.connected && !!projectId
 
+  // When Google Drive is active, allow up to 10GB; otherwise use the prop limit
+  const DRIVE_MAX_SIZE_MB = 10240 // 10GB in MB
+  const effectiveMaxSize = (useGoogleDrive && isDriveAvailable) ? DRIVE_MAX_SIZE_MB : maxSize
+
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       // Add files to uploading state
@@ -196,7 +200,7 @@ export function FileUploadZone({
     useDropzone({
       onDrop,
       accept,
-      maxSize: maxSize * 1024 * 1024,
+      maxSize: effectiveMaxSize * 1024 * 1024,
       multiple,
     })
 
@@ -262,7 +266,9 @@ export function FileUploadZone({
               {t('clickToBrowse')}
             </p>
             <p className="text-xs text-muted-foreground">
-              {t('maxSize', { size: maxSize })}
+              {(useGoogleDrive && isDriveAvailable)
+                ? t('googleDriveNoLimit')
+                : t('maxSize', { size: maxSize })}
             </p>
           </div>
         </div>
@@ -281,7 +287,7 @@ export function FileUploadZone({
                     {errors.map((error) => (
                       <li key={error.code}>
                         {error.code === 'file-too-large'
-                          ? t('fileTooLarge', { size: maxSize })
+                          ? t('fileTooLarge', { size: effectiveMaxSize })
                           : error.code === 'file-invalid-type'
                             ? t('invalidFileType')
                             : error.message}
