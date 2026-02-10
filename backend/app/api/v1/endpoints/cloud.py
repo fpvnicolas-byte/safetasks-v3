@@ -1,6 +1,5 @@
 """
 Cloud API endpoints — OAuth2 Google Drive integration.
-Endpoints will be fully implemented in Task 5.
 """
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -12,11 +11,15 @@ from app.schemas.cloud import (
     GoogleOAuthConnectResponse,
     GoogleOAuthStatusResponse,
     GoogleOAuthDisconnectResponse,
-    DriveUploadSessionRequest, DriveUploadSessionResponse,
-    DriveUploadCompleteRequest, DriveUploadCompleteResponse,
+    DriveUploadSessionRequest,
+    DriveUploadSessionResponse,
+    DriveUploadCompleteRequest,
+    DriveUploadCompleteResponse,
     DriveDownloadUrlResponse,
     ProjectDriveFolderResponse,
 )
+from app.services.google_oauth import google_oauth_service
+from app.services.google_drive import google_drive_service
 
 
 router = APIRouter()
@@ -31,13 +34,10 @@ router = APIRouter()
 )
 async def connect_google_drive(
     profile=Depends(get_current_profile),
-    db: AsyncSession = Depends(get_db),
 ):
     """Initiate Google Drive OAuth2 connection — generates authorization URL."""
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="OAuth2 connect will be implemented in Task 5",
-    )
+    auth_url = google_oauth_service.generate_auth_url(profile.organization_id)
+    return GoogleOAuthConnectResponse(authorization_url=auth_url)
 
 
 @router.get(
@@ -51,10 +51,22 @@ async def google_auth_callback(
     db: AsyncSession = Depends(get_db),
 ):
     """Handle Google OAuth2 callback — exchanges code for tokens."""
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="OAuth2 callback will be implemented in Task 5",
-    )
+    try:
+        # Verify state matches org_id to prevent CSRF / cross-org injection
+        org_id_from_state = state.split(":")[0]
+        if str(profile.organization_id) != org_id_from_state:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid state parameter: organization mismatch",
+            )
+
+        await google_oauth_service.handle_callback(code, state, db)
+        return {"message": "Google Drive connected successfully"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to connect Google Drive: {str(e)}",
+        )
 
 
 @router.get(
@@ -67,13 +79,7 @@ async def google_drive_status(
     db: AsyncSession = Depends(get_db),
 ):
     """Get Google Drive connection status for the organization."""
-    organization_id = profile.organization_id
-    from app.models.cloud import GoogleDriveCredentials as GDCModel
-    from sqlalchemy import select
-
-    query = select(GDCModel).where(GDCModel.organization_id == organization_id)
-    result = await db.execute(query)
-    creds = result.scalar_one_or_none()
+    creds = await google_oauth_service.get_status(profile.organization_id, db)
 
     if not creds:
         return GoogleOAuthStatusResponse(connected=False)
@@ -96,23 +102,7 @@ async def disconnect_google_drive(
     db: AsyncSession = Depends(get_db),
 ):
     """Disconnect Google Drive — revokes tokens and removes credentials."""
-    organization_id = profile.organization_id
-    from app.models.cloud import GoogleDriveCredentials as GDCModel
-    from sqlalchemy import select
-
-    query = select(GDCModel).where(GDCModel.organization_id == organization_id)
-    result = await db.execute(query)
-    creds = result.scalar_one_or_none()
-
-    if not creds:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Google Drive not configured for this organization",
-        )
-
-    await db.delete(creds)
-    await db.commit()
-
+    await google_oauth_service.disconnect(profile.organization_id, db)
     return GoogleOAuthDisconnectResponse(
         status="disconnected",
         message="Google Drive disconnected successfully",
@@ -132,10 +122,39 @@ async def create_upload_session(
     db: AsyncSession = Depends(get_db),
 ):
     """Create a resumable upload session for direct browser-to-Drive upload."""
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Upload session will be implemented in Task 5",
-    )
+    try:
+        # Fetch project to get name
+        from app.models.projects import Project
+        from sqlalchemy import select
+        project_query = select(Project).where(Project.id == body.project_id, Project.organization_id == profile.organization_id)
+        project_result = await db.execute(project_query)
+        project = project_result.scalar_one_or_none()
+        
+        if not project:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+
+        # Ensure project folders exist
+        await google_drive_service.ensure_project_folders(
+            profile.organization_id, body.project_id, project.name, db
+        )
+
+        result = await google_drive_service.create_upload_session(
+            organization_id=profile.organization_id,
+            project_id=body.project_id,
+            file_name=body.file_name,
+            file_size=body.file_size,
+            mime_type=body.mime_type,
+            module=body.module,
+            db=db,
+        )
+        return DriveUploadSessionResponse(**result)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create upload session: {str(e)}",
+        )
 
 
 @router.post(
@@ -149,10 +168,23 @@ async def confirm_upload(
     db: AsyncSession = Depends(get_db),
 ):
     """Confirm a completed upload and finalize the file reference."""
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Upload confirm will be implemented in Task 5",
-    )
+    try:
+        ref = await google_drive_service.confirm_upload(
+            organization_id=profile.organization_id,
+            file_reference_id=body.file_reference_id,
+            drive_file_id=body.drive_file_id,
+            drive_file_url=body.drive_file_url,
+            db=db,
+        )
+        return DriveUploadCompleteResponse(
+            id=ref.id,
+            file_name=ref.file_name,
+            storage_provider=ref.storage_provider,
+            external_id=ref.external_id,
+            external_url=ref.external_url,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 # ─── Download ───────────────────────────────────────────────
@@ -168,10 +200,15 @@ async def get_download_url(
     db: AsyncSession = Depends(get_db),
 ):
     """Generate a signed download URL for a file stored on Google Drive."""
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Download URL will be implemented in Task 5",
-    )
+    try:
+        result = await google_drive_service.get_download_url(
+            organization_id=profile.organization_id,
+            file_reference_id=file_reference_id,
+            db=db,
+        )
+        return DriveDownloadUrlResponse(**result)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 # ─── Project Folders ────────────────────────────────────────
@@ -187,21 +224,18 @@ async def get_project_drive_folders(
     db: AsyncSession = Depends(get_db),
 ):
     """Get Google Drive folder information for a project."""
-    organization_id = profile.organization_id
-    from app.models.cloud import ProjectDriveFolder
+    # Fetch project to get name
+    from app.models.projects import Project
     from sqlalchemy import select
+    project_query = select(Project).where(Project.id == project_id, Project.organization_id == profile.organization_id)
+    project_result = await db.execute(project_query)
+    project = project_result.scalar_one_or_none()
+    
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
 
-    query = select(ProjectDriveFolder).where(
-        ProjectDriveFolder.organization_id == organization_id,
-        ProjectDriveFolder.project_id == project_id,
+    # Try to find existing folders or create new ones
+    folders = await google_drive_service.ensure_project_folders(
+        profile.organization_id, project_id, project.name, db
     )
-    result = await db.execute(query)
-    folders = result.scalar_one_or_none()
-
-    if not folders:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Project Drive folders not found",
-        )
-
     return folders
