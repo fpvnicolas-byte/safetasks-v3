@@ -1,18 +1,30 @@
 'use client'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardAction } from '@/components/ui/card'
 import { TrendsData } from '@/types'
 import { formatCurrency } from '@/lib/utils/money'
-import { TrendingUp, TrendingDown } from 'lucide-react'
+import { TrendingUp, TrendingDown, Lightbulb } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
 interface RevenueChartProps {
   data: TrendsData
 }
 
+/**
+ * Format a YYYY-MM string into a short human-readable month label.
+ * e.g. "2026-01" → "Jan 26"
+ */
+function formatMonth(monthStr: string): string {
+  const [year, month] = monthStr.split('-')
+  const date = new Date(Number(year), Number(month) - 1)
+  return date.toLocaleString('en-US', { month: 'short', year: '2-digit' })
+}
+
 export function RevenueChart({ data }: RevenueChartProps) {
   const t = useTranslations('dashboard.revenueChart')
   const trends = data.monthly_financial_trends || []
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
   if (trends.length === 0) {
     return (
@@ -25,10 +37,16 @@ export function RevenueChart({ data }: RevenueChartProps) {
     )
   }
 
-  // Get max value for scaling
-  const maxValue = Math.max(...trends.map(t =>
-    Math.max(t.revenue_cents, t.expenses_cents)
-  ))
+  // Slice to last 6 months
+  const visibleTrends = trends.slice(-6)
+
+  // Get max value for scaling (use absolute values for correct scaling)
+  const maxValue = Math.max(
+    ...visibleTrends.map(t =>
+      Math.max(t.revenue_cents, t.expenses_cents, Math.abs(t.net_profit_cents))
+    ),
+    1 // avoid division by zero
+  )
 
   // Calculate revenue growth
   const latestRevenue = trends[trends.length - 1]?.revenue_cents || 0
@@ -37,109 +55,151 @@ export function RevenueChart({ data }: RevenueChartProps) {
     ? ((latestRevenue - previousRevenue) / previousRevenue) * 100
     : 0
 
+  const isPositiveGrowth = revenueGrowth >= 0
+
+  // Determine the active trend data (hovered or latest)
+  const activeTrend = hoveredIndex !== null ? visibleTrends[hoveredIndex] : visibleTrends[visibleTrends.length - 1]
+
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>{t('title')}</CardTitle>
-            <CardDescription>{t('lastMonths', { count: trends.length })}</CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            {revenueGrowth >= 0 ? (
-              <TrendingUp className="h-5 w-5 text-green-600" />
-            ) : (
-              <TrendingDown className="h-5 w-5 text-red-600" />
-            )}
-            <span className={`text-sm font-medium ${revenueGrowth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {revenueGrowth > 0 ? '+' : ''}{revenueGrowth.toFixed(1)}%
-            </span>
-          </div>
+        <div>
+          <CardTitle>{t('title')}</CardTitle>
+          <CardDescription>{t('lastMonths', { count: visibleTrends.length })}</CardDescription>
         </div>
+        <CardAction>
+          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${isPositiveGrowth
+              ? 'bg-[oklch(0.62_0.16_150/0.15)] text-[oklch(0.62_0.16_150)]'
+              : 'bg-[oklch(0.7_0.2_25/0.15)] text-[oklch(0.7_0.2_25)]'
+            }`}>
+            {isPositiveGrowth ? (
+              <TrendingUp className="h-3.5 w-3.5" />
+            ) : (
+              <TrendingDown className="h-3.5 w-3.5" />
+            )}
+            {revenueGrowth > 0 ? '+' : ''}{revenueGrowth.toFixed(1)}%
+          </div>
+        </CardAction>
       </CardHeader>
+
       <CardContent>
-        <div className="space-y-4">
-          {/* Simple bar chart visualization */}
-          <div className="space-y-4">
-            {trends.slice(-6).map((trend, index) => {
-              const revenueHeight = (trend.revenue_cents / maxValue) * 100
-              const expenseHeight = (trend.expenses_cents / maxValue) * 100
-              const profitHeight = ((trend.revenue_cents - trend.expenses_cents) / maxValue) * 100
+        <div className="space-y-5">
+          {/* Summary row – shows values for hovered or latest month */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="rounded-lg bg-chart-2/10 px-3 py-2">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{t('revenue')}</div>
+              <div className="text-sm font-bold text-chart-2">{formatCurrency(activeTrend.revenue_cents)}</div>
+            </div>
+            <div className="rounded-lg bg-chart-4/10 px-3 py-2">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{t('expenses')}</div>
+              <div className="text-sm font-bold text-chart-4">{formatCurrency(activeTrend.expenses_cents)}</div>
+            </div>
+            <div className="rounded-lg bg-chart-1/10 px-3 py-2">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{t('netProfit')}</div>
+              <div className={`text-sm font-bold ${activeTrend.net_profit_cents >= 0 ? 'text-chart-1' : 'text-destructive'}`}>
+                {formatCurrency(activeTrend.net_profit_cents)}
+              </div>
+            </div>
+          </div>
 
-              return (
-                <div key={index} className="space-y-1">
-                  <div className="text-xs text-muted-foreground">{trend.month}</div>
-                  <div className="grid grid-cols-3 gap-1 h-16 sm:h-20 items-end">
+          {/* Vertical grouped bar chart */}
+          <div className="relative">
+            {/* Grid lines */}
+            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none" aria-hidden="true">
+              {[0, 1, 2, 3].map(i => (
+                <div key={i} className="border-b border-border/40 w-full" />
+              ))}
+            </div>
+
+            {/* Bars container */}
+            <div
+              className="relative flex items-end gap-1 sm:gap-2"
+              style={{ height: '160px' }}
+            >
+              {visibleTrends.map((trend, index) => {
+                const revenueH = (trend.revenue_cents / maxValue) * 100
+                const expenseH = (trend.expenses_cents / maxValue) * 100
+                const profitH = (Math.abs(trend.net_profit_cents) / maxValue) * 100
+                const isHovered = hoveredIndex === index
+                const isInactive = hoveredIndex !== null && hoveredIndex !== index
+
+                return (
+                  <div
+                    key={index}
+                    className={`flex-1 flex items-end justify-center gap-[3px] sm:gap-1 h-full cursor-pointer rounded-md transition-all duration-200 ${isHovered ? 'bg-muted/30' : ''
+                      } ${isInactive ? 'opacity-40' : 'opacity-100'}`}
+                    onMouseEnter={() => setHoveredIndex(index)}
+                    onMouseLeave={() => setHoveredIndex(null)}
+                  >
                     {/* Revenue bar */}
-                    <div className="flex flex-col justify-end">
-                      <div
-                        className="bg-green-500 rounded-t transition-all"
-                        style={{ height: `${Math.max(revenueHeight, 8)}%` }}
-                        title={`Revenue: ${formatCurrency(trend.revenue_cents)}`}
-                      />
-                      <div className="text-xs text-center mt-1 text-green-700 truncate">
-                        {formatCurrency(trend.revenue_cents)}
-                      </div>
-                    </div>
-
-                    {/* Expense bar */}
-                    <div className="flex flex-col justify-end">
-                      <div
-                        className="bg-red-500 rounded-t transition-all"
-                        style={{ height: `${Math.max(expenseHeight, 8)}%` }}
-                        title={`Expenses: ${formatCurrency(trend.expenses_cents)}`}
-                      />
-                      <div className="text-xs text-center mt-1 text-red-700 truncate">
-                        {formatCurrency(trend.expenses_cents)}
-                      </div>
-                    </div>
-
-                    {/* Profit bar */}
-                    <div className="flex flex-col justify-end">
-                      <div
-                        className={`${profitHeight >= 0 ? 'bg-blue-500' : 'bg-orange-500'} rounded-t transition-all`}
-                        style={{ height: `${Math.max(Math.abs(profitHeight), 8)}%` }}
-                        title={`Net: ${formatCurrency(trend.net_profit_cents)}`}
-                      />
-                      <div className="text-xs text-center mt-1 truncate">
-                        <span className={profitHeight >= 0 ? 'text-blue-700' : 'text-orange-700'}>
-                          {formatCurrency(trend.net_profit_cents)}
-                        </span>
-                      </div>
-                    </div>
+                    <div
+                      className="flex-1 max-w-[28px] rounded-t-sm bg-chart-2 transition-all duration-500 ease-out"
+                      style={{ height: `${Math.max(revenueH, 4)}%` }}
+                      title={`${t('revenue')}: ${formatCurrency(trend.revenue_cents)}`}
+                    />
+                    {/* Expenses bar */}
+                    <div
+                      className="flex-1 max-w-[28px] rounded-t-sm bg-chart-4 transition-all duration-500 ease-out"
+                      style={{ height: `${Math.max(expenseH, 4)}%` }}
+                      title={`${t('expenses')}: ${formatCurrency(trend.expenses_cents)}`}
+                    />
+                    {/* Net Profit bar */}
+                    <div
+                      className={`flex-1 max-w-[28px] rounded-t-sm transition-all duration-500 ease-out ${trend.net_profit_cents >= 0 ? 'bg-chart-1' : 'bg-destructive'
+                        }`}
+                      style={{ height: `${Math.max(profitH, 4)}%` }}
+                      title={`${t('netProfit')}: ${formatCurrency(trend.net_profit_cents)}`}
+                    />
                   </div>
+                )
+              })}
+            </div>
+
+            {/* X-axis month labels */}
+            <div className="flex gap-1 sm:gap-2 mt-2">
+              {visibleTrends.map((trend, index) => (
+                <div
+                  key={index}
+                  className={`flex-1 text-center text-[10px] sm:text-xs font-medium transition-colors duration-200 ${hoveredIndex === index ? 'text-foreground' : 'text-muted-foreground'
+                    }`}
+                >
+                  {formatMonth(trend.month)}
                 </div>
-              )
-            })}
+              ))}
+            </div>
           </div>
 
           {/* Legend */}
-          <div className="flex gap-6 text-sm border-t pt-4">
-            <div className="flex items-center gap-2">
-              <div className="h-3 w-3 bg-green-500 rounded" />
-              <span>{t('revenue')}</span>
+          <div className="flex items-center justify-center gap-5 text-xs border-t border-border/60 pt-4">
+            <div className="flex items-center gap-1.5">
+              <div className="h-2.5 w-2.5 rounded-sm bg-chart-2" />
+              <span className="text-muted-foreground">{t('revenue')}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="h-3 w-3 bg-red-500 rounded" />
-              <span>{t('expenses')}</span>
+            <div className="flex items-center gap-1.5">
+              <div className="h-2.5 w-2.5 rounded-sm bg-chart-4" />
+              <span className="text-muted-foreground">{t('expenses')}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="h-3 w-3 bg-blue-500 rounded" />
-              <span>{t('netProfit')}</span>
+            <div className="flex items-center gap-1.5">
+              <div className="h-2.5 w-2.5 rounded-sm bg-chart-1" />
+              <span className="text-muted-foreground">{t('netProfit')}</span>
             </div>
           </div>
 
           {/* Key Insights */}
           {data.key_insights && data.key_insights.length > 0 && (
-            <div className="border-t pt-4">
-              <h4 className="text-sm font-medium mb-2">{t('keyInsights')}</h4>
-              <ul className="space-y-1">
+            <div className="border-t border-border/60 pt-4 space-y-2">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('keyInsights')}</h4>
+              <div className="space-y-1.5">
                 {data.key_insights.map((insight, idx) => (
-                  <li key={idx} className="text-sm text-muted-foreground">
-                    • {insight}
-                  </li>
+                  <div
+                    key={idx}
+                    className="flex items-start gap-2 rounded-lg bg-muted/40 px-3 py-2 text-sm text-muted-foreground"
+                  >
+                    <Lightbulb className="h-3.5 w-3.5 mt-0.5 shrink-0 text-chart-4" />
+                    <span>{insight}</span>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
           )}
         </div>
