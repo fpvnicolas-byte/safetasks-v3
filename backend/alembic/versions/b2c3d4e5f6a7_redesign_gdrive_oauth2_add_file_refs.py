@@ -22,12 +22,13 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     # ── 1. Redesign google_drive_credentials ─────────────────
     # Drop old columns
-    op.drop_column("google_drive_credentials", "credentials")
-    op.drop_column("google_drive_credentials", "service_account_key")
-    op.drop_column("google_drive_credentials", "auto_sync_enabled")
-    op.drop_column("google_drive_credentials", "sync_on_proposal_approval")
-    op.drop_column("google_drive_credentials", "sync_on_shooting_day_finalized")
-    op.drop_column("google_drive_credentials", "last_sync_at")
+    # Drop old columns safely (ignoring if they don't exist)
+    op.execute("ALTER TABLE google_drive_credentials DROP COLUMN IF EXISTS credentials")
+    op.execute("ALTER TABLE google_drive_credentials DROP COLUMN IF EXISTS service_account_key")
+    op.execute("ALTER TABLE google_drive_credentials DROP COLUMN IF EXISTS auto_sync_enabled")
+    op.execute("ALTER TABLE google_drive_credentials DROP COLUMN IF EXISTS sync_on_proposal_approval")
+    op.execute("ALTER TABLE google_drive_credentials DROP COLUMN IF EXISTS sync_on_shooting_day_finalized")
+    op.execute("ALTER TABLE google_drive_credentials DROP COLUMN IF EXISTS last_sync_at")
 
     # Add OAuth2 columns
     op.add_column(
