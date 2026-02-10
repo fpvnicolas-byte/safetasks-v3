@@ -135,7 +135,7 @@ async def create_upload_session(
 
         # Ensure project folders exist
         await google_drive_service.ensure_project_folders(
-            profile.organization_id, body.project_id, project.name, db
+            profile.organization_id, body.project_id, project.title, db
         )
 
         result = await google_drive_service.create_upload_session(
@@ -236,6 +236,6 @@ async def get_project_drive_folders(
 
     # Try to find existing folders or create new ones
     folders = await google_drive_service.ensure_project_folders(
-        profile.organization_id, project_id, project.name, db
+        profile.organization_id, project_id, project.title, db
     )
     return folders
