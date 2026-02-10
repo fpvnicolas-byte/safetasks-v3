@@ -1,17 +1,11 @@
-from typing import List
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_profile, require_owner_admin_or_producer, require_billing_active
 from app.db.session import get_db
-from app.services.google_drive import google_drive_service
-from app.services.cloud import cloud_sync_service
 from app.schemas.cloud import (
     GoogleDriveCredentials, GoogleDriveCredentialsCreate, GoogleDriveCredentialsUpdate,
-    SyncFileRequest, SyncResult,
-    ProjectSyncRequest, ProjectSyncResult,
-    SyncStatusResponse
 )
 
 
@@ -159,136 +153,6 @@ async def remove_google_drive_auth(
     await db.commit()
 
     return {"message": "Google Drive authentication removed successfully"}
-
-
-@router.post(
-    "/sync/file",
-    response_model=SyncResult,
-    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
-)
-async def sync_file_to_drive(
-    sync_request: SyncFileRequest,
-    background_tasks: BackgroundTasks,
-    profile=Depends(get_current_profile),
-    db: AsyncSession = Depends(get_db),
-) -> SyncResult:
-    """
-    Sync a specific file to Google Drive.
-    This operation runs in the background to prevent API timeouts.
-    """
-    organization_id = profile.organization_id
-    try:
-        # Start the sync operation
-        result = await cloud_sync_service.sync_file_to_drive(
-            file_id=sync_request.file_id,
-            project_id=sync_request.project_id,
-            module=sync_request.module,
-            db=db
-        )
-
-        return SyncResult(**result)
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to initiate file sync: {str(e)}"
-        )
-
-
-@router.post(
-    "/projects/{project_id}/sync-all",
-    response_model=ProjectSyncResult,
-    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
-)
-async def sync_project_files(
-    project_id: UUID,
-    sync_request: ProjectSyncRequest = None,
-    background_tasks: BackgroundTasks = None,
-    profile=Depends(get_current_profile),
-    db: AsyncSession = Depends(get_db),
-) -> ProjectSyncResult:
-    """
-    Sync all files for a project to Google Drive.
-    This operation syncs files from all modules (proposals, shooting_days, scripts, media).
-    """
-    organization_id = profile.organization_id
-    if sync_request is None:
-        sync_request = ProjectSyncRequest()
-
-    try:
-        # Start the project sync operation
-        result = await cloud_sync_service.sync_project_files(
-            project_id=project_id,
-            modules=sync_request.modules,
-            db=db
-        )
-
-        return ProjectSyncResult(**result)
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to initiate project sync: {str(e)}"
-        )
-
-
-@router.get("/status", response_model=SyncStatusResponse, dependencies=[Depends(require_owner_admin_or_producer)])
-async def get_sync_status(
-    project_id: UUID = None,
-    file_path: str = None,
-    profile=Depends(get_current_profile),
-    db: AsyncSession = Depends(get_db),
-) -> SyncStatusResponse:
-    """
-    Get synchronization status for files.
-    Can filter by project or specific file path.
-    """
-    organization_id = profile.organization_id
-    try:
-        status_result = await cloud_sync_service.get_sync_status(
-            organization_id=organization_id,
-            file_path=file_path,
-            project_id=project_id,
-            db=db
-        )
-
-        return SyncStatusResponse(**status_result)
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get sync status: {str(e)}"
-        )
-
-
-@router.post(
-    "/check-alerts",
-    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
-)
-async def check_sync_alerts(
-    background_tasks: BackgroundTasks,
-    profile=Depends(get_current_profile),
-    db: AsyncSession = Depends(get_db),
-) -> dict:
-    """
-    Manually trigger sync status checks and send alerts.
-    Only admins and managers can trigger alerts.
-    """
-    organization_id = profile.organization_id
-    try:
-        # This could check for failed syncs and send notifications
-        # For now, return a placeholder response
-        return {
-            "message": "Sync alert check completed",
-            "alerts_checked": 0,
-            "alerts_sent": 0
-        }
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to check sync alerts: {str(e)}"
-        )
 
 
 @router.get("/projects/{project_id}/folders", dependencies=[Depends(require_owner_admin_or_producer)])

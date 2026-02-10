@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Storage & Cloud Sync V1 Test Script
-Tests multi-tenant file storage and cloud synchronization
+Storage V1 Test Script
+Tests multi-tenant file storage
 """
 
 import asyncio
@@ -12,7 +12,6 @@ from app.core.config import settings
 from app.models.organizations import Organization
 from app.models.profiles import Profile
 from app.services.storage import storage_service
-from app.services.cloud import cloud_sync_service
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -116,21 +115,7 @@ async def test_storage_flow():
         print(f"✅ Signed URL generated (expires in 30 min)")
         print(f"   URL: {signed_url[:50]}...")
 
-        # Test 4: Cloud sync simulation
-        print("\n☁️  Test 4: Cloud synchronization simulation")
-        sync_results = await cloud_sync_service.sync_production_assets(
-            organization_id=org_a_id,
-            module="scripts",
-            file_path=script_result["file_path"],
-            file_name=script_filename,
-            providers=["google_drive", "dropbox"]
-        )
-
-        print("✅ Cloud sync completed:")
-        for provider, result in sync_results.items():
-            print(f"   {provider}: {result.get('status', 'unknown')}")
-
-        # Test 5: Multi-tenancy security - different org can't access
+        # Test 4: Multi-tenancy security - different org can't access
         print("\n🔒 Test 5: Multi-tenancy security test")
         try:
             # Try to generate signed URL for Org A's file using Org B's context
@@ -147,8 +132,8 @@ async def test_storage_flow():
         except Exception as e:
             print(f"Error in security test: {e}")
 
-        # Test 6: File validation
-        print("\n✅ Test 6: File validation tests")
+        # Test 5: File validation
+        print("\n✅ Test 5: File validation tests")
 
         # Test oversized file
         large_content = b"x" * (26 * 1024 * 1024)  # 26MB (over limit)
@@ -178,10 +163,9 @@ async def test_storage_flow():
         except ValueError as e:
             print(f"✅ File type validation working: {str(e)}")
 
-        print("\n🎉 Storage & Cloud Sync V1 Tests Completed!")
+        print("\n🎉 Storage V1 Tests Completed!")
         print("✅ Multi-tenant file paths implemented")
         print("✅ Public/private bucket separation working")
-        print("✅ Cloud sync simulation functional")
         print("✅ File validation and security enforced")
 
     finally:

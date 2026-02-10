@@ -13,11 +13,9 @@ from app.api.deps import (
 )
 from app.db.session import get_db
 from app.services.storage import storage_service
-from app.services.cloud import cloud_sync_service
 from app.services.entitlements import ensure_storage_capacity, increment_storage_usage, decrement_storage_usage
 from app.schemas.storage import (
     FileUploadResponse, SignedUrlRequest, SignedUrlResponse,
-    CloudSyncRequest, CloudSyncResponse, SyncStatusResponse
 )
 
 router = APIRouter()
@@ -62,19 +60,6 @@ async def upload_file(
             bucket=bucket,
             entity_id=entity_id
         )
-
-        # Optionally sync to cloud providers for production files
-        if bucket == "production-files":
-            try:
-                await cloud_sync_service.sync_production_assets(
-                    organization_id=organization_id,
-                    module=module,
-                    file_path=result["file_path"],
-                    file_name=file.filename
-                )
-            except Exception as e:
-                # Log but don't fail the upload if cloud sync fails
-                print(f"Cloud sync failed: {str(e)}")
 
         await increment_storage_usage(db, organization_id, bytes_added=len(file_content))
         return FileUploadResponse(**result)
@@ -134,92 +119,6 @@ async def generate_signed_url(
         )
 
 
-@router.post(
-    "/sync-cloud",
-    response_model=CloudSyncResponse,
-    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
-)
-async def sync_to_cloud(
-    request: CloudSyncRequest,
-    organization_id: UUID = Depends(get_organization_from_profile),
-    db: AsyncSession = Depends(get_db),
-) -> CloudSyncResponse:
-    """
-    Sync a file to external cloud providers (Google Drive, Dropbox, etc.).
-    """
-    try:
-        # Validate file ownership
-        if not request.file_path.startswith(str(organization_id)):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied: file does not belong to your organization"
-            )
-
-        # Extract filename from path for logging
-        filename = request.file_path.split('/')[-1]
-
-        results = await cloud_sync_service.sync_production_assets(
-            organization_id=organization_id,
-            module="storage",  # Generic module for storage operations
-            file_path=request.file_path,
-            file_name=filename,
-            providers=request.providers
-        )
-
-        return CloudSyncResponse(
-            file_path=request.file_path,
-            organization_id=str(organization_id),
-            results=results
-        )
-
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Cloud sync failed: {str(e)}"
-        )
-
-
-@router.get("/sync-status/{file_path:path}", response_model=SyncStatusResponse, dependencies=[Depends(require_read_only)])
-async def get_sync_status(
-    file_path: str,
-    organization_id: UUID = Depends(get_organization_from_profile),
-    db: AsyncSession = Depends(get_db),
-) -> SyncStatusResponse:
-    """
-    Get synchronization status for a file.
-    """
-    try:
-        # Validate file ownership
-        if not file_path.startswith(str(organization_id)):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied: file does not belong to your organization"
-            )
-
-        status_info = await cloud_sync_service.get_sync_status(
-            organization_id=organization_id,
-            file_path=file_path
-        )
-
-        return SyncStatusResponse(**status_info)
-
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Status check failed: {str(e)}"
-        )
-
-
 @router.get("/list/{module}", dependencies=[Depends(require_read_only)])
 async def list_files(
     module: str,
@@ -238,7 +137,7 @@ async def list_files(
             path_prefix = f"{organization_id}/{module}/{entity_id}/"
         else:
             path_prefix = f"{organization_id}/{module}/"
-        
+
         # Determine bucket based on module
         if module == "kits":
             bucket = "public-assets"  # Kit photos are public
@@ -247,7 +146,7 @@ async def list_files(
 
         # List files from storage service
         files = await storage_service.list_files(bucket, path_prefix)
-        
+
         # Add additional metadata to each file
         enriched_files = []
         for file_obj in files:
