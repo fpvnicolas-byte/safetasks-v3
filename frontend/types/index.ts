@@ -1443,9 +1443,79 @@ export interface SignedUrlResponse {
 }
 
 // ============================================================================
-// GOOGLE DRIVE & CLOUD TYPES (OAuth2 — will be added in Task 6)
-// See: docs/plans/2026-02-09-google-drive-oauth-redesign.md
+// GOOGLE DRIVE & CLOUD TYPES
 // ============================================================================
+
+export interface GoogleOAuthConnectResponse {
+  authorization_url: string
+}
+
+export interface GoogleOAuthStatusResponse {
+  connected: boolean
+  connected_email?: string
+  connected_at?: string
+  root_folder_url?: string
+}
+
+export interface GoogleOAuthDisconnectResponse {
+  status: string
+  message: string
+}
+
+export interface DriveUploadSessionRequest {
+  file_name: string
+  file_size: number
+  mime_type: string
+  project_id: string
+  module: string // scripts, shooting_days, media
+}
+
+export interface DriveUploadSessionResponse {
+  session_uri: string
+  file_reference_id: string
+}
+
+export interface DriveUploadCompleteRequest {
+  file_reference_id: string
+  drive_file_id: string
+  drive_file_url?: string
+}
+
+export interface DriveUploadCompleteResponse {
+  id: string
+  file_name: string
+  storage_provider: string
+  external_id: string
+  external_url?: string
+}
+
+export interface DriveDownloadUrlResponse {
+  download_url: string
+  expires_in: number
+}
+
+export interface CloudFileReference {
+  id: string
+  organization_id: string
+  project_id?: string
+  module?: string
+  file_name: string
+  file_size?: string
+  mime_type?: string
+  storage_provider: string
+  external_url?: string
+  thumbnail_path?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ProjectDriveFolderResponse {
+  project_id: string
+  project_folder?: { id: string; url: string }
+  scripts_folder?: { id: string; url: string }
+  shooting_days_folder?: { id: string; url: string }
+  media_folder?: { id: string; url: string }
+}
 
 // ============================================================================
 // ANALYTICS & DASHBOARD TYPES
