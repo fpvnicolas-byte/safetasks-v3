@@ -1,55 +1,83 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 from uuid import UUID
 from datetime import datetime
-from typing import Optional, Dict, Any, List
+from typing import Optional
 
 
-class GoogleDriveCredentialsBase(BaseModel):
-    """Base schema for Google Drive credentials."""
-    service_account_key: Optional[Dict[str, Any]] = None
-    auto_sync_enabled: bool = True
-    sync_on_proposal_approval: bool = True
-    sync_on_shooting_day_finalized: bool = True
+# ─── OAuth ──────────────────────────────────────────────────
 
-    model_config = ConfigDict(from_attributes=True)
+class GoogleOAuthConnectRequest(BaseModel):
+    redirect_uri: str
+
+class GoogleOAuthConnectResponse(BaseModel):
+    authorization_url: str
+
+class GoogleOAuthStatusResponse(BaseModel):
+    connected: bool
+    connected_email: Optional[str] = None
+    connected_at: Optional[datetime] = None
+    root_folder_url: Optional[str] = None
+
+class GoogleOAuthDisconnectResponse(BaseModel):
+    status: str
+    message: str
 
 
-class GoogleDriveCredentialsCreate(GoogleDriveCredentialsBase):
-    """Schema for creating Google Drive credentials."""
-    service_account_key: Dict[str, Any]  # Required for creation
+# ─── Upload ─────────────────────────────────────────────────
+
+class DriveUploadSessionRequest(BaseModel):
+    file_name: str
+    file_size: int  # bytes
+    mime_type: str
+    project_id: UUID
+    module: str  # scripts, shooting_days, media
+
+class DriveUploadSessionResponse(BaseModel):
+    session_uri: str  # Google resumable upload URI
+    file_reference_id: UUID  # pre-created file reference ID
+
+class DriveUploadCompleteRequest(BaseModel):
+    file_reference_id: UUID
+    drive_file_id: str
+    drive_file_url: Optional[str] = None
+
+class DriveUploadCompleteResponse(BaseModel):
+    id: UUID
+    file_name: str
+    storage_provider: str
+    external_id: str
+    external_url: Optional[str]
 
 
-class GoogleDriveCredentials(GoogleDriveCredentialsBase):
-    """Schema for Google Drive credentials response."""
+# ─── Download ───────────────────────────────────────────────
+
+class DriveDownloadUrlResponse(BaseModel):
+    download_url: str
+    expires_in: int  # seconds
+
+
+# ─── File Reference ─────────────────────────────────────────
+
+class CloudFileReferenceResponse(BaseModel):
     id: UUID
     organization_id: UUID
-    root_folder_id: Optional[str]
-    root_folder_url: Optional[str]
-    connected_at: Optional[datetime]
-    last_sync_at: Optional[datetime]
+    project_id: Optional[UUID]
+    module: Optional[str]
+    file_name: str
+    file_size: Optional[str]
+    mime_type: Optional[str]
+    storage_provider: str
+    external_url: Optional[str]
+    thumbnail_path: Optional[str]
     created_at: datetime
     updated_at: datetime
 
-
-class GoogleDriveCredentialsUpdate(BaseModel):
-    """Schema for updating Google Drive credentials."""
-    service_account_key: Optional[Dict[str, Any]] = None
-    auto_sync_enabled: Optional[bool] = None
-    sync_on_proposal_approval: Optional[bool] = None
-    sync_on_shooting_day_finalized: Optional[bool] = None
-
     model_config = ConfigDict(from_attributes=True)
 
 
-class ProjectDriveFolderBase(BaseModel):
-    """Base schema for project drive folder."""
-    pass
+# ─── Project Folders ────────────────────────────────────────
 
-    model_config = ConfigDict(from_attributes=True)
-
-
-class ProjectDriveFolder(ProjectDriveFolderBase):
-    """Schema for project drive folder response."""
+class ProjectDriveFolderResponse(BaseModel):
     id: UUID
     organization_id: UUID
     project_id: UUID
@@ -63,13 +91,5 @@ class ProjectDriveFolder(ProjectDriveFolderBase):
     media_folder_url: Optional[str]
     created_at: datetime
     updated_at: datetime
-
-
-class GoogleDriveFolderInfo(BaseModel):
-    """Schema for Google Drive folder information."""
-    folder_id: str
-    folder_url: str
-    name: str
-    created_time: str
 
     model_config = ConfigDict(from_attributes=True)

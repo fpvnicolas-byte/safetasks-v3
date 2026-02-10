@@ -1,3 +1,7 @@
+"""
+Cloud API endpoints — OAuth2 Google Drive integration.
+Endpoints will be fully implemented in Task 5.
+"""
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -5,172 +9,191 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_profile, require_owner_admin_or_producer, require_billing_active
 from app.db.session import get_db
 from app.schemas.cloud import (
-    GoogleDriveCredentials, GoogleDriveCredentialsCreate, GoogleDriveCredentialsUpdate,
+    GoogleOAuthConnectResponse,
+    GoogleOAuthStatusResponse,
+    GoogleOAuthDisconnectResponse,
+    DriveUploadSessionRequest, DriveUploadSessionResponse,
+    DriveUploadCompleteRequest, DriveUploadCompleteResponse,
+    DriveDownloadUrlResponse,
+    ProjectDriveFolderResponse,
 )
 
 
 router = APIRouter()
 
 
-@router.post(
-    "/google/auth",
-    response_model=GoogleDriveCredentials,
-    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+# ─── OAuth2 Flow ────────────────────────────────────────────
+
+@router.get(
+    "/google/auth/connect",
+    response_model=GoogleOAuthConnectResponse,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)],
 )
-async def setup_google_drive_auth(
-    credentials_in: GoogleDriveCredentialsCreate,
-    profile: "Profile" = Depends(get_current_profile),
+async def connect_google_drive(
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
-) -> GoogleDriveCredentials:
-    """
-    Setup Google Drive authentication for the organization.
-    Only admins and managers can configure Google Drive access.
-    Requires a Google Service Account key for backend automation.
-    """
-    organization_id = profile.organization_id
-    from app.models.cloud import GoogleDriveCredentials as GDCModel
-
-    # Check if credentials already exist
-    from sqlalchemy import select
-    existing_query = select(GDCModel).where(GDCModel.organization_id == organization_id)
-    result = await db.execute(existing_query)
-    existing = result.scalar_one_or_none()
-
-    if existing:
-        # Update existing credentials
-        for field, value in credentials_in.dict(exclude_unset=True).items():
-            setattr(existing, field, value)
-        db.add(existing)
-    else:
-        # Create new credentials
-        new_credentials = GDCModel(
-            organization_id=organization_id,
-            **credentials_in.dict()
-        )
-        db.add(new_credentials)
-
-    await db.commit()
-
-    if existing:
-        await db.refresh(existing)
-        return existing
-    else:
-        await db.refresh(new_credentials)
-        return new_credentials
+):
+    """Initiate Google Drive OAuth2 connection — generates authorization URL."""
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="OAuth2 connect will be implemented in Task 5",
+    )
 
 
-@router.get("/google/auth", response_model=GoogleDriveCredentials, dependencies=[Depends(require_owner_admin_or_producer)])
-async def get_google_drive_auth(
-    profile: "Profile" = Depends(get_current_profile),
+@router.get(
+    "/google/auth/callback",
+    dependencies=[Depends(require_owner_admin_or_producer)],
+)
+async def google_auth_callback(
+    code: str,
+    state: str,
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
-) -> GoogleDriveCredentials:
-    """
-    Get Google Drive authentication status for the organization.
-    """
+):
+    """Handle Google OAuth2 callback — exchanges code for tokens."""
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="OAuth2 callback will be implemented in Task 5",
+    )
+
+
+@router.get(
+    "/google/auth/status",
+    response_model=GoogleOAuthStatusResponse,
+    dependencies=[Depends(require_owner_admin_or_producer)],
+)
+async def google_drive_status(
+    profile=Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get Google Drive connection status for the organization."""
     organization_id = profile.organization_id
     from app.models.cloud import GoogleDriveCredentials as GDCModel
     from sqlalchemy import select
 
     query = select(GDCModel).where(GDCModel.organization_id == organization_id)
     result = await db.execute(query)
-    credentials = result.scalar_one_or_none()
+    creds = result.scalar_one_or_none()
 
-    if not credentials:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Google Drive not configured for this organization"
-        )
+    if not creds:
+        return GoogleOAuthStatusResponse(connected=False)
 
-    return credentials
-
-
-@router.put(
-    "/google/auth",
-    response_model=GoogleDriveCredentials,
-    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
-)
-async def update_google_drive_auth(
-    credentials_in: GoogleDriveCredentialsUpdate,
-    profile: "Profile" = Depends(get_current_profile),
-    db: AsyncSession = Depends(get_db),
-) -> GoogleDriveCredentials:
-    """
-    Update Google Drive authentication settings.
-    Only admins and managers can update Google Drive settings.
-    """
-    organization_id = profile.organization_id
-    from app.models.cloud import GoogleDriveCredentials as GDCModel
-    from sqlalchemy import select
-
-    query = select(GDCModel).where(GDCModel.organization_id == organization_id)
-    result = await db.execute(query)
-    credentials = result.scalar_one_or_none()
-
-    if not credentials:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Google Drive not configured for this organization"
-        )
-
-    # Update fields
-    for field, value in credentials_in.dict(exclude_unset=True).items():
-        setattr(credentials, field, value)
-
-    db.add(credentials)
-    await db.commit()
-    await db.refresh(credentials)
-
-    return credentials
+    return GoogleOAuthStatusResponse(
+        connected=True,
+        connected_email=creds.connected_email,
+        connected_at=creds.connected_at,
+        root_folder_url=creds.root_folder_url,
+    )
 
 
 @router.delete(
     "/google/auth",
-    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)]
+    response_model=GoogleOAuthDisconnectResponse,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)],
 )
-async def remove_google_drive_auth(
-    profile: "Profile" = Depends(get_current_profile),
+async def disconnect_google_drive(
+    profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
-) -> dict:
-    """
-    Remove Google Drive authentication for the organization.
-    Only admins and managers can remove Google Drive access.
-    """
+):
+    """Disconnect Google Drive — revokes tokens and removes credentials."""
     organization_id = profile.organization_id
     from app.models.cloud import GoogleDriveCredentials as GDCModel
     from sqlalchemy import select
 
     query = select(GDCModel).where(GDCModel.organization_id == organization_id)
     result = await db.execute(query)
-    credentials = result.scalar_one_or_none()
+    creds = result.scalar_one_or_none()
 
-    if not credentials:
+    if not creds:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Google Drive not configured for this organization"
+            detail="Google Drive not configured for this organization",
         )
 
-    await db.delete(credentials)
+    await db.delete(creds)
     await db.commit()
 
-    return {"message": "Google Drive authentication removed successfully"}
+    return GoogleOAuthDisconnectResponse(
+        status="disconnected",
+        message="Google Drive disconnected successfully",
+    )
 
 
-@router.get("/projects/{project_id}/folders", dependencies=[Depends(require_owner_admin_or_producer)])
+# ─── Upload ─────────────────────────────────────────────────
+
+@router.post(
+    "/google/upload/session",
+    response_model=DriveUploadSessionResponse,
+    dependencies=[Depends(require_owner_admin_or_producer), Depends(require_billing_active)],
+)
+async def create_upload_session(
+    body: DriveUploadSessionRequest,
+    profile=Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a resumable upload session for direct browser-to-Drive upload."""
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="Upload session will be implemented in Task 5",
+    )
+
+
+@router.post(
+    "/google/upload/complete",
+    response_model=DriveUploadCompleteResponse,
+    dependencies=[Depends(require_owner_admin_or_producer)],
+)
+async def confirm_upload(
+    body: DriveUploadCompleteRequest,
+    profile=Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
+):
+    """Confirm a completed upload and finalize the file reference."""
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="Upload confirm will be implemented in Task 5",
+    )
+
+
+# ─── Download ───────────────────────────────────────────────
+
+@router.get(
+    "/google/download/{file_reference_id}",
+    response_model=DriveDownloadUrlResponse,
+    dependencies=[Depends(require_owner_admin_or_producer)],
+)
+async def get_download_url(
+    file_reference_id: UUID,
+    profile=Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
+):
+    """Generate a signed download URL for a file stored on Google Drive."""
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="Download URL will be implemented in Task 5",
+    )
+
+
+# ─── Project Folders ────────────────────────────────────────
+
+@router.get(
+    "/projects/{project_id}/folders",
+    response_model=ProjectDriveFolderResponse,
+    dependencies=[Depends(require_owner_admin_or_producer)],
+)
 async def get_project_drive_folders(
     project_id: UUID,
     profile=Depends(get_current_profile),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Get Google Drive folder information for a project.
-    """
+    """Get Google Drive folder information for a project."""
     organization_id = profile.organization_id
     from app.models.cloud import ProjectDriveFolder
     from sqlalchemy import select
 
     query = select(ProjectDriveFolder).where(
         ProjectDriveFolder.organization_id == organization_id,
-        ProjectDriveFolder.project_id == project_id
+        ProjectDriveFolder.project_id == project_id,
     )
     result = await db.execute(query)
     folders = result.scalar_one_or_none()
@@ -178,25 +201,7 @@ async def get_project_drive_folders(
     if not folders:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Project Google Drive folders not found. Sync a file first to create folders."
+            detail="Project Drive folders not found",
         )
 
-    return {
-        "project_id": str(project_id),
-        "project_folder": {
-            "id": folders.project_folder_id,
-            "url": folders.project_folder_url
-        } if folders.project_folder_id else None,
-        "scripts_folder": {
-            "id": folders.scripts_folder_id,
-            "url": folders.scripts_folder_url
-        } if folders.scripts_folder_id else None,
-        "shooting_days_folder": {
-            "id": folders.shooting_days_folder_id,
-            "url": folders.shooting_days_folder_url
-        } if folders.shooting_days_folder_id else None,
-        "media_folder": {
-            "id": folders.media_folder_id,
-            "url": folders.media_folder_url
-        } if folders.media_folder_id else None,
-    }
+    return folders

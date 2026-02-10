@@ -1,7 +1,7 @@
 # Import all models automatically detected
 from .bank_accounts import BankAccount
 from .clients import Client
-from .cloud import GoogleDriveCredentials, ProjectDriveFolder
+from .cloud import GoogleDriveCredentials, ProjectDriveFolder, CloudFileReference
 from .commercial import Supplier
 from .invites import OrganizationInvite
 from .financial import TaxTypeEnum, InvoiceStatusEnum, InvoicePaymentMethodEnum, TaxTable, Invoice, InvoiceItem
@@ -27,6 +27,7 @@ __all__ = [
     "Client",
     "GoogleDriveCredentials",
     "ProjectDriveFolder",
+    "CloudFileReference",
     "Supplier",
     "TaxTypeEnum",
     "InvoiceStatusEnum",

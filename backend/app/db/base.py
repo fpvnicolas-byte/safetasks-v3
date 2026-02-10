@@ -16,6 +16,7 @@ from app.models import (
     Notification,
     GoogleDriveCredentials,
     ProjectDriveFolder,
+    CloudFileReference,
     Plan,
     Entitlement,
     OrganizationUsage,

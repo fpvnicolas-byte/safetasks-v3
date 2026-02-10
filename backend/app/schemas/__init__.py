@@ -43,6 +43,15 @@ from .billing import (
     SubscriptionCancelRequest,
     SubscriptionInfo,
 )
+from .cloud import (
+    GoogleOAuthConnectRequest, GoogleOAuthConnectResponse,
+    GoogleOAuthStatusResponse, GoogleOAuthDisconnectResponse,
+    DriveUploadSessionRequest, DriveUploadSessionResponse,
+    DriveUploadCompleteRequest, DriveUploadCompleteResponse,
+    DriveDownloadUrlResponse,
+    CloudFileReferenceResponse,
+    ProjectDriveFolderResponse,
+)
 
 __all__ = [
     "Organization", "OrganizationCreate", "OrganizationUpdate",
@@ -77,7 +86,12 @@ __all__ = [
     "SubscriptionActionResponse",
     "SubscriptionCancelRequest",
     "SubscriptionInfo",
-    "GoogleDriveCredentials", "GoogleDriveCredentialsCreate", "GoogleDriveCredentialsUpdate",
-    "ProjectDriveFolder",
-    "GoogleDriveFolderInfo",
+    "GoogleOAuthConnectRequest", "GoogleOAuthConnectResponse",
+    "GoogleOAuthStatusResponse", "GoogleOAuthDisconnectResponse",
+    "DriveUploadSessionRequest", "DriveUploadSessionResponse",
+    "DriveUploadCompleteRequest", "DriveUploadCompleteResponse",
+    "DriveDownloadUrlResponse",
+    "CloudFileReferenceResponse",
+    "ProjectDriveFolderResponse",
 ]
+
