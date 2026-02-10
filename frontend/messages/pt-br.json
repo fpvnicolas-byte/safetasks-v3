@@ -3472,6 +3472,44 @@
       "confirmTitle": "Excluir Contato",
       "confirm": "Tem certeza que deseja excluir {name}? Esta ação não pode ser desfeita."
     },
+    "invite": {
+      "inviteMember": "Convidar Membro",
+      "modalTitle": "Convidar Membro da Equipe",
+      "modalDescription": "Envie um convite da plataforma para um novo membro da equipe",
+      "emailLabel": "Email",
+      "emailPlaceholder": "colega@exemplo.com",
+      "roleLabel": "Função",
+      "selectRole": "Selecione uma função",
+      "sendInvite": "Enviar Convite",
+      "linkReady": "O link de convite foi gerado. Compartilhe com o membro da equipe:",
+      "close": "Fechar",
+      "cancel": "Cancelar"
+    },
+    "team": {
+      "activeMembers": "Membros Ativos",
+      "activeMembersDescription": "Membros da equipe com acesso à plataforma",
+      "columnName": "Nome",
+      "columnEmail": "Email",
+      "columnRole": "Função",
+      "columnJoined": "Entrou em",
+      "columnActions": "Ações",
+      "columnSent": "Enviado",
+      "columnExpires": "Expira",
+      "remove": "Remover",
+      "pendingInvites": "Convites Pendentes",
+      "pendingInvitesDescription": "Convites que foram enviados mas ainda não foram aceitos",
+      "resend": "Reenviar",
+      "resending": "Reenviando...",
+      "revoke": "Revogar"
+    },
+    "tabs": {
+      "contacts": "Contatos",
+      "team": "Equipe & Acesso",
+      "info": "Info",
+      "projects": "Projetos",
+      "financials": "Financeiro",
+      "access": "Acesso"
+    },
     "detail": {
       "title": "Detalhes do Contato",
       "backToContacts": "Voltar para Contatos",
@@ -3508,12 +3546,6 @@
       "periodTotal": "Total do Período",
       "period": "Período",
       "byProject": "Por Projeto"
-    },
-    "tabs": {
-      "info": "Info",
-      "projects": "Projetos",
-      "financials": "Financeiro",
-      "access": "Acesso"
     },
     "info": {
       "title": "Informações do Contato",

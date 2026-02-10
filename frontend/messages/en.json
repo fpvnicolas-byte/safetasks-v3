@@ -3472,6 +3472,44 @@
       "confirmTitle": "Delete Contact",
       "confirm": "Are you sure you want to delete {name}? This action cannot be undone."
     },
+    "invite": {
+      "inviteMember": "Invite Member",
+      "modalTitle": "Invite Team Member",
+      "modalDescription": "Send a platform invite to a new team member",
+      "emailLabel": "Email",
+      "emailPlaceholder": "colleague@example.com",
+      "roleLabel": "Role",
+      "selectRole": "Select a role",
+      "sendInvite": "Send Invite",
+      "linkReady": "The invite link has been generated. Share it with your team member:",
+      "close": "Close",
+      "cancel": "Cancel"
+    },
+    "team": {
+      "activeMembers": "Active Members",
+      "activeMembersDescription": "Team members with platform access",
+      "columnName": "Name",
+      "columnEmail": "Email",
+      "columnRole": "Role",
+      "columnJoined": "Joined",
+      "columnActions": "Actions",
+      "columnSent": "Sent",
+      "columnExpires": "Expires",
+      "remove": "Remove",
+      "pendingInvites": "Pending Invitations",
+      "pendingInvitesDescription": "Invitations that have been sent but not yet accepted",
+      "resend": "Resend",
+      "resending": "Resending...",
+      "revoke": "Revoke"
+    },
+    "tabs": {
+      "contacts": "Contacts",
+      "team": "Team & Access",
+      "info": "Info",
+      "projects": "Projects",
+      "financials": "Financials",
+      "access": "Access"
+    },
     "detail": {
       "title": "Contact Details",
       "backToContacts": "Back to Contacts",
@@ -3508,12 +3546,6 @@
       "periodTotal": "Period Total",
       "period": "Period",
       "byProject": "By Project"
-    },
-    "tabs": {
-      "info": "Info",
-      "projects": "Projects",
-      "financials": "Financials",
-      "access": "Access"
     },
     "info": {
       "title": "Contact Information",
