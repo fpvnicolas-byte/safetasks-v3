@@ -144,23 +144,57 @@ async def list_files(
         else:
             bucket = "production-files"  # Scripts, PDFs, etc. are private
 
-        # List files from storage service
-        files = await storage_service.list_files(bucket, path_prefix)
-
-        # Add additional metadata to each file
         enriched_files = []
-        for file_obj in files:
-            file_name = file_obj.get('name') if isinstance(file_obj, dict) else getattr(file_obj, 'name', None)
-            if file_name:
-                file_path = f"{path_prefix}{file_name}"
-                enriched_files.append({
-                    "name": file_name,
-                    "path": file_path,
-                    "bucket": bucket,
-                    "size": file_obj.get('metadata', {}).get('size') if isinstance(file_obj, dict) else getattr(file_obj, 'size', None),
-                    "created_at": file_obj.get('metadata', {}).get('created_at') if isinstance(file_obj, dict) else getattr(file_obj, 'created_at', None),
-                    "is_public": bucket == "public-assets"
-                })
+
+        # 1. Fetch from Supabase Storage
+        try:
+            files = await storage_service.list_files(bucket, path_prefix)
+            for file_obj in files:
+                file_name = file_obj.get('name') if isinstance(file_obj, dict) else getattr(file_obj, 'name', None)
+                if file_name:
+                    file_path = f"{path_prefix}{file_name}"
+                    enriched_files.append({
+                        "name": file_name,
+                        "path": file_path,
+                        "bucket": bucket,
+                        "size": file_obj.get('metadata', {}).get('size') if isinstance(file_obj, dict) else getattr(file_obj, 'size', None),
+                        "created_at": file_obj.get('metadata', {}).get('created_at') if isinstance(file_obj, dict) else getattr(file_obj, 'created_at', None),
+                        "is_public": bucket == "public-assets"
+                    })
+        except Exception:
+            # Fallback if Supabase fails (or folder doesn't exist)
+            pass
+
+        # 2. Fetch from Google Drive (CloudFileReference)
+        from sqlalchemy import select
+        from app.models.cloud import CloudFileReference
+        
+        query = select(CloudFileReference).where(
+            CloudFileReference.organization_id == organization_id,
+            CloudFileReference.module == module
+        )
+        
+        if entity_id:
+            try:
+                # If entity_id is a UUID, assume it's project_id for now
+                uid = UUID(entity_id)
+                query = query.where(CloudFileReference.project_id == uid)
+            except ValueError:
+                pass
+
+        result = await db.execute(query)
+        drive_files = result.scalars().all()
+
+        for df in drive_files:
+             enriched_files.append({
+                 "name": df.file_name,
+                 "path": str(df.id), # Use Reference ID as path
+                 "bucket": "google_drive",
+                 "size": int(df.file_size) if df.file_size and df.file_size.isdigit() else 0,
+                 "created_at": df.created_at.isoformat() if df.created_at else None,
+                 "is_public": False,
+                 "access_url": df.external_url
+             })
 
         return enriched_files
 
@@ -191,7 +225,35 @@ async def delete_file(
     Validates that the file belongs to the requesting organization.
     """
     try:
-        # Validate file ownership
+        # Handle Google Drive file deletion
+        if bucket == "google_drive":
+            from sqlalchemy import select
+            from app.models.cloud import CloudFileReference
+
+            try:
+                ref_id = UUID(file_path)
+            except ValueError:
+                 raise HTTPException(status_code=400, detail="Invalid file ID for Google Drive file")
+
+            result = await db.execute(select(CloudFileReference).where(CloudFileReference.id == ref_id))
+            file_ref = result.scalar_one_or_none()
+
+            if not file_ref:
+                raise HTTPException(status_code=404, detail="File not found")
+
+            if file_ref.organization_id != organization_id:
+                raise HTTPException(status_code=403, detail="Access denied")
+
+            # Delete the reference
+            await db.delete(file_ref)
+            await db.commit()
+            
+            # NOTE: We are intentionally NOT deleting the actual file in Google Drive 
+            # to prevent data loss in case of shared access. It will become an orphan or remain in the folder.
+            
+            return {"message": "File reference deleted successfully", "file_path": file_path}
+
+        # Validate file ownership for Supabase files
         if not file_path.startswith(str(organization_id)):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

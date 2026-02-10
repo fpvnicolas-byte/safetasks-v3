@@ -4,9 +4,6 @@ import {
   FileUploadResponse,
   SignedUrlRequest,
   SignedUrlResponse,
-  CloudSyncRequest,
-  CloudSyncResponse,
-  SyncStatusResponse,
 } from '@/types'
 
 const STORAGE_KEY = 'storage'
@@ -155,6 +152,35 @@ export function useSignedUrl() {
       }
 
       const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
+
+      // Handle Google Drive files
+      if (request.bucket === 'google_drive') {
+        const response = await fetch(
+          `${API_BASE_URL}/api/v1/cloud/google/download/${request.file_path}`,
+          {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        )
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.detail || 'Failed to generate download URL')
+        }
+
+        const data = await response.json()
+        return {
+          signed_url: data.download_url,
+          expires_in: data.expires_in,
+          file_path: request.file_path,
+          bucket: request.bucket
+        }
+      }
+
+      // Handle Standard Storage (Supabase/S3)
       const response = await fetch(
         `${API_BASE_URL}/api/v1/storage/sign-url`,
         {
@@ -170,93 +196,6 @@ export function useSignedUrl() {
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.detail || 'Failed to generate signed URL')
-      }
-
-      return response.json()
-    },
-  })
-}
-
-/**
- * Hook to sync a file to cloud providers (Google Drive, etc.)
- *
- * @example
- * const syncFile = useSyncToCloud()
- *
- * await syncFile.mutateAsync({
- *   file_path: 'org-id/scripts/script.pdf',
- *   providers: ['google_drive']
- * })
- */
-export function useSyncToCloud() {
-  return useMutation({
-    mutationFn: async (
-      request: CloudSyncRequest
-    ): Promise<CloudSyncResponse> => {
-      // Get JWT token from Supabase
-      const supabase = createClient()
-      const { data: { session }, error } = await supabase.auth.getSession()
-
-      if (error || !session) {
-        throw new Error('Not authenticated')
-      }
-
-      const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/storage/sync-cloud`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(request),
-        }
-      )
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || 'Cloud sync failed')
-      }
-
-      return response.json()
-    },
-  })
-}
-
-/**
- * Hook to check sync status of a file
- *
- * @example
- * const checkStatus = useSyncStatus()
- *
- * const status = await checkStatus.mutateAsync('org-id/scripts/script.pdf')
- */
-export function useSyncStatus() {
-  return useMutation({
-    mutationFn: async (filePath: string): Promise<SyncStatusResponse> => {
-      // Get JWT token from Supabase
-      const supabase = createClient()
-      const { data: { session }, error } = await supabase.auth.getSession()
-
-      if (error || !session) {
-        throw new Error('Not authenticated')
-      }
-
-      const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/storage/sync-status/${encodeURIComponent(filePath)}`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-        }
-      )
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || 'Failed to get sync status')
       }
 
       return response.json()

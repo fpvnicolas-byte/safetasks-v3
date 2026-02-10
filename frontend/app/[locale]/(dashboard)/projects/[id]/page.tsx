@@ -463,6 +463,7 @@ export default function ProjectDetailPage() {
               <CardContent className="space-y-4">
                 <FileUploadZone
                   module="scripts"
+                  projectId={projectId}
                   accept={{
                     'application/pdf': ['.pdf'],
                     'application/msword': ['.doc'],
@@ -497,6 +498,7 @@ export default function ProjectDetailPage() {
               <CardContent className="space-y-4">
                 <FileUploadZone
                   module="shooting-days"
+                  projectId={projectId}
                   accept={{
                     'application/pdf': ['.pdf'],
                     'application/msword': ['.doc'],
@@ -530,6 +532,7 @@ export default function ProjectDetailPage() {
               <CardContent className="space-y-4">
                 <FileUploadZone
                   module="media"
+                  projectId={projectId}
                   accept={{
                     'image/*': ['.png', '.jpg', '.jpeg', '.webp'],
                     'video/*': ['.mp4', '.mov', '.avi'],

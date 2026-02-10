@@ -2524,7 +2524,10 @@
       "noFilesYet": "No files uploaded yet",
       "fileCount": "{count} {count, plural, =1 {file} other {files}}",
       "viewList": "List",
-      "viewGrid": "Grid"
+      "viewGrid": "Grid",
+      "storageDrive": "Google Drive Storage",
+      "storageDriveDesc": "Save directly to {email}",
+      "uploadingDrive": "Uploading to Drive..."
     }
   },
   "notifications": {
