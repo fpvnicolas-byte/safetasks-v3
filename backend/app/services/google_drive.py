@@ -85,10 +85,15 @@ class GoogleDriveService:
 
         access_token = await google_oauth_service.get_valid_access_token(organization_id, db)
 
-        # Ensure root exists
+        # Ensure root folder exists (auto-create if needed)
         creds = await self._get_creds(organization_id, db)
         if not creds.root_folder_id:
-            raise ValueError("Root folder not set; call ensure_root_folder first")
+            # Auto-create root folder
+            folder_name = f"SafeTasks - {project_name}"
+            root_id = await self._create_folder(access_token, folder_name, parent_id=None)
+            creds.root_folder_id = root_id
+            creds.root_folder_url = f"https://drive.google.com/drive/folders/{root_id}"
+            await db.commit()
         root_id = creds.root_folder_id
 
         # Create project folder
