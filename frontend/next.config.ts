@@ -16,7 +16,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   experimental: {
-    // optimizeCss: true,
+    // optimizeCss requires 'critters' and is incompatible with App Router streaming
   },
   async rewrites() {
     return [

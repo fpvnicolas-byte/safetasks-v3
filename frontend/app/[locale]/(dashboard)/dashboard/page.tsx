@@ -7,12 +7,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Loader2, DollarSign, TrendingUp, Package, Cloud, FolderOpen } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils/money'
-import { RevenueChart } from '@/components/dashboard/RevenueChart'
-import { ProjectStatusCards } from '@/components/dashboard/ProjectStatusCards'
-import { RecentTransactions } from '@/components/dashboard/RecentTransactions'
-import { EquipmentUtilization } from '@/components/dashboard/EquipmentUtilization'
+import dynamic from 'next/dynamic'
 import { QuickActions } from '@/components/dashboard/QuickActions'
 import { useTranslations } from 'next-intl'
+import { Skeleton } from '@/components/ui/skeleton'
+
+// Dynamic imports for heavy below-the-fold components to reduce initial JS bundle
+const RevenueChart = dynamic(
+  () => import('@/components/dashboard/RevenueChart').then(mod => ({ default: mod.RevenueChart })),
+  {
+    loading: () => (
+      <Card><CardHeader><Skeleton className="h-6 w-36" /><Skeleton className="h-4 w-48 mt-1" /></CardHeader>
+        <CardContent><div className="space-y-4">{Array.from({ length: 4 }).map((_, i) => (<div key={i}><Skeleton className="h-3 w-16 mb-1" /><Skeleton className="h-16 w-full" /></div>))}</div></CardContent></Card>
+    ),
+    ssr: false,
+  }
+)
+const ProjectStatusCards = dynamic(
+  () => import('@/components/dashboard/ProjectStatusCards').then(mod => ({ default: mod.ProjectStatusCards })),
+  { ssr: false }
+)
+const RecentTransactions = dynamic(
+  () => import('@/components/dashboard/RecentTransactions').then(mod => ({ default: mod.RecentTransactions })),
+  { ssr: false }
+)
+const EquipmentUtilization = dynamic(
+  () => import('@/components/dashboard/EquipmentUtilization').then(mod => ({ default: mod.EquipmentUtilization })),
+  { ssr: false }
+)
 
 // Helper function to safely format numbers
 const safeToFixed = (value: number | string | null | undefined, decimals: number = 1): string => {

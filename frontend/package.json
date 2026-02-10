@@ -6,7 +6,7 @@
     "predev": "node scripts/ensure-next-dev-dirs.js",
     "dev": "next dev",
     "dev:turbo": "next dev --turbo",
-    "build": "NEXT_FONT_GOOGLE_DISABLE_DOWNLOAD=1 next build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "check-translations": "node scripts/check-translations.js"
