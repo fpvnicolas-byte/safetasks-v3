@@ -246,7 +246,7 @@ async def process_infinitypay_webhook(
         status="succeeded",
         provider="infinitypay",
         external_id=transaction_nsu,
-        metadata={
+        event_metadata={
             "order_nsu": order_nsu,
             "invoice_slug": invoice_slug,
             "capture_method": payload.get("capture_method"),
@@ -295,3 +295,57 @@ def has_active_access(organization: Organization) -> bool:
         return True
         
     return False
+
+
+async def is_event_processed(db: AsyncSession, event_id: str) -> bool:
+    """Check if a webhook event has already been processed."""
+    query = select(BillingEvent).where(
+        (BillingEvent.stripe_event_id == event_id) | (BillingEvent.external_id == event_id),
+        BillingEvent.status == "processed"
+    )
+    result = await db.execute(query)
+    return result.scalars().first() is not None
+
+
+async def record_billing_event(
+    db: AsyncSession, 
+    event_id: str, 
+    event_type: str, 
+    status: str
+) -> BillingEvent:
+    """Record a new billing event."""
+    # Check if exists
+    query = select(BillingEvent).where(
+        (BillingEvent.stripe_event_id == event_id) | (BillingEvent.external_id == event_id)
+    )
+    result = await db.execute(query)
+    existing = result.scalars().first()
+    
+    if existing:
+        return existing
+        
+    event = BillingEvent(
+        stripe_event_id=event_id,
+        external_id=event_id,
+        event_type=event_type,
+        status=status,
+        provider="stripe",  # Defaulting to stripe for compatibility with stripe_connect.py
+        received_at=datetime.now(timezone.utc)
+    )
+    db.add(event)
+    # We don't commit here, identifying the caller responsibility usually, but we need ID.
+    await db.flush()
+    return event
+
+
+async def mark_event_processed(db: AsyncSession, event: BillingEvent) -> None:
+    """Mark event as processed."""
+    event.status = "processed"
+    event.processed_at = datetime.now(timezone.utc)
+    db.add(event)
+
+
+async def mark_event_failed(db: AsyncSession, event: BillingEvent) -> None:
+    """Mark event as failed."""
+    event.status = "failed"
+    db.add(event)
