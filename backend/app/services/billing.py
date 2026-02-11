@@ -250,18 +250,24 @@ async def process_infinitypay_webhook(
     # If the verification response includes our metadata, use it (trusted source)
     metadata_plan = payload.get("plan_name")  # From our checkout metadata
     
+    # Valid plan names and their access durations
+    PLAN_DURATIONS = {
+        "starter": 30,
+        "professional": 30,
+        "professional_annual": 365,
+    }
+    
+    # Amount-based fallback mapping (amount_cents → plan_name, duration)
     AMOUNT_TO_PLAN = {
         3990: ("starter", 30),
         8990: ("professional", 30),
         75500: ("professional_annual", 365),
     }
     
-    if metadata_plan and metadata_plan in AMOUNT_TO_PLAN:
+    if metadata_plan and metadata_plan in PLAN_DURATIONS:
         # Trusted metadata from our checkout link
         new_plan_name = metadata_plan
-        duration_days = AMOUNT_TO_PLAN.get(
-            amount_cents, (metadata_plan, 30 if metadata_plan != "professional_annual" else 365)
-        )[1]
+        duration_days = PLAN_DURATIONS[metadata_plan]
     elif amount_cents in AMOUNT_TO_PLAN:
         # Fallback: infer from amount
         new_plan_name, duration_days = AMOUNT_TO_PLAN[amount_cents]
