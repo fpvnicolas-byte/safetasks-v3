@@ -257,9 +257,9 @@ export default function BillingPage() {
     : null
   const planIntervalLabel = usageData.plan?.billing_interval
     ? translateOrFallback(
-        `billingPage.planInterval.${usageData.plan?.billing_interval}`,
-        usageData.plan?.billing_interval ?? ''
-      )
+      `billingPage.planInterval.${usageData.plan?.billing_interval}`,
+      usageData.plan?.billing_interval ?? ''
+    )
     : null
   const planRenewalDate =
     usageData.subscription?.current_period_end || usageData.trial_ends_at
@@ -354,11 +354,10 @@ export default function BillingPage() {
                     </div>
                   )}
                 </div>
-                <div className={`text-sm font-semibold ${
-                  isTrial ? 'text-warning' :
+                <div className={`text-sm font-semibold ${isTrial ? 'text-warning' :
                   isPastDue || isTrialEnded ? 'text-destructive' :
-                  'text-success'
-                }`}>
+                    'text-success'
+                  }`}>
                   {usageData.billing_status.replace('_', ' ').toUpperCase()}
                 </div>
               </div>
@@ -378,22 +377,16 @@ export default function BillingPage() {
               </div>
 
               <div className="mt-4 flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  onClick={handleOpenStripePortal}
-                  disabled={!usageData.stripe_customer_id || isPortalLoading}
-                >
-                  {t('billingPage.currentPlan.manageButton')}
-                </Button>
-                {isCancelScheduled ? (
-                  <Button variant="ghost" onClick={handleResumePlan} disabled={isResuming}>
-                    {t('billingPage.currentPlan.resumeButton')}
+                <Link href={`/${locale}/settings/billing/plans`}>
+                  <Button variant="outline">
+                    {translateOrFallback('billingPage.currentPlan.manageButton', 'Extend Access')}
                   </Button>
-                ) : (
-                  <Button variant="ghost" onClick={handleCancelPlan} disabled={isCanceling}>
-                    {t('billingPage.currentPlan.cancelButton')}
-                  </Button>
-                )}
+                </Link>
+                {/* 
+                <Button variant="ghost" disabled>
+                   {t('billingPage.currentPlan.cancelButton')}
+                </Button> 
+                */}
               </div>
             </div>
 
@@ -440,13 +433,13 @@ export default function BillingPage() {
 
       {/* Usage Meters */}
       <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              {t('billingPage.usage.heading')}
-            </CardTitle>
-            <CardDescription>{t('billingPage.usage.description')}</CardDescription>
-          </CardHeader>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5" />
+            {t('billingPage.usage.heading')}
+          </CardTitle>
+          <CardDescription>{t('billingPage.usage.description')}</CardDescription>
+        </CardHeader>
         <CardContent>
           <div className="grid gap-6 md:grid-cols-2">
             {/* Projects */}

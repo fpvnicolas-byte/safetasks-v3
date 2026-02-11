@@ -50,11 +50,11 @@ class Settings(BaseSettings):
 
     # Database Settings
     POSTGRES_SERVER: str = "localhost"
-    POSTGRES_USER: str = "postgres"
+    POSTGRES_USER: str = "nicolasbertoni"
     POSTGRES_PASSWORD: str = "postgres"
     POSTGRES_DB: str = "safetasks"
     POSTGRES_PORT: str = "5432"
-    
+
     DATABASE_URL: Optional[str] = None
     SQLALCHEMY_DATABASE_URI: Optional[str] = None
 
@@ -111,7 +111,7 @@ class Settings(BaseSettings):
     AI_MODEL: str = "gemini-pro"
     AI_MAX_TOKENS: int = 4000
     AI_TEMPERATURE: float = 0.7
-
+    
     # Financial automation
     FINANCIAL_AUTOMATION_ENABLED: bool = True
     DEFAULT_INVOICE_DUE_DAYS: int = 14
@@ -139,6 +139,11 @@ class Settings(BaseSettings):
     STRIPE_CONNECT_CLIENT_ID: Optional[str] = None          # Stripe Connect OAuth client ID (ca_xxx)
     STRIPE_CONNECT_WEBHOOK_SECRET: Optional[str] = None      # Separate webhook secret for Connect events
 
+    # InfinityPay (for platform plans)
+    INFINITYPAY_HANDLE: Optional[str] = None # e.g. "nicolas-domenico-bertoni"
+    INFINITYPAY_WEBHOOK_URL: Optional[str] = None # e.g. "https://api.safetasks.com/api/v1/billing/webhooks/infinitypay"
+    INFINITYPAY_API_URL: str = "https://api.infinitepay.io/invoices/public/checkout"
+
     # Invites
     INVITE_EMAIL_ENABLED: bool = False
     INVITE_TOKEN_EXPIRY_DAYS: int = 7
@@ -153,7 +158,7 @@ class Settings(BaseSettings):
     WHATSAPP_INSTANCE_NAME: Optional[str] = None
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        # env_file=".env", # Temporarily disabled due to permissions error
         case_sensitive=True,
         extra="ignore"
     )

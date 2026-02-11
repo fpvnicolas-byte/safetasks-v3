@@ -88,17 +88,17 @@ export default function PlansPage() {
     try {
       setIsUpgrading(plan.name)
 
-      const response = await apiClient.post<{ url: string }>('/api/v1/billing/create-checkout-session', {
-        price_id: plan.priceId,
-        success_url: `${window.location.origin}/${locale}/settings/billing?success=true`,
-        cancel_url: `${window.location.origin}/${locale}/settings/billing/plans?canceled=true`,
+      // Use the new InfinityPay checkout link endpoint
+      const response = await apiClient.post<{ url: string }>('/api/v1/billing/checkout/link', {
+        plan_name: plan.name, // 'starter', 'pro', etc.
+        redirect_url: `${window.location.origin}/${locale}/settings/billing?success=true`,
       })
 
-      // Redirect to Stripe Checkout
+      // Redirect to InfinityPay Checkout
       window.location.href = response.url
     } catch (error) {
-      console.error('Failed to create checkout session:', error)
-      toast.error('Failed to start checkout process')
+      console.error('Failed to create checkout link:', error)
+      toast.error('Failed to generate checkout link')
       setIsUpgrading(null)
     }
   }
@@ -142,9 +142,8 @@ export default function PlansPage() {
         {PLANS.map((plan) => (
           <Card
             key={plan.name}
-            className={`relative ${
-              plan.recommended ? 'border-primary shadow-lg' : ''
-            }`}
+            className={`relative ${plan.recommended ? 'border-primary shadow-lg' : ''
+              }`}
           >
             {plan.recommended && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
