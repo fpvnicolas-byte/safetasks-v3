@@ -7,7 +7,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel
 
 from app.api.deps import get_current_profile, get_db, require_billing_read
 from app.core.config import settings
@@ -53,8 +53,10 @@ async def infinitypay_webhook(
     
     logger.info(f"Received InfinityPay webhook: {payload}")
     
-    # Process webhook
-    await billing_service.process_infinitypay_webhook(db, payload)
+    # Process webhook (return 400 on failure so provider retries)
+    processed = await billing_service.process_infinitypay_webhook(db, payload)
+    if not processed:
+        raise HTTPException(status_code=400, detail="Webhook payload could not be processed")
 
     return {"status": "success"}
 
@@ -62,7 +64,8 @@ async def infinitypay_webhook(
 class VerifyTransactionRequest(BaseModel):
     transaction_nsu: str
     order_nsu: str
-    invoice_slug: str
+    invoice_slug: Optional[str] = None
+    slug: Optional[str] = None
 
 
 @router.post("/verify")
@@ -75,8 +78,12 @@ async def verify_transaction_manually(
     Manually trigger verification for a transaction (called by Frontend on success page).
     User must belong to the organization referenced in order_nsu.
     """
+    invoice_slug = request.invoice_slug or request.slug
+    if not invoice_slug:
+        raise HTTPException(400, "Missing invoice slug")
+
     # Security: Ensure user owns the order
-    # order_nsu format: orgId_timestamp
+    # order_nsu format: orgId_plan_timestamp (legacy: orgId_timestamp)
     try:
         org_id_str = request.order_nsu.split("_")[0]
         order_org_id = UUID(org_id_str)
@@ -95,7 +102,7 @@ async def verify_transaction_manually(
     is_valid, data = await infinity_pay_service.verify_payment(
         transaction_id=request.transaction_nsu,
         order_nsu=request.order_nsu,
-        slug=request.invoice_slug
+        slug=invoice_slug
     )
     
     if not is_valid:
@@ -106,14 +113,16 @@ async def verify_transaction_manually(
     verified_payload = {
         "order_nsu": request.order_nsu,
         "transaction_nsu": request.transaction_nsu,
-        "invoice_slug": request.invoice_slug,
+        "invoice_slug": invoice_slug,
         "amount": data.get("amount", 0),
         "paid_amount": data.get("paid_amount", data.get("amount", 0)),
         "plan_name": data.get("plan_name"),  # From checkout metadata if available
         "capture_method": data.get("capture_method"),
         "installments": data.get("installments"),
     }
-    await billing_service.process_infinitypay_webhook(db, verified_payload)
+    processed = await billing_service.process_infinitypay_webhook(db, verified_payload)
+    if not processed:
+        raise HTTPException(400, "Verification payload could not be processed")
     
     return {"status": "verified", "access_granted": True}
 

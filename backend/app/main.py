@@ -244,7 +244,7 @@ async def notifications_websocket(
                 
                 # Handle ping
                 if data == "ping":
-                    await websocket.send_text("pong")
+                    await websocket.send_json({"type": "pong"})
                     
             except WebSocketDisconnect:
                 break

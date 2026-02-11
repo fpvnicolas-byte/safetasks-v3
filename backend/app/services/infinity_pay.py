@@ -12,8 +12,26 @@ logger = logging.getLogger(__name__)
 class InfinityPayService:
     def __init__(self):
         self.handle = settings.INFINITYPAY_HANDLE
-        self.base_url = settings.INFINITYPAY_API_URL
+        self.base_url = str(settings.INFINITYPAY_API_URL).rstrip("/")
         self.webhook_url = settings.INFINITYPAY_WEBHOOK_URL
+
+    @staticmethod
+    def _extract_checkout_url(data: Dict) -> Optional[str]:
+        """Extract checkout URL across known InfinityPay response shapes."""
+        if not isinstance(data, dict):
+            return None
+
+        direct = data.get("checkout_url") or data.get("url") or data.get("link")
+        if isinstance(direct, str) and direct:
+            return direct
+
+        nested = data.get("data")
+        if isinstance(nested, dict):
+            nested_url = nested.get("checkout_url") or nested.get("url") or nested.get("link")
+            if isinstance(nested_url, str) and nested_url:
+                return nested_url
+
+        return None
 
     async def create_checkout_link(
         self,
@@ -63,13 +81,14 @@ class InfinityPayService:
                 response.raise_for_status()
                 data = response.json()
                 
-                # Official documentation confirms 'checkout_url' is the key.
-                checkout_url = data.get("checkout_url")
+                checkout_url = self._extract_checkout_url(data)
                 if not checkout_url:
-                    logger.error(f"InfinityPay response missing 'checkout_url': {data}")
-                    # Fallback just in case, though doc confirms checksout_url
-                    checkout_url = data.get("url") or data.get("link")
-                
+                    logger.error(f"InfinityPay response missing checkout URL: {data}")
+                    raise HTTPException(
+                        status_code=status.HTTP_502_BAD_GATEWAY,
+                        detail="Payment provider did not return a checkout URL"
+                    )
+
                 return checkout_url
                 
             except httpx.HTTPError as e:

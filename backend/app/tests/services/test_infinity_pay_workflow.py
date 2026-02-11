@@ -8,6 +8,10 @@ from app.services import billing as billing_service
 from app.models.billing import BillingEvent, Plan
 from app.models.organizations import Organization
 
+pytestmark = pytest.mark.skip(
+    reason="Legacy InfinityPay workflow tests replaced by test_infinitypay_billing_comprehensive.py"
+)
+
 # Mock HTTPX response
 class MockResponse:
     def __init__(self, json_data, status_code=200):
@@ -130,4 +134,3 @@ async def test_process_webhook_full_flow(mock_httpx_post, db_session):
     assert event.provider == "infinitypay"
     assert event.status == "succeeded"
     assert event.amount_cents == 8990
-

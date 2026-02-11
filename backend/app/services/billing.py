@@ -3,6 +3,7 @@ import logging
 from typing import Optional
 from uuid import UUID
 from datetime import datetime, timedelta, timezone
+from urllib.parse import urlsplit
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -73,12 +74,55 @@ _ALLOWED_REDIRECT_PREFIXES: list[str] = []
 def _is_redirect_url_allowed(url: str) -> bool:
     """Validate redirect_url against allowed frontend origins."""
     frontend_url = settings.FRONTEND_URL
-    allowed = list(_ALLOWED_REDIRECT_PREFIXES)
+    allowed = [str(prefix) for prefix in _ALLOWED_REDIRECT_PREFIXES]
     if frontend_url:
-        allowed.append(frontend_url)
+        allowed.append(str(frontend_url))
     if not allowed:
         return True  # No restrictions configured
-    return any(url.startswith(prefix) for prefix in allowed)
+
+    try:
+        parsed_url = urlsplit(url)
+    except Exception:
+        return False
+
+    if parsed_url.scheme not in ("http", "https") or not parsed_url.netloc:
+        return False
+
+    target_origin = f"{parsed_url.scheme.lower()}://{parsed_url.netloc.lower()}"
+    target_path = parsed_url.path or "/"
+
+    for raw_prefix in allowed:
+        prefix = (raw_prefix or "").strip()
+        if not prefix:
+            continue
+
+        # Backward-compatible fallback for arbitrary prefixes.
+        if "://" not in prefix:
+            if url.startswith(prefix):
+                return True
+            continue
+
+        try:
+            parsed_prefix = urlsplit(prefix)
+        except Exception:
+            continue
+
+        if parsed_prefix.scheme not in ("http", "https") or not parsed_prefix.netloc:
+            continue
+
+        allowed_origin = f"{parsed_prefix.scheme.lower()}://{parsed_prefix.netloc.lower()}"
+        if target_origin != allowed_origin:
+            continue
+
+        # If prefix has no path (or "/"), any path on same origin is allowed.
+        base_path = (parsed_prefix.path or "/").rstrip("/")
+        if not base_path:
+            return True
+
+        if target_path == base_path or target_path.startswith(f"{base_path}/"):
+            return True
+
+    return False
 
 
 async def create_infinitypay_checkout_link(
@@ -142,8 +186,8 @@ async def create_infinitypay_checkout_link(
         }
     ]
     
-    # Using org_id + timestamp as order_nsu to be unique
-    order_nsu = f"{organization.id}_{int(datetime.now().timestamp())}"
+    # Embed org + plan + timestamp to recover plan deterministically from webhook.
+    order_nsu = f"{organization.id}_{plan_name}_{int(datetime.now().timestamp())}"
     
     metadata = {
         "order_nsu": order_nsu,
@@ -162,6 +206,8 @@ async def create_infinitypay_checkout_link(
             redirect_url=redirect_url
         )
         return url
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to create InfinityPay link: {e}")
         raise HTTPException(
@@ -173,7 +219,7 @@ async def create_infinitypay_checkout_link(
 async def process_infinitypay_webhook(
     db: AsyncSession,
     payload: dict
-) -> None:
+) -> bool:
     """
     Process InfinityPay webhook (payment approval).
     
@@ -193,7 +239,7 @@ async def process_infinitypay_webhook(
     order_nsu = payload.get("order_nsu")
     if not order_nsu:
         logger.error("InfinityPay webhook missing order_nsu")
-        return
+        return False
 
     # Extract org_id from order_nsu (format: orgId_timestamp)
     try:
@@ -201,7 +247,7 @@ async def process_infinitypay_webhook(
         org_id = UUID(org_id_str)
     except Exception:
         logger.error(f"Malformed order_nsu: {order_nsu}")
-        return
+        return False
 
     query = select(Organization).where(Organization.id == org_id)
     result = await db.execute(query)
@@ -209,17 +255,17 @@ async def process_infinitypay_webhook(
     
     if not organization:
         logger.error(f"Organization not found for order_nsu: {order_nsu}")
-        return
+        return False
         
     # Extract verification details
     transaction_nsu = payload.get("transaction_nsu") # UUID of transaction
-    invoice_slug = payload.get("invoice_slug") # Slug
+    invoice_slug = payload.get("invoice_slug") or payload.get("slug") # Slug
     
     # 1. Zero Trust Verification
     if not transaction_nsu or not invoice_slug:
         logger.error("Missing verification fields (transaction_nsu/invoice_slug)")
         # We cannot verify, so we cannot trust this webhook
-        return
+        return False
 
     is_verified, transaction_data = await infinity_pay_service.verify_payment(
         transaction_id=transaction_nsu,
@@ -229,7 +275,7 @@ async def process_infinitypay_webhook(
     
     if not is_verified:
         logger.warning(f"Payment verification FAILED for order {order_nsu}. Access denied.")
-        return
+        return False
 
     # 2. Ledgering (Audit Trail)
     # Check if we already processed this transaction to be idempotent
@@ -240,15 +286,21 @@ async def process_infinitypay_webhook(
     
     if existing_event:
         logger.info(f"Transaction {transaction_nsu} already processed.")
-        return
+        return True
 
     amount_cents = payload.get("amount", 0)
     paid_amount_cents = payload.get("paid_amount", 0)
     
-    # Determine plan from trusted metadata first, fallback to amount matching
-    # The order_nsu embeds org_id but we also stored plan_name in the checkout metadata
-    # If the verification response includes our metadata, use it (trusted source)
-    metadata_plan = payload.get("plan_name")  # From our checkout metadata
+    # Determine plan from trusted metadata first, then from order_nsu, then fallback to amount.
+    # New order_nsu format: <org_uuid>_<plan_name>_<timestamp>
+    order_parts = order_nsu.split("_")
+    plan_from_order_nsu = None
+    if len(order_parts) >= 3:
+        candidate = "_".join(order_parts[1:-1])
+        if candidate:
+            plan_from_order_nsu = candidate
+
+    metadata_plan = payload.get("plan_name") or plan_from_order_nsu
     
     # Valid plan names and their access durations
     PLAN_DURATIONS = {
@@ -273,7 +325,7 @@ async def process_infinitypay_webhook(
         new_plan_name, duration_days = AMOUNT_TO_PLAN[amount_cents]
     else:
         logger.error(f"Unknown payment amount {amount_cents} and no metadata plan. Cannot determine plan.")
-        return
+        return False
         
     # Create Ledger Entry
     ledger_entry = BillingEvent(
@@ -318,6 +370,7 @@ async def process_infinitypay_webhook(
     await db.commit() # Commit explicitly here to save ledger and org update together
     
     logger.info(f"Verified & Processed InfinityPay payment {transaction_nsu} for org {organization.id}.")
+    return True
 
 
 # Helper to check access
