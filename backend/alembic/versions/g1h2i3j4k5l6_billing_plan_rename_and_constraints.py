@@ -116,19 +116,32 @@ def upgrade() -> None:
 
     # ----------------------------------------------------------------
     # 3. Update organizations.plan CHECK constraint
+    #    Must use PL/pgSQL for drop — Python try/except corrupts the
+    #    PostgreSQL transaction on failure (transactional DDL).
     # ----------------------------------------------------------------
-    # Drop existing constraint (try multiple possible names)
-    for name in ('organizations_plan_check', 'ck_organizations_plan'):
-        try:
-            op.drop_constraint(name, 'organizations', type_='check')
-        except Exception:
-            pass
+    op.execute(sa.text("""
+        DO $$
+        BEGIN
+            ALTER TABLE organizations DROP CONSTRAINT IF EXISTS organizations_plan_check;
+            ALTER TABLE organizations DROP CONSTRAINT IF EXISTS ck_organizations_plan;
+        EXCEPTION WHEN others THEN
+            NULL;
+        END $$;
+    """))
 
-    op.create_check_constraint(
-        'ck_organizations_plan',
-        'organizations',
-        "plan IN ('free', 'starter', 'professional', 'professional_annual', 'enterprise')"
-    )
+    op.execute(sa.text("""
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.table_constraints
+                WHERE constraint_name = 'ck_organizations_plan'
+                  AND table_name = 'organizations'
+            ) THEN
+                ALTER TABLE organizations ADD CONSTRAINT ck_organizations_plan
+                    CHECK (plan IN ('free', 'starter', 'professional', 'professional_annual', 'enterprise'));
+            END IF;
+        END $$;
+    """))
 
     # ----------------------------------------------------------------
     # 4. Rename existing plan values in data
@@ -146,28 +159,36 @@ def downgrade() -> None:
     op.execute("UPDATE organizations SET plan = 'pro' WHERE plan = 'professional'")
     op.execute("UPDATE organizations SET plan = 'pro_annual' WHERE plan = 'professional_annual'")
 
-    # Restore original CHECK constraint
-    try:
-        op.drop_constraint('ck_organizations_plan', 'organizations', type_='check')
-    except Exception:
-        pass
-    op.create_check_constraint(
-        'organizations_plan_check',
-        'organizations',
-        "plan IN ('free', 'starter', 'professional', 'enterprise')"
-    )
+    # Restore original CHECK constraint (PL/pgSQL to avoid transaction abort)
+    op.execute(sa.text("""
+        DO $$
+        BEGIN
+            ALTER TABLE organizations DROP CONSTRAINT IF EXISTS ck_organizations_plan;
+        EXCEPTION WHEN others THEN NULL;
+        END $$;
+    """))
+    op.execute(sa.text("""
+        ALTER TABLE organizations ADD CONSTRAINT organizations_plan_check
+            CHECK (plan IN ('free', 'starter', 'professional', 'enterprise'))
+    """))
 
     # Remove unique constraint
-    try:
-        op.drop_constraint('uq_billing_events_external_id', 'billing_events', type_='unique')
-    except Exception:
-        pass
+    op.execute(sa.text("""
+        DO $$
+        BEGIN
+            ALTER TABLE billing_events DROP CONSTRAINT IF EXISTS uq_billing_events_external_id;
+        EXCEPTION WHEN others THEN NULL;
+        END $$;
+    """))
 
     # Remove FK
-    try:
-        op.drop_constraint('fk_billing_events_organization_id', 'billing_events', type_='foreignkey')
-    except Exception:
-        pass
+    op.execute(sa.text("""
+        DO $$
+        BEGIN
+            ALTER TABLE billing_events DROP CONSTRAINT IF EXISTS fk_billing_events_organization_id;
+        EXCEPTION WHEN others THEN NULL;
+        END $$;
+    """))
 
     # Revert stripe_event_id to NOT NULL
     op.alter_column(
@@ -179,13 +200,20 @@ def downgrade() -> None:
 
     # Drop added billing_events columns
     for col in ('event_metadata', 'plan_name', 'currency', 'amount_cents', 'provider', 'organization_id', 'external_id'):
-        try:
-            op.drop_column('billing_events', col)
-        except Exception:
-            pass
+        op.execute(sa.text(f"""
+            DO $$
+            BEGIN
+                ALTER TABLE billing_events DROP COLUMN IF EXISTS {col};
+            EXCEPTION WHEN others THEN NULL;
+            END $$;
+        """))
 
     # Drop access_ends_at
-    try:
-        op.drop_column('organizations', 'access_ends_at')
-    except Exception:
-        pass
+    op.execute(sa.text("""
+        DO $$
+        BEGIN
+            ALTER TABLE organizations DROP COLUMN IF EXISTS access_ends_at;
+        EXCEPTION WHEN others THEN NULL;
+        END $$;
+    """))
+
