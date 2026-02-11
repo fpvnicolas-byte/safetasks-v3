@@ -229,7 +229,7 @@ class GoogleDriveService:
             f"{DRIVE_API}/files/{ref.external_id}?alt=media"
             f"&access_token={access_token}"
         )
-        return {"download_url": download_url, "expires_in": 3600}
+        return {"download_url": download_url, "file_name": ref.file_name, "expires_in": 3600}
 
     # ── Delete ───────────────────────────────────────────────
 

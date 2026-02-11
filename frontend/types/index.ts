@@ -1440,6 +1440,7 @@ export interface SignedUrlResponse {
   expires_in: number
   file_path: string
   bucket: string
+  file_name?: string  // Original file name (for Google Drive downloads)
 }
 
 // ============================================================================

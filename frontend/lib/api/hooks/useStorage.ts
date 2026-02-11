@@ -176,7 +176,8 @@ export function useSignedUrl() {
           signed_url: data.download_url,
           expires_in: data.expires_in,
           file_path: request.file_path,
-          bucket: request.bucket
+          bucket: request.bucket,
+          file_name: data.file_name,
         }
       }
 

@@ -53,6 +53,7 @@ class DriveUploadCompleteResponse(BaseModel):
 
 class DriveDownloadUrlResponse(BaseModel):
     download_url: str
+    file_name: str
     expires_in: int  # seconds
 
 

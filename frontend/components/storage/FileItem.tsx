@@ -75,6 +75,7 @@ export function FileItem({
   const handleDownload = async () => {
     try {
       let url = file.access_url
+      let downloadFileName = fileName
 
       // If file is private, get signed URL
       if (!file.is_public && !url) {
@@ -84,10 +85,27 @@ export function FileItem({
           expires_in: 3600,
         })
         url = result.signed_url
+        if (result.file_name) {
+          downloadFileName = result.file_name
+        }
       }
 
       if (url) {
-        window.open(url, '_blank')
+        // For Google Drive files, fetch as blob and trigger download with correct name
+        if (file.bucket === 'google_drive') {
+          const response = await fetch(url)
+          const blob = await response.blob()
+          const blobUrl = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = blobUrl
+          a.download = downloadFileName
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+          URL.revokeObjectURL(blobUrl)
+        } else {
+          window.open(url, '_blank')
+        }
       }
     } catch (error) {
       console.error('Download failed:', error)
@@ -236,7 +254,7 @@ export function FileItem({
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter className="gap-2">
-                <Button variant="outline" onClick={() => {}}>
+                <Button variant="outline" onClick={() => { }}>
                   Cancel
                 </Button>
                 <Button
