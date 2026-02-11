@@ -104,8 +104,8 @@ async def create_infinitypay_checkout_link(
     # TODO: Fetch from database or keep strict mapping here to avoid DB drift
     PLAN_DETAILS = {
         "starter": {"price": 3990, "description": "Starter Plan - 1 Month Access"},
-        "pro": {"price": 8990, "description": "Pro Plan - 1 Month Access"},
-        "pro_annual": {"price": 75500, "description": "Pro Plan - 1 Year Access"},
+        "professional": {"price": 8990, "description": "Professional Plan - 1 Month Access"},
+        "professional_annual": {"price": 75500, "description": "Professional Plan - 1 Year Access"},
     }
     
     plan_info = PLAN_DETAILS.get(plan_name)
@@ -252,15 +252,15 @@ async def process_infinitypay_webhook(
     
     AMOUNT_TO_PLAN = {
         3990: ("starter", 30),
-        8990: ("pro", 30),
-        75500: ("pro_annual", 365),
+        8990: ("professional", 30),
+        75500: ("professional_annual", 365),
     }
     
     if metadata_plan and metadata_plan in AMOUNT_TO_PLAN:
         # Trusted metadata from our checkout link
         new_plan_name = metadata_plan
         duration_days = AMOUNT_TO_PLAN.get(
-            amount_cents, (metadata_plan, 30 if metadata_plan != "pro_annual" else 365)
+            amount_cents, (metadata_plan, 30 if metadata_plan != "professional_annual" else 365)
         )[1]
     elif amount_cents in AMOUNT_TO_PLAN:
         # Fallback: infer from amount

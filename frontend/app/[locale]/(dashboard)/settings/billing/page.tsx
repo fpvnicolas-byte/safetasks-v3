@@ -69,8 +69,8 @@ interface UsageData {
 const PLAN_NAME_FALLBACKS: Record<string, string> = {
   pro_trial: 'Pro Trial',
   starter: 'Starter',
-  pro: 'Pro',
-  pro_annual: 'Pro Annual',
+  professional: 'Professional',
+  professional_annual: 'Professional Annual',
   enterprise: 'Enterprise',
 }
 

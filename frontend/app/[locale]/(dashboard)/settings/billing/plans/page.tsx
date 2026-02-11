@@ -36,8 +36,8 @@ const PLANS: Plan[] = [
     ],
   },
   {
-    name: 'pro',
-    displayName: 'Pro',
+    name: 'professional',
+    displayName: 'Professional',
     price: 'R$ 89,90',
     interval: 'mês',
     features: [
@@ -51,8 +51,8 @@ const PLANS: Plan[] = [
     recommended: true,
   },
   {
-    name: 'pro_annual',
-    displayName: 'Pro Annual',
+    name: 'professional_annual',
+    displayName: 'Professional Annual',
     price: 'R$ 755',
     interval: 'ano',
     features: [

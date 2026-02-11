@@ -29,7 +29,7 @@ router = APIRouter()
 
 class CheckoutLinkRequest(BaseModel):
     """Request to create a checkout link."""
-    plan_name: Literal["starter", "pro", "pro_annual"]
+    plan_name: Literal["starter", "professional", "professional_annual"]
     redirect_url: str
 
 

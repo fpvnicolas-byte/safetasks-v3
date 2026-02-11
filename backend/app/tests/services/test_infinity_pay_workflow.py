@@ -83,7 +83,7 @@ async def test_verify_payment_failed(infinity_pay_service, mock_httpx_post):
 async def test_process_webhook_full_flow(mock_httpx_post, db_session):
     # 1. Setup Data
     org = Organization(name="Test Org", slug="test-org")
-    plan_pro = Plan(name="pro", is_custom=False)
+    plan_pro = Plan(name="professional", is_custom=False)
     db_session.add(org)
     db_session.add(plan_pro)
     await db_session.commit()
@@ -99,7 +99,7 @@ async def test_process_webhook_full_flow(mock_httpx_post, db_session):
         "invoice_slug": invoice_slug,
         "amount": 8990,
         "paid_amount": 8990,
-        "plan_name": "pro",
+        "plan_name": "professional",
     }
     
     # 2. Mock Verification Call
@@ -115,7 +115,7 @@ async def test_process_webhook_full_flow(mock_httpx_post, db_session):
     
     # 4. Assert Org Updated
     await db_session.refresh(org)
-    assert org.plan == "pro"
+    assert org.plan == "professional"
     assert org.billing_status == "active"
     assert org.access_ends_at is not None
     assert org.access_ends_at > datetime.now(timezone.utc)

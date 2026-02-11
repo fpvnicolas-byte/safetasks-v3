@@ -2450,8 +2450,8 @@
       "planNames": {
         "pro_trial": "Trial Pro",
         "starter": "Starter",
-        "pro": "Pro",
-        "pro_annual": "Pro Anual",
+        "professional": "Professional",
+        "professional_annual": "Professional Anual",
         "enterprise": "Enterprise",
         "unknown": "Plano desconhecido",
         "noPlan": "Sem plano"

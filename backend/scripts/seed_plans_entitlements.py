@@ -25,7 +25,7 @@ PLANS = [
         },
     },
     {
-        "name": "pro",
+        "name": "professional",
         "billing_interval": "monthly",
         "stripe_price_id": "price_1SpDHYQBou9YDSD2wu8zH3rt",
         "is_custom": False,
@@ -39,7 +39,7 @@ PLANS = [
         },
     },
     {
-        "name": "pro_annual",
+        "name": "professional_annual",
         "billing_interval": "annual",
         "stripe_price_id": "price_1SpDYvQBou9YDSD2YsG88KQa",
         "is_custom": False,

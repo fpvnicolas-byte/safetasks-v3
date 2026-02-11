@@ -10,7 +10,7 @@ from app.models.billing import Plan
 
 PLAN_MAP = {
     "starter": "starter",
-    "professional": "pro",
+    "professional": "professional",
     "enterprise": "enterprise",
 }
 
