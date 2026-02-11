@@ -98,30 +98,7 @@ export function FileUploadZone({
               module: module,
             })
 
-            // 2. Upload to Google (PUT)
-            await fetch(session.session_uri, {
-              method: 'PUT',
-              headers: {
-                'Content-Type': file.type,
-              },
-              body: file,
-            })
-
-            // 3. Confirm & Get Metadata
-            // Note: Google doesn't return the file ID in the PUT response body reliably across all CORS modes,
-            // but our backend pre-created a CloudFileReference. We just need to confirm it.
-            // Wait - our confirm endpoint needs the drive_file_id.
-            // Google Resumable Upload response DOES contain the file resource JSON if successful.
-            // We need to capture the response from the fetch/PUT.
-
-            // Re-do fetch to capture response
-            /*
-            const uploadResponse = await fetch(...)
-            const uploadData = await uploadResponse.json()
-            const driveFileId = uploadData.id
-            */
-
-            // Let's implement the fetch properly
+            // 2. Upload file to Google Drive (PUT to resumable session URI)
             const uploadResponse = await fetch(session.session_uri, {
               method: 'PUT',
               headers: { 'Content-Type': file.type },
@@ -134,7 +111,6 @@ export function FileUploadZone({
 
             const uploadData = await uploadResponse.json()
             const driveFileId = uploadData.id
-            // drive_file_url is usually implicit or webViewLink
             const driveFileUrl = uploadData.webViewLink
 
             const confirmResult = await confirmDriveUpload.mutateAsync({
