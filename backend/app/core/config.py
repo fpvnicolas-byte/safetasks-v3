@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     LOG_SLOW_QUERIES_MS: int = 0
     
     # CORS
-    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
+    BACKEND_CORS_ORIGINS: Union[List[AnyHttpUrl], str] = []
 
     @field_validator("API_V1_STR", mode="before")
     @classmethod
