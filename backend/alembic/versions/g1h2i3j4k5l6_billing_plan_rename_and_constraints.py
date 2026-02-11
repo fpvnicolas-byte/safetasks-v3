@@ -1,11 +1,14 @@
 """Add missing billing columns, plan rename, and constraints
 
-- organizations.access_ends_at (CRITICAL: missing from DB, causes all queries to fail)
+- organizations.access_ends_at (if not already present)
 - billing_events: external_id, organization_id, provider, amount_cents, currency, plan_name, event_metadata
 - billing_events.stripe_event_id: make nullable (was NOT NULL)
 - organizations.plan CHECK constraint: add 'professional_annual'
 - billing_events.external_id: unique constraint for idempotency
 - Rename existing 'pro'/'pro_annual' plan values to 'professional'/'professional_annual'
+
+NOTE: Uses IF NOT EXISTS to be idempotent — safe to run even if some
+columns were already added manually outside Alembic.
 
 Revision ID: g1h2i3j4k5l6
 Revises: bb22cc33dd44
@@ -25,49 +28,62 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
+def _add_column_if_not_exists(table: str, column: str, col_type: str, extra: str = "") -> None:
+    """Add a column only if it doesn't already exist (idempotent)."""
+    op.execute(sa.text(f"""
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = '{table}' AND column_name = '{column}'
+            ) THEN
+                ALTER TABLE {table} ADD COLUMN {column} {col_type} {extra};
+            END IF;
+        END $$;
+    """))
+
+
+def _constraint_exists(name: str) -> sa.text:
+    """Check if a constraint exists."""
+    return sa.text(f"""
+        SELECT 1 FROM information_schema.table_constraints
+        WHERE constraint_name = '{name}'
+    """)
+
+
 def upgrade() -> None:
+    conn = op.get_bind()
+
     # ----------------------------------------------------------------
-    # 1. CRITICAL: Add missing access_ends_at column to organizations
-    #    Without this column, every SELECT on organizations fails.
+    # 1. Add missing access_ends_at column to organizations
     # ----------------------------------------------------------------
-    op.add_column(
-        'organizations',
-        sa.Column('access_ends_at', sa.TIMESTAMP(timezone=True), nullable=True)
+    _add_column_if_not_exists(
+        'organizations', 'access_ends_at', 'TIMESTAMPTZ'
     )
 
     # ----------------------------------------------------------------
     # 2. Add missing columns to billing_events
-    #    The original migration only created: id, stripe_event_id,
-    #    event_type, status, received_at, processed_at
-    #    The model now has many more columns for InfinityPay support.
     # ----------------------------------------------------------------
-    op.add_column(
-        'billing_events',
-        sa.Column('external_id', sa.String(), nullable=True)
+    _add_column_if_not_exists(
+        'billing_events', 'external_id', 'VARCHAR'
     )
-    op.add_column(
-        'billing_events',
-        sa.Column('organization_id', sa.UUID(), nullable=True)
+    _add_column_if_not_exists(
+        'billing_events', 'organization_id', 'UUID'
     )
-    op.add_column(
-        'billing_events',
-        sa.Column('provider', sa.String(), nullable=False, server_default='stripe')
+    _add_column_if_not_exists(
+        'billing_events', 'provider', 'VARCHAR', "NOT NULL DEFAULT 'stripe'"
     )
-    op.add_column(
-        'billing_events',
-        sa.Column('amount_cents', sa.BIGINT(), nullable=True)
+    _add_column_if_not_exists(
+        'billing_events', 'amount_cents', 'BIGINT'
     )
-    op.add_column(
-        'billing_events',
-        sa.Column('currency', sa.String(), nullable=True)
+    _add_column_if_not_exists(
+        'billing_events', 'currency', 'VARCHAR'
     )
-    op.add_column(
-        'billing_events',
-        sa.Column('plan_name', sa.String(), nullable=True)
+    _add_column_if_not_exists(
+        'billing_events', 'plan_name', 'VARCHAR'
     )
-    op.add_column(
-        'billing_events',
-        sa.Column('event_metadata', JSONB(), nullable=True)
+    _add_column_if_not_exists(
+        'billing_events', 'event_metadata', 'JSONB'
     )
 
     # Make stripe_event_id nullable (was NOT NULL, now legacy)
@@ -78,33 +94,33 @@ def upgrade() -> None:
         nullable=True
     )
 
-    # Add FK for organization_id
-    op.create_foreign_key(
-        'fk_billing_events_organization_id',
-        'billing_events',
-        'organizations',
-        ['organization_id'],
-        ['id']
-    )
+    # Add FK for organization_id (if not exists)
+    result = conn.execute(_constraint_exists('fk_billing_events_organization_id'))
+    if not result.fetchone():
+        op.create_foreign_key(
+            'fk_billing_events_organization_id',
+            'billing_events',
+            'organizations',
+            ['organization_id'],
+            ['id']
+        )
 
-    # Add unique constraint on external_id for idempotency
-    op.create_unique_constraint(
-        'uq_billing_events_external_id',
-        'billing_events',
-        ['external_id']
-    )
+    # Add unique constraint on external_id (if not exists)
+    result = conn.execute(_constraint_exists('uq_billing_events_external_id'))
+    if not result.fetchone():
+        op.create_unique_constraint(
+            'uq_billing_events_external_id',
+            'billing_events',
+            ['external_id']
+        )
 
     # ----------------------------------------------------------------
     # 3. Update organizations.plan CHECK constraint
-    #    Add 'professional_annual' to allowed values
     # ----------------------------------------------------------------
-    # Drop existing constraint (may be named differently across envs)
-    try:
-        op.drop_constraint('organizations_plan_check', 'organizations', type_='check')
-    except Exception:
-        # Constraint might have a different auto-generated name
+    # Drop existing constraint (try multiple possible names)
+    for name in ('organizations_plan_check', 'ck_organizations_plan'):
         try:
-            op.drop_constraint('ck_organizations_plan', 'organizations', type_='check')
+            op.drop_constraint(name, 'organizations', type_='check')
         except Exception:
             pass
 
@@ -142,10 +158,16 @@ def downgrade() -> None:
     )
 
     # Remove unique constraint
-    op.drop_constraint('uq_billing_events_external_id', 'billing_events', type_='unique')
+    try:
+        op.drop_constraint('uq_billing_events_external_id', 'billing_events', type_='unique')
+    except Exception:
+        pass
 
     # Remove FK
-    op.drop_constraint('fk_billing_events_organization_id', 'billing_events', type_='foreignkey')
+    try:
+        op.drop_constraint('fk_billing_events_organization_id', 'billing_events', type_='foreignkey')
+    except Exception:
+        pass
 
     # Revert stripe_event_id to NOT NULL
     op.alter_column(
@@ -156,13 +178,14 @@ def downgrade() -> None:
     )
 
     # Drop added billing_events columns
-    op.drop_column('billing_events', 'event_metadata')
-    op.drop_column('billing_events', 'plan_name')
-    op.drop_column('billing_events', 'currency')
-    op.drop_column('billing_events', 'amount_cents')
-    op.drop_column('billing_events', 'provider')
-    op.drop_column('billing_events', 'organization_id')
-    op.drop_column('billing_events', 'external_id')
+    for col in ('event_metadata', 'plan_name', 'currency', 'amount_cents', 'provider', 'organization_id', 'external_id'):
+        try:
+            op.drop_column('billing_events', col)
+        except Exception:
+            pass
 
     # Drop access_ends_at
-    op.drop_column('organizations', 'access_ends_at')
+    try:
+        op.drop_column('organizations', 'access_ends_at')
+    except Exception:
+        pass
