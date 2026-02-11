@@ -244,14 +244,20 @@ async def delete_file(
             if file_ref.organization_id != organization_id:
                 raise HTTPException(status_code=403, detail="Access denied")
 
-            # Delete the reference
+            # Delete the actual file from Google Drive
+            if file_ref.external_id:
+                from app.services.google_drive import google_drive_service
+                await google_drive_service.delete_file(
+                    organization_id=organization_id,
+                    drive_file_id=file_ref.external_id,
+                    db=db,
+                )
+
+            # Delete the DB reference
             await db.delete(file_ref)
             await db.commit()
             
-            # NOTE: We are intentionally NOT deleting the actual file in Google Drive 
-            # to prevent data loss in case of shared access. It will become an orphan or remain in the folder.
-            
-            return {"message": "File reference deleted successfully", "file_path": file_path}
+            return {"message": "File deleted successfully", "file_path": file_path}
 
         # Validate file ownership for Supabase files
         if not file_path.startswith(str(organization_id)):

@@ -231,6 +231,31 @@ class GoogleDriveService:
         )
         return {"download_url": download_url, "expires_in": 3600}
 
+    # ── Delete ───────────────────────────────────────────────
+
+    async def delete_file(
+        self,
+        organization_id: UUID,
+        drive_file_id: str,
+        db: AsyncSession,
+    ) -> bool:
+        """Delete a file from Google Drive. Returns True if successful."""
+        try:
+            access_token = await google_oauth_service.get_valid_access_token(organization_id, db)
+            async with httpx.AsyncClient() as client:
+                resp = await client.delete(
+                    f"{DRIVE_API}/files/{drive_file_id}",
+                    headers={"Authorization": f"Bearer {access_token}"},
+                )
+                # 204 = success, 404 = already deleted
+                if resp.status_code in (204, 404):
+                    return True
+                resp.raise_for_status()
+                return True
+        except Exception as e:
+            logger.warning(f"Failed to delete file {drive_file_id} from Drive: {e}")
+            return False
+
     # ── Private helpers ──────────────────────────────────────
 
     async def _get_creds(
