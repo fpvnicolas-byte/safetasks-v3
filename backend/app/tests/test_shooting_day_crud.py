@@ -21,7 +21,15 @@ from app.core.base import Base
 async def setup_test_data():
     """Create test organization and project"""
     # Use the same database URI as the application
-    engine = create_async_engine(settings.SQLALCHEMY_DATABASE_URI, echo=False)
+    engine = create_async_engine(
+        settings.SQLALCHEMY_DATABASE_URI,
+        echo=False,
+        connect_args={
+            "prepared_statement_cache_size": 0,
+            "prepared_statement_name_func": lambda: f"__asyncpg_{uuid.uuid4()}__",
+            "statement_cache_size": 0,
+        },
+    )
     
     # Create tables if they don't exist (this uses proper models with new fields)
     async with engine.begin() as conn:

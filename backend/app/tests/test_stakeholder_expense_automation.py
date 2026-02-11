@@ -6,7 +6,7 @@ Tests automatic expense creation when stakeholders are confirmed
 
 import asyncio
 import uuid
-from datetime import date
+from datetime import date, time
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import select
@@ -26,7 +26,15 @@ from app.schemas.bank_accounts import BankAccountCreate
 
 async def setup_test_data():
     """Create test organization, project, and stakeholders for expense automation testing"""
-    engine = create_async_engine(settings.SQLALCHEMY_DATABASE_URI, echo=False)
+    engine = create_async_engine(
+        settings.SQLALCHEMY_DATABASE_URI,
+        echo=False,
+        connect_args={
+            "prepared_statement_cache_size": 0,
+            "prepared_statement_name_func": lambda: f"__asyncpg_{uuid.uuid4()}__",
+            "statement_cache_size": 0,
+        },
+    )
     async with engine.begin() as conn:
         from app.core.base import Base
         await conn.run_sync(Base.metadata.create_all)
@@ -84,7 +92,8 @@ async def setup_test_data():
                 organization_id=org.id,
                 project_id=project.id,
                 date=date(2024, 6, 10 + i),
-                call_time="08:00"
+                call_time=time(8, 0),
+                location_name=f"Location {i + 1}",
             )
             db.add(shooting_day)
 
@@ -135,6 +144,7 @@ async def test_expense_creation_daily_rate():
             assert transaction.category == "crew_hire"
             assert transaction.stakeholder_id == stakeholder.id
             assert transaction.project_id == project_id
+            assert transaction.payment_status == "pending"
 
             print(f"✅ Created expense: R$ {transaction.amount_cents / 100:.2f}")
             print(f"   Rate: R$ 2,500/day × 3 days = R$ 7,500")
@@ -144,9 +154,9 @@ async def test_expense_creation_daily_rate():
                 select(BankAccount).where(BankAccount.id == uuid.UUID("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"))
             )
             account = result.scalar_one()
-            assert account.balance_cents == -expected_amount, \
-                f"Expected balance -{expected_amount}, got {account.balance_cents}"
-            print(f"✅ Bank balance updated: R$ {account.balance_cents / 100:.2f}")
+            assert account.balance_cents == 0, \
+                f"Expected unchanged balance 0 for pending expense, got {account.balance_cents}"
+            print(f"✅ Bank balance unchanged while pending: R$ {account.balance_cents / 100:.2f}")
 
         finally:
             await db.close()

@@ -27,7 +27,9 @@ async def _truncate_public_schema():
         result = await conn.execute(
             text("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
         )
-        tables = [row[0] for row in result]
+        # Keep alembic metadata intact so migration tooling continues to work
+        # after test runs on shared test databases.
+        tables = [row[0] for row in result if row[0] != "alembic_version"]
         if tables:
             quoted = ", ".join(f'"{name}"' for name in tables)
             await conn.execute(text(f"TRUNCATE TABLE {quoted} CASCADE"))

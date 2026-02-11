@@ -21,7 +21,15 @@ from app.schemas.kits import KitCreate
 
 async def setup_test_data():
     """Create test organization, kit, and inventory"""
-    engine = create_async_engine(settings.SQLALCHEMY_DATABASE_URI, echo=False)
+    engine = create_async_engine(
+        settings.SQLALCHEMY_DATABASE_URI,
+        echo=False,
+        connect_args={
+            "prepared_statement_cache_size": 0,
+            "prepared_statement_name_func": lambda: f"__asyncpg_{uuid.uuid4()}__",
+            "statement_cache_size": 0,
+        },
+    )
     async with engine.begin() as conn:
         from app.core.base import Base
         await conn.run_sync(Base.metadata.create_all)

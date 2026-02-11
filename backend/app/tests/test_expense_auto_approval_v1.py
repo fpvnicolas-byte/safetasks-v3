@@ -25,7 +25,15 @@ from app.services.financial import transaction_service
 
 
 async def _create_db_session():
-    engine = create_async_engine(settings.SQLALCHEMY_DATABASE_URI, echo=False)
+    engine = create_async_engine(
+        settings.SQLALCHEMY_DATABASE_URI,
+        echo=False,
+        connect_args={
+            "prepared_statement_cache_size": 0,
+            "prepared_statement_name_func": lambda: f"__asyncpg_{uuid.uuid4()}__",
+            "statement_cache_size": 0,
+        },
+    )
     async with engine.begin() as conn:
         from app.core.base import Base
         await conn.run_sync(Base.metadata.create_all)
@@ -68,7 +76,10 @@ async def test_expense_requires_approval_and_applies_balance_on_approval():
             balance_cents=0,
             currency="USD",
         )
-        db.add_all([org, approver, client, project, bank_account])
+        # Flush parent org first to satisfy FK ordering on stricter backends.
+        db.add(org)
+        await db.flush()
+        db.add_all([approver, client, project, bank_account])
         await db.commit()
 
         # Create an expense within remaining budget ($25.00) - should still be pending

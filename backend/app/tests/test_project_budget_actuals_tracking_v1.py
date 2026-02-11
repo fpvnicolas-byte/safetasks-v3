@@ -25,7 +25,15 @@ from app.services.financial import transaction_service
 
 
 async def _create_db_session():
-    engine = create_async_engine(settings.SQLALCHEMY_DATABASE_URI, echo=False)
+    engine = create_async_engine(
+        settings.SQLALCHEMY_DATABASE_URI,
+        echo=False,
+        connect_args={
+            "prepared_statement_cache_size": 0,
+            "prepared_statement_name_func": lambda: f"__asyncpg_{uuid.uuid4()}__",
+            "statement_cache_size": 0,
+        },
+    )
     async with engine.begin() as conn:
         from app.core.base import Base
         await conn.run_sync(Base.metadata.create_all)
@@ -59,7 +67,13 @@ async def test_budget_summary_includes_unassigned_project_expenses():
             balance_cents=0,
             currency="BRL",
         )
-        db.add_all([org, client, project, bank_account])
+        # Insert parent rows first to guarantee FK-safe ordering.
+        db.add(org)
+        await db.flush()
+        db.add(client)
+        await db.flush()
+        db.add_all([project, bank_account])
+        await db.flush()
 
         # One crew budget line (estimated)
         budget_line = ProjectBudgetLine(
@@ -133,7 +147,13 @@ async def test_transaction_service_auto_links_budget_line_by_category():
             balance_cents=0,
             currency="BRL",
         )
-        db.add_all([org, client, project, bank_account])
+        # Insert parent rows first to guarantee FK-safe ordering.
+        db.add(org)
+        await db.flush()
+        db.add(client)
+        await db.flush()
+        db.add_all([project, bank_account])
+        await db.flush()
 
         # Budget line for crew category
         budget_line = ProjectBudgetLine(

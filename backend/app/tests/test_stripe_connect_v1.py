@@ -50,7 +50,15 @@ PAYMENT_INTENT_ID = "pi_test_intent_xyz789"
 
 async def setup_test_data():
     """Create test database fixtures for Stripe Connect tests."""
-    engine = create_async_engine(settings.SQLALCHEMY_DATABASE_URI, echo=False)
+    engine = create_async_engine(
+        settings.SQLALCHEMY_DATABASE_URI,
+        echo=False,
+        connect_args={
+            "prepared_statement_cache_size": 0,
+            "prepared_statement_name_func": lambda: f"__asyncpg_{uuid.uuid4()}__",
+            "statement_cache_size": 0,
+        },
+    )
     async with engine.begin() as conn:
         from app.core.base import Base
         await conn.run_sync(Base.metadata.create_all)
@@ -66,9 +74,9 @@ async def setup_test_data():
             stripe_connect_account_id=CONNECTED_ACCOUNT_ID,
             stripe_connect_onboarding_complete=True,
             stripe_connect_enabled_at=datetime.now(timezone.utc),
-            default_bank_account_id=BANK_ACCOUNT_ID,
         )
         db.add(org)
+        await db.flush()
 
         # Admin profile
         profile = Profile(
@@ -89,6 +97,11 @@ async def setup_test_data():
             currency="BRL",
         )
         db.add(bank_account)
+        await db.flush()
+
+        # Link default account after both rows exist (FK-safe ordering)
+        org.default_bank_account_id = BANK_ACCOUNT_ID
+        db.add(org)
 
         # Client
         client = Client(
@@ -98,6 +111,7 @@ async def setup_test_data():
             email="client@corp.com",
         )
         db.add(client)
+        await db.flush()
 
         # Project
         project = Project(
@@ -105,9 +119,10 @@ async def setup_test_data():
             organization_id=ORG_ID,
             client_id=CLIENT_ID,
             title="Wedding Film",
-            status="in-progress",
+            status="production",
         )
         db.add(project)
+        await db.flush()
 
         # Invoice 1: Stripe payment, status=sent (ready for payment link)
         invoice_1 = Invoice(
@@ -175,7 +190,8 @@ async def test_1_model_fields():
         slug="new-org",
     )
     assert org.stripe_connect_account_id is None
-    assert org.stripe_connect_onboarding_complete == False
+    # Legacy rows may default to False; new model instances can be None until onboarding state is set.
+    assert org.stripe_connect_onboarding_complete in (None, False)
     assert org.stripe_connect_enabled_at is None
     print("    ✓ Organization Stripe Connect fields: correct defaults")
 

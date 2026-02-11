@@ -21,7 +21,15 @@ from app.schemas.bank_accounts import BankAccountCreate
 async def setup_test_data():
     """Create test organizations and users with different roles"""
     # Create test organizations
-    engine = create_async_engine(settings.SQLALCHEMY_DATABASE_URI, echo=False)
+    engine = create_async_engine(
+        settings.SQLALCHEMY_DATABASE_URI,
+        echo=False,
+        connect_args={
+            "prepared_statement_cache_size": 0,
+            "prepared_statement_name_func": lambda: f"__asyncpg_{uuid.uuid4()}__",
+            "statement_cache_size": 0,
+        },
+    )
     async with engine.begin() as conn:
         # Create tables if they don't exist
         from app.core.base import Base
