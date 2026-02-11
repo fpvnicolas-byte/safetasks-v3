@@ -2448,6 +2448,8 @@
       "loading": "Carregando informações de cobrança...",
       "emptyState": "Nenhuma informação de cobrança disponível",
       "planNames": {
+        "free": "Gratuito",
+        "pro": "Professional",
         "pro_trial": "Trial Pro",
         "starter": "Starter",
         "professional": "Professional",
@@ -2486,21 +2488,22 @@
           "proposals": "Propostas",
           "team": "Membros da equipe",
           "storage": "Armazenamento",
-          "unlimited": "Ilimitado"
+          "aiCredits": "Créditos de IA"
         },
-        "messages": {
-          "success": "Plano atualizado com sucesso!",
-          "canceled": "Upgrade cancelado.",
-          "loadError": "Falha ao carregar dados de uso",
-          "cancelSuccess": "Assinatura cancelada com sucesso",
-          "cancelError": "Falha ao cancelar assinatura",
-          "resumeSuccess": "Assinatura retomada com sucesso",
-          "resumeError": "Falha ao retomar assinatura",
-          "portalError": "Falha ao abrir portal de cobrança",
-          "verifyingPayment": "Verificando pagamento...",
-          "paymentVerified": "Pagamento verificado! Seu plano foi atualizado.",
-          "verificationFailed": "Não foi possível verificar o pagamento automaticamente. Por favor contate o suporte."
-        }
+        "unlimited": "Ilimitado"
+      },
+      "messages": {
+        "success": "Plano atualizado com sucesso!",
+        "canceled": "Upgrade cancelado.",
+        "loadError": "Falha ao carregar dados de uso",
+        "cancelSuccess": "Assinatura cancelada com sucesso",
+        "cancelError": "Falha ao cancelar assinatura",
+        "resumeSuccess": "Assinatura retomada com sucesso",
+        "resumeError": "Falha ao retomar assinatura",
+        "portalError": "Falha ao abrir portal de cobrança",
+        "verifyingPayment": "Verificando pagamento...",
+        "paymentVerified": "Pagamento verificado! Seu plano foi atualizado.",
+        "verificationFailed": "Não foi possível verificar o pagamento automaticamente. Por favor contate o suporte."
       }
     },
     "storage": {

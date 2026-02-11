@@ -2448,6 +2448,8 @@
       "loading": "Loading billing information...",
       "emptyState": "No billing information available",
       "planNames": {
+        "free": "Free",
+        "pro": "Professional",
         "pro_trial": "Pro Trial",
         "starter": "Starter",
         "professional": "Professional",
