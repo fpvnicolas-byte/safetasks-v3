@@ -306,11 +306,19 @@ class GoogleDriveService:
         """
         Start a resumable upload and return the session URI.
         The browser will PUT chunks directly to this URI.
+        The Origin header is critical — Google uses it to set CORS
+        headers on subsequent PUT requests from the browser.
         """
         metadata = {
             "name": file_name,
             "parents": [parent_folder_id],
         }
+
+        # Determine frontend origin for CORS
+        frontend_url = getattr(settings, "FRONTEND_URL", "https://safetasks.vercel.app")
+        # Strip trailing slash
+        origin = frontend_url.rstrip("/")
+
         async with httpx.AsyncClient() as client:
             resp = await client.post(
                 f"{DRIVE_UPLOAD_API}/files",
@@ -322,6 +330,7 @@ class GoogleDriveService:
                     "Authorization": f"Bearer {access_token}",
                     "Content-Type": "application/json; charset=UTF-8",
                     "X-Upload-Content-Type": mime_type,
+                    "Origin": origin,
                 },
                 json=metadata,
             )
