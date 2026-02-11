@@ -68,10 +68,18 @@ async def check_expiring_plans():
                 send_plan_expiry_warning(user_email, org.name, 1, renew_link)
                 
             elif days_left < 0 and days_left > -2: # Expired yesterday/today
-                # Only send if we haven't already marked it as expired/blocked
-                # But here we just notify
                 logger.info(f"Sending EXPIRED notice to {user_email} for org {org.name}")
                 send_plan_expired_notice(user_email, org.name, renew_link)
+                
+                # Block access for expired organizations
+                if org.billing_status != 'blocked':
+                    org.billing_status = 'blocked'
+                    org.subscription_status = 'past_due'
+                    db.add(org)
+                    logger.info(f"Blocked access for expired org {org.id} ({org.name})")
+
+        # Commit any status changes
+        await db.commit()
 
     logger.info("Plan expiration check complete.")
 

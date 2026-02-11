@@ -49,7 +49,7 @@ class Organization(Base):
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     __table_args__ = (
-        CheckConstraint("plan IN ('free', 'starter', 'professional', 'enterprise')"),
+        CheckConstraint("plan IN ('free', 'starter', 'professional', 'pro', 'pro_annual', 'enterprise')"),
         CheckConstraint("subscription_status IN ('trialing', 'active', 'past_due', 'cancelled', 'paused')"),
         CheckConstraint(
             "billing_status IN ('trial_active', 'trial_ended', 'active', 'past_due', 'canceled', 'blocked', 'billing_pending_review')"

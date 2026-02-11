@@ -117,9 +117,6 @@ export default function BillingPage() {
   }
   const [usageData, setUsageData] = useState<UsageData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [isCanceling, setIsCanceling] = useState(false)
-  const [isResuming, setIsResuming] = useState(false)
-  const [isPortalLoading, setIsPortalLoading] = useState(false)
 
   useEffect(() => {
     const checkPaymentStatus = async () => {
@@ -191,54 +188,7 @@ export default function BillingPage() {
     }).format(date)
   }
 
-  const handleCancelPlan = async () => {
-    if (!usageData?.stripe_subscription_id) return
-    setIsCanceling(true)
-    try {
-      await apiClient.post('/api/v1/billing/subscription/cancel', {
-        at_period_end: true,
-      })
-      toast.success(t('billingPage.messages.cancelSuccess'))
-      await loadUsage()
-    } catch (error) {
-      console.error('Failed to cancel subscription:', error)
-      toast.error(t('billingPage.messages.cancelError'))
-    } finally {
-      setIsCanceling(false)
-    }
-  }
 
-  const handleResumePlan = async () => {
-    if (!usageData?.stripe_subscription_id) return
-    setIsResuming(true)
-    try {
-      await apiClient.post('/api/v1/billing/subscription/resume')
-      toast.success(t('billingPage.messages.resumeSuccess'))
-      await loadUsage()
-    } catch (error) {
-      console.error('Failed to resume subscription:', error)
-      toast.error(t('billingPage.messages.resumeError'))
-    } finally {
-      setIsResuming(false)
-    }
-  }
-
-  const handleOpenStripePortal = async () => {
-    if (!usageData?.stripe_customer_id || typeof window === 'undefined') return
-    setIsPortalLoading(true)
-    try {
-      const returnUrl = `${window.location.origin}/${locale}/settings/billing`
-      const response = await apiClient.post<{ url: string }>('/api/v1/billing/portal-session', {
-        return_url: returnUrl,
-      })
-      window.open(response.url, '_blank')
-    } catch (error) {
-      console.error('Failed to open Stripe portal:', error)
-      toast.error(t('billingPage.messages.portalError'))
-    } finally {
-      setIsPortalLoading(false)
-    }
-  }
 
   const calculatePercentage = (current: number, limit: number | null): number => {
     if (limit === null) return 0

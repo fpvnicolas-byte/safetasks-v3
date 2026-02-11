@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, TIMESTAMP, Boolean, Integer, BIGINT, ForeignKey, UniqueConstraint, func
+from sqlalchemy import Column, String, TIMESTAMP, Boolean, Integer, BIGINT, ForeignKey, UniqueConstraint, func  # noqa: F811
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from app.core.base import Base
@@ -73,6 +73,5 @@ class BillingEvent(Base):
     processed_at = Column(TIMESTAMP(timezone=True), nullable=True)
 
     __table_args__ = (
-        # UniqueConstraint("stripe_event_id", name="uq_billing_events_stripe_event_id"), # Accessing legacy constraint might be tricky if we drop it here? 
-        # For now, let's allow external_id to be unique contextually.
+        UniqueConstraint("external_id", name="uq_billing_events_external_id"),
     )

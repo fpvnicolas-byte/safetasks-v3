@@ -1,13 +1,13 @@
 """Billing and InfinityPay webhook endpoints."""
 import logging
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Literal, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from pydantic import BaseModel
+from pydantic import BaseModel, HttpUrl
 
 from app.api.deps import get_current_profile, get_db, require_billing_read
 from app.core.config import settings
@@ -29,7 +29,7 @@ router = APIRouter()
 
 class CheckoutLinkRequest(BaseModel):
     """Request to create a checkout link."""
-    plan_name: str # starter, pro
+    plan_name: Literal["starter", "pro", "pro_annual"]
     redirect_url: str
 
 
@@ -101,9 +101,19 @@ async def verify_transaction_manually(
     if not is_valid:
          raise HTTPException(400, "Payment verification failed or invalid")
          
-    # 2. Call the processing logic
-    # We pass the TRUSTED data from the verification response, not the user input
-    await billing_service.process_infinitypay_webhook(db, data)
+    # 2. Construct a properly-shaped payload from the TRUSTED verification response
+    # The process_infinitypay_webhook expects specific top-level keys
+    verified_payload = {
+        "order_nsu": request.order_nsu,
+        "transaction_nsu": request.transaction_nsu,
+        "invoice_slug": request.invoice_slug,
+        "amount": data.get("amount", 0),
+        "paid_amount": data.get("paid_amount", data.get("amount", 0)),
+        "plan_name": data.get("plan_name"),  # From checkout metadata if available
+        "capture_method": data.get("capture_method"),
+        "installments": data.get("installments"),
+    }
+    await billing_service.process_infinitypay_webhook(db, verified_payload)
     
     return {"status": "verified", "access_granted": True}
 

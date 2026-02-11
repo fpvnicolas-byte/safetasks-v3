@@ -67,6 +67,20 @@ async def setup_trial_for_organization(
     logger.info(f"Set up 7-day trial for org {organization.id}, expires {organization.trial_ends_at}")
 
 
+# Allowed redirect URL prefixes for checkout
+_ALLOWED_REDIRECT_PREFIXES: list[str] = []
+
+def _is_redirect_url_allowed(url: str) -> bool:
+    """Validate redirect_url against allowed frontend origins."""
+    frontend_url = settings.FRONTEND_URL
+    allowed = list(_ALLOWED_REDIRECT_PREFIXES)
+    if frontend_url:
+        allowed.append(frontend_url)
+    if not allowed:
+        return True  # No restrictions configured
+    return any(url.startswith(prefix) for prefix in allowed)
+
+
 async def create_infinitypay_checkout_link(
     db: AsyncSession,
     organization: Organization,
@@ -99,6 +113,13 @@ async def create_infinitypay_checkout_link(
          raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid plan selected"
+        )
+
+    # Validate redirect_url against allowed origins to prevent open redirect
+    if not _is_redirect_url_allowed(redirect_url):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid redirect URL"
         )
 
     # Get the plan ID from DB to ensure validity
@@ -224,17 +245,29 @@ async def process_infinitypay_webhook(
     amount_cents = payload.get("amount", 0)
     paid_amount_cents = payload.get("paid_amount", 0)
     
-    # Logic to determine plan details (kept from before, but safer)
-    new_plan_name = "pro" 
-    duration_days = 30
+    # Determine plan from trusted metadata first, fallback to amount matching
+    # The order_nsu embeds org_id but we also stored plan_name in the checkout metadata
+    # If the verification response includes our metadata, use it (trusted source)
+    metadata_plan = payload.get("plan_name")  # From our checkout metadata
     
-    if amount_cents == 3990:
-        new_plan_name = "starter"
-    elif amount_cents == 8990:
-        new_plan_name = "pro"
-    elif amount_cents == 75500:
-        new_plan_name = "pro_annual"
-        duration_days = 365
+    AMOUNT_TO_PLAN = {
+        3990: ("starter", 30),
+        8990: ("pro", 30),
+        75500: ("pro_annual", 365),
+    }
+    
+    if metadata_plan and metadata_plan in AMOUNT_TO_PLAN:
+        # Trusted metadata from our checkout link
+        new_plan_name = metadata_plan
+        duration_days = AMOUNT_TO_PLAN.get(
+            amount_cents, (metadata_plan, 30 if metadata_plan != "pro_annual" else 365)
+        )[1]
+    elif amount_cents in AMOUNT_TO_PLAN:
+        # Fallback: infer from amount
+        new_plan_name, duration_days = AMOUNT_TO_PLAN[amount_cents]
+    else:
+        logger.error(f"Unknown payment amount {amount_cents} and no metadata plan. Cannot determine plan.")
+        return
         
     # Create Ledger Entry
     ledger_entry = BillingEvent(

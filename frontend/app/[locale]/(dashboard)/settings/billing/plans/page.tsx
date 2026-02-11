@@ -16,7 +16,6 @@ interface Plan {
   displayName: string
   price: string
   interval: string
-  priceId: string
   features: string[]
   recommended?: boolean
 }
@@ -27,7 +26,6 @@ const PLANS: Plan[] = [
     displayName: 'Starter',
     price: 'R$ 39,90',
     interval: 'mês',
-    priceId: 'price_1SmKRMQBou9YDSD2HPqUgldI',
     features: [
       '5 projects',
       '20 clients',
@@ -42,7 +40,6 @@ const PLANS: Plan[] = [
     displayName: 'Pro',
     price: 'R$ 89,90',
     interval: 'mês',
-    priceId: 'price_1SpDHYQBou9YDSD2wu8zH3rt',
     features: [
       'Unlimited projects',
       'Unlimited clients',
@@ -58,7 +55,6 @@ const PLANS: Plan[] = [
     displayName: 'Pro Annual',
     price: 'R$ 755',
     interval: 'ano',
-    priceId: 'price_1SpDYvQBou9YDSD2YsG88KQa',
     features: [
       'Unlimited projects',
       'Unlimited clients',
