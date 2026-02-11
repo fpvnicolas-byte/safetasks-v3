@@ -1,5 +1,6 @@
 from typing import Optional
-from uuid import UUID
+from uuid import UUID, uuid4
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -165,10 +166,97 @@ async def list_files(
             # Fallback if Supabase fails (or folder doesn't exist)
             pass
 
-        # 2. Fetch from Google Drive (CloudFileReference)
+    # 2. Fetch from Google Drive (CloudFileReference) & Sync
         from sqlalchemy import select
-        from app.models.cloud import CloudFileReference
+        from app.models.cloud import CloudFileReference, ProjectDriveFolder
+        from app.services.google_drive import google_drive_service
         
+        # Determine if we can sync from a Drive folder
+        drive_folder_id = None
+        if entity_id:
+            try:
+                project_id = UUID(entity_id)
+                project_folder_query = select(ProjectDriveFolder).where(
+                    ProjectDriveFolder.project_id == project_id,
+                    ProjectDriveFolder.organization_id == organization_id
+                )
+                pf_result = await db.execute(project_folder_query)
+                pf = pf_result.scalar_one_or_none()
+                
+                if pf:
+                    # Map module to folder column
+                    # Frontend parses 'shooting-days' -> DB 'shooting_days_folder_id'
+                    module_key = module.replace("-", "_")
+                    drive_folder_id = getattr(pf, f"{module_key}_folder_id", None)
+            except (ValueError, AttributeError):
+                pass
+
+        # 2a. Sync: List files from Drive API and create missing DB records
+        active_drive_ids = set()
+        sync_successful = False
+
+        if drive_folder_id:
+            try:
+                drive_api_files = await google_drive_service.list_folder_files(
+                    organization_id=organization_id,
+                    folder_id=drive_folder_id,
+                    db=db
+                )
+                
+                if drive_api_files is not None:
+                    sync_successful = True
+                    # Get existing refs to compare
+                    existing_refs_query = select(CloudFileReference).where(
+                        CloudFileReference.organization_id == organization_id,
+                        CloudFileReference.module == module,
+                        CloudFileReference.project_id == project_id  # We know project_id is valid here
+                    )
+                    existing_result = await db.execute(existing_refs_query)
+                    existing_refs = existing_result.scalars().all()
+                    existing_map = {ref.external_id: ref for ref in existing_refs if ref.external_id}
+                    
+                    # Identify new files
+                    new_refs = []
+                    for f in drive_api_files:
+                        f_id = f.get("id")
+                        if not f_id:
+                            continue
+                        active_drive_ids.add(f_id)
+                        
+                        if f_id not in existing_map:
+                            # Create new reference
+                            size_str = f.get("size", "0")
+                            try:
+                                # Convert timestamp (e.g. 2023-10-25T12:00:00.000Z)
+                                created_time = datetime.fromisoformat(f.get("createdTime", "").replace("Z", "+00:00"))
+                            except Exception:
+                                created_time = datetime.now(timezone.utc)
+
+                            new_ref = CloudFileReference(
+                                id=uuid4(),
+                                organization_id=organization_id,
+                                project_id=project_id,
+                                module=module,
+                                file_name=f.get("name", "Untitled"),
+                                file_size=size_str,
+                                mime_type=f.get("mimeType", "application/octet-stream"),
+                                storage_provider="google_drive",
+                                external_id=f_id,
+                                external_url=f.get("webViewLink"),
+                                thumbnail_path=None, # generic icon
+                                created_at=created_time,
+                                updated_at=datetime.now(timezone.utc)
+                            )
+                            new_refs.append(new_ref)
+                            db.add(new_ref)
+                    
+                    if new_refs:
+                        await db.commit()
+            except Exception as e:
+                # Log usage but don't fail the whole list request
+                pass
+
+        # 2b. Fetch final list from DB (now including synced files)
         query = select(CloudFileReference).where(
             CloudFileReference.organization_id == organization_id,
             CloudFileReference.module == module
@@ -176,7 +264,6 @@ async def list_files(
         
         if entity_id:
             try:
-                # If entity_id is a UUID, assume it's project_id for now
                 uid = UUID(entity_id)
                 query = query.where(CloudFileReference.project_id == uid)
             except ValueError:
@@ -186,7 +273,12 @@ async def list_files(
         drive_files = result.scalars().all()
 
         for df in drive_files:
-             enriched_files.append({
+            # Filter Orphans: If sync was successful (we listed folder) and file has external_id
+            # but is missing from active_drive_ids, it was deleted from Drive. Hide it.
+            if sync_successful and df.external_id and df.external_id not in active_drive_ids:
+                 continue
+
+            enriched_files.append({
                  "name": df.file_name,
                  "path": str(df.id), # Use Reference ID as path
                  "bucket": "google_drive",

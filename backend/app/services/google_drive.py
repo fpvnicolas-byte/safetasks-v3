@@ -231,6 +231,52 @@ class GoogleDriveService:
         )
         return {"download_url": download_url, "file_name": ref.file_name, "expires_in": 3600}
 
+    # ── List ──────────────────────────────────────────────────
+
+    async def list_folder_files(
+        self,
+        organization_id: UUID,
+        folder_id: str,
+        db: AsyncSession,
+    ) -> list[dict]:
+        """
+        List all files in a Google Drive folder.
+        Returns a list of dicts with: id, name, mimeType, size, webViewLink, createdTime.
+        Excludes sub-folders (only files).
+        """
+        try:
+            access_token = await google_oauth_service.get_valid_access_token(organization_id, db)
+            files: list[dict] = []
+            page_token: str | None = None
+
+            async with httpx.AsyncClient() as client:
+                while True:
+                    params: dict = {
+                        "q": f"'{folder_id}' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'",
+                        "fields": "nextPageToken, files(id, name, mimeType, size, webViewLink, createdTime)",
+                        "pageSize": 100,
+                    }
+                    if page_token:
+                        params["pageToken"] = page_token
+
+                    resp = await client.get(
+                        f"{DRIVE_API}/files",
+                        params=params,
+                        headers={"Authorization": f"Bearer {access_token}"},
+                    )
+                    resp.raise_for_status()
+                    data = resp.json()
+                    files.extend(data.get("files", []))
+
+                    page_token = data.get("nextPageToken")
+                    if not page_token:
+                        break
+
+            return files
+        except Exception as e:
+            logger.warning(f"Failed to list folder {folder_id}: {e}")
+            return None
+
     # ── Delete ───────────────────────────────────────────────
 
     async def delete_file(
