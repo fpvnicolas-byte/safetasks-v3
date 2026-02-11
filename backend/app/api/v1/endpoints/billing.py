@@ -59,6 +59,55 @@ async def infinitypay_webhook(
     return {"status": "success"}
 
 
+class VerifyTransactionRequest(BaseModel):
+    transaction_nsu: str
+    order_nsu: str
+    invoice_slug: str
+
+
+@router.post("/verify")
+async def verify_transaction_manually(
+    request: VerifyTransactionRequest,
+    db: AsyncSession = Depends(get_db),
+    profile: Profile = Depends(get_current_profile)
+) -> dict:
+    """
+    Manually trigger verification for a transaction (called by Frontend on success page).
+    User must belong to the organization referenced in order_nsu.
+    """
+    # Security: Ensure user owns the order
+    # order_nsu format: orgId_timestamp
+    try:
+        org_id_str = request.order_nsu.split("_")[0]
+        order_org_id = UUID(org_id_str)
+    except:
+        raise HTTPException(400, "Invalid order_nsu format")
+
+    if profile.organization_id != order_org_id:
+        raise HTTPException(403, "You do not have permission to verify this order")
+
+    # Reuse the logic from webhook via a simulated payload
+    # Or better, extract a 'process_payment' method in service.
+    # For now, let's construct a payload that matches what process_infinitypay_webhook expects
+    # We need to fetch amount/details from the verification call first because frontend might lie.
+    
+    # 1. Verify with InfinityPay FIRST to get truth
+    is_valid, data = await infinity_pay_service.verify_payment(
+        transaction_id=request.transaction_nsu,
+        order_nsu=request.order_nsu,
+        slug=request.invoice_slug
+    )
+    
+    if not is_valid:
+         raise HTTPException(400, "Payment verification failed or invalid")
+         
+    # 2. Call the processing logic
+    # We pass the TRUSTED data from the verification response, not the user input
+    await billing_service.process_infinitypay_webhook(db, data)
+    
+    return {"status": "verified", "access_granted": True}
+
+
 @router.post("/checkout/link", response_model=CheckoutLinkResponse, dependencies=[Depends(require_billing_read())])
 async def create_checkout_link(
     request: CheckoutLinkRequest,

@@ -53,12 +53,26 @@ class BillingEvent(Base):
     __tablename__ = "billing_events"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    stripe_event_id = Column(String, nullable=False, unique=True)
+    stripe_event_id = Column(String, nullable=True) # Legacy (keep for now, or make nullable)
+    external_id = Column(String, nullable=True) # For InfinityPay NSU or generic ID
+    organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True)
+    
     event_type = Column(String, nullable=False)
-    status = Column(String, nullable=False)  # received, processed, failed
+    status = Column(String, nullable=False)  # received, processed, failed, succeeded
+    provider = Column(String, default="stripe", nullable=False) # stripe, infinitypay
+    
+    amount_cents = Column(BIGINT, nullable=True)
+    currency = Column(String, nullable=True)
+    plan_name = Column(String, nullable=True)
+    
+    # JSONB for flexible metadata
+    from sqlalchemy.dialects.postgresql import JSONB
+    event_metadata = Column(JSONB, nullable=True) 
+
     received_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     processed_at = Column(TIMESTAMP(timezone=True), nullable=True)
 
     __table_args__ = (
-        UniqueConstraint("stripe_event_id", name="uq_billing_events_stripe_event_id"),
+        # UniqueConstraint("stripe_event_id", name="uq_billing_events_stripe_event_id"), # Accessing legacy constraint might be tricky if we drop it here? 
+        # For now, let's allow external_id to be unique contextually.
     )

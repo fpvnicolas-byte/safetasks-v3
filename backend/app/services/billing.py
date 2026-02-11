@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 
 from app.core.config import settings
-from app.models.billing import BillingEvent, Plan, OrganizationUsage
+from app.models.billing import BillingEvent, Plan, OrganizationUsage, BillingService
 from app.models.organizations import Organization
 from app.services.infinity_pay import infinity_pay_service
 
@@ -190,28 +190,73 @@ async def process_infinitypay_webhook(
         logger.error(f"Organization not found for order_nsu: {order_nsu}")
         return
         
-    # Determine Plan based on amount? 
-    # Or ideally, we should have stored a pending order. 
-    # Since InfinityPay doesn't pass back custom metadata field in the webhook body (only order_nsu),
-    # we have to infer or lookup.
-    # For now, let's infer from amount or assume 'pro' if it matches prices.
-    # A more robust way is to store 'CheckoutSessions' table. 
-    # But for MVP, let's check the amount.
+    # Extract verification details
+    transaction_nsu = payload.get("transaction_nsu") # UUID of transaction
+    invoice_slug = payload.get("invoice_slug") # Slug
     
-    amount = payload.get("amount", 0)
+    # 1. Zero Trust Verification
+    if not transaction_nsu or not invoice_slug:
+        logger.error("Missing verification fields (transaction_nsu/invoice_slug)")
+        # We cannot verify, so we cannot trust this webhook
+        return
+
+    is_verified, transaction_data = await infinity_pay_service.verify_payment(
+        transaction_id=transaction_nsu,
+        order_nsu=order_nsu,
+        slug=invoice_slug
+    )
     
-    new_plan_name = "pro" # Default fallback
+    if not is_verified:
+        logger.warning(f"Payment verification FAILED for order {order_nsu}. Access denied.")
+        return
+
+    # 2. Ledgering (Audit Trail)
+    # Check if we already processed this transaction to be idempotent
+    # We can query BillingEvent by external_id = transaction_nsu
+    query = select(BillingEvent).where(BillingEvent.external_id == transaction_nsu)
+    result = await db.execute(query)
+    existing_event = result.scalar_one_or_none()
+    
+    if existing_event:
+        logger.info(f"Transaction {transaction_nsu} already processed.")
+        return
+
+    amount_cents = payload.get("amount", 0)
+    paid_amount_cents = payload.get("paid_amount", 0)
+    
+    # Logic to determine plan details (kept from before, but safer)
+    new_plan_name = "pro" 
     duration_days = 30
     
-    if amount == 3990:
+    if amount_cents == 3990:
         new_plan_name = "starter"
-    elif amount == 8990:
+    elif amount_cents == 8990:
         new_plan_name = "pro"
-    elif amount == 75500:
+    elif amount_cents == 75500:
         new_plan_name = "pro_annual"
         duration_days = 365
         
-    # Get Plan DB Object
+    # Create Ledger Entry
+    ledger_entry = BillingEvent(
+        organization_id=organization.id,
+        event_type="payment_success",
+        plan_name=new_plan_name,
+        amount_cents=paid_amount_cents,
+        currency="BRL",
+        status="succeeded",
+        provider="infinitypay",
+        external_id=transaction_nsu,
+        metadata={
+            "order_nsu": order_nsu,
+            "invoice_slug": invoice_slug,
+            "capture_method": payload.get("capture_method"),
+            "installments": payload.get("installments"),
+            "full_verification_data": transaction_data
+        }
+    )
+    db.add(ledger_entry)
+
+    # 3. Grant Access
     query = select(Plan).where(Plan.name == new_plan_name)
     result = await db.execute(query)
     plan_db = result.scalar_one_or_none()
@@ -220,21 +265,20 @@ async def process_infinitypay_webhook(
         organization.plan_id = plan_db.id
         organization.plan = new_plan_name
         
-    # Extend Access
     now = datetime.now(timezone.utc)
     
-    # If currently active and not expired, extend from existing end date
     if organization.access_ends_at and organization.access_ends_at > now:
         organization.access_ends_at += timedelta(days=duration_days)
     else:
-        # If expired or new, start from now
         organization.access_ends_at = now + timedelta(days=duration_days)
         
     organization.billing_status = "active"
-    organization.subscription_status = "active" # For compatibility
+    organization.subscription_status = "active"
     
     db.add(organization)
-    logger.info(f"Processed InfinityPay payment for org {organization.id}. Access extended to {organization.access_ends_at}")
+    await db.commit() # Commit explicitly here to save ledger and org update together
+    
+    logger.info(f"Verified & Processed InfinityPay payment {transaction_nsu} for org {organization.id}.")
 
 
 # Helper to check access

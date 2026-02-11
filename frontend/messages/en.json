@@ -2231,7 +2231,7 @@
     "cancel": "Cancel",
     "account": "Account",
     "preferences": "Preferences",
-    "notifications": "Notifications",
+    "notificationsLabel": "Notifications",
     "security": "Security",
     "main": {
       "organization": {
@@ -2491,14 +2491,17 @@
         "unlimited": "Unlimited"
       },
       "messages": {
-        "success": "Subscription activated successfully!",
-        "canceled": "Subscription upgrade canceled",
-        "loadError": "Failed to load billing information",
-        "cancelSuccess": "Plan cancellation scheduled. It will remain active until the billing period ends.",
-        "cancelError": "Failed to schedule the cancellation. Please try again.",
-        "resumeSuccess": "Subscription resumed successfully.",
-        "resumeError": "Failed to resume the subscription. Please try again.",
-        "portalError": "Unable to open the Stripe billing portal."
+        "success": "Plan updated successfully!",
+        "canceled": "Upgrade canceled.",
+        "loadError": "Failed to load usage data",
+        "cancelSuccess": "Subscription canceled successfully",
+        "cancelError": "Failed to cancel subscription",
+        "resumeSuccess": "Subscription resumed successfully",
+        "resumeError": "Failed to resume subscription",
+        "portalError": "Failed to open billing portal",
+        "verifyingPayment": "Verifying payment...",
+        "paymentVerified": "Payment verified! Your plan has been updated.",
+        "verificationFailed": "Could not verify payment automatically. Please contact support."
       }
     }
   },

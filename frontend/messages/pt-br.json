@@ -2231,7 +2231,7 @@
     "cancel": "Cancelar",
     "account": "Conta",
     "preferences": "Preferências",
-    "notifications": "Notificações",
+    "notificationsLabel": "Notificações",
     "security": "Segurança",
     "main": {
       "organization": {
@@ -2486,972 +2486,841 @@
           "proposals": "Propostas",
           "team": "Membros da equipe",
           "storage": "Armazenamento",
-          "aiCredits": "Créditos de IA"
+          "unlimited": "Ilimitado"
         },
-        "unlimited": "Ilimitado"
-      },
-      "messages": {
-        "success": "Assinatura ativada com sucesso!",
-        "canceled": "Atualização de plano cancelada",
-        "loadError": "Falha ao carregar informações de cobrança",
-        "cancelSuccess": "Cancelamento agendado. Seu plano permanece ativo até o fim do período.",
-        "cancelError": "Falha ao agendar o cancelamento. Tente novamente.",
-        "resumeSuccess": "Plano retomado com sucesso.",
-        "resumeError": "Falha ao retomar o plano. Tente novamente.",
-        "portalError": "Não foi possível abrir o portal de cobrança do Stripe."
-      }
-    }
-  },
-  "storage": {
-    "title": "Armazenamento",
-    "files": "Arquivos",
-    "upload": "Enviar",
-    "download": "Baixar",
-    "size": "Tamanho",
-    "type": "Tipo",
-    "lastModified": "Última Modificação",
-    "folder": "Pasta",
-    "noFiles": "Nenhum arquivo encontrado",
-    "fileUpload": {
-      "dragActive": "Solte os arquivos aqui",
-      "dragInactive": "Arraste e solte arquivos aqui",
-      "clickToBrowse": "ou clique para procurar",
-      "maxSize": "Tamanho máximo: {size}MB",
-      "fileTooLarge": "Arquivo muito grande (máx {size}MB)",
-      "invalidFileType": "Tipo de arquivo inválido",
-      "uploading": "Enviando...",
-      "uploadComplete": "Envio concluído!",
-      "noFilesYet": "Nenhum arquivo enviado ainda",
-      "fileCount": "{count} {count, plural, =1 {arquivo} other {arquivos}}",
-      "viewList": "Lista",
-      "viewGrid": "Grade",
-      "storageDrive": "Armazenamento Google Drive",
-      "storageDriveDesc": "Salvar diretamente em {email}",
-      "uploadingDrive": "Enviando para o Drive...",
-      "googleDriveNoLimit": "Google Drive: envie até 10GB"
-    }
-  },
-  "notifications": {
-    "messages": {
-      "welcome_title": "Bem-vindo ao SafeTasks! 🎬",
-      "welcome_message": "Seu sistema de gestão de produção está pronto. Comece criando seu primeiro projeto ou enviando um roteiro para análise de IA.",
-      "script_analysis_complete_title": "Análise de Roteiro Completa ✅",
-      "script_analysis_complete_message": "Seu roteiro foi analisado. Encontrados {characters} personagens e {scenes} cenas.",
-      "budget_alert_title": "Alerta de Orçamento ⚠️",
-      "budget_alert_message": "O projeto '{project}' está se aproximando de {percent}% do orçamento alocado.",
-      "equipment_maintenance_title": "Manutenção de Equipamento Vencida 🔧",
-      "equipment_maintenance_message": "{item} precisa de manutenção preventiva. Último serviço foi há {days} dias.",
-      "proposal_approved_title": "Proposta Aprovada 🎉",
-      "proposal_approved_message": "Parabéns! Sua proposta para '{project}' foi aprovada.",
-      "payment_received_title": "Pagamento Recebido 💰",
-      "payment_received_message": "Pagamento de {amount} recebido do cliente '{client}' para a fatura #{invoice}.",
-      "upload_failed_title": "Falha no Upload ❌",
-      "upload_failed_message": "Falha ao enviar '{file}'. Erro: {error}",
-      "test_notification_title": "Notificação de Teste 🧪",
-      "test_notification_message": "Esta é uma notificação de teste localizada. Parâmetro: {param}"
-    },
-    "title": "Notificações",
-    "description": "Fique atualizado com alertas em tempo real e atualizações importantes",
-    "unableToLoad": "Não foi possível carregar notificações",
-    "failedToLoad": "Falha ao carregar notificações: {message}",
-    "retry": "Tentar Novamente",
-    "stats": {
-      "total": "Total",
-      "unread": "Não Lidas",
-      "read": "Lidas"
-    },
-    "controls": {
-      "showAll": "Mostrar Todas",
-      "unreadOnly": "Apenas Não Lidas",
-      "markRead": "Marcar como lida",
-      "markAllRead": "Marcar Todas como Lidas",
-      "loading": "Carregando...",
-      "count": "{count} notificações"
-    },
-    "list": {
-      "title": "Notificações Recentes",
-      "showingUnread": "Mostrando apenas notificações não lidas",
-      "showingAll": "Todas as notificações",
-      "newBadge": "Nova"
-    },
-    "empty": {
-      "title": "Nenhuma notificação ainda",
-      "description": "Você verá atualizações e alertas aqui quando estiverem disponíveis"
-    },
-    "markAsRead": "Marcar como Lida",
-    "clearAll": "Limpar Tudo",
-    "unread": "Não Lida",
-    "today": "Hoje",
-    "earlier": "Anterior",
-    "noNotifications": "Nenhuma notificação",
-    "viewAll": "Ver todas as notificações"
-  },
-  "landing": {
-    "nav": {
-      "features": "Recursos",
-      "modules": "Módulos",
-      "workflow": "Fluxo",
-      "pricing": "Preços",
-      "signIn": "Entrar",
-      "getStarted": "Iniciar teste"
-    },
-    "hero": {
-      "eyebrow": "Feito para produtoras audiovisuais",
-      "title": "SafeTasks é o sistema de produção que conecta projetos, pessoas e dinheiro.",
-      "subtitle": "O melhor do Yandu + Jobb System, reconstruído em uma plataforma moderna e com acesso por função.",
-      "primaryCta": "Criar conta",
-      "secondaryCta": "Ver preços",
-      "note": "Teste Pro de 7 dias com uso limitado. Cancele quando quiser."
-    },
-    "badges": {
-      "roles": "Acesso por função",
-      "billing": "Limites do plano e uso",
-      "drive": "Sincronização Google Drive",
-      "ai": "Breakdowns com IA"
-    },
-    "console": {
-      "label": "Console de Produção",
-      "title": "SafeTasks Studio",
-      "cards": {
-        "active": {
-          "label": "Produção ativa",
-          "title": "Neon Atlantic",
-          "detail": "6 diárias de filmagem, 24 pessoas na equipe"
-        },
-        "approvals": {
-          "label": "Aprovações pendentes",
-          "title": "3 orçamentos pendentes",
-          "detail": "Equipe financeira notificada"
-        },
-        "storage": {
-          "label": "Armazenamento + IA",
-          "title": "14,2 GB usados",
-          "detail": "Créditos de IA sincronizados"
+        "messages": {
+          "success": "Plano atualizado com sucesso!",
+          "canceled": "Upgrade cancelado.",
+          "loadError": "Falha ao carregar dados de uso",
+          "cancelSuccess": "Assinatura cancelada com sucesso",
+          "cancelError": "Falha ao cancelar assinatura",
+          "resumeSuccess": "Assinatura retomada com sucesso",
+          "resumeError": "Falha ao retomar assinatura",
+          "portalError": "Falha ao abrir portal de cobrança",
+          "verifyingPayment": "Verificando pagamento...",
+          "paymentVerified": "Pagamento verificado! Seu plano foi atualizado.",
+          "verificationFailed": "Não foi possível verificar o pagamento automaticamente. Por favor contate o suporte."
         }
       }
     },
-    "sections": {
+    "storage": {
+      "title": "Armazenamento",
+      "files": "Arquivos",
+      "upload": "Enviar",
+      "download": "Baixar",
+      "size": "Tamanho",
+      "type": "Tipo",
+      "lastModified": "Última Modificação",
+      "folder": "Pasta",
+      "noFiles": "Nenhum arquivo encontrado",
+      "fileUpload": {
+        "dragActive": "Solte os arquivos aqui",
+        "dragInactive": "Arraste e solte arquivos aqui",
+        "clickToBrowse": "ou clique para procurar",
+        "maxSize": "Tamanho máximo: {size}MB",
+        "fileTooLarge": "Arquivo muito grande (máx {size}MB)",
+        "invalidFileType": "Tipo de arquivo inválido",
+        "uploading": "Enviando...",
+        "uploadComplete": "Envio concluído!",
+        "noFilesYet": "Nenhum arquivo enviado ainda",
+        "fileCount": "{count} {count, plural, =1 {arquivo} other {arquivos}}",
+        "viewList": "Lista",
+        "viewGrid": "Grade",
+        "storageDrive": "Armazenamento Google Drive",
+        "storageDriveDesc": "Salvar diretamente em {email}",
+        "uploadingDrive": "Enviando para o Drive...",
+        "googleDriveNoLimit": "Google Drive: envie até 10GB"
+      }
+    },
+    "notifications": {
+      "messages": {
+        "welcome_title": "Bem-vindo ao SafeTasks! 🎬",
+        "welcome_message": "Seu sistema de gestão de produção está pronto. Comece criando seu primeiro projeto ou enviando um roteiro para análise de IA.",
+        "script_analysis_complete_title": "Análise de Roteiro Completa ✅",
+        "script_analysis_complete_message": "Seu roteiro foi analisado. Encontrados {characters} personagens e {scenes} cenas.",
+        "budget_alert_title": "Alerta de Orçamento ⚠️",
+        "budget_alert_message": "O projeto '{project}' está se aproximando de {percent}% do orçamento alocado.",
+        "equipment_maintenance_title": "Manutenção de Equipamento Vencida 🔧",
+        "equipment_maintenance_message": "{item} precisa de manutenção preventiva. Último serviço foi há {days} dias.",
+        "proposal_approved_title": "Proposta Aprovada 🎉",
+        "proposal_approved_message": "Parabéns! Sua proposta para '{project}' foi aprovada.",
+        "payment_received_title": "Pagamento Recebido 💰",
+        "payment_received_message": "Pagamento de {amount} recebido do cliente '{client}' para a fatura #{invoice}.",
+        "upload_failed_title": "Falha no Upload ❌",
+        "upload_failed_message": "Falha ao enviar '{file}'. Erro: {error}",
+        "test_notification_title": "Notificação de Teste 🧪",
+        "test_notification_message": "Esta é uma notificação de teste localizada. Parâmetro: {param}"
+      },
+      "title": "Notificações",
+      "description": "Fique atualizado com alertas em tempo real e atualizações importantes",
+      "unableToLoad": "Não foi possível carregar notificações",
+      "failedToLoad": "Falha ao carregar notificações: {message}",
+      "retry": "Tentar Novamente",
+      "stats": {
+        "total": "Total",
+        "unread": "Não Lidas",
+        "read": "Lidas"
+      },
+      "controls": {
+        "showAll": "Mostrar Todas",
+        "unreadOnly": "Apenas Não Lidas",
+        "markRead": "Marcar como lida",
+        "markAllRead": "Marcar Todas como Lidas",
+        "loading": "Carregando...",
+        "count": "{count} notificações"
+      },
+      "list": {
+        "title": "Notificações Recentes",
+        "showingUnread": "Mostrando apenas notificações não lidas",
+        "showingAll": "Todas as notificações",
+        "newBadge": "Nova"
+      },
+      "empty": {
+        "title": "Nenhuma notificação ainda",
+        "description": "Você verá atualizações e alertas aqui quando estiverem disponíveis"
+      },
+      "markAsRead": "Marcar como Lida",
+      "clearAll": "Limpar Tudo",
+      "unread": "Não Lida",
+      "today": "Hoje",
+      "earlier": "Anterior",
+      "noNotifications": "Nenhuma notificação",
+      "viewAll": "Ver todas as notificações"
+    },
+    "landing": {
+      "nav": {
+        "features": "Recursos",
+        "modules": "Módulos",
+        "workflow": "Fluxo",
+        "pricing": "Preços",
+        "signIn": "Entrar",
+        "getStarted": "Iniciar teste"
+      },
+      "hero": {
+        "eyebrow": "Feito para produtoras audiovisuais",
+        "title": "SafeTasks é o sistema de produção que conecta projetos, pessoas e dinheiro.",
+        "subtitle": "O melhor do Yandu + Jobb System, reconstruído em uma plataforma moderna e com acesso por função.",
+        "primaryCta": "Criar conta",
+        "secondaryCta": "Ver preços",
+        "note": "Teste Pro de 7 dias com uso limitado. Cancele quando quiser."
+      },
+      "badges": {
+        "roles": "Acesso por função",
+        "billing": "Limites do plano e uso",
+        "drive": "Sincronização Google Drive",
+        "ai": "Breakdowns com IA"
+      },
+      "console": {
+        "label": "Console de Produção",
+        "title": "SafeTasks Studio",
+        "cards": {
+          "active": {
+            "label": "Produção ativa",
+            "title": "Neon Atlantic",
+            "detail": "6 diárias de filmagem, 24 pessoas na equipe"
+          },
+          "approvals": {
+            "label": "Aprovações pendentes",
+            "title": "3 orçamentos pendentes",
+            "detail": "Equipe financeira notificada"
+          },
+          "storage": {
+            "label": "Armazenamento + IA",
+            "title": "14,2 GB usados",
+            "detail": "Créditos de IA sincronizados"
+          }
+        }
+      },
+      "sections": {
+        "modules": {
+          "title": "Tudo o que uma produção precisa",
+          "subtitle": "Da pré-produção à entrega final, tudo sincronizado."
+        },
+        "workflow": {
+          "title": "Um fluxo que reflete a realidade do set",
+          "subtitle": "Planeje, filme, aprove e feche sem perder contexto."
+        },
+        "access": {
+          "title": "Acesso claro para cada papel",
+          "subtitle": "Owners, produtores, financeiro e freelancers veem somente o necessário."
+        },
+        "integrations": {
+          "title": "Conectado ao seu stack",
+          "subtitle": "Arquivos, pagamentos e automação em um único fluxo."
+        },
+        "testimonials": {
+          "title": "Construído com equipes de produção",
+          "subtitle": "Feito para substituir planilhas soltas e fluxos frágeis."
+        },
+        "cta": {
+          "title": "Pronto para rodar sua próxima produção no SafeTasks?",
+          "subtitle": "Crie sua conta e inicie o teste em minutos."
+        }
+      },
       "modules": {
-        "title": "Tudo o que uma produção precisa",
-        "subtitle": "Da pré-produção à entrega final, tudo sincronizado."
+        "production": {
+          "title": "Projetos e breakdowns",
+          "description": "Cenas, personagens, diárias e dias de filmagem conectados à produção."
+        },
+        "scheduling": {
+          "title": "Agenda e equipe",
+          "description": "Calendário, notificações, propostas e aprovações em um só lugar."
+        },
+        "financials": {
+          "title": "Orçamentos e fluxo de caixa",
+          "description": "Clientes, faturas, transações e impostos com aprovações por função."
+        },
+        "inventory": {
+          "title": "Inventário e kits",
+          "description": "Controle de equipamentos, manutenção e kits por produção."
+        },
+        "files": {
+          "title": "Arquivos e Drive",
+          "description": "Centralize ativos com Google Drive e limites de uso."
+        },
+        "ai": {
+          "title": "Assistente de produção com IA",
+          "description": "Análise de roteiro, sugestões de dia de filmagem e estimativas melhores."
+        }
       },
       "workflow": {
-        "title": "Um fluxo que reflete a realidade do set",
-        "subtitle": "Planeje, filme, aprove e feche sem perder contexto."
+        "step1": {
+          "title": "Pré-produção",
+          "description": "Briefings, orçamentos, propostas, stakeholders e aprovações."
+        },
+        "step2": {
+          "title": "Produção",
+          "description": "Ordens do dia, equipe, locações, cronogramas e atualizações."
+        },
+        "step3": {
+          "title": "Pós-produção",
+          "description": "Faturas, pagamentos, status de entrega e fechamento financeiro."
+        }
       },
       "access": {
-        "title": "Acesso claro para cada papel",
-        "subtitle": "Owners, produtores, financeiro e freelancers veem somente o necessário."
+        "owner": {
+          "title": "Owner",
+          "description": "Controle total, billing, aprovações e configurações da empresa."
+        },
+        "producer": {
+          "title": "Produtor",
+          "description": "Cria produções, gerencia equipe, agenda e entregas."
+        },
+        "finance": {
+          "title": "Financeiro",
+          "description": "Gerencia faturas, transações, tabelas fiscais e aprovações."
+        },
+        "freelancer": {
+          "title": "Freelancer",
+          "description": "Vê apenas projetos atribuídos e seus cachês."
+        }
       },
       "integrations": {
-        "title": "Conectado ao seu stack",
-        "subtitle": "Arquivos, pagamentos e automação em um único fluxo."
+        "drive": {
+          "title": "Google Drive",
+          "description": "Sincronize pastas e mantenha ativos alinhados com a produção."
+        },
+        "stripe": {
+          "title": "Cobrança Stripe",
+          "description": "Assinaturas, webhooks e status confiável."
+        },
+        "automation": {
+          "title": "Pronto para automação",
+          "description": "Webhooks e APIs para integrar com o seu estúdio."
+        }
       },
       "testimonials": {
-        "title": "Construído com equipes de produção",
-        "subtitle": "Feito para substituir planilhas soltas e fluxos frágeis."
+        "one": {
+          "quote": "Finalmente temos uma fonte única de verdade para a produção.",
+          "name": "Gerente de Produção",
+          "role": "Série de TV"
+        },
+        "two": {
+          "quote": "O financeiro aprova sem travar o fluxo criativo.",
+          "name": "Líder Financeiro",
+          "role": "Estúdio comercial"
+        }
       },
       "cta": {
-        "title": "Pronto para rodar sua próxima produção no SafeTasks?",
-        "subtitle": "Crie sua conta e inicie o teste em minutos."
-      }
+        "primary": "Começar teste",
+        "secondary": "Ver planos"
+      },
+      "footer": "© 2026 SafeTasks V3. Feito para produções audiovisuais."
     },
-    "modules": {
-      "production": {
-        "title": "Projetos e breakdowns",
-        "description": "Cenas, personagens, diárias e dias de filmagem conectados à produção."
-      },
-      "scheduling": {
-        "title": "Agenda e equipe",
-        "description": "Calendário, notificações, propostas e aprovações em um só lugar."
-      },
-      "financials": {
-        "title": "Orçamentos e fluxo de caixa",
-        "description": "Clientes, faturas, transações e impostos com aprovações por função."
-      },
-      "inventory": {
-        "title": "Inventário e kits",
-        "description": "Controle de equipamentos, manutenção e kits por produção."
-      },
-      "files": {
-        "title": "Arquivos e Drive",
-        "description": "Centralize ativos com Google Drive e limites de uso."
-      },
-      "ai": {
-        "title": "Assistente de produção com IA",
-        "description": "Análise de roteiro, sugestões de dia de filmagem e estimativas melhores."
-      }
-    },
-    "workflow": {
-      "step1": {
-        "title": "Pré-produção",
-        "description": "Briefings, orçamentos, propostas, stakeholders e aprovações."
-      },
-      "step2": {
-        "title": "Produção",
-        "description": "Ordens do dia, equipe, locações, cronogramas e atualizações."
-      },
-      "step3": {
-        "title": "Pós-produção",
-        "description": "Faturas, pagamentos, status de entrega e fechamento financeiro."
-      }
-    },
-    "access": {
-      "owner": {
-        "title": "Owner",
-        "description": "Controle total, billing, aprovações e configurações da empresa."
-      },
-      "producer": {
-        "title": "Produtor",
-        "description": "Cria produções, gerencia equipe, agenda e entregas."
-      },
-      "finance": {
-        "title": "Financeiro",
-        "description": "Gerencia faturas, transações, tabelas fiscais e aprovações."
-      },
-      "freelancer": {
-        "title": "Freelancer",
-        "description": "Vê apenas projetos atribuídos e seus cachês."
-      }
-    },
-    "integrations": {
-      "drive": {
-        "title": "Google Drive",
-        "description": "Sincronize pastas e mantenha ativos alinhados com a produção."
-      },
-      "stripe": {
-        "title": "Cobrança Stripe",
-        "description": "Assinaturas, webhooks e status confiável."
-      },
-      "automation": {
-        "title": "Pronto para automação",
-        "description": "Webhooks e APIs para integrar com o seu estúdio."
-      }
-    },
-    "testimonials": {
-      "one": {
-        "quote": "Finalmente temos uma fonte única de verdade para a produção.",
-        "name": "Gerente de Produção",
-        "role": "Série de TV"
-      },
-      "two": {
-        "quote": "O financeiro aprova sem travar o fluxo criativo.",
-        "name": "Líder Financeiro",
-        "role": "Estúdio comercial"
-      }
-    },
-    "cta": {
-      "primary": "Começar teste",
-      "secondary": "Ver planos"
-    },
-    "footer": "© 2026 SafeTasks V3. Feito para produções audiovisuais."
-  },
-  "pricing": {
-    "eyebrow": "Planos",
-    "title": "Planos para escalar sua produção",
-    "subtitle": "Escolha o plano pelo tamanho da equipe e pelo uso. Atualize quando quiser.",
-    "note": "Enterprise é customizado e inclui SLA.",
-    "mostPopular": "Mais popular",
-    "backToHome": "Voltar para Home",
-    "plans": {
-      "starter": {
-        "name": "Starter",
-        "price": "R$ 39,90",
-        "period": "mês",
-        "description": "Para equipes pequenas testando o SafeTasks.",
-        "billingNote": "Mensal",
-        "cta": "Escolher Starter",
-        "features": [
-          "Até 5 projetos",
-          "Até 20 clientes",
-          "Até 20 propostas",
-          "Até 5 membros",
-          "25 GB de armazenamento",
-          "100 créditos de IA por mês"
-        ]
-      },
-      "pro": {
-        "name": "Pro",
-        "price": "R$ 89,90",
-        "period": "mês",
-        "description": "Para produções ativas com equipes maiores.",
-        "billingNote": "Mensal",
-        "cta": "Iniciar teste Pro",
-        "features": [
-          "Projetos e clientes ilimitados",
-          "Propostas e usuários ilimitados",
-          "50 GB de armazenamento",
-          "1.000 créditos de IA por mês",
-          "Aprovações por função",
-          "Relatórios avançados"
-        ]
-      },
-      "proAnnual": {
-        "name": "Pro Anual",
-        "price": "R$ 755",
-        "period": "ano",
-        "description": "Economize no anual e aumente os limites.",
-        "billingNote": "Anual",
-        "cta": "Escolher Pro Anual",
-        "features": [
-          "Tudo do Pro",
-          "75 GB de armazenamento",
-          "2.000 créditos de IA por mês",
-          "Economia anual",
-          "Suporte prioritário"
-        ]
-      },
-      "enterprise": {
-        "name": "Enterprise",
-        "price": "Custom",
-        "period": "contrato",
-        "description": "Para grandes estúdios e fluxos complexos.",
-        "billingNote": "SLA",
-        "cta": "Falar com vendas",
-        "features": [
-          "Limites e onboarding sob medida",
-          "Time dedicado de sucesso",
-          "Revisão de segurança e compliance",
-          "Integrações customizadas"
-        ]
-      }
-    },
-    "includes": {
-      "title": "Todo plano inclui",
-      "items": [
-        "Controle de acesso por função",
-        "Freelancers com visão por projeto",
-        "Regras de uso e billing",
-        "Integração Google Drive",
-        "Fluxos auditáveis"
-      ]
-    },
-    "faq": {
-      "title": "FAQ",
-      "items": [
-        {
-          "q": "Existe período de teste?",
-          "a": "Sim. Toda nova organização começa com teste Pro de 7 dias e uso limitado."
+    "pricing": {
+      "eyebrow": "Planos",
+      "title": "Planos para escalar sua produção",
+      "subtitle": "Escolha o plano pelo tamanho da equipe e pelo uso. Atualize quando quiser.",
+      "note": "Enterprise é customizado e inclui SLA.",
+      "mostPopular": "Mais popular",
+      "backToHome": "Voltar para Home",
+      "plans": {
+        "starter": {
+          "name": "Starter",
+          "price": "R$ 39,90",
+          "period": "mês",
+          "description": "Para equipes pequenas testando o SafeTasks.",
+          "billingNote": "Mensal",
+          "cta": "Escolher Starter",
+          "features": [
+            "Até 5 projetos",
+            "Até 20 clientes",
+            "Até 20 propostas",
+            "Até 5 membros",
+            "25 GB de armazenamento",
+            "100 créditos de IA por mês"
+          ]
         },
-        {
-          "q": "Posso mudar de plano depois?",
-          "a": "Sim, você pode trocar ou fazer upgrade a qualquer momento."
+        "pro": {
+          "name": "Pro",
+          "price": "R$ 89,90",
+          "period": "mês",
+          "description": "Para produções ativas com equipes maiores.",
+          "billingNote": "Mensal",
+          "cta": "Iniciar teste Pro",
+          "features": [
+            "Projetos e clientes ilimitados",
+            "Propostas e usuários ilimitados",
+            "50 GB de armazenamento",
+            "1.000 créditos de IA por mês",
+            "Aprovações por função",
+            "Relatórios avançados"
+          ]
         },
-        {
-          "q": "Freelancers precisam de licença paga?",
-          "a": "Não. Freelancers têm acesso limitado e não ocupam licenças pagas."
+        "proAnnual": {
+          "name": "Pro Anual",
+          "price": "R$ 755",
+          "period": "ano",
+          "description": "Economize no anual e aumente os limites.",
+          "billingNote": "Anual",
+          "cta": "Escolher Pro Anual",
+          "features": [
+            "Tudo do Pro",
+            "75 GB de armazenamento",
+            "2.000 créditos de IA por mês",
+            "Economia anual",
+            "Suporte prioritário"
+          ]
+        },
+        "enterprise": {
+          "name": "Enterprise",
+          "price": "Custom",
+          "period": "contrato",
+          "description": "Para grandes estúdios e fluxos complexos.",
+          "billingNote": "SLA",
+          "cta": "Falar com vendas",
+          "features": [
+            "Limites e onboarding sob medida",
+            "Time dedicado de sucesso",
+            "Revisão de segurança e compliance",
+            "Integrações customizadas"
+          ]
         }
-      ]
-    },
-    "cta": {
-      "title": "Comece a produzir hoje",
-      "subtitle": "Crie sua conta e traga o estúdio inteiro para o SafeTasks.",
-      "primary": "Criar conta",
-      "secondary": "Voltar para home"
-    }
-  },
-  "ai": {
-    "title": "Recursos de IA",
-    "subtitle": "Aproveite a IA para aprimorar seu fluxo de trabalho de produção",
-    "viewProjects": "Ver Projetos",
-    "analyzeScript": "Analisar Roteiro",
-    "usage": {
-      "title": "Uso de IA",
-      "description": "Acompanhe o consumo de créditos de IA",
-      "label": "Créditos de IA",
-      "unlimited": "Ilimitado",
-      "loading": "Carregando uso de IA...",
-      "unavailable": "Dados de uso de IA indisponíveis"
-    },
-    "tabs": {
-      "overview": "Visão Geral",
-      "suggestions": "Sugestões",
-      "recommendations": "Recomendações",
-      "analysis": "Análise"
-    },
-    "quickActions": {
-      "title": "Ações Rápidas",
-      "desc": "Comece com ferramentas de produção com IA",
-      "scriptAnalysis": {
-        "title": "Análise de Roteiro",
-        "desc": "Analise roteiros para extrair personagens, cenas e requisitos de produção"
       },
-      "budgetEstimation": {
-        "title": "Estimativa de Orçamento",
-        "desc": "Obtenha estimativas de orçamento baseadas em IA a partir da análise do roteiro"
+      "includes": {
+        "title": "Todo plano inclui",
+        "items": [
+          "Controle de acesso por função",
+          "Freelancers com visão por projeto",
+          "Regras de uso e billing",
+          "Integração Google Drive",
+          "Fluxos auditáveis"
+        ]
       },
-      "shootingDay": {
-        "title": "Sugestões de Dia de Filmagem",
-        "desc": "Gere cronogramas e dias de filmagem otimizados"
+      "faq": {
+        "title": "FAQ",
+        "items": [
+          {
+            "q": "Existe período de teste?",
+            "a": "Sim. Toda nova organização começa com teste Pro de 7 dias e uso limitado."
+          },
+          {
+            "q": "Posso mudar de plano depois?",
+            "a": "Sim, você pode trocar ou fazer upgrade a qualquer momento."
+          },
+          {
+            "q": "Freelancers precisam de licença paga?",
+            "a": "Não. Freelancers têm acesso limitado e não ocupam licenças pagas."
+          }
+        ]
+      },
+      "cta": {
+        "title": "Comece a produzir hoje",
+        "subtitle": "Crie sua conta e traga o estúdio inteiro para o SafeTasks.",
+        "primary": "Criar conta",
+        "secondary": "Voltar para home"
       }
     },
-    "analysisForm": {
-      "title": "Análise Rápida de Roteiro",
-      "desc": "Inicie uma análise de roteiro diretamente do painel",
-      "selectProject": "Selecionar Projeto",
-      "selectProjectPlaceholder": "Selecione um projeto",
-      "analysisType": "Tipo de Análise",
-      "selectTypePlaceholder": "Selecione o tipo de análise",
-      "types": {
-        "full": "Análise Completa",
-        "scenes": "Análise de Cenas",
-        "characters": "Análise de Personagens",
-        "locations": "Análise de Locações"
+    "ai": {
+      "title": "Recursos de IA",
+      "subtitle": "Aproveite a IA para aprimorar seu fluxo de trabalho de produção",
+      "viewProjects": "Ver Projetos",
+      "analyzeScript": "Analisar Roteiro",
+      "usage": {
+        "title": "Uso de IA",
+        "description": "Acompanhe o consumo de créditos de IA",
+        "label": "Créditos de IA",
+        "unlimited": "Ilimitado",
+        "loading": "Carregando uso de IA...",
+        "unavailable": "Dados de uso de IA indisponíveis"
       },
-      "scriptText": "Texto do Roteiro",
-      "scriptPlaceholder": "Cole o texto do seu roteiro aqui...",
-      "startAnalysis": "Iniciar Análise",
-      "analyzing": "Analisando...",
-      "fullAnalysis": "Análise Completa"
-    },
-    "insights": {
-      "activeAnalyses": {
-        "title": "Análises Ativas",
-        "desc": "Roteiros sendo analisados atualmente"
+      "tabs": {
+        "overview": "Visão Geral",
+        "suggestions": "Sugestões",
+        "recommendations": "Recomendações",
+        "analysis": "Análise"
       },
-      "suggestions": {
-        "title": "Sugestões",
-        "desc": "Sugestões geradas por IA"
+      "quickActions": {
+        "title": "Ações Rápidas",
+        "desc": "Comece com ferramentas de produção com IA",
+        "scriptAnalysis": {
+          "title": "Análise de Roteiro",
+          "desc": "Analise roteiros para extrair personagens, cenas e requisitos de produção"
+        },
+        "budgetEstimation": {
+          "title": "Estimativa de Orçamento",
+          "desc": "Obtenha estimativas de orçamento baseadas em IA a partir da análise do roteiro"
+        },
+        "shootingDay": {
+          "title": "Sugestões de Dia de Filmagem",
+          "desc": "Gere cronogramas e dias de filmagem otimizados"
+        }
       },
-      "recommendations": {
-        "title": "Recomendações",
-        "desc": "Recomendações de alta prioridade"
-      },
-      "successRate": {
-        "title": "Taxa de Sucesso",
-        "desc": "Taxa de sucesso da análise de IA"
-      }
-    },
-    "lists": {
-      "suggestionsTitle": "Sugestões de IA",
-      "recommendationsTitle": "Recomendações de IA",
-      "analysisTitle": "Análise de Roteiro",
-      "available": "disponíveis",
-      "completed": "concluídas",
-      "estimatedSavings": "Economia estimada",
-      "timeSaved": "Tempo economizado",
-      "costSaved": "Custo economizado",
-      "riskReduction": "Redução de risco",
-      "actionItems": "Itens de Ação:",
-      "relatedScenes": "Cenas relacionadas",
-      "summary": "Resumo da Análise",
-      "preview": "Prévia do Roteiro"
-    },
-    "empty": {
-      "projects": "Nenhum projeto disponível",
-      "suggestions": "Nenhuma sugestão disponível. Analise um roteiro para obter sugestões de IA.",
-      "recommendations": "Nenhuma recomendação disponível. Analise um roteiro para obter recomendações de IA.",
-      "analyses": "Nenhuma análise de roteiro disponível. Inicie uma análise de roteiro para ver os resultados."
-    },
-    "shootingDaySuggestions": {
-      "pageTitle": "Sugestões de Dia de Filmagem com IA",
-      "pageSubtitle": "Gere cronogramas e dias de filmagem otimizados",
-      "settings": {
-        "title": "Configurações de Sugestão",
-        "description": "Configure seus parâmetros para sugestão de dia de filmagem",
-        "projectLabel": "Projeto",
+      "analysisForm": {
+        "title": "Análise Rápida de Roteiro",
+        "desc": "Inicie uma análise de roteiro diretamente do painel",
+        "selectProject": "Selecionar Projeto",
         "selectProjectPlaceholder": "Selecione um projeto",
-        "suggestionTypeLabel": "Tipo de Sugestão",
-        "selectTypePlaceholder": "Selecione o tipo de sugestão",
-        "types": {
-          "optimized": "Cronograma Otimizado",
-          "weather": "Com Previsão do Tempo",
-          "cast": "Gerenciamento de Elenco",
-          "location": "Eficiência de Localização"
-        },
-        "descriptions": {
-          "optimized": "Cronograma de filmagem otimizado com base na análise de cenas e eficiência de localização",
-          "weather": "Agendamento ciente do clima com planos de contingência para filmagens externas",
-          "cast": "Disponibilidade de elenco e gerenciamento de fadiga para desempenho ideal",
-          "location": "Agendamento baseado em localização para minimizar tempo de viagem e configuração"
-        }
-      },
-      "features": {
-        "title": "Recursos de Sugestão",
-        "sequencing": "Sequenciamento ideal de dias de filmagem",
-        "timeEfficient": "Horários de chamada e encerramento eficientes",
-        "castCrew": "Otimização da disponibilidade de elenco e equipe",
-        "locationBased": "Agendamento baseado em localização para eficiência"
-      },
-      "scriptAnalysis": {
-        "title": "Análise de Roteiro",
-        "description": "Cole o texto do seu roteiro abaixo para análise de IA e otimização do dia de filmagem",
-        "label": "Texto do Roteiro",
-        "placeholder": "Cole o texto do seu roteiro aqui... A IA analisará cenas, locais, requisitos de elenco e gerará sugestões otimizadas de dia de filmagem."
-      },
-      "tips": {
-        "title": "Dicas de Sugestão",
-        "location": "Inclua detalhes de localização para agendamento preciso",
-        "cast": "Mencione requisitos de elenco e necessidades especiais",
-        "weather": "Observe quaisquer cenas sensíveis ao clima",
-        "optimized": "Cronogramas otimizados minimizam o tempo de viagem",
-        "weatherAware": "Sugestões cientes do clima incluem contingências"
-      },
-      "analysisPreview": {
-        "title": "Prévia da Análise",
-        "description": "A IA analisará este roteiro para otimização do dia de filmagem",
-        "estimatedScenes": "Cenas estimadas",
-        "estimatedCharacters": "Personagens estimados",
-        "estimatedLocations": "Locais estimados",
-        "selectedType": "Tipo de sugestão selecionado"
-      }
-    },
-    "recommendations": {
-      "pageTitle": "Recomendações de IA",
-      "pageSubtitle": "Recomendações de IA de alta prioridade para otimizar seu fluxo de trabalho de produção",
-      "filter": {
-        "title": "Filtrar Recomendações",
-        "description": "Filtre e gerencie recomendações de IA para seu projeto",
-        "typeLabel": "Tipo de Recomendação",
-        "typePlaceholder": "Filtrar por tipo",
-        "types": {
-          "all": "Todos os Tipos",
-          "shootingDay": "Dia de Filmagem",
-          "budget": "Orçamento",
-          "schedule": "Cronograma",
-          "equipment": "Equipamento"
-        }
-      },
-      "stats": {
-        "title": "Estatísticas",
-        "total": "Total",
-        "highPriority": "Alta Prioridade",
-        "mediumPriority": "Média Prioridade",
-        "avgConfidence": "Confiança Média"
-      },
-      "list": {
-        "title": "Recomendações",
-        "description": "Recomendações de IA de alta prioridade com insights acionáveis",
-        "apply": "Aplicar",
-        "details": "Detalhes",
-        "actionItems": "Itens de Ação",
-        "estimatedImpact": "Impacto Estimado",
-        "created": "Criado",
-        "timeSaved": "Tempo Economizado:",
-        "costSaved": "Custo Economizado:",
-        "riskReduction": "Redução de Risco:"
-      },
-      "noRecommendations": {
-        "title": "Nenhuma Recomendação Disponível",
-        "description": "Nenhuma recomendação encontrada para este projeto. Analise seu roteiro para gerar recomendações.",
-        "selectProject": "Por favor, selecione um projeto para visualizar recomendações."
-      },
-      "priorityMatrix": {
-        "title": "Matriz de Prioridade",
-        "description": "Visualize recomendações por prioridade e confiança",
-        "high": "Alta Prioridade",
-        "highDesc": "Recomendações críticas que devem ser abordadas imediatamente",
-        "medium": "Média Prioridade",
-        "mediumDesc": "Recomendações importantes para implementação a médio prazo",
-        "low": "Baixa Prioridade",
-        "lowDesc": "Recomendações desejáveis para otimização"
-      },
-      "guide": {
-        "title": "Guia de Implementação",
-        "description": "Como implementar recomendações de IA efetivamente",
-        "highPriority": "Comece com Alta Prioridade",
-        "highPriorityDesc": "Concentre-se primeiro nas recomendações de alta prioridade para impacto máximo",
-        "actionItems": "Siga os Itens de Ação",
-        "actionItemsDesc": "Cada recomendação inclui itens de ação específicos a seguir",
-        "trackImpact": "Monitore o Impacto",
-        "trackImpactDesc": "Monitore as métricas de impacto estimado para medir o sucesso"
-      }
-    },
-    "suggestions": {
-      "pageTitle": "Sugestões de IA",
-      "pageSubtitle": "Sugestões impulsionadas por IA para otimizar seu fluxo de trabalho de produção",
-      "generate": {
-        "title": "Gerar Sugestões",
-        "description": "Gere sugestões impulsionadas por IA para seu projeto"
-      },
-      "filter": {
-        "typeLabel": "Tipo de Sugestão",
-        "typePlaceholder": "Filtrar por tipo",
-        "types": {
-          "all": "Todos os Tipos",
-          "budget": "Orçamento",
-          "schedule": "Cronograma",
-          "casting": "Elenco",
-          "logistics": "Logística",
-          "equipment": "Equipamento",
-          "other": "Outros"
-        }
-      },
-      "list": {
-        "title": "Sugestões",
-        "description": "Sugestões geradas por IA para melhorar sua eficiência de produção",
-        "details": "Detalhes",
-        "impact": "Impacto",
-        "costEfficiency": "Eficiência de Custo",
-        "timeSavings": "Economia de Tempo",
-        "riskReduction": "Redução de Risco",
-        "relatedScenes": "Cenas Relacionadas:",
-        "estimatedSavings": "Economia Estimada:",
-        "timeSaved": "Tempo Economizado:",
-        "scenes": "Cenas",
-        "characters": "Personagens",
-        "locations": "Locações",
-        "equipment": "Equipamento"
-      },
-      "noSuggestions": {
-        "title": "Nenhuma Sugestão Disponível",
-        "description": "Nenhuma sugestão encontrada para este projeto. Gere sugestões usando as ações rápidas.",
-        "selectProject": "Por favor, selecione um projeto para visualizar sugestões."
-      },
-      "insights": {
-        "title": "Insights de IA",
-        "description": "Insights principais das suas sugestões de IA",
-        "topPriority": "Prioridade Máxima",
-        "timeSavings": "Economia de Tempo",
-        "timeSavingsDesc": "Economia total de tempo estimada de todas as sugestões",
-        "costSavings": "Economia de Custo",
-        "costSavingsDesc": "Economia total de custo estimada de todas as sugestões"
-      }
-    },
-    "actions": {
-      "generateBudget": "Gerar Orçamento",
-      "generateShootingDay": "Gerar Dia de Filmagem",
-      "generatingBudget": "Gerando Orçamento...",
-      "generatingShootingDay": "Gerando Dia de Filmagem...",
-      "viewAiDashboard": "Ver Painel de IA",
-      "backToDashboard": "Voltar ao Painel de IA",
-      "viewShootingDays": "Ver Dias de Filmagem",
-      "analyzeScriptRecommendations": "Analisar Roteiro para Recomendações",
-      "viewAiSuggestions": "Ver Sugestões de IA",
-      "exportRecommendations": "Exportar Recomendações",
-      "generateSuggestions": "Gerar Sugestões",
-      "generating": "Gerando...",
-      "clear": "Limpar",
-      "generateBudgetSuggestions": "Gerar Sugestões de Orçamento",
-      "generateScheduleSuggestions": "Gerar Sugestões de Cronograma",
-      "analyzeScript": "Analisar Roteiro"
-    },
-    "scriptAnalysis": {
-      "pageTitle": "Análise de Roteiro com IA",
-      "pageSubtitle": "Analise roteiros para extrair personagens, cenas, locações e requisitos de produção",
-      "settings": {
-        "title": "Configurações de Análise",
-        "description": "Configure os parâmetros da análise de roteiro",
-        "projectLabel": "Projeto",
-        "projectPlaceholder": "Selecione um projeto"
-      },
-      "analysisType": {
-        "label": "Tipo de Análise",
-        "placeholder": "Selecione o tipo de análise",
+        "analysisType": "Tipo de Análise",
+        "selectTypePlaceholder": "Selecione o tipo de análise",
         "types": {
           "full": "Análise Completa",
-          "characters": "Análise de Personagens",
           "scenes": "Análise de Cenas",
+          "characters": "Análise de Personagens",
           "locations": "Análise de Locações"
         },
-        "descriptions": {
-          "full": "Análise completa incluindo personagens, cenas, locações e requisitos de produção",
-          "characters": "Foco na análise de personagens, padrões de diálogo e requisitos de elenco",
-          "scenes": "Desdobramento de cenas, planejamento de tomadas e análise de sequências",
-          "locations": "Requisitos de locação, design de cenários e logística de filmagem"
-        }
+        "scriptText": "Texto do Roteiro",
+        "scriptPlaceholder": "Cole o texto do seu roteiro aqui...",
+        "startAnalysis": "Iniciar Análise",
+        "analyzing": "Analisando...",
+        "fullAnalysis": "Análise Completa"
       },
-      "features": {
-        "title": "Recursos de Análise",
-        "characters": "Identificação de personagens e análise de diálogos",
-        "scenes": "Desdobramento de cenas e planejamento de sequências",
-        "production": "Identificação de requisitos de produção",
-        "schedule": "Otimização do cronograma de filmagem"
-      },
-      "actions": {
-        "viewProduction": "Ver Produção",
-        "analyzing": "Analisando Roteiro..."
-      },
-      "scriptInput": {
-        "title": "Entrada do Roteiro",
-        "description": "Cole o texto do seu roteiro abaixo para análise de IA",
-        "label": "Texto do Roteiro",
-        "placeholder": "Cole o texto do seu roteiro aqui... Inclua nomes de personagens, diálogos, descrições de cenas e quaisquer notas de produção para uma análise mais precisa.",
-        "charCount": "{current}/{max} caracteres"
-      },
-      "tips": {
-        "title": "Dicas de Análise",
-        "items": {
-          "characters": "Use nomes de personagens adequados (em MAIÚSCULAS) para identificação precisa",
-          "scenes": "Inclua cabeçalhos de cena (INT./EXT. locações)",
-          "production": "Adicione notas de produção entre parênteses para requisitos especiais",
-          "full": "A análise completa fornece os resultados mais abrangentes",
-          "casting": "A análise de personagens é ótima para planejamento de elenco"
-        }
-      },
-      "preview": {
-        "title": "Prévia do Roteiro",
-        "description": "A IA analisará este roteiro com base nos parâmetros selecionados",
-        "cards": {
-          "characters": "Personagens",
-          "scenes": "Cenas",
-          "analysisType": "Tipo de Análise",
-          "complexity": "Complexidade"
+      "insights": {
+        "activeAnalyses": {
+          "title": "Análises Ativas",
+          "desc": "Roteiros sendo analisados atualmente"
         },
-        "labels": {
-          "aiCharacters": "Personagens analisados pela IA",
-          "estimatedCharacters": "Personagens estimados (baseado em regex)",
-          "aiScenes": "Cenas analisadas pela IA",
+        "suggestions": {
+          "title": "Sugestões",
+          "desc": "Sugestões geradas por IA"
+        },
+        "recommendations": {
+          "title": "Recomendações",
+          "desc": "Recomendações de alta prioridade"
+        },
+        "successRate": {
+          "title": "Taxa de Sucesso",
+          "desc": "Taxa de sucesso da análise de IA"
+        }
+      },
+      "lists": {
+        "suggestionsTitle": "Sugestões de IA",
+        "recommendationsTitle": "Recomendações de IA",
+        "analysisTitle": "Análise de Roteiro",
+        "available": "disponíveis",
+        "completed": "concluídas",
+        "estimatedSavings": "Economia estimada",
+        "timeSaved": "Tempo economizado",
+        "costSaved": "Custo economizado",
+        "riskReduction": "Redução de risco",
+        "actionItems": "Itens de Ação:",
+        "relatedScenes": "Cenas relacionadas",
+        "summary": "Resumo da Análise",
+        "preview": "Prévia do Roteiro"
+      },
+      "empty": {
+        "projects": "Nenhum projeto disponível",
+        "suggestions": "Nenhuma sugestão disponível. Analise um roteiro para obter sugestões de IA.",
+        "recommendations": "Nenhuma recomendação disponível. Analise um roteiro para obter recomendações de IA.",
+        "analyses": "Nenhuma análise de roteiro disponível. Inicie uma análise de roteiro para ver os resultados."
+      },
+      "shootingDaySuggestions": {
+        "pageTitle": "Sugestões de Dia de Filmagem com IA",
+        "pageSubtitle": "Gere cronogramas e dias de filmagem otimizados",
+        "settings": {
+          "title": "Configurações de Sugestão",
+          "description": "Configure seus parâmetros para sugestão de dia de filmagem",
+          "projectLabel": "Projeto",
+          "selectProjectPlaceholder": "Selecione um projeto",
+          "suggestionTypeLabel": "Tipo de Sugestão",
+          "selectTypePlaceholder": "Selecione o tipo de sugestão",
+          "types": {
+            "optimized": "Cronograma Otimizado",
+            "weather": "Com Previsão do Tempo",
+            "cast": "Gerenciamento de Elenco",
+            "location": "Eficiência de Localização"
+          },
+          "descriptions": {
+            "optimized": "Cronograma de filmagem otimizado com base na análise de cenas e eficiência de localização",
+            "weather": "Agendamento ciente do clima com planos de contingência para filmagens externas",
+            "cast": "Disponibilidade de elenco e gerenciamento de fadiga para desempenho ideal",
+            "location": "Agendamento baseado em localização para minimizar tempo de viagem e configuração"
+          }
+        },
+        "features": {
+          "title": "Recursos de Sugestão",
+          "sequencing": "Sequenciamento ideal de dias de filmagem",
+          "timeEfficient": "Horários de chamada e encerramento eficientes",
+          "castCrew": "Otimização da disponibilidade de elenco e equipe",
+          "locationBased": "Agendamento baseado em localização para eficiência"
+        },
+        "scriptAnalysis": {
+          "title": "Análise de Roteiro",
+          "description": "Cole o texto do seu roteiro abaixo para análise de IA e otimização do dia de filmagem",
+          "label": "Texto do Roteiro",
+          "placeholder": "Cole o texto do seu roteiro aqui... A IA analisará cenas, locais, requisitos de elenco e gerará sugestões otimizadas de dia de filmagem."
+        },
+        "tips": {
+          "title": "Dicas de Sugestão",
+          "location": "Inclua detalhes de localização para agendamento preciso",
+          "cast": "Mencione requisitos de elenco e necessidades especiais",
+          "weather": "Observe quaisquer cenas sensíveis ao clima",
+          "optimized": "Cronogramas otimizados minimizam o tempo de viagem",
+          "weatherAware": "Sugestões cientes do clima incluem contingências"
+        },
+        "analysisPreview": {
+          "title": "Prévia da Análise",
+          "description": "A IA analisará este roteiro para otimização do dia de filmagem",
           "estimatedScenes": "Cenas estimadas",
-          "selectedType": "Tipo de análise selecionado",
-          "complexity": "Complexidade da análise"
-        },
-        "complexity": {
-          "high": "Alta",
-          "medium": "Média",
-          "low": "Baixa"
+          "estimatedCharacters": "Personagens estimados",
+          "estimatedLocations": "Locais estimados",
+          "selectedType": "Tipo de sugestão selecionado"
         }
       },
-      "analysisStatus": {
-        "title": "Análise de IA Concluída",
-        "summary": "{characters} personagens, {scenes} cenas, {locations} locações identificadas"
+      "recommendations": {
+        "pageTitle": "Recomendações de IA",
+        "pageSubtitle": "Recomendações de IA de alta prioridade para otimizar seu fluxo de trabalho de produção",
+        "filter": {
+          "title": "Filtrar Recomendações",
+          "description": "Filtre e gerencie recomendações de IA para seu projeto",
+          "typeLabel": "Tipo de Recomendação",
+          "typePlaceholder": "Filtrar por tipo",
+          "types": {
+            "all": "Todos os Tipos",
+            "shootingDay": "Dia de Filmagem",
+            "budget": "Orçamento",
+            "schedule": "Cronograma",
+            "equipment": "Equipamento"
+          }
+        },
+        "stats": {
+          "title": "Estatísticas",
+          "total": "Total",
+          "highPriority": "Alta Prioridade",
+          "mediumPriority": "Média Prioridade",
+          "avgConfidence": "Confiança Média"
+        },
+        "list": {
+          "title": "Recomendações",
+          "description": "Recomendações de IA de alta prioridade com insights acionáveis",
+          "apply": "Aplicar",
+          "details": "Detalhes",
+          "actionItems": "Itens de Ação",
+          "estimatedImpact": "Impacto Estimado",
+          "created": "Criado",
+          "timeSaved": "Tempo Economizado:",
+          "costSaved": "Custo Economizado:",
+          "riskReduction": "Redução de Risco:"
+        },
+        "noRecommendations": {
+          "title": "Nenhuma Recomendação Disponível",
+          "description": "Nenhuma recomendação encontrada para este projeto. Analise seu roteiro para gerar recomendações.",
+          "selectProject": "Por favor, selecione um projeto para visualizar recomendações."
+        },
+        "priorityMatrix": {
+          "title": "Matriz de Prioridade",
+          "description": "Visualize recomendações por prioridade e confiança",
+          "high": "Alta Prioridade",
+          "highDesc": "Recomendações críticas que devem ser abordadas imediatamente",
+          "medium": "Média Prioridade",
+          "mediumDesc": "Recomendações importantes para implementação a médio prazo",
+          "low": "Baixa Prioridade",
+          "lowDesc": "Recomendações desejáveis para otimização"
+        },
+        "guide": {
+          "title": "Guia de Implementação",
+          "description": "Como implementar recomendações de IA efetivamente",
+          "highPriority": "Comece com Alta Prioridade",
+          "highPriorityDesc": "Concentre-se primeiro nas recomendações de alta prioridade para impacto máximo",
+          "actionItems": "Siga os Itens de Ação",
+          "actionItemsDesc": "Cada recomendação inclui itens de ação específicos a seguir",
+          "trackImpact": "Monitore o Impacto",
+          "trackImpactDesc": "Monitore as métricas de impacto estimado para medir o sucesso"
+        }
       },
-      "errors": {
-        "unknown": "Erro desconhecido"
-      }
-    },
-    "budgetEstimation": {
-      "pageTitle": "Estimativa de Orçamento com IA",
-      "pageSubtitle": "Obtenha estimativas de orçamento baseadas em IA a partir da análise do roteiro",
-      "settings": {
-        "title": "Configurações de Estimativa",
-        "description": "Configure os parâmetros de estimativa de orçamento",
-        "projectLabel": "Projeto",
-        "projectPlaceholder": "Selecione um projeto"
-      },
-      "estimationType": {
-        "label": "Tipo de Estimativa",
-        "placeholder": "Selecione o tipo de estimativa",
-        "types": {
-          "quick": "Estimativa Rápida",
-          "detailed": "Análise Detalhada"
+      "suggestions": {
+        "pageTitle": "Sugestões de IA",
+        "pageSubtitle": "Sugestões impulsionadas por IA para otimizar seu fluxo de trabalho de produção",
+        "generate": {
+          "title": "Gerar Sugestões",
+          "description": "Gere sugestões impulsionadas por IA para seu projeto"
+        },
+        "filter": {
+          "typeLabel": "Tipo de Sugestão",
+          "typePlaceholder": "Filtrar por tipo",
+          "types": {
+            "all": "Todos os Tipos",
+            "budget": "Orçamento",
+            "schedule": "Cronograma",
+            "casting": "Elenco",
+            "logistics": "Logística",
+            "equipment": "Equipamento",
+            "other": "Outros"
+          }
+        },
+        "list": {
+          "title": "Sugestões",
+          "description": "Sugestões geradas por IA para melhorar sua eficiência de produção",
+          "details": "Detalhes",
+          "impact": "Impacto",
+          "costEfficiency": "Eficiência de Custo",
+          "timeSavings": "Economia de Tempo",
+          "riskReduction": "Redução de Risco",
+          "relatedScenes": "Cenas Relacionadas:",
+          "estimatedSavings": "Economia Estimada:",
+          "timeSaved": "Tempo Economizado:",
+          "scenes": "Cenas",
+          "characters": "Personagens",
+          "locations": "Locações",
+          "equipment": "Equipamento"
+        },
+        "noSuggestions": {
+          "title": "Nenhuma Sugestão Disponível",
+          "description": "Nenhuma sugestão encontrada para este projeto. Gere sugestões usando as ações rápidas.",
+          "selectProject": "Por favor, selecione um projeto para visualizar sugestões."
+        },
+        "insights": {
+          "title": "Insights de IA",
+          "description": "Insights principais das suas sugestões de IA",
+          "topPriority": "Prioridade Máxima",
+          "timeSavings": "Economia de Tempo",
+          "timeSavingsDesc": "Economia total de tempo estimada de todas as sugestões",
+          "costSavings": "Economia de Custo",
+          "costSavingsDesc": "Economia total de custo estimada de todas as sugestões"
         }
       },
       "actions": {
-        "viewFinancials": "Ver Financeiro",
-        "estimate": "Estimar Orçamento",
-        "estimating": "Estimando Orçamento..."
+        "generateBudget": "Gerar Orçamento",
+        "generateShootingDay": "Gerar Dia de Filmagem",
+        "generatingBudget": "Gerando Orçamento...",
+        "generatingShootingDay": "Gerando Dia de Filmagem...",
+        "viewAiDashboard": "Ver Painel de IA",
+        "backToDashboard": "Voltar ao Painel de IA",
+        "viewShootingDays": "Ver Dias de Filmagem",
+        "analyzeScriptRecommendations": "Analisar Roteiro para Recomendações",
+        "viewAiSuggestions": "Ver Sugestões de IA",
+        "exportRecommendations": "Exportar Recomendações",
+        "generateSuggestions": "Gerar Sugestões",
+        "generating": "Gerando...",
+        "clear": "Limpar",
+        "generateBudgetSuggestions": "Gerar Sugestões de Orçamento",
+        "generateScheduleSuggestions": "Gerar Sugestões de Cronograma",
+        "analyzeScript": "Analisar Roteiro"
       },
-      "scriptInput": {
-        "title": "Análise de Roteiro",
-        "description": "Cole o texto do seu roteiro abaixo para análise de IA e estimativa de orçamento",
-        "label": "Texto do Roteiro",
-        "placeholder": "Cole o texto do seu roteiro aqui... A IA analisará personagens, cenas, locações e requisitos de produção para gerar uma estimativa de orçamento precisa.",
-        "charCount": "{current}/{max} caracteres"
-      },
-      "tips": {
-        "title": "Dicas de Estimativa",
-        "items": {
-          "characters": "Inclua descrições de personagens e diálogos",
-          "locations": "Mencione locações e requisitos de cenários",
-          "effects": "Anote quaisquer efeitos especiais ou necessidades de equipamento",
-          "quick": "Estimativas rápidas são mais velozes, mas menos detalhadas",
-          "detailed": "Análises detalhadas fornecem desdobramentos abrangentes"
+      "scriptAnalysis": {
+        "pageTitle": "Análise de Roteiro com IA",
+        "pageSubtitle": "Analise roteiros para extrair personagens, cenas, locações e requisitos de produção",
+        "settings": {
+          "title": "Configurações de Análise",
+          "description": "Configure os parâmetros da análise de roteiro",
+          "projectLabel": "Projeto",
+          "projectPlaceholder": "Selecione um projeto"
+        },
+        "analysisType": {
+          "label": "Tipo de Análise",
+          "placeholder": "Selecione o tipo de análise",
+          "types": {
+            "full": "Análise Completa",
+            "characters": "Análise de Personagens",
+            "scenes": "Análise de Cenas",
+            "locations": "Análise de Locações"
+          },
+          "descriptions": {
+            "full": "Análise completa incluindo personagens, cenas, locações e requisitos de produção",
+            "characters": "Foco na análise de personagens, padrões de diálogo e requisitos de elenco",
+            "scenes": "Desdobramento de cenas, planejamento de tomadas e análise de sequências",
+            "locations": "Requisitos de locação, design de cenários e logística de filmagem"
+          }
+        },
+        "features": {
+          "title": "Recursos de Análise",
+          "characters": "Identificação de personagens e análise de diálogos",
+          "scenes": "Desdobramento de cenas e planejamento de sequências",
+          "production": "Identificação de requisitos de produção",
+          "schedule": "Otimização do cronograma de filmagem"
+        },
+        "actions": {
+          "viewProduction": "Ver Produção",
+          "analyzing": "Analisando Roteiro..."
+        },
+        "scriptInput": {
+          "title": "Entrada do Roteiro",
+          "description": "Cole o texto do seu roteiro abaixo para análise de IA",
+          "label": "Texto do Roteiro",
+          "placeholder": "Cole o texto do seu roteiro aqui... Inclua nomes de personagens, diálogos, descrições de cenas e quaisquer notas de produção para uma análise mais precisa.",
+          "charCount": "{current}/{max} caracteres"
+        },
+        "tips": {
+          "title": "Dicas de Análise",
+          "items": {
+            "characters": "Use nomes de personagens adequados (em MAIÚSCULAS) para identificação precisa",
+            "scenes": "Inclua cabeçalhos de cena (INT./EXT. locações)",
+            "production": "Adicione notas de produção entre parênteses para requisitos especiais",
+            "full": "A análise completa fornece os resultados mais abrangentes",
+            "casting": "A análise de personagens é ótima para planejamento de elenco"
+          }
+        },
+        "preview": {
+          "title": "Prévia do Roteiro",
+          "description": "A IA analisará este roteiro com base nos parâmetros selecionados",
+          "cards": {
+            "characters": "Personagens",
+            "scenes": "Cenas",
+            "analysisType": "Tipo de Análise",
+            "complexity": "Complexidade"
+          },
+          "labels": {
+            "aiCharacters": "Personagens analisados pela IA",
+            "estimatedCharacters": "Personagens estimados (baseado em regex)",
+            "aiScenes": "Cenas analisadas pela IA",
+            "estimatedScenes": "Cenas estimadas",
+            "selectedType": "Tipo de análise selecionado",
+            "complexity": "Complexidade da análise"
+          },
+          "complexity": {
+            "high": "Alta",
+            "medium": "Média",
+            "low": "Baixa"
+          }
+        },
+        "analysisStatus": {
+          "title": "Análise de IA Concluída",
+          "summary": "{characters} personagens, {scenes} cenas, {locations} locações identificadas"
+        },
+        "errors": {
+          "unknown": "Erro desconhecido"
         }
       },
-      "preview": {
-        "title": "Prévia da Análise",
-        "description": "A IA analisará este roteiro para estimativa de orçamento",
-        "cards": {
-          "characters": "Personagens",
-          "complexity": "Complexidade",
-          "estimationType": "Tipo de Estimativa"
+      "budgetEstimation": {
+        "pageTitle": "Estimativa de Orçamento com IA",
+        "pageSubtitle": "Obtenha estimativas de orçamento baseadas em IA a partir da análise do roteiro",
+        "settings": {
+          "title": "Configurações de Estimativa",
+          "description": "Configure os parâmetros de estimativa de orçamento",
+          "projectLabel": "Projeto",
+          "projectPlaceholder": "Selecione um projeto"
         },
-        "labels": {
-          "estimatedCharacters": "Personagens estimados",
-          "complexity": "Nível de complexidade do roteiro",
-          "selectedType": "Tipo de estimativa selecionado"
+        "estimationType": {
+          "label": "Tipo de Estimativa",
+          "placeholder": "Selecione o tipo de estimativa",
+          "types": {
+            "quick": "Estimativa Rápida",
+            "detailed": "Análise Detalhada"
+          }
         },
-        "complexity": {
-          "high": "Alta",
-          "medium": "Média",
-          "low": "Baixa"
+        "actions": {
+          "viewFinancials": "Ver Financeiro",
+          "estimate": "Estimar Orçamento",
+          "estimating": "Estimando Orçamento..."
+        },
+        "scriptInput": {
+          "title": "Análise de Roteiro",
+          "description": "Cole o texto do seu roteiro abaixo para análise de IA e estimativa de orçamento",
+          "label": "Texto do Roteiro",
+          "placeholder": "Cole o texto do seu roteiro aqui... A IA analisará personagens, cenas, locações e requisitos de produção para gerar uma estimativa de orçamento precisa.",
+          "charCount": "{current}/{max} caracteres"
+        },
+        "tips": {
+          "title": "Dicas de Estimativa",
+          "items": {
+            "characters": "Inclua descrições de personagens e diálogos",
+            "locations": "Mencione locações e requisitos de cenários",
+            "effects": "Anote quaisquer efeitos especiais ou necessidades de equipamento",
+            "quick": "Estimativas rápidas são mais velozes, mas menos detalhadas",
+            "detailed": "Análises detalhadas fornecem desdobramentos abrangentes"
+          }
+        },
+        "preview": {
+          "title": "Prévia da Análise",
+          "description": "A IA analisará este roteiro para estimativa de orçamento",
+          "cards": {
+            "characters": "Personagens",
+            "complexity": "Complexidade",
+            "estimationType": "Tipo de Estimativa"
+          },
+          "labels": {
+            "estimatedCharacters": "Personagens estimados",
+            "complexity": "Nível de complexidade do roteiro",
+            "selectedType": "Tipo de estimativa selecionado"
+          },
+          "complexity": {
+            "high": "Alta",
+            "medium": "Média",
+            "low": "Baixa"
+          }
+        },
+        "errors": {
+          "estimateFailed": "Falha ao estimar o orçamento"
         }
+      }
+    },
+    "billingBanner": {
+      "trialEndingTitle": "Teste terminando em breve",
+      "trialEndingMessage": "Seu teste grátis termina {time}. Faça upgrade para manter acesso total.",
+      "trialEndedTitle": "Teste encerrado",
+      "trialEndedMessage": "Seu teste terminou. Faça upgrade para continuar usando o SafeTasks.",
+      "ctaPrimary": "Fazer upgrade",
+      "ctaSecondary": "Ver preços",
+      "timeFallback": "em breve"
+    },
+    "projectAssignments": {
+      "title": "Acesso ao Projeto",
+      "description": "Atribua freelancers para conceder acesso a este projeto.",
+      "assignFreelancer": "Atribuir Freelancer",
+      "modalTitle": "Atribuir Freelancer",
+      "modalDescription": "Selecione um freelancer da sua equipe.",
+      "selectPlaceholder": "Selecione um freelancer",
+      "assign": "Atribuir",
+      "remove": "Remover",
+      "empty": "Nenhum freelancer foi atribuído a este projeto ainda.",
+      "noAvailableFreelancers": "Nenhum freelancer disponível para atribuir.",
+      "confirmRemove": "Remover acesso de {name}?",
+      "table": {
+        "headers": {
+          "name": "Nome",
+          "email": "Email",
+          "assignedAt": "Atribuído em",
+          "actions": "Ações"
+        }
+      },
+      "toast": {
+        "assigned": "Freelancer atribuído",
+        "removed": "Acesso removido"
       },
       "errors": {
-        "estimateFailed": "Falha ao estimar o orçamento"
+        "alreadyAssigned": "Este freelancer já está atribuído",
+        "assignFailed": "Falha ao atribuir freelancer",
+        "removeFailed": "Falha ao remover atribuição"
       }
-    }
-  },
-  "billingBanner": {
-    "trialEndingTitle": "Teste terminando em breve",
-    "trialEndingMessage": "Seu teste grátis termina {time}. Faça upgrade para manter acesso total.",
-    "trialEndedTitle": "Teste encerrado",
-    "trialEndedMessage": "Seu teste terminou. Faça upgrade para continuar usando o SafeTasks.",
-    "ctaPrimary": "Fazer upgrade",
-    "ctaSecondary": "Ver preços",
-    "timeFallback": "em breve"
-  },
-  "projectAssignments": {
-    "title": "Acesso ao Projeto",
-    "description": "Atribua freelancers para conceder acesso a este projeto.",
-    "assignFreelancer": "Atribuir Freelancer",
-    "modalTitle": "Atribuir Freelancer",
-    "modalDescription": "Selecione um freelancer da sua equipe.",
-    "selectPlaceholder": "Selecione um freelancer",
-    "assign": "Atribuir",
-    "remove": "Remover",
-    "empty": "Nenhum freelancer foi atribuído a este projeto ainda.",
-    "noAvailableFreelancers": "Nenhum freelancer disponível para atribuir.",
-    "confirmRemove": "Remover acesso de {name}?",
-    "table": {
-      "headers": {
-        "name": "Nome",
-        "email": "Email",
-        "assignedAt": "Atribuído em",
-        "actions": "Ações"
-      }
-    },
-    "toast": {
-      "assigned": "Freelancer atribuído",
-      "removed": "Acesso removido"
-    },
-    "errors": {
-      "alreadyAssigned": "Este freelancer já está atribuído",
-      "assignFailed": "Falha ao atribuir freelancer",
-      "removeFailed": "Falha ao remover atribuição"
-    }
-  },
-  "team": {
-    "title": "Equipe",
-    "description": "Gerencie os membros da sua organização e convites",
-    "inviteMember": "Convidar Membro",
-    "activeMembers": "Membros Ativos",
-    "activeMembersDescription": "Pessoas que fazem parte da sua organização",
-    "pendingInvites": "Convites Pendentes",
-    "pendingInvitesDescription": "Convites aguardando aceitação",
-    "columnName": "Nome",
-    "columnEmail": "Email",
-    "columnRole": "Função",
-    "columnJoined": "Entrou em",
-    "columnActions": "Ações",
-    "columnSent": "Enviado",
-    "columnExpires": "Expira",
-    "remove": "Remover",
-    "removeMember": "Remover Membro",
-    "removeConfirm": "Tem certeza que deseja remover {name} da organização? O acesso será revogado imediatamente.",
-    "resend": "Reenviar",
-    "revoke": "Revogar",
-    "inviteModalTitle": "Convidar membro da equipe",
-    "inviteModalDescription": "Envie um convite para entrar na sua organização",
-    "inviteLinkReady": "Compartilhe este link com a pessoa que você está convidando:",
-    "emailLabel": "Endereço de email",
-    "emailPlaceholder": "colega@exemplo.com",
-    "roleLabel": "Função",
-    "selectRole": "Selecione uma função",
-    "sendInvite": "Enviar Convite",
-    "cancel": "Cancelar",
-    "close": "Fechar",
-    "inviteCreated": "Convite criado com sucesso",
-    "inviteAlreadyPending": "Já existe um convite pendente para este email",
-    "seatLimitReached": "Limite de vagas atingido — faça upgrade do seu plano",
-    "inviteError": "Falha ao criar convite",
-    "resending": "Reenviando...",
-    "resendLinkTitle": "Link do Convite Atualizado",
-    "resendLinkDescription": "Isto gera um novo link de convite para {email}. Compartilhe este novo link com a pessoa.",
-    "resendLinkNote": "Observação: qualquer link compartilhado anteriormente deixa de funcionar após reenviar.",
-    "inviteResent": "Link do convite atualizado",
-    "resendError": "Falha ao reenviar convite",
-    "inviteRevoked": "Convite revogado",
-    "revokeError": "Falha ao revogar convite",
-    "roleChanged": "Função atualizada com sucesso",
-    "roleChangeError": "Falha ao alterar função",
-    "memberRemoved": "Membro removido da organização",
-    "removeError": "Falha ao remover membro"
-  },
-  "contacts": {
-    "title": "Contatos",
-    "description": "Gerencie todos os contatos da sua organização em um só lugar",
-    "breadcrumb": "Contatos",
-    "addContact": "Adicionar Contato",
-    "editContact": "Editar Contato",
-    "viewContact": "Ver Contato",
-    "deleteContact": "Excluir Contato",
-    "searchPlaceholder": "Buscar contatos por nome, email ou telefone...",
-    "noContactsTitle": "Nenhum Contato Encontrado",
-    "noContactsDescription": "Comece adicionando seu primeiro contato",
-    "createFirst": "Crie seu primeiro contato para gerenciar fornecedores, freelancers e membros da equipe.",
-    "loading": "Carregando contatos...",
-    "error": "Falha ao carregar contatos",
-    "notFound": "Contato não encontrado",
-    "filters": {
-      "title": "Filtros",
-      "description": "Filtre e pesquise seus contatos",
-      "search": "Buscar",
-      "searchPlaceholder": "Buscar por nome, email, telefone...",
-      "category": "Categoria",
-      "allCategories": "Todas as Categorias",
-      "rentalHouse": "Locadora de Equipamentos",
-      "freelancer": "Freelancer",
-      "catering": "Catering",
-      "transport": "Transporte",
-      "postProduction": "Pós-Produção",
-      "other": "Outro",
-      "platformStatus": "Acesso à Plataforma",
-      "allStatus": "Todos os Status",
-      "allAccess": "Todos os Acessos",
-      "platformActive": "Usuários Ativos",
-      "platformInvited": "Convidados",
-      "platformNone": "Sem Acesso",
-      "results": "Resultados",
-      "contactCount": "{count} contato",
-      "contactCount_other": "{count} contatos"
-    },
-    "categories": {
-      "freelancer": "Freelancer",
-      "equipment_rental": "Aluguel de Equipamento",
-      "catering": "Catering",
-      "location": "Locação",
-      "post_production": "Pós-Produção",
-      "rental_house": "Locadora de Equipamentos",
-      "transport": "Transporte",
-      "other": "Outro"
-    },
-    "platformStatus": {
-      "none": "Sem Acesso",
-      "invited": "Convidado",
-      "active": "Ativo"
-    },
-    "card": {
-      "projects": "projetos",
-      "totalSpent": "Total Gasto",
-      "noEmail": "Sem email",
-      "noPhone": "Sem telefone",
-      "active": "Ativo",
-      "inactive": "Inativo",
-      "view": "Ver",
-      "edit": "Editar",
-      "delete": "Excluir",
-      "platform": {
-        "none": "Sem Acesso",
-        "invited": "Convidado",
-        "active": "Ativo"
-      }
-    },
-    "empty": {
-      "helpText": "Você ainda não tem contatos. Crie seu primeiro contato para começar.",
-      "addFirst": "Adicionar Primeiro Contato"
-    },
-    "delete": {
-      "confirmTitle": "Excluir Contato",
-      "confirm": "Tem certeza que deseja excluir {name}? Esta ação não pode ser desfeita."
-    },
-    "invite": {
-      "inviteMember": "Convidar Membro",
-      "modalTitle": "Convidar Membro da Equipe",
-      "modalDescription": "Envie um convite da plataforma para um novo membro da equipe",
-      "emailLabel": "Email",
-      "emailPlaceholder": "colega@exemplo.com",
-      "roleLabel": "Função",
-      "selectRole": "Selecione uma função",
-      "sendInvite": "Enviar Convite",
-      "linkReady": "O link de convite foi gerado. Compartilhe com o membro da equipe:",
-      "close": "Fechar",
-      "cancel": "Cancelar"
     },
     "team": {
+      "title": "Equipe",
+      "description": "Gerencie os membros da sua organização e convites",
+      "inviteMember": "Convidar Membro",
       "activeMembers": "Membros Ativos",
-      "activeMembersDescription": "Membros da equipe com acesso à plataforma",
+      "activeMembersDescription": "Pessoas que fazem parte da sua organização",
+      "pendingInvites": "Convites Pendentes",
+      "pendingInvitesDescription": "Convites aguardando aceitação",
       "columnName": "Nome",
       "columnEmail": "Email",
       "columnRole": "Função",
@@ -3460,221 +3329,357 @@
       "columnSent": "Enviado",
       "columnExpires": "Expira",
       "remove": "Remover",
-      "pendingInvites": "Convites Pendentes",
-      "pendingInvitesDescription": "Convites que foram enviados mas ainda não foram aceitos",
+      "removeMember": "Remover Membro",
+      "removeConfirm": "Tem certeza que deseja remover {name} da organização? O acesso será revogado imediatamente.",
       "resend": "Reenviar",
+      "revoke": "Revogar",
+      "inviteModalTitle": "Convidar membro da equipe",
+      "inviteModalDescription": "Envie um convite para entrar na sua organização",
+      "inviteLinkReady": "Compartilhe este link com a pessoa que você está convidando:",
+      "emailLabel": "Endereço de email",
+      "emailPlaceholder": "colega@exemplo.com",
+      "roleLabel": "Função",
+      "selectRole": "Selecione uma função",
+      "sendInvite": "Enviar Convite",
+      "cancel": "Cancelar",
+      "close": "Fechar",
+      "inviteCreated": "Convite criado com sucesso",
+      "inviteAlreadyPending": "Já existe um convite pendente para este email",
+      "seatLimitReached": "Limite de vagas atingido — faça upgrade do seu plano",
+      "inviteError": "Falha ao criar convite",
       "resending": "Reenviando...",
-      "revoke": "Revogar"
+      "resendLinkTitle": "Link do Convite Atualizado",
+      "resendLinkDescription": "Isto gera um novo link de convite para {email}. Compartilhe este novo link com a pessoa.",
+      "resendLinkNote": "Observação: qualquer link compartilhado anteriormente deixa de funcionar após reenviar.",
+      "inviteResent": "Link do convite atualizado",
+      "resendError": "Falha ao reenviar convite",
+      "inviteRevoked": "Convite revogado",
+      "revokeError": "Falha ao revogar convite",
+      "roleChanged": "Função atualizada com sucesso",
+      "roleChangeError": "Falha ao alterar função",
+      "memberRemoved": "Membro removido da organização",
+      "removeError": "Falha ao remover membro"
     },
-    "tabs": {
-      "contacts": "Contatos",
-      "team": "Equipe & Acesso",
-      "info": "Info",
-      "projects": "Projetos",
-      "financials": "Financeiro",
-      "access": "Acesso"
-    },
-    "detail": {
-      "title": "Detalhes do Contato",
-      "backToContacts": "Voltar para Contatos",
-      "editButton": "Editar",
-      "deleteButton": "Excluir",
-      "deleteConfirm": "Tem certeza que deseja excluir este contato? Esta ação não pode ser desfeita.",
-      "contactInfo": "Informações de Contato",
-      "email": "Email",
-      "phone": "Telefone",
-      "address": "Endereço",
-      "documentId": "Documento (CPF/CNPJ)",
-      "noContactInfo": "Nenhuma informação de contato disponível",
-      "specialties": "Especialidades",
-      "notes": "Observações",
-      "bankInfo": "Informações Bancárias",
-      "projectAssignments": "Atribuições de Projetos",
-      "projectAssignmentsDescription": "Projetos aos quais este contato está atribuído",
-      "assignToProject": "Atribuir a Projeto",
-      "project": "Projeto",
-      "role": "Função",
-      "status": "Status",
-      "rate": "Taxa",
-      "dates": "Datas",
-      "noAssignments": "Nenhuma atribuição de projeto ainda",
-      "financialStatement": "Extrato Financeiro",
-      "financialStatementDescription": "Histórico de transações e resumo financeiro",
-      "fromDate": "De",
-      "toDate": "Até",
-      "generateStatement": "Gerar Extrato",
-      "totalSpent": "Total Gasto",
-      "projectCount": "Projetos",
-      "loadingStatement": "Carregando extrato...",
-      "totalTransactions": "Total de Transações",
-      "periodTotal": "Total do Período",
-      "period": "Período",
-      "byProject": "Por Projeto"
-    },
-    "info": {
-      "title": "Informações do Contato",
-      "description": "Detalhes básicos e informações do contato",
-      "basicInfo": "Informações Básicas",
-      "category": "Categoria",
-      "email": "Email",
-      "phone": "Telefone",
-      "address": "Endereço",
-      "documentId": "Documento (CPF/CNPJ)",
-      "specialties": "Especialidades",
-      "notes": "Observações",
-      "bankInfo": "Informações Bancárias",
-      "bankName": "Nome do Banco",
-      "accountNumber": "Número da Conta",
-      "routingNumber": "Agência",
-      "pixKey": "Chave PIX",
-      "noBankInfo": "Nenhuma informação bancária fornecida"
-    },
-    "projects": {
-      "title": "Atribuições de Projetos",
-      "description": "Projetos aos quais este contato está atribuído",
-      "assignToProject": "Atribuir a Projeto",
-      "noAssignments": "Nenhuma atribuição de projeto ainda",
-      "noAssignmentsHelp": "Atribua este contato a um projeto para rastrear seu trabalho e pagamentos.",
-      "table": {
+    "contacts": {
+      "title": "Contatos",
+      "description": "Gerencie todos os contatos da sua organização em um só lugar",
+      "breadcrumb": "Contatos",
+      "addContact": "Adicionar Contato",
+      "editContact": "Editar Contato",
+      "viewContact": "Ver Contato",
+      "deleteContact": "Excluir Contato",
+      "searchPlaceholder": "Buscar contatos por nome, email ou telefone...",
+      "noContactsTitle": "Nenhum Contato Encontrado",
+      "noContactsDescription": "Comece adicionando seu primeiro contato",
+      "createFirst": "Crie seu primeiro contato para gerenciar fornecedores, freelancers e membros da equipe.",
+      "loading": "Carregando contatos...",
+      "error": "Falha ao carregar contatos",
+      "notFound": "Contato não encontrado",
+      "filters": {
+        "title": "Filtros",
+        "description": "Filtre e pesquise seus contatos",
+        "search": "Buscar",
+        "searchPlaceholder": "Buscar por nome, email, telefone...",
+        "category": "Categoria",
+        "allCategories": "Todas as Categorias",
+        "rentalHouse": "Locadora de Equipamentos",
+        "freelancer": "Freelancer",
+        "catering": "Catering",
+        "transport": "Transporte",
+        "postProduction": "Pós-Produção",
+        "other": "Outro",
+        "platformStatus": "Acesso à Plataforma",
+        "allStatus": "Todos os Status",
+        "allAccess": "Todos os Acessos",
+        "platformActive": "Usuários Ativos",
+        "platformInvited": "Convidados",
+        "platformNone": "Sem Acesso",
+        "results": "Resultados",
+        "contactCount": "{count} contato",
+        "contactCount_other": "{count} contatos"
+      },
+      "categories": {
+        "freelancer": "Freelancer",
+        "equipment_rental": "Aluguel de Equipamento",
+        "catering": "Catering",
+        "location": "Locação",
+        "post_production": "Pós-Produção",
+        "rental_house": "Locadora de Equipamentos",
+        "transport": "Transporte",
+        "other": "Outro"
+      },
+      "platformStatus": {
+        "none": "Sem Acesso",
+        "invited": "Convidado",
+        "active": "Ativo"
+      },
+      "card": {
+        "projects": "projetos",
+        "totalSpent": "Total Gasto",
+        "noEmail": "Sem email",
+        "noPhone": "Sem telefone",
+        "active": "Ativo",
+        "inactive": "Inativo",
+        "view": "Ver",
+        "edit": "Editar",
+        "delete": "Excluir",
+        "platform": {
+          "none": "Sem Acesso",
+          "invited": "Convidado",
+          "active": "Ativo"
+        }
+      },
+      "empty": {
+        "helpText": "Você ainda não tem contatos. Crie seu primeiro contato para começar.",
+        "addFirst": "Adicionar Primeiro Contato"
+      },
+      "delete": {
+        "confirmTitle": "Excluir Contato",
+        "confirm": "Tem certeza que deseja excluir {name}? Esta ação não pode ser desfeita."
+      },
+      "invite": {
+        "inviteMember": "Convidar Membro",
+        "modalTitle": "Convidar Membro da Equipe",
+        "modalDescription": "Envie um convite da plataforma para um novo membro da equipe",
+        "emailLabel": "Email",
+        "emailPlaceholder": "colega@exemplo.com",
+        "roleLabel": "Função",
+        "selectRole": "Selecione uma função",
+        "sendInvite": "Enviar Convite",
+        "linkReady": "O link de convite foi gerado. Compartilhe com o membro da equipe:",
+        "close": "Fechar",
+        "cancel": "Cancelar"
+      },
+      "team": {
+        "activeMembers": "Membros Ativos",
+        "activeMembersDescription": "Membros da equipe com acesso à plataforma",
+        "columnName": "Nome",
+        "columnEmail": "Email",
+        "columnRole": "Função",
+        "columnJoined": "Entrou em",
+        "columnActions": "Ações",
+        "columnSent": "Enviado",
+        "columnExpires": "Expira",
+        "remove": "Remover",
+        "pendingInvites": "Convites Pendentes",
+        "pendingInvitesDescription": "Convites que foram enviados mas ainda não foram aceitos",
+        "resend": "Reenviar",
+        "resending": "Reenviando...",
+        "revoke": "Revogar"
+      },
+      "tabs": {
+        "contacts": "Contatos",
+        "team": "Equipe & Acesso",
+        "info": "Info",
+        "projects": "Projetos",
+        "financials": "Financeiro",
+        "access": "Acesso"
+      },
+      "detail": {
+        "title": "Detalhes do Contato",
+        "backToContacts": "Voltar para Contatos",
+        "editButton": "Editar",
+        "deleteButton": "Excluir",
+        "deleteConfirm": "Tem certeza que deseja excluir este contato? Esta ação não pode ser desfeita.",
+        "contactInfo": "Informações de Contato",
+        "email": "Email",
+        "phone": "Telefone",
+        "address": "Endereço",
+        "documentId": "Documento (CPF/CNPJ)",
+        "noContactInfo": "Nenhuma informação de contato disponível",
+        "specialties": "Especialidades",
+        "notes": "Observações",
+        "bankInfo": "Informações Bancárias",
+        "projectAssignments": "Atribuições de Projetos",
+        "projectAssignmentsDescription": "Projetos aos quais este contato está atribuído",
+        "assignToProject": "Atribuir a Projeto",
         "project": "Projeto",
         "role": "Função",
         "status": "Status",
         "rate": "Taxa",
-        "bookingDates": "Datas de Reserva",
-        "paymentStatus": "Pagamento"
+        "dates": "Datas",
+        "noAssignments": "Nenhuma atribuição de projeto ainda",
+        "financialStatement": "Extrato Financeiro",
+        "financialStatementDescription": "Histórico de transações e resumo financeiro",
+        "fromDate": "De",
+        "toDate": "Até",
+        "generateStatement": "Gerar Extrato",
+        "totalSpent": "Total Gasto",
+        "projectCount": "Projetos",
+        "loadingStatement": "Carregando extrato...",
+        "totalTransactions": "Total de Transações",
+        "periodTotal": "Total do Período",
+        "period": "Período",
+        "byProject": "Por Projeto"
       },
-      "paymentStatus": {
-        "pending": "Pendente",
-        "partial": "Parcial",
-        "paid": "Pago"
-      }
-    },
-    "financials": {
-      "title": "Extrato Financeiro",
-      "description": "Histórico de transações e resumo financeiro",
-      "dateRange": "Período",
-      "startDate": "Data Inicial",
-      "endDate": "Data Final",
-      "apply": "Aplicar",
-      "summary": "Resumo",
-      "totalExpenses": "Total de Despesas",
-      "transactionCount": "Transações",
-      "noTransactions": "Nenhuma transação encontrada para este período"
-    },
-    "access": {
-      "title": "Acesso à Plataforma",
-      "description": "Gerencie o acesso deste contato à plataforma",
-      "currentStatus": "Status Atual",
-      "noAccess": "Este contato não tem acesso à plataforma",
-      "noAccessHelp": "Convide-o para a plataforma para dar acesso a projetos e recursos com base em sua função.",
-      "inviteToPlatform": "Convidar para Plataforma",
-      "pendingInvite": "Convite Pendente",
-      "pendingInviteDescription": "Um convite foi enviado para {email}",
-      "invitedAt": "Convidado em",
-      "expiresAt": "Expira em",
-      "resendInvite": "Reenviar Convite",
-      "revokeInvite": "Revogar Convite",
-      "activeUser": "Usuário Ativo da Plataforma",
-      "activeUserDescription": "Este contato tem acesso à plataforma",
-      "role": "Função",
-      "changeRole": "Alterar Função",
-      "removeAccess": "Remover Acesso",
-      "roleChanged": "Função atualizada com sucesso",
-      "roleChangeError": "Falha ao alterar função",
-      "accessRemoved": "Acesso removido com sucesso",
-      "removeError": "Falha ao remover acesso",
-      "inviteResent": "Convite reenviado com sucesso",
-      "resendError": "Falha ao reenviar convite",
-      "inviteRevoked": "Convite revogado com sucesso",
-      "revokeError": "Falha ao revogar convite",
-      "removeAccessTitle": "Remover Acesso à Plataforma",
-      "removeAccessDescription": "Tem certeza que deseja remover o acesso à plataforma de {name}? Esta pessoa não poderá mais fazer login.",
-      "inviteLinkTitle": "Link de Convite Gerado",
-      "inviteLinkDescription": "Compartilhe este link com {name} para convidá-lo para a plataforma.",
-      "close": "Fechar",
-      "noEmailForInvite": "Este contato não tem endereço de email. Adicione um email para convidá-lo.",
-      "inviteAlreadyPending": "Já existe um convite pendente para este contato",
-      "seatLimitReached": "Sua organização atingiu o limite de assentos. Faça upgrade para convidar mais membros.",
-      "inviteError": "Falha ao enviar convite",
-      "inviteForm": {
-        "title": "Convidar para Plataforma",
-        "description": "Envie um email de convite para dar acesso à plataforma a este contato",
-        "email": "Endereço de Email",
+      "info": {
+        "title": "Informações do Contato",
+        "description": "Detalhes básicos e informações do contato",
+        "basicInfo": "Informações Básicas",
+        "category": "Categoria",
+        "email": "Email",
+        "phone": "Telefone",
+        "address": "Endereço",
+        "documentId": "Documento (CPF/CNPJ)",
+        "specialties": "Especialidades",
+        "notes": "Observações",
+        "bankInfo": "Informações Bancárias",
+        "bankName": "Nome do Banco",
+        "accountNumber": "Número da Conta",
+        "routingNumber": "Agência",
+        "pixKey": "Chave PIX",
+        "noBankInfo": "Nenhuma informação bancária fornecida"
+      },
+      "projects": {
+        "title": "Atribuições de Projetos",
+        "description": "Projetos aos quais este contato está atribuído",
+        "assignToProject": "Atribuir a Projeto",
+        "noAssignments": "Nenhuma atribuição de projeto ainda",
+        "noAssignmentsHelp": "Atribua este contato a um projeto para rastrear seu trabalho e pagamentos.",
+        "table": {
+          "project": "Projeto",
+          "role": "Função",
+          "status": "Status",
+          "rate": "Taxa",
+          "bookingDates": "Datas de Reserva",
+          "paymentStatus": "Pagamento"
+        },
+        "paymentStatus": {
+          "pending": "Pendente",
+          "partial": "Parcial",
+          "paid": "Pago"
+        }
+      },
+      "financials": {
+        "title": "Extrato Financeiro",
+        "description": "Histórico de transações e resumo financeiro",
+        "dateRange": "Período",
+        "startDate": "Data Inicial",
+        "endDate": "Data Final",
+        "apply": "Aplicar",
+        "summary": "Resumo",
+        "totalExpenses": "Total de Despesas",
+        "transactionCount": "Transações",
+        "noTransactions": "Nenhuma transação encontrada para este período"
+      },
+      "access": {
+        "title": "Acesso à Plataforma",
+        "description": "Gerencie o acesso deste contato à plataforma",
+        "currentStatus": "Status Atual",
+        "noAccess": "Este contato não tem acesso à plataforma",
+        "noAccessHelp": "Convide-o para a plataforma para dar acesso a projetos e recursos com base em sua função.",
+        "inviteToPlatform": "Convidar para Plataforma",
+        "pendingInvite": "Convite Pendente",
+        "pendingInviteDescription": "Um convite foi enviado para {email}",
+        "invitedAt": "Convidado em",
+        "expiresAt": "Expira em",
+        "resendInvite": "Reenviar Convite",
+        "revokeInvite": "Revogar Convite",
+        "activeUser": "Usuário Ativo da Plataforma",
+        "activeUserDescription": "Este contato tem acesso à plataforma",
         "role": "Função",
-        "selectRole": "Selecione uma função",
-        "send": "Enviar Convite",
-        "sending": "Enviando..."
+        "changeRole": "Alterar Função",
+        "removeAccess": "Remover Acesso",
+        "roleChanged": "Função atualizada com sucesso",
+        "roleChangeError": "Falha ao alterar função",
+        "accessRemoved": "Acesso removido com sucesso",
+        "removeError": "Falha ao remover acesso",
+        "inviteResent": "Convite reenviado com sucesso",
+        "resendError": "Falha ao reenviar convite",
+        "inviteRevoked": "Convite revogado com sucesso",
+        "revokeError": "Falha ao revogar convite",
+        "removeAccessTitle": "Remover Acesso à Plataforma",
+        "removeAccessDescription": "Tem certeza que deseja remover o acesso à plataforma de {name}? Esta pessoa não poderá mais fazer login.",
+        "inviteLinkTitle": "Link de Convite Gerado",
+        "inviteLinkDescription": "Compartilhe este link com {name} para convidá-lo para a plataforma.",
+        "close": "Fechar",
+        "noEmailForInvite": "Este contato não tem endereço de email. Adicione um email para convidá-lo.",
+        "inviteAlreadyPending": "Já existe um convite pendente para este contato",
+        "seatLimitReached": "Sua organização atingiu o limite de assentos. Faça upgrade para convidar mais membros.",
+        "inviteError": "Falha ao enviar convite",
+        "inviteForm": {
+          "title": "Convidar para Plataforma",
+          "description": "Envie um email de convite para dar acesso à plataforma a este contato",
+          "email": "Endereço de Email",
+          "role": "Função",
+          "selectRole": "Selecione uma função",
+          "send": "Enviar Convite",
+          "sending": "Enviando..."
+        },
+        "roles": {
+          "owner": "Proprietário",
+          "admin": "Administrador",
+          "producer": "Produtor",
+          "finance": "Financeiro",
+          "freelancer": "Freelancer"
+        }
       },
-      "roles": {
-        "owner": "Proprietário",
-        "admin": "Administrador",
-        "producer": "Produtor",
-        "finance": "Financeiro",
-        "freelancer": "Freelancer"
+      "assignDialog": {
+        "title": "Atribuir a Projeto",
+        "description": "Atribua este contato a um projeto como membro da equipe",
+        "selectProject": "Selecionar Projeto",
+        "projectPlaceholder": "Escolha um projeto",
+        "role": "Função",
+        "rolePlaceholder": "ex: Diretor, Câmera, Eletricista",
+        "rateType": "Tipo de Taxa",
+        "daily": "Diária",
+        "hourly": "Por Hora",
+        "fixed": "Fixo",
+        "rateValue": "Valor da Taxa",
+        "startDate": "Data Inicial",
+        "endDate": "Data Final",
+        "assign": "Atribuir",
+        "assigning": "Atribuindo...",
+        "success": "Contato atribuído ao projeto com sucesso",
+        "error": "Falha ao atribuir contato ao projeto"
+      },
+      "form": {
+        "createTitle": "Adicionar Novo Contato",
+        "createDescription": "Adicione um novo contato à sua organização",
+        "editTitle": "Editar Contato",
+        "editDescription": "Atualizar informações do contato",
+        "basicInfo": "Informações Básicas",
+        "contactInfo": "Informações de Contato",
+        "additionalDetails": "Detalhes Adicionais",
+        "name": "Nome",
+        "namePlaceholder": "Nome do contato",
+        "nameRequired": "Nome é obrigatório",
+        "category": "Categoria",
+        "selectCategory": "Selecione a categoria",
+        "email": "Email",
+        "emailPlaceholder": "email@exemplo.com",
+        "phone": "Telefone",
+        "phonePlaceholder": "+55 (11) 99999-9999",
+        "address": "Endereço",
+        "addressPlaceholder": "Endereço completo",
+        "documentId": "CPF/CNPJ",
+        "documentIdPlaceholder": "123.456.789-00",
+        "specialties": "Especialidades",
+        "specialtiesPlaceholder": "Lista separada por vírgulas de habilidades",
+        "specialtiesHint": "Separe múltiplas especialidades com vírgulas",
+        "notes": "Observações",
+        "notesPlaceholder": "Observações adicionais sobre este contato...",
+        "bankInfo": "Informações Bancárias",
+        "bankName": "Nome do Banco",
+        "bankNamePlaceholder": "Nome do banco",
+        "accountNumber": "Número da Conta",
+        "accountNumberPlaceholder": "Número da conta",
+        "routingNumber": "Agência",
+        "routingNumberPlaceholder": "Número da agência",
+        "pixKey": "Chave PIX",
+        "pixKeyPlaceholder": "Chave PIX",
+        "create": "Criar Contato",
+        "creating": "Criando...",
+        "createError": "Falha ao criar contato",
+        "submit": "Salvar Contato",
+        "submitting": "Salvando...",
+        "cancel": "Cancelar",
+        "success": "Contato salvo com sucesso",
+        "error": "Falha ao salvar contato"
       }
-    },
-    "assignDialog": {
-      "title": "Atribuir a Projeto",
-      "description": "Atribua este contato a um projeto como membro da equipe",
-      "selectProject": "Selecionar Projeto",
-      "projectPlaceholder": "Escolha um projeto",
-      "role": "Função",
-      "rolePlaceholder": "ex: Diretor, Câmera, Eletricista",
-      "rateType": "Tipo de Taxa",
-      "daily": "Diária",
-      "hourly": "Por Hora",
-      "fixed": "Fixo",
-      "rateValue": "Valor da Taxa",
-      "startDate": "Data Inicial",
-      "endDate": "Data Final",
-      "assign": "Atribuir",
-      "assigning": "Atribuindo...",
-      "success": "Contato atribuído ao projeto com sucesso",
-      "error": "Falha ao atribuir contato ao projeto"
-    },
-    "form": {
-      "createTitle": "Adicionar Novo Contato",
-      "createDescription": "Adicione um novo contato à sua organização",
-      "editTitle": "Editar Contato",
-      "editDescription": "Atualizar informações do contato",
-      "basicInfo": "Informações Básicas",
-      "contactInfo": "Informações de Contato",
-      "additionalDetails": "Detalhes Adicionais",
-      "name": "Nome",
-      "namePlaceholder": "Nome do contato",
-      "nameRequired": "Nome é obrigatório",
-      "category": "Categoria",
-      "selectCategory": "Selecione a categoria",
-      "email": "Email",
-      "emailPlaceholder": "email@exemplo.com",
-      "phone": "Telefone",
-      "phonePlaceholder": "+55 (11) 99999-9999",
-      "address": "Endereço",
-      "addressPlaceholder": "Endereço completo",
-      "documentId": "CPF/CNPJ",
-      "documentIdPlaceholder": "123.456.789-00",
-      "specialties": "Especialidades",
-      "specialtiesPlaceholder": "Lista separada por vírgulas de habilidades",
-      "specialtiesHint": "Separe múltiplas especialidades com vírgulas",
-      "notes": "Observações",
-      "notesPlaceholder": "Observações adicionais sobre este contato...",
-      "bankInfo": "Informações Bancárias",
-      "bankName": "Nome do Banco",
-      "bankNamePlaceholder": "Nome do banco",
-      "accountNumber": "Número da Conta",
-      "accountNumberPlaceholder": "Número da conta",
-      "routingNumber": "Agência",
-      "routingNumberPlaceholder": "Número da agência",
-      "pixKey": "Chave PIX",
-      "pixKeyPlaceholder": "Chave PIX",
-      "create": "Criar Contato",
-      "creating": "Criando...",
-      "createError": "Falha ao criar contato",
-      "submit": "Salvar Contato",
-      "submitting": "Salvando...",
-      "cancel": "Cancelar",
-      "success": "Contato salvo com sucesso",
-      "error": "Falha ao salvar contato"
     }
+  },
+  "contacts": {
+    "dummy": "value"
   }
 }

@@ -81,10 +81,23 @@ class InfinityPayService:
                     detail="Failed to create payment link"
                 )
 
-    async def verify_payment(self, transaction_id: str, order_nsu: str, slug: str) -> bool:
+    async def verify_payment(self, transaction_id: str, order_nsu: str, slug: str) -> (bool, dict):
         """
-        Verify payment status.
+        Verify payment status and return full transaction details.
+        
+        Args:
+            transaction_id: The transaction NSU from InfinityPay
+            order_nsu: The order NSU from our system
+            slug: The invoice slug from InfinityPay
+            
+        Returns:
+            Tuple (is_paid, transaction_data)
         """
+        # If any required field is missing, we can't verify
+        if not all([transaction_id, order_nsu, slug]):
+             logger.warning("Missing params for verify_payment")
+             return False, {}
+
         payload = {
             "handle": self.handle,
             "order_nsu": order_nsu,
@@ -94,12 +107,19 @@ class InfinityPayService:
         
         async with httpx.AsyncClient() as client:
             try:
+                # Documentation endpoint: POST /payment_check
                 response = await client.post(f"{self.base_url}/payment_check", json=payload)
                 response.raise_for_status()
                 data = response.json()
-                return data.get("paid", False)
+                
+                # Check explicit 'paid' status
+                is_paid = data.get("paid", False)
+                return is_paid, data
+                
             except httpx.HTTPError as e:
                 logger.error(f"InfinityPay verification error: {e}")
-                return False
+                if hasattr(e, 'response') and e.response:
+                     logger.error(f"Response: {e.response.text}")
+                return False, {}
 
 infinity_pay_service = InfinityPayService()
