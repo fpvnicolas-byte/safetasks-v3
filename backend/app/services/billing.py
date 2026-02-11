@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 
 from app.core.config import settings
-from app.models.billing import BillingEvent, Plan, OrganizationUsage, BillingService
+from app.models.billing import BillingEvent, Plan, OrganizationUsage
 from app.models.organizations import Organization
 from app.services.infinity_pay import infinity_pay_service
 
