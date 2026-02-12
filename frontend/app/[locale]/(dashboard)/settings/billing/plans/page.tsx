@@ -9,7 +9,7 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/api/client'
 import { useLocale } from 'next-intl'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 
 interface Plan {
   name: string
@@ -70,10 +70,39 @@ const PLANS: Plan[] = [
 export default function PlansPage() {
   const { organizationId } = useAuth()
   const locale = useLocale()
-  const router = useRouter()
   const searchParams = useSearchParams()
   const [isUpgrading, setIsUpgrading] = useState<string | null>(null)
   const autoCheckoutRef = useRef(false)
+
+  const getCheckoutErrorMessage = (error: unknown): { message: string; isWarning: boolean } => {
+    const apiError = error as { statusCode?: number; message?: string } | null
+    const statusCode = apiError?.statusCode
+    const rawMessage = (apiError?.message || '').trim()
+
+    if (statusCode === 409) {
+      const untilMatch = rawMessage.match(/until\s+(.+)$/i)
+      if (untilMatch?.[1]) {
+        const parsed = new Date(untilMatch[1].trim())
+        if (!Number.isNaN(parsed.getTime())) {
+          return {
+            isWarning: true,
+            message: `Your organization already has an active plan until ${parsed.toLocaleString()}.`,
+          }
+        }
+      }
+
+      return {
+        isWarning: true,
+        message: 'Your organization already has an active plan. You cannot open another checkout right now.',
+      }
+    }
+
+    if (rawMessage) {
+      return { isWarning: false, message: rawMessage }
+    }
+
+    return { isWarning: false, message: 'Failed to generate checkout link' }
+  }
 
   const handleSelectPlan = async (plan: Plan) => {
     if (!organizationId) {
@@ -94,7 +123,12 @@ export default function PlansPage() {
       window.location.href = response.url
     } catch (error) {
       console.error('Failed to create checkout link:', error)
-      toast.error('Failed to generate checkout link')
+      const { message, isWarning } = getCheckoutErrorMessage(error)
+      if (isWarning) {
+        toast.warning(message)
+      } else {
+        toast.error(message)
+      }
       setIsUpgrading(null)
     }
   }
