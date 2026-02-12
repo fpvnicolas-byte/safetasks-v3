@@ -399,6 +399,38 @@ def require_billing_read():
     return billing_checker
 
 
+def require_billing_checkout():
+    """
+    Allow checkout-link creation for recovery states.
+
+    Allowed:
+    - active/trial states
+    - past_due, blocked, billing_pending_review (so org can renew)
+
+    Blocked:
+    - canceled
+    """
+    async def billing_checker(
+        profile: Profile = Depends(get_current_profile),
+        db: AsyncSession = Depends(get_db)
+    ) -> Profile:
+        if not profile.organization_id:
+            return profile
+
+        organization = await get_organization_record(profile, db)
+        status_value = _normalize_billing_status(organization)
+
+        if status_value == "canceled":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Billing is canceled. Access denied."
+            )
+
+        return profile
+
+    return billing_checker
+
+
 def require_master_owner():
     """
     Dependency that allows only the master owner.

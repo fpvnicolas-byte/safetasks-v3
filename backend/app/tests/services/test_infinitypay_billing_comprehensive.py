@@ -13,11 +13,13 @@ Tests cover:
 """
 import pytest
 from datetime import datetime, timedelta, timezone
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch, MagicMock
 from uuid import uuid4
 
 from fastapi import HTTPException
 
+from app.api import deps as deps_module
 from app.services import billing as billing_module
 from app.services.billing import (
     _is_redirect_url_allowed,
@@ -105,6 +107,179 @@ class TestRedirectUrlValidation:
             mock_settings.FRONTEND_URL = None
             # When no restrictions configured, allow all (backwards-compat)
             assert _is_redirect_url_allowed("https://anything.com") is True
+
+
+# ---------------------------------------------------------------------------
+# 1b. Checkout creation guardrails
+# ---------------------------------------------------------------------------
+
+class TestCheckoutCreationGuardrails:
+    """Tests for duplicate plan purchase prevention in checkout creation."""
+
+    @pytest.mark.asyncio
+    async def test_blocks_duplicate_same_plan_when_active(self):
+        org_plan = FakePlan(name="professional")
+        org = FakeOrganization(
+            plan="professional",
+            plan_id=org_plan.id,
+            billing_status="active",
+            access_ends_at=datetime.now(timezone.utc) + timedelta(days=10),
+        )
+
+        current_plan_result = MagicMock()
+        current_plan_result.scalar_one_or_none.return_value = org_plan
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(return_value=current_plan_result)
+
+        with patch.object(
+            billing_module.settings, "FRONTEND_URL", "https://safetasks.vercel.app"
+        ), patch.object(
+            billing_module.infinity_pay_service,
+            "create_checkout_link",
+            new_callable=AsyncMock,
+        ) as mock_create:
+            with pytest.raises(HTTPException) as exc:
+                await billing_module.create_infinitypay_checkout_link(
+                    db=mock_db,
+                    organization=org,
+                    plan_name="professional",
+                    redirect_url="https://safetasks.vercel.app/settings/billing",
+                )
+
+        assert exc.value.status_code == 409
+        assert "already active" in str(exc.value.detail)
+        mock_create.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_allows_upgrade_to_different_plan_when_active(self):
+        current_plan = FakePlan(name="starter")
+        target_plan = FakePlan(name="professional")
+        org = FakeOrganization(
+            plan="starter",
+            plan_id=current_plan.id,
+            billing_status="active",
+            access_ends_at=datetime.now(timezone.utc) + timedelta(days=10),
+        )
+
+        current_plan_result = MagicMock()
+        current_plan_result.scalar_one_or_none.return_value = current_plan
+
+        target_plan_result = MagicMock()
+        target_plan_result.scalar_one_or_none.return_value = target_plan
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(side_effect=[current_plan_result, target_plan_result])
+
+        with patch.object(
+            billing_module.settings, "FRONTEND_URL", "https://safetasks.vercel.app"
+        ), patch.object(
+            billing_module.infinity_pay_service,
+            "create_checkout_link",
+            new_callable=AsyncMock,
+            return_value="https://pay.infinitepay.io/scan/upgrade123",
+        ) as mock_create:
+            url = await billing_module.create_infinitypay_checkout_link(
+                db=mock_db,
+                organization=org,
+                plan_name="professional",
+                redirect_url="https://safetasks.vercel.app/settings/billing",
+            )
+
+        assert url == "https://pay.infinitepay.io/scan/upgrade123"
+        assert mock_create.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_allows_same_plan_purchase_after_expiry(self):
+        current_plan = FakePlan(name="professional")
+        target_plan = FakePlan(name="professional")
+        org = FakeOrganization(
+            plan="professional",
+            plan_id=current_plan.id,
+            billing_status="blocked",
+            access_ends_at=datetime.now(timezone.utc) - timedelta(days=2),
+        )
+
+        current_plan_result = MagicMock()
+        current_plan_result.scalar_one_or_none.return_value = current_plan
+
+        target_plan_result = MagicMock()
+        target_plan_result.scalar_one_or_none.return_value = target_plan
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(side_effect=[current_plan_result, target_plan_result])
+
+        with patch.object(
+            billing_module.settings, "FRONTEND_URL", "https://safetasks.vercel.app"
+        ), patch.object(
+            billing_module.infinity_pay_service,
+            "create_checkout_link",
+            new_callable=AsyncMock,
+            return_value="https://pay.infinitepay.io/scan/renew123",
+        ) as mock_create:
+            url = await billing_module.create_infinitypay_checkout_link(
+                db=mock_db,
+                organization=org,
+                plan_name="professional",
+                redirect_url="https://safetasks.vercel.app/settings/billing",
+            )
+
+        assert url == "https://pay.infinitepay.io/scan/renew123"
+        assert mock_create.call_count == 1
+
+
+# ---------------------------------------------------------------------------
+# 1c. Checkout permission dependency
+# ---------------------------------------------------------------------------
+
+class TestCheckoutPermissionDependency:
+    """Tests for require_billing_checkout dependency behavior."""
+
+    @pytest.mark.asyncio
+    async def test_allows_blocked_org_to_open_checkout(self):
+        checker = deps_module.require_billing_checkout()
+        profile = SimpleNamespace(organization_id=uuid4())
+        organization = SimpleNamespace(billing_status="blocked", subscription_status="past_due")
+
+        with patch(
+            "app.api.deps.get_organization_record",
+            new_callable=AsyncMock,
+            return_value=organization,
+        ):
+            result = await checker(profile=profile, db=AsyncMock())
+
+        assert result is profile
+
+    @pytest.mark.asyncio
+    async def test_allows_past_due_org_to_open_checkout(self):
+        checker = deps_module.require_billing_checkout()
+        profile = SimpleNamespace(organization_id=uuid4())
+        organization = SimpleNamespace(billing_status="past_due", subscription_status="past_due")
+
+        with patch(
+            "app.api.deps.get_organization_record",
+            new_callable=AsyncMock,
+            return_value=organization,
+        ):
+            result = await checker(profile=profile, db=AsyncMock())
+
+        assert result is profile
+
+    @pytest.mark.asyncio
+    async def test_blocks_canceled_org_from_opening_checkout(self):
+        checker = deps_module.require_billing_checkout()
+        profile = SimpleNamespace(organization_id=uuid4())
+        organization = SimpleNamespace(billing_status="canceled", subscription_status="cancelled")
+
+        with patch(
+            "app.api.deps.get_organization_record",
+            new_callable=AsyncMock,
+            return_value=organization,
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await checker(profile=profile, db=AsyncMock())
+
+        assert exc.value.status_code == 403
 
 
 # ---------------------------------------------------------------------------
@@ -359,6 +534,14 @@ class TestProcessWebhook:
 
         db.execute = AsyncMock(side_effect=results)
 
+    def _get_ledger_entry(self, db):
+        """Return the created BillingEvent entry from mocked db.add calls."""
+        for call in db.add.call_args_list:
+            candidate = call.args[0]
+            if getattr(candidate, "event_type", None) == "payment_success":
+                return candidate
+        return None
+
     # --- Plan detection tests ---
 
     @pytest.mark.asyncio
@@ -531,6 +714,54 @@ class TestProcessWebhook:
         }
         await billing_module.process_infinitypay_webhook(mock_db, payload)
         assert org.billing_status != "active"
+
+    # --- Audit metadata persistence ---
+
+    @pytest.mark.asyncio
+    async def test_receipt_url_persisted_from_webhook_payload(self, mock_db):
+        """receipt_url from webhook payload must be stored in billing_events metadata."""
+        org = FakeOrganization()
+        plan = FakePlan(name="professional")
+        self._setup_db_returns(mock_db, org, plan)
+
+        receipt_url = "https://checkout.infinitepay.io/receipt/webhook123"
+        payload = self._build_payload(org.id, plan_name="professional", amount=8990)
+        payload["receipt_url"] = receipt_url
+
+        with patch.object(
+            billing_module.infinity_pay_service,
+            "verify_payment",
+            new_callable=AsyncMock,
+            return_value=(True, {"paid": True, "amount": 8990}),
+        ):
+            await billing_module.process_infinitypay_webhook(mock_db, payload)
+
+        ledger_entry = self._get_ledger_entry(mock_db)
+        assert ledger_entry is not None
+        assert ledger_entry.event_metadata["receipt_url"] == receipt_url
+
+    @pytest.mark.asyncio
+    async def test_receipt_url_persisted_from_verify_fallback(self, mock_db):
+        """When webhook omits receipt_url, verification metadata fallback must be persisted."""
+        org = FakeOrganization()
+        plan = FakePlan(name="professional")
+        self._setup_db_returns(mock_db, org, plan)
+
+        receipt_url = "https://checkout.infinitepay.io/receipt/verify456"
+        payload = self._build_payload(org.id, plan_name="professional", amount=8990)
+        payload.pop("receipt_url", None)
+
+        with patch.object(
+            billing_module.infinity_pay_service,
+            "verify_payment",
+            new_callable=AsyncMock,
+            return_value=(True, {"paid": True, "amount": 8990, "receipt_url": receipt_url}),
+        ):
+            await billing_module.process_infinitypay_webhook(mock_db, payload)
+
+        ledger_entry = self._get_ledger_entry(mock_db)
+        assert ledger_entry is not None
+        assert ledger_entry.event_metadata["receipt_url"] == receipt_url
 
 
 # ---------------------------------------------------------------------------

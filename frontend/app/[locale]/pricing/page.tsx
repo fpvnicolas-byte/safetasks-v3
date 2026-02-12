@@ -17,6 +17,13 @@ interface PricingPlan {
   icon: typeof CreditCard
 }
 
+const BILLING_PLAN_KEY_MAP: Record<PricingPlanKey, string> = {
+  starter: 'starter',
+  pro: 'professional',
+  proAnnual: 'professional_annual',
+  enterprise: 'enterprise',
+}
+
 const display = Playfair_Display({
   subsets: ['latin'],
   weight: ['600', '700'],
@@ -56,7 +63,7 @@ export default function PricingPage() {
       return `${basePath}/auth/register`
     }
 
-    const billingKey = key === 'proAnnual' ? 'pro_annual' : key
+    const billingKey = BILLING_PLAN_KEY_MAP[key]
     return `${basePath}/settings/billing/plans?plan=${encodeURIComponent(billingKey)}`
   }
 

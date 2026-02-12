@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel
 
-from app.api.deps import get_current_profile, get_db, require_billing_read
+from app.api.deps import get_current_profile, get_db, require_billing_checkout, require_billing_read
 from app.core.config import settings
 from app.models.profiles import Profile
 from app.models.billing import Plan
@@ -66,6 +66,7 @@ class VerifyTransactionRequest(BaseModel):
     order_nsu: str
     invoice_slug: Optional[str] = None
     slug: Optional[str] = None
+    receipt_url: Optional[str] = None
 
 
 @router.post("/verify")
@@ -114,6 +115,7 @@ async def verify_transaction_manually(
         "order_nsu": request.order_nsu,
         "transaction_nsu": request.transaction_nsu,
         "invoice_slug": invoice_slug,
+        "receipt_url": request.receipt_url or data.get("receipt_url"),
         "amount": data.get("amount", 0),
         "paid_amount": data.get("paid_amount", data.get("amount", 0)),
         "plan_name": data.get("plan_name"),  # From checkout metadata if available
@@ -127,7 +129,7 @@ async def verify_transaction_manually(
     return {"status": "verified", "access_granted": True}
 
 
-@router.post("/checkout/link", response_model=CheckoutLinkResponse, dependencies=[Depends(require_billing_read())])
+@router.post("/checkout/link", response_model=CheckoutLinkResponse, dependencies=[Depends(require_billing_checkout())])
 async def create_checkout_link(
     request: CheckoutLinkRequest,
     profile: Profile = Depends(get_current_profile),

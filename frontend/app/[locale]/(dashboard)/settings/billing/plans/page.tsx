@@ -86,7 +86,7 @@ export default function PlansPage() {
 
       // Use the new InfinityPay checkout link endpoint
       const response = await apiClient.post<{ url: string }>('/api/v1/billing/checkout/link', {
-        plan_name: plan.name, // 'starter', 'pro', etc.
+        plan_name: plan.name, // 'starter', 'professional', 'professional_annual'
         redirect_url: `${window.location.origin}/${locale}/settings/billing?success=true`,
       })
 

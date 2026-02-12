@@ -125,6 +125,15 @@ def _is_redirect_url_allowed(url: str) -> bool:
     return False
 
 
+def _has_active_paid_access(organization: Organization) -> bool:
+    """Return True when organization is currently in an active paid cycle."""
+    if organization.billing_status != "active":
+        return False
+    if not organization.access_ends_at:
+        return False
+    return organization.access_ends_at > datetime.now(timezone.utc)
+
+
 async def create_infinitypay_checkout_link(
     db: AsyncSession,
     organization: Organization,
@@ -137,7 +146,7 @@ async def create_infinitypay_checkout_link(
     Args:
         db: Database session
         organization: Organization upgrading
-        plan_name: Plan name (e.g. 'starter', 'pro')
+        plan_name: Plan name (e.g. 'starter', 'professional')
         redirect_url: URL to redirect on success
 
     Returns:
@@ -164,6 +173,22 @@ async def create_infinitypay_checkout_link(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid redirect URL"
+        )
+
+    # Prevent accidental duplicate purchases of the same active paid plan.
+    current_plan_name = organization.plan
+    if organization.plan_id:
+        current_plan_query = select(Plan).where(Plan.id == organization.plan_id)
+        current_plan_result = await db.execute(current_plan_query)
+        current_plan = current_plan_result.scalar_one_or_none()
+        if current_plan and current_plan.name:
+            current_plan_name = current_plan.name
+
+    if _has_active_paid_access(organization) and current_plan_name == plan_name:
+        active_until = organization.access_ends_at.isoformat() if organization.access_ends_at else "unknown"
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Selected plan is already active until {active_until}"
         )
 
     # Get the plan ID from DB to ensure validity
@@ -327,6 +352,10 @@ async def process_infinitypay_webhook(
         logger.error(f"Unknown payment amount {amount_cents} and no metadata plan. Cannot determine plan.")
         return False
         
+    receipt_url = payload.get("receipt_url")
+    if not receipt_url and isinstance(transaction_data, dict):
+        receipt_url = transaction_data.get("receipt_url")
+
     # Create Ledger Entry
     ledger_entry = BillingEvent(
         organization_id=organization.id,
@@ -340,6 +369,7 @@ async def process_infinitypay_webhook(
         event_metadata={
             "order_nsu": order_nsu,
             "invoice_slug": invoice_slug,
+            "receipt_url": receipt_url,
             "capture_method": payload.get("capture_method"),
             "installments": payload.get("installments"),
             "full_verification_data": transaction_data

@@ -127,6 +127,7 @@ export default function BillingPage() {
       const transactionNsu = searchParams.get('transaction_nsu')
       const orderNsu = searchParams.get('order_nsu')
       const invoiceSlug = searchParams.get('slug') // They call it 'slug' in params
+      const receiptUrl = searchParams.get('receipt_url')
 
       if (transactionNsu && orderNsu && invoiceSlug) {
         const toastId = toast.loading(t('billingPage.messages.verifyingPayment'))
@@ -134,7 +135,8 @@ export default function BillingPage() {
           await apiClient.post('/api/v1/billing/verify', {
             transaction_nsu: transactionNsu,
             order_nsu: orderNsu,
-            invoice_slug: invoiceSlug
+            invoice_slug: invoiceSlug,
+            receipt_url: receiptUrl,
           })
           toast.success(t('billingPage.messages.paymentVerified'), { id: toastId })
           // Remove params to clean URL
