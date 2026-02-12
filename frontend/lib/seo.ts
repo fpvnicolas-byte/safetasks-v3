@@ -29,13 +29,13 @@ interface LocaleSeoCopy {
 
 const SEO_COPY: Record<Locale, LocaleSeoCopy> = {
   en: {
-    siteTitle: 'SafeTasks | Film Production Management Platform',
+    siteTitle: 'SafeTasks | Film Production Management Platform for Teams',
     siteDescription:
       'SafeTasks helps production teams manage projects, finance, scheduling, inventory, and collaboration in one production OS.',
-    landingTitle: 'SafeTasks | Production OS for Film Teams',
+    landingTitle: 'SafeTasks | Production OS for Film Teams and Studios',
     landingDescription:
       'Run projects, approvals, team workflows, and production finance in one role-based workspace for audiovisual teams.',
-    pricingTitle: 'SafeTasks Pricing | Plans for Production Teams',
+    pricingTitle: 'SafeTasks Pricing | Plans for Film Teams and Studios',
     pricingDescription:
       'Choose a SafeTasks plan based on your team size and usage. Start with trial access and upgrade as productions scale.',
     openGraphLocale: 'en_US',
@@ -47,7 +47,7 @@ const SEO_COPY: Record<Locale, LocaleSeoCopy> = {
     landingTitle: 'SafeTasks | Sistema de Producao para Equipes Audiovisuais',
     landingDescription:
       'Organize projetos, aprovacoes, fluxo da equipe e financeiro de producao em um workspace moderno e orientado por funcao.',
-    pricingTitle: 'Planos SafeTasks | Escala para Produtoras',
+    pricingTitle: 'Planos SafeTasks | Escala para Equipes e Produtoras',
     pricingDescription:
       'Escolha o plano SafeTasks ideal para o tamanho da sua equipe e nivel de uso. Comece com trial e evolua conforme a producao cresce.',
     openGraphLocale: 'pt_BR',
