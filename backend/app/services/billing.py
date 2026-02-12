@@ -127,11 +127,15 @@ def _is_redirect_url_allowed(url: str) -> bool:
 
 def _has_active_paid_access(organization: Organization) -> bool:
     """Return True when organization is currently in an active paid cycle."""
-    if organization.billing_status != "active":
-        return False
     if not organization.access_ends_at:
         return False
-    return organization.access_ends_at > datetime.now(timezone.utc)
+    if organization.access_ends_at <= datetime.now(timezone.utc):
+        return False
+    # Trial users may carry "professional" in legacy org.plan but should still be
+    # allowed to purchase the paid professional plan.
+    if organization.billing_status == "trial_active":
+        return False
+    return True
 
 
 async def create_infinitypay_checkout_link(

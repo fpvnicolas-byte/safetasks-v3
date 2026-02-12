@@ -152,6 +152,79 @@ class TestCheckoutCreationGuardrails:
         mock_create.assert_not_called()
 
     @pytest.mark.asyncio
+    async def test_blocks_duplicate_same_plan_when_access_is_active_even_if_status_is_not_active(self):
+        org_plan = FakePlan(name="professional")
+        org = FakeOrganization(
+            plan="professional",
+            plan_id=org_plan.id,
+            billing_status="past_due",
+            access_ends_at=datetime.now(timezone.utc) + timedelta(days=10),
+        )
+
+        current_plan_result = MagicMock()
+        current_plan_result.scalar_one_or_none.return_value = org_plan
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(return_value=current_plan_result)
+
+        with patch.object(
+            billing_module.settings, "FRONTEND_URL", "https://safetasks.vercel.app"
+        ), patch.object(
+            billing_module.infinity_pay_service,
+            "create_checkout_link",
+            new_callable=AsyncMock,
+        ) as mock_create:
+            with pytest.raises(HTTPException) as exc:
+                await billing_module.create_infinitypay_checkout_link(
+                    db=mock_db,
+                    organization=org,
+                    plan_name="professional",
+                    redirect_url="https://safetasks.vercel.app/settings/billing",
+                )
+
+        assert exc.value.status_code == 409
+        assert "already active" in str(exc.value.detail)
+        mock_create.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_allows_trial_active_org_to_purchase_professional(self):
+        current_plan = FakePlan(name="pro_trial")
+        target_plan = FakePlan(name="professional")
+        org = FakeOrganization(
+            plan="professional",
+            plan_id=current_plan.id,
+            billing_status="trial_active",
+            access_ends_at=datetime.now(timezone.utc) + timedelta(days=5),
+        )
+
+        current_plan_result = MagicMock()
+        current_plan_result.scalar_one_or_none.return_value = current_plan
+
+        target_plan_result = MagicMock()
+        target_plan_result.scalar_one_or_none.return_value = target_plan
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(side_effect=[current_plan_result, target_plan_result])
+
+        with patch.object(
+            billing_module.settings, "FRONTEND_URL", "https://safetasks.vercel.app"
+        ), patch.object(
+            billing_module.infinity_pay_service,
+            "create_checkout_link",
+            new_callable=AsyncMock,
+            return_value="https://pay.infinitepay.io/scan/trial-buy",
+        ) as mock_create:
+            url = await billing_module.create_infinitypay_checkout_link(
+                db=mock_db,
+                organization=org,
+                plan_name="professional",
+                redirect_url="https://safetasks.vercel.app/settings/billing",
+            )
+
+        assert url == "https://pay.infinitepay.io/scan/trial-buy"
+        assert mock_create.call_count == 1
+
+    @pytest.mark.asyncio
     async def test_allows_upgrade_to_different_plan_when_active(self):
         current_plan = FakePlan(name="starter")
         target_plan = FakePlan(name="professional")
