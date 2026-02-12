@@ -3458,6 +3458,7 @@
       "activeMembers": "Active Members",
       "activeMembersDescription": "Team members with platform access",
       "columnName": "Name",
+      "unnamed": "Unnamed",
       "columnEmail": "Email",
       "columnRole": "Role",
       "columnJoined": "Joined",

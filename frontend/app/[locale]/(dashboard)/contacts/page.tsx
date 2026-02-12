@@ -64,7 +64,7 @@ import {
   Crown,
 } from 'lucide-react'
 import { LocaleLink } from '@/components/LocaleLink'
-import { Contact, SupplierCategory, getSupplierCategoryDisplayName, formatCurrency } from '@/types'
+import { Contact, SupplierCategory, formatCurrency } from '@/types'
 import type { PlatformStatus } from '@/types'
 import { useTranslations } from 'next-intl'
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
@@ -76,12 +76,21 @@ const PLATFORM_STATUS_COLORS: Record<string, string> = {
   none: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
 }
 
-const ROLE_LABELS: Record<string, string> = {
-  owner: 'Owner',
-  admin: 'Admin',
-  producer: 'Producer',
-  finance: 'Finance',
-  freelancer: 'Freelancer',
+const ROLE_TRANSLATION_KEYS = {
+  owner: 'access.roles.owner',
+  admin: 'access.roles.admin',
+  producer: 'access.roles.producer',
+  finance: 'access.roles.finance',
+  freelancer: 'access.roles.freelancer',
+} as const
+
+const CATEGORY_TRANSLATION_KEYS: Record<SupplierCategory, string> = {
+  rental_house: 'categories.rental_house',
+  freelancer: 'categories.freelancer',
+  catering: 'categories.catering',
+  transport: 'categories.transport',
+  post_production: 'categories.post_production',
+  other: 'categories.other',
 }
 
 const ROLE_COLORS: Record<string, string> = {
@@ -161,6 +170,11 @@ export default function ContactsPage() {
 
   const pendingInvites = invites?.filter((inv) => inv.status === 'pending') || []
   const invitableRoles = getRolesCanInvite(effectiveRole)
+  const getRoleLabel = (role: string) => {
+    const key = ROLE_TRANSLATION_KEYS[role as keyof typeof ROLE_TRANSLATION_KEYS]
+    return key ? t(key) : role
+  }
+  const getCategoryLabel = (category: SupplierCategory) => t(CATEGORY_TRANSLATION_KEYS[category])
 
   // --- Handlers ---
   const handleDelete = async () => {
@@ -438,6 +452,7 @@ export default function ContactsPage() {
                   contact={contact}
                   onDelete={() => setDeleteTarget({ id: contact.id, name: contact.name })}
                   t={t}
+                  getCategoryLabel={getCategoryLabel}
                 />
               ))}
             </div>
@@ -490,7 +505,7 @@ export default function ContactsPage() {
                       <TableRow key={member.id}>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
-                            {member.full_name || 'Unnamed'}
+                            {member.full_name || t('team.unnamed')}
                             {member.is_master_owner && (
                               <Crown className="h-4 w-4 text-amber-500" />
                             )}
@@ -507,16 +522,16 @@ export default function ContactsPage() {
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="admin">Admin</SelectItem>
-                                <SelectItem value="producer">Producer</SelectItem>
-                                <SelectItem value="finance">Finance</SelectItem>
-                                <SelectItem value="freelancer">Freelancer</SelectItem>
+                                <SelectItem value="admin">{getRoleLabel('admin')}</SelectItem>
+                                <SelectItem value="producer">{getRoleLabel('producer')}</SelectItem>
+                                <SelectItem value="finance">{getRoleLabel('finance')}</SelectItem>
+                                <SelectItem value="freelancer">{getRoleLabel('freelancer')}</SelectItem>
                               </SelectContent>
                             </Select>
                           ) : (
                             <Badge variant="outline" className={ROLE_COLORS[member.effective_role] || ''}>
                               {member.is_master_owner && <Shield className="h-3 w-3 mr-1" />}
-                              {ROLE_LABELS[member.effective_role] || member.effective_role}
+                              {getRoleLabel(member.effective_role)}
                             </Badge>
                           )}
                         </TableCell>
@@ -571,7 +586,7 @@ export default function ContactsPage() {
                         <TableCell className="font-medium">{invite.invited_email}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className={ROLE_COLORS[invite.role_v2] || ''}>
-                            {ROLE_LABELS[invite.role_v2] || invite.role_v2}
+                            {getRoleLabel(invite.role_v2)}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -689,7 +704,7 @@ export default function ContactsPage() {
               <div className="space-y-2">
                 <Label>{t('invite.roleLabel')}</Label>
                 {invitableRoles.length === 1 ? (
-                  <Input value={ROLE_LABELS[invitableRoles[0]] || invitableRoles[0]} readOnly />
+                  <Input value={getRoleLabel(invitableRoles[0])} readOnly />
                 ) : (
                   <Select value={inviteRole} onValueChange={setInviteRole}>
                     <SelectTrigger>
@@ -698,7 +713,7 @@ export default function ContactsPage() {
                     <SelectContent>
                       {invitableRoles.map((role) => (
                         <SelectItem key={role} value={role}>
-                          {ROLE_LABELS[role] || role}
+                          {getRoleLabel(role)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -732,9 +747,10 @@ interface ContactCardProps {
   contact: Contact
   onDelete: () => void
   t: (key: string, values?: Record<string, string | number>) => string
+  getCategoryLabel: (category: SupplierCategory) => string
 }
 
-function ContactCard({ contact, onDelete, t }: ContactCardProps) {
+function ContactCard({ contact, onDelete, t, getCategoryLabel }: ContactCardProps) {
   return (
     <Card className="h-full hover:shadow-md transition-shadow">
       <CardHeader className="min-h-[96px]">
@@ -748,7 +764,7 @@ function ContactCard({ contact, onDelete, t }: ContactCardProps) {
             </CardTitle>
             <CardDescription className="flex items-center gap-2 mt-1">
               <Badge variant="secondary">
-                {getSupplierCategoryDisplayName(contact.category)}
+                {getCategoryLabel(contact.category)}
               </Badge>
               <Badge className={PLATFORM_STATUS_COLORS[contact.platform_status]}>
                 {t(`card.platform.${contact.platform_status}`)}
