@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -129,6 +129,19 @@ export default function BillingPage() {
   const [usageData, setUsageData] = useState<UsageData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  const loadUsage = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      const data = await apiClient.get<UsageData>('/api/v1/billing/usage')
+      setUsageData(data)
+    } catch (error) {
+      console.error('Failed to load usage:', error)
+      toast.error(t('billingPage.messages.loadError'))
+    } finally {
+      setIsLoading(false)
+    }
+  }, [t])
+
   useEffect(() => {
     const checkPaymentStatus = async () => {
       const success = searchParams.get('success')
@@ -154,7 +167,7 @@ export default function BillingPage() {
           const newUrl = window.location.pathname
           window.history.replaceState({}, '', newUrl)
           // Reload usage to reflect new plan
-          loadUsage()
+          await loadUsage()
         } catch (error) {
           console.error('Payment verification failed:', error)
           toast.error(t('billingPage.messages.verificationFailed'), { id: toastId })
@@ -169,27 +182,14 @@ export default function BillingPage() {
       }
     }
 
-    checkPaymentStatus()
-  }, [searchParams, t])
+    void checkPaymentStatus()
+  }, [searchParams, t, loadUsage])
 
   useEffect(() => {
     if (organizationId) {
-      loadUsage()
+      void loadUsage()
     }
-  }, [organizationId])
-
-  const loadUsage = async () => {
-    try {
-      setIsLoading(true)
-      const data = await apiClient.get<UsageData>('/api/v1/billing/usage')
-      setUsageData(data)
-    } catch (error) {
-      console.error('Failed to load usage:', error)
-      toast.error(t('billingPage.messages.loadError'))
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  }, [organizationId, loadUsage])
 
   const formatPlanDate = (value: string | null | undefined): string | null => {
     if (!value) return null
@@ -379,18 +379,6 @@ export default function BillingPage() {
                 ))}
               </div>
 
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Link href={`/${locale}/settings/billing/plans`}>
-                  <Button variant="outline">
-                    {translateOrFallback('billingPage.currentPlan.manageButton', 'Extend Access')}
-                  </Button>
-                </Link>
-                {/* 
-                <Button variant="ghost" disabled>
-                   {t('billingPage.currentPlan.cancelButton')}
-                </Button> 
-                */}
-              </div>
             </div>
 
             {isTrial && usageData.trial_ends_at && (
