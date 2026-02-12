@@ -30,7 +30,7 @@ export default function PlatformLayout({
             }
 
             try {
-                await apiClient.get('/api/v1/platform/refunds?limit=1')
+                await apiClient.get('/api/v1/platform/refunds/?limit=1')
                 if (!cancelled) setIsPlatformAdmin(true)
             } catch {
                 if (!cancelled) {

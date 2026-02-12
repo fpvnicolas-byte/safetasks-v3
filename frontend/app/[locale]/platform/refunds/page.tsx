@@ -27,7 +27,7 @@ export default function PlatformRefundsPage() {
     useEffect(() => {
         const fetchQueue = async () => {
             try {
-                const data = await apiClient.get<RefundRequest[]>('/api/v1/platform/refunds')
+                const data = await apiClient.get<RefundRequest[]>('/api/v1/platform/refunds/')
                 setRequests(data)
             } catch (err) {
                 console.error('Failed to load queue', err)
