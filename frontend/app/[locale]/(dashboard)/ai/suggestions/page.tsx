@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProjects } from '@/lib/api/hooks/useProjects'
-import { useAiSuggestions, useAiBudgetEstimation, useAiShootingDaySuggestions } from '@/lib/api/hooks/useAiFeatures'
+import { groupSuggestionsByAnalysis } from '@/lib/ai/suggestion-groups'
+import { useAiAnalysis, useAiSuggestions, useAiBudgetEstimation, useAiShootingDaySuggestions } from '@/lib/api/hooks/useAiFeatures'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -38,6 +39,7 @@ export default function AiSuggestionsPage() {
 
   // Queries
   const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId || undefined)
+  const { data: analyses } = useAiAnalysis(organizationId || '')
   const { data: suggestions, isLoading: isLoadingSuggestions } = useAiSuggestions(selectedProjectId)
   const { mutateAsync: generateBudgetEstimation, isPending: isGeneratingBudget } = useAiBudgetEstimation()
   const { mutateAsync: generateShootingDay, isPending: isGeneratingShootingDay } = useAiShootingDaySuggestions()
@@ -139,6 +141,12 @@ export default function AiSuggestionsPage() {
   const filteredSuggestions = suggestions?.filter((s: AiSuggestion) =>
     suggestionType === 'all' || s.suggestion_type === suggestionType
   ) || []
+
+  const groupedSuggestions = groupSuggestionsByAnalysis({
+    suggestions: filteredSuggestions,
+    analyses: analyses || [],
+    projectId: selectedProjectId,
+  })
 
   return (
     <div className="space-y-6">
@@ -305,77 +313,100 @@ export default function AiSuggestionsPage() {
               <div className="flex justify-center items-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
-            ) : filteredSuggestions.length > 0 ? (
-              <div className="space-y-4">
-                {filteredSuggestions.map((suggestion: AiSuggestion) => (
-                  <Card key={suggestion.id} className="hover:shadow-lg transition-shadow">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-muted rounded-full">
-                            {getSuggestionIcon(suggestion.suggestion_type)}
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <Badge variant="secondary">{getSuggestionTypeLabel(suggestion.suggestion_type)}</Badge>
-                              <Badge className={getPriorityColor(suggestion.priority)}>
-                                {getPriorityLabel(suggestion.priority)}
-                              </Badge>
-                              <Badge className={getConfidenceColor(suggestion.confidence)}>
-                                {Math.round(suggestion.confidence * 100)}%
-                              </Badge>
-                            </div>
-                            <CardTitle className="text-lg mt-1">{suggestion.suggestion_text}</CardTitle>
-                          </div>
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {new Date(suggestion.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <h4 className="font-semibold mb-2">{t('suggestions.list.details')}</h4>
-                          {suggestion.related_scenes.length > 0 && (
-                            <div className="text-sm text-muted-foreground mb-2">
-                              <span className="font-medium">{t('suggestions.list.relatedScenes')}</span> {suggestion.related_scenes.join(', ')}
-                            </div>
-                          )}
-                          {suggestion.estimated_savings_cents && (
-                            <div className="text-sm text-success mb-1">
-                              <span className="font-medium">{t('suggestions.list.estimatedSavings')}</span> {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(suggestion.estimated_savings_cents / 100)}
-                            </div>
-                          )}
-                          {suggestion.estimated_time_saved_minutes && (
-                            <div className="text-sm text-info">
-                              <span className="font-medium">{t('suggestions.list.timeSaved')}</span> {suggestion.estimated_time_saved_minutes} minutes
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <h4 className="font-semibold mb-2">{t('suggestions.list.impact')}</h4>
-                          <div className="space-y-1 text-sm text-muted-foreground">
-                            <div className="flex justify-between">
-                              <span>{t('suggestions.list.costEfficiency')}</span>
-                              <span className="font-medium">High</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>{t('suggestions.list.timeSavings')}</span>
-                              <span className="font-medium">Medium</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>{t('suggestions.list.riskReduction')}</span>
-                              <span className="font-medium">Low</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
+	            ) : groupedSuggestions.length > 0 ? (
+	              <div className="space-y-6">
+	                {groupedSuggestions.map((group) => (
+	                  <div key={group.key} className="space-y-4">
+	                    <div className="rounded-md border bg-muted/30 px-3 py-2">
+	                      <div className="flex items-center justify-between gap-2">
+	                        <div className="text-sm font-semibold">
+	                          {group.analysis
+	                            ? `${t('lists.analysisTitle')} - ${new Date(group.analysis.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}`
+	                            : t('suggestions.list.title')}
+	                        </div>
+	                        <div className="text-xs text-muted-foreground">
+	                          {group.suggestions.length} {t('tabs.suggestions')}
+	                        </div>
+	                      </div>
+	                      {group.analysis && (
+	                        <div className="mt-1 text-xs text-muted-foreground">
+	                          {group.analysis.script_text.substring(0, 140)}
+	                          {group.analysis.script_text.length > 140 ? '...' : ''}
+	                        </div>
+	                      )}
+	                    </div>
+
+	                    {group.suggestions.map((suggestion: AiSuggestion) => (
+	                      <Card key={suggestion.id} className="hover:shadow-lg transition-shadow">
+	                        <CardHeader>
+	                          <div className="flex items-center justify-between">
+	                            <div className="flex items-center gap-3">
+	                              <div className="p-2 bg-muted rounded-full">
+	                                {getSuggestionIcon(suggestion.suggestion_type)}
+	                              </div>
+	                              <div>
+	                                <div className="flex items-center gap-2">
+	                                  <Badge variant="secondary">{getSuggestionTypeLabel(suggestion.suggestion_type)}</Badge>
+	                                  <Badge className={getPriorityColor(suggestion.priority)}>
+	                                    {getPriorityLabel(suggestion.priority)}
+	                                  </Badge>
+	                                  <Badge className={getConfidenceColor(suggestion.confidence)}>
+	                                    {Math.round(suggestion.confidence * 100)}%
+	                                  </Badge>
+	                                </div>
+	                                <CardTitle className="text-lg mt-1">{suggestion.suggestion_text}</CardTitle>
+	                              </div>
+	                            </div>
+	                            <div className="text-sm text-muted-foreground">
+	                              {new Date(suggestion.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+	                            </div>
+	                          </div>
+	                        </CardHeader>
+	                        <CardContent>
+	                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+	                            <div>
+	                              <h4 className="font-semibold mb-2">{t('suggestions.list.details')}</h4>
+	                              {suggestion.related_scenes.length > 0 && (
+	                                <div className="text-sm text-muted-foreground mb-2">
+	                                  <span className="font-medium">{t('suggestions.list.relatedScenes')}</span> {suggestion.related_scenes.join(', ')}
+	                                </div>
+	                              )}
+	                              {suggestion.estimated_savings_cents && (
+	                                <div className="text-sm text-success mb-1">
+	                                  <span className="font-medium">{t('suggestions.list.estimatedSavings')}</span> {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(suggestion.estimated_savings_cents / 100)}
+	                                </div>
+	                              )}
+	                              {suggestion.estimated_time_saved_minutes && (
+	                                <div className="text-sm text-info">
+	                                  <span className="font-medium">{t('suggestions.list.timeSaved')}</span> {suggestion.estimated_time_saved_minutes} minutes
+	                                </div>
+	                              )}
+	                            </div>
+	                            <div>
+	                              <h4 className="font-semibold mb-2">{t('suggestions.list.impact')}</h4>
+	                              <div className="space-y-1 text-sm text-muted-foreground">
+	                                <div className="flex justify-between">
+	                                  <span>{t('suggestions.list.costEfficiency')}</span>
+	                                  <span className="font-medium">High</span>
+	                                </div>
+	                                <div className="flex justify-between">
+	                                  <span>{t('suggestions.list.timeSavings')}</span>
+	                                  <span className="font-medium">Medium</span>
+	                                </div>
+	                                <div className="flex justify-between">
+	                                  <span>{t('suggestions.list.riskReduction')}</span>
+	                                  <span className="font-medium">Low</span>
+	                                </div>
+	                              </div>
+	                            </div>
+	                          </div>
+	                        </CardContent>
+	                      </Card>
+	                    ))}
+	                  </div>
+	                ))}
+	              </div>
+	            ) : (
               <div className="text-center py-8">
                 <div className="flex justify-center mb-4">
                   <Sparkles className="h-12 w-12 text-muted-foreground/60" />

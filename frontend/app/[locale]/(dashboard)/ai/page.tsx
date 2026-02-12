@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useAiAnalysis, useAiSuggestions, useAiRecommendations, useAnalyzeScript, useDeleteAiAnalysis } from '@/lib/api/hooks/useAiFeatures'
 import { useProjects } from '@/lib/api/hooks/useProjects'
 import { apiClient } from '@/lib/api/client'
+import { groupSuggestionsByAnalysis } from '@/lib/ai/suggestion-groups'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -157,6 +158,12 @@ export default function AiFeaturesPage() {
       default: return recommendationType
     }
   }
+
+  const groupedSuggestions = groupSuggestionsByAnalysis({
+    suggestions: suggestions || [],
+    analyses: analyses || [],
+    projectId: suggestionsProjectId,
+  })
 
   const calculatePercentage = (current: number, limit: number | null): number => {
     if (limit === null) return 0
@@ -507,50 +514,75 @@ export default function AiFeaturesPage() {
 	            <div className="flex justify-center items-center py-8">
 	              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
 	            </div>
-	          ) : suggestions && suggestions.length > 0 ? (
-            <div className="grid gap-6">
-              {suggestions.map((suggestion: AiSuggestion) => (
-                <Card key={suggestion.id}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">{getSuggestionTypeLabel(suggestion.suggestion_type)}</Badge>
-                        <Badge className={getPriorityColor(suggestion.priority)}>
-                          {getPriorityLabel(suggestion.priority)}
-                        </Badge>
-                        <Badge className={getConfidenceColor(suggestion.confidence)}>
-                          {Math.round(suggestion.confidence * 100)}%
-                        </Badge>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {new Date(suggestion.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-                      </div>
-                    </div>
-                    <CardTitle>{suggestion.suggestion_text}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {suggestion.related_scenes.length > 0 && (
-                      <div className="text-sm text-muted-foreground">
-                        {t('lists.relatedScenes')}: {suggestion.related_scenes.join(', ')}
-                      </div>
-                    )}
-                    {suggestion.estimated_savings_cents && (
-                      <div className="text-sm text-success mt-2">
-                        {t('lists.estimatedSavings')}: {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(suggestion.estimated_savings_cents / 100)}
-                      </div>
-                    )}
-                    {suggestion.estimated_time_saved_minutes && (
-                      <div className="text-sm text-info mt-1">
-                        {t('lists.timeSaved')}: {suggestion.estimated_time_saved_minutes} minutes
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-	          ) : (
-		            <Card>
-		              <CardContent className="py-8 text-center text-muted-foreground">
+		          ) : groupedSuggestions.length > 0 ? (
+	            <div className="space-y-6">
+	              {groupedSuggestions.map((group) => (
+	                <div key={group.key} className="space-y-3">
+	                  <div className="rounded-md border bg-muted/30 px-3 py-2">
+	                    <div className="flex items-center justify-between gap-2">
+	                      <div className="text-sm font-semibold">
+	                        {group.analysis
+	                          ? `${t('lists.analysisTitle')} - ${new Date(group.analysis.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}`
+	                          : t('lists.suggestionsTitle')}
+	                      </div>
+	                      <div className="text-xs text-muted-foreground">
+	                        {group.suggestions.length} {t('tabs.suggestions')}
+	                      </div>
+	                    </div>
+	                    {group.analysis && (
+	                      <div className="mt-1 text-xs text-muted-foreground">
+	                        {group.analysis.script_text.substring(0, 140)}
+	                        {group.analysis.script_text.length > 140 ? '...' : ''}
+	                      </div>
+	                    )}
+	                  </div>
+
+	                  <div className="grid gap-6">
+	                    {group.suggestions.map((suggestion: AiSuggestion) => (
+	                      <Card key={suggestion.id}>
+	                        <CardHeader>
+	                          <div className="flex items-center justify-between">
+	                            <div className="flex items-center gap-2">
+	                              <Badge variant="secondary">{getSuggestionTypeLabel(suggestion.suggestion_type)}</Badge>
+	                              <Badge className={getPriorityColor(suggestion.priority)}>
+	                                {getPriorityLabel(suggestion.priority)}
+	                              </Badge>
+	                              <Badge className={getConfidenceColor(suggestion.confidence)}>
+	                                {Math.round(suggestion.confidence * 100)}%
+	                              </Badge>
+	                            </div>
+	                            <div className="text-sm text-muted-foreground">
+	                              {new Date(suggestion.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+	                            </div>
+	                          </div>
+	                          <CardTitle>{suggestion.suggestion_text}</CardTitle>
+	                        </CardHeader>
+	                        <CardContent>
+	                          {suggestion.related_scenes.length > 0 && (
+	                            <div className="text-sm text-muted-foreground">
+	                              {t('lists.relatedScenes')}: {suggestion.related_scenes.join(', ')}
+	                            </div>
+	                          )}
+	                          {suggestion.estimated_savings_cents && (
+	                            <div className="text-sm text-success mt-2">
+	                              {t('lists.estimatedSavings')}: {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(suggestion.estimated_savings_cents / 100)}
+	                            </div>
+	                          )}
+	                          {suggestion.estimated_time_saved_minutes && (
+	                            <div className="text-sm text-info mt-1">
+	                              {t('lists.timeSaved')}: {suggestion.estimated_time_saved_minutes} minutes
+	                            </div>
+	                          )}
+	                        </CardContent>
+	                      </Card>
+	                    ))}
+	                  </div>
+	                </div>
+	              ))}
+	            </div>
+		          ) : (
+			            <Card>
+			              <CardContent className="py-8 text-center text-muted-foreground">
 		                {suggestionsProjectId ? t('empty.suggestions') : tFeedback('selectProject')}
 		              </CardContent>
 		            </Card>
