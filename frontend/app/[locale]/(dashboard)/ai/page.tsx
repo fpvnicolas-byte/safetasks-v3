@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
@@ -41,6 +42,7 @@ export default function AiFeaturesPage() {
   const [scriptText, setScriptText] = useState<string>('')
   const [analysisType, setAnalysisType] = useState<string>('full')
   const [deletingAnalysisId, setDeletingAnalysisId] = useState<string | null>(null)
+  const [analysisToDelete, setAnalysisToDelete] = useState<ScriptAnalysis | null>(null)
 
   // Queries
   const { data: analyses, isLoading: isLoadingAnalyses } = useAiAnalysis(organizationId!)
@@ -91,16 +93,14 @@ export default function AiFeaturesPage() {
     }
   }
 
-  const handleDeleteAnalysis = async (analysis: ScriptAnalysis) => {
-    const ok = window.confirm(
-      'Delete this analysis and its generated suggestions/recommendations? This cannot be undone.'
-    )
-    if (!ok) return
+  const handleDeleteAnalysis = async () => {
+    if (!analysisToDelete) return
 
     try {
-      setDeletingAnalysisId(analysis.id)
-      await deleteAnalysis({ analysis_id: analysis.id, project_id: analysis.project_id })
+      setDeletingAnalysisId(analysisToDelete.id)
+      await deleteAnalysis({ analysis_id: analysisToDelete.id, project_id: analysisToDelete.project_id })
       toast.success(tFeedback('actionSuccess'))
+      setAnalysisToDelete(null)
     } catch (error: unknown) {
       const message = getErrorMessage(error)
       toast.error(tFeedback('actionError', { message: message || 'Failed to delete analysis' }))
@@ -163,6 +163,17 @@ export default function AiFeaturesPage() {
 
   return (
     <div className="space-y-6">
+      <ConfirmDeleteDialog
+        open={!!analysisToDelete}
+        onOpenChange={(open) => {
+          if (!open) setAnalysisToDelete(null)
+        }}
+        onConfirm={handleDeleteAnalysis}
+        loading={deletingAnalysisId === analysisToDelete?.id}
+        title="Delete analysis?"
+        description="Delete this analysis and its generated suggestions/recommendations? This cannot be undone."
+      />
+
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
@@ -653,7 +664,7 @@ export default function AiFeaturesPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleDeleteAnalysis(analysis)}
+                          onClick={() => setAnalysisToDelete(analysis)}
                           disabled={deletingAnalysisId === analysis.id}
                         >
                           {deletingAnalysisId === analysis.id ? (
