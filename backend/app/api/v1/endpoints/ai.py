@@ -7,6 +7,7 @@ from sqlalchemy import select, delete
 import hashlib
 import time
 import json
+import unicodedata
 
 from app.api.deps import (
     get_current_organization,
@@ -145,6 +146,14 @@ def _schedule_recommendation_copy(
     return ("Production Schedule Recommendations", description, action_items)
 
 
+def _normalize_hint_text(text: str) -> str:
+    """Normalize free-form suggestion text for keyword matching."""
+    lowered = (text or "").strip().lower()
+    if not lowered:
+        return ""
+    return unicodedata.normalize("NFKD", lowered).encode("ascii", "ignore").decode("ascii")
+
+
 def infer_suggestion_type(text: str) -> str:
     """
     Best-effort classifier for AiSuggestion.suggestion_type.
@@ -152,7 +161,7 @@ def infer_suggestion_type(text: str) -> str:
     The AI engine currently returns production_notes as plain strings; we map them into
     our limited enum: budget/schedule/casting/logistics/equipment/other.
     """
-    t = (text or "").strip().lower()
+    t = _normalize_hint_text(text)
     if not t:
         return "other"
 
@@ -162,45 +171,86 @@ def infer_suggestion_type(text: str) -> str:
         "casting",
         "actor",
         "actors",
+        "atriz",
+        "ator",
+        "atores",
+        "atrizes",
+        "elenco",
         "talent",
         "extra",
         "extras",
+        "figurante",
+        "figurantes",
         "stunt",
         "stunts",
+        "duble",
+        "dubles",
         "voiceover",
         "voice over",
+        "dublagem",
+        "voz",
         "wardrobe",
+        "figurino",
         "costume",
+        "fantasia",
         "makeup",
+        "maquiagem",
         "hair",
+        "cabelo",
     ]
     schedule_keywords = [
         "schedule",
         "scheduling",
+        "cronograma",
+        "agenda",
         "shooting day",
+        "dia de filmagem",
         "timeline",
+        "prazo",
+        "atraso",
         "availability",
+        "disponibilidade",
         "overtime",
+        "hora extra",
         "day/night",
         "day-night",
         "weather",
+        "clima",
+        "chuva",
+        "tempestade",
         "sunset",
+        "por do sol",
         "sunrise",
+        "nascer do sol",
     ]
     logistics_keywords = [
         "permit",
         "permits",
+        "autorizacao",
+        "autorizacoes",
+        "permissao",
+        "permissoes",
         "clearance",
         "location",
+        "locacao",
+        "locacoes",
+        "cenario",
+        "cenarios",
         "transport",
+        "transporte",
         "travel",
+        "viagem",
         "parking",
+        "estacionamento",
         "catering",
+        "alimentacao",
         "security",
+        "seguranca",
         "shipping",
         "customs",
         "visa",
         "insurance",
+        "seguro",
         "truck",
         "van",
         "refrigerated",
@@ -212,34 +262,66 @@ def infer_suggestion_type(text: str) -> str:
     ]
     budget_keywords = [
         "budget",
+        "orcamento",
         "cost",
         "costs",
+        "custo",
+        "custos",
         "fee",
         "fees",
+        "taxa",
+        "taxas",
         "rates",
+        "diaria",
+        "diarias",
         "expensive",
+        "caro",
+        "caros",
         "save",
         "savings",
+        "economia",
+        "economizar",
         "rental",
+        "aluguel",
         "licensing",
         "license",
+        "licenca",
+        "licencas",
         "music licensing",
     ]
     equipment_keywords = [
         "camera",
+        "camara",
         "lens",
         "lenses",
+        "lente",
+        "lentes",
         "lighting",
+        "iluminacao",
         "light",
+        "luz",
         "mic",
         "microphone",
+        "microfone",
         "boom",
         "audio",
+        "som",
         "equipment",
+        "equipamento",
+        "equipamentos",
         "gear",
         "drone",
         "fpv",
         "rig",
+        "gimbal",
+        "tripod",
+        "tripe",
+        "vfx",
+        "visual effects",
+        "efeitos visuais",
+        "contraste",
+        "color grading",
+        "correcao de cor",
     ]
 
     if any(k in t for k in casting_keywords):
@@ -255,6 +337,58 @@ def infer_suggestion_type(text: str) -> str:
 
     # Post-production / legal / general notes end up here.
     return "other"
+
+
+def infer_suggestion_priority_confidence(text: str, suggestion_type: str) -> tuple[str, float]:
+    """
+    Best-effort priority and confidence inference for plain production notes.
+    """
+    t = _normalize_hint_text(text)
+    if not t:
+        return "medium", 0.75
+
+    high_priority_keywords = [
+        "seguranca",
+        "safety",
+        "risco",
+        "risk",
+        "urgente",
+        "urgent",
+        "critico",
+        "critical",
+        "chuva",
+        "tempestade",
+        "weather",
+        "permit",
+        "autorizacao",
+        "compliance",
+        "regulatory",
+        "seguro",
+        "insurance",
+    ]
+    low_priority_keywords = [
+        "opcional",
+        "optional",
+        "nice to have",
+        "ui",
+        "interface",
+        "estetica",
+        "aesthetic",
+        "contraste",
+        "post",
+        "pos",
+        "post-production",
+    ]
+
+    if any(k in t for k in high_priority_keywords):
+        return "high", 0.86 if suggestion_type != "other" else 0.8
+
+    if any(k in t for k in low_priority_keywords):
+        return "low", 0.68 if suggestion_type != "other" else 0.62
+
+    if suggestion_type == "other":
+        return "medium", 0.7
+    return "medium", 0.78
 
 
 async def process_script_analysis(
@@ -663,23 +797,42 @@ async def get_ai_suggestions(
         result = await db.execute(query)
         suggestions = result.scalars().all()
         
-        # Convert to dict format matching frontend types
-        return [
-            {
-                "id": str(suggestion.id),
-                "organization_id": str(suggestion.organization_id),
-                "project_id": str(suggestion.project_id),
-                "suggestion_type": suggestion.suggestion_type,
-                "suggestion_text": suggestion.suggestion_text,
-                "confidence": suggestion.confidence,
-                "priority": suggestion.priority,
-                "related_scenes": suggestion.related_scenes or [],
-                "estimated_savings_cents": suggestion.estimated_savings_cents,
-                "estimated_time_saved_minutes": suggestion.estimated_time_saved_minutes,
-                "created_at": suggestion.created_at.isoformat()
-            }
-            for suggestion in suggestions
-        ]
+        # Convert to dict format matching frontend types.
+        # Legacy suggestions were often saved as other/medium/0.75; enrich response values on read.
+        response_suggestions: List[Dict[str, Any]] = []
+        for suggestion in suggestions:
+            suggestion_type = suggestion.suggestion_type
+            priority = suggestion.priority
+            confidence = suggestion.confidence
+
+            inferred_type = infer_suggestion_type(suggestion.suggestion_text or "")
+            if suggestion_type == "other" and inferred_type != "other":
+                suggestion_type = inferred_type
+
+            is_legacy_default = priority == "medium" and abs((confidence or 0.0) - 0.75) < 1e-9
+            if is_legacy_default:
+                priority, confidence = infer_suggestion_priority_confidence(
+                    suggestion.suggestion_text or "",
+                    suggestion_type,
+                )
+
+            response_suggestions.append(
+                {
+                    "id": str(suggestion.id),
+                    "organization_id": str(suggestion.organization_id),
+                    "project_id": str(suggestion.project_id),
+                    "suggestion_type": suggestion_type,
+                    "suggestion_text": suggestion.suggestion_text,
+                    "confidence": confidence,
+                    "priority": priority,
+                    "related_scenes": suggestion.related_scenes or [],
+                    "estimated_savings_cents": suggestion.estimated_savings_cents,
+                    "estimated_time_saved_minutes": suggestion.estimated_time_saved_minutes,
+                    "created_at": suggestion.created_at.isoformat()
+                }
+            )
+
+        return response_suggestions
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1093,14 +1246,19 @@ async def analyze_script_content(
                     if note_key in seen_notes:
                         continue
                     seen_notes.add(note_key)
+                    suggestion_type = infer_suggestion_type(clean_note)
+                    priority, confidence = infer_suggestion_priority_confidence(
+                        clean_note,
+                        suggestion_type,
+                    )
                     await ai_suggestion_service.create_from_ai_result(
                         db=db,
                         organization_id=organization_id,
                         project_id=request.project_id,
-                        suggestion_type=infer_suggestion_type(clean_note),
+                        suggestion_type=suggestion_type,
                         suggestion_text=clean_note,
-                        confidence=0.75,
-                        priority="medium",
+                        confidence=confidence,
+                        priority=priority,
                         related_scenes=[],
                     )
 

@@ -29,7 +29,7 @@ import { useLocale, useTranslations } from 'next-intl'
 export default function AiRecommendationsPage() {
   const router = useRouter()
   const locale = useLocale()
-  const { user, organizationId } = useAuth()
+  const { organizationId } = useAuth()
   const tCommon = useTranslations('common.feedback')
   const t = useTranslations('ai')
 
@@ -52,6 +52,25 @@ export default function AiRecommendationsPage() {
       case 'medium': return 'bg-warning/20 text-warning-foreground'
       case 'low': return 'bg-success/15 text-success'
       default: return 'bg-secondary text-secondary-foreground'
+    }
+  }
+
+  const getPriorityLabel = (priority: string) => {
+    switch (priority) {
+      case 'high': return t('recommendations.priorityMatrix.high')
+      case 'medium': return t('recommendations.priorityMatrix.medium')
+      case 'low': return t('recommendations.priorityMatrix.low')
+      default: return priority
+    }
+  }
+
+  const getRecommendationTypeLabel = (recommendationType: AiRecommendation['recommendation_type']) => {
+    switch (recommendationType) {
+      case 'shooting_day': return t('recommendations.filter.types.shootingDay')
+      case 'budget': return t('recommendations.filter.types.budget')
+      case 'schedule': return t('recommendations.filter.types.schedule')
+      case 'equipment': return t('recommendations.filter.types.equipment')
+      default: return recommendationType
     }
   }
 
@@ -274,12 +293,12 @@ export default function AiRecommendationsPage() {
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
-                              <Badge variant="outline">{recommendation.recommendation_type}</Badge>
+                              <Badge variant="outline">{getRecommendationTypeLabel(recommendation.recommendation_type)}</Badge>
                               <Badge className={getPriorityColor(recommendation.priority)}>
-                                {recommendation.priority}
+                                {getPriorityLabel(recommendation.priority)}
                               </Badge>
                               <Badge className={getConfidenceColor(recommendation.confidence)}>
-                                {Math.round(recommendation.confidence * 100)}% confidence
+                                {Math.round(recommendation.confidence * 100)}%
                               </Badge>
                             </div>
                             <CardTitle className="text-lg mt-1">{recommendation.title}</CardTitle>

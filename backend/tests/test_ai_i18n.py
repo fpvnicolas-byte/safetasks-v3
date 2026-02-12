@@ -1,5 +1,7 @@
 from app.api.v1.endpoints.ai import (
     _equipment_recommendation_copy,
+    infer_suggestion_priority_confidence,
+    infer_suggestion_type,
     _localized_text,
     _resolve_response_language,
     _schedule_recommendation_copy,
@@ -94,3 +96,25 @@ def test_schedule_recommendation_copy_is_localized():
     assert title == "Recomendações de Cronograma de Produção"
     assert "Seu roteiro contém 5 cenas em 2 locações." in description
     assert action_items[0] == "Planejar 5 cenas"
+
+
+def test_infer_suggestion_type_handles_portuguese_keywords():
+    assert infer_suggestion_type("Seguranca chuva.") == "schedule"
+    assert infer_suggestion_type("Efeitos visuais no set.") == "equipment"
+    assert infer_suggestion_type("Min. cenario e locacao.") == "logistics"
+
+
+def test_infer_suggestion_priority_confidence_varies_by_content():
+    high_priority, high_confidence = infer_suggestion_priority_confidence(
+        "Seguranca chuva.",
+        "schedule",
+    )
+    low_priority, low_confidence = infer_suggestion_priority_confidence(
+        "UI na pos.",
+        "other",
+    )
+
+    assert high_priority == "high"
+    assert high_confidence > 0.8
+    assert low_priority == "low"
+    assert low_confidence < 0.7

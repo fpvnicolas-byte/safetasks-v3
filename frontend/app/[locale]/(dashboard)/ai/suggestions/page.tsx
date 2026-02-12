@@ -29,7 +29,7 @@ import { useLocale, useTranslations } from 'next-intl'
 export default function AiSuggestionsPage() {
   const router = useRouter()
   const locale = useLocale()
-  const { user, organizationId } = useAuth()
+  const { organizationId } = useAuth()
   const tCommon = useTranslations('common.feedback')
   const t = useTranslations('ai')
 
@@ -41,6 +41,12 @@ export default function AiSuggestionsPage() {
   const { data: suggestions, isLoading: isLoadingSuggestions } = useAiSuggestions(selectedProjectId)
   const { mutateAsync: generateBudgetEstimation, isPending: isGeneratingBudget } = useAiBudgetEstimation()
   const { mutateAsync: generateShootingDay, isPending: isGeneratingShootingDay } = useAiShootingDaySuggestions()
+
+  const getErrorMessage = (error: unknown): string => {
+    if (error instanceof Error) return error.message
+    if (typeof error === 'string') return error
+    return ''
+  }
 
   const handleGenerateBudget = async () => {
     if (!selectedProjectId) {
@@ -56,8 +62,8 @@ export default function AiSuggestionsPage() {
       })
       toast.success(tCommon('actionSuccess'))
       console.log('Budget estimation:', result)
-    } catch (error: any) {
-      toast.error(tCommon('actionError', { message: error?.message || 'Failed to generate budget estimation' }))
+    } catch (error: unknown) {
+      toast.error(tCommon('actionError', { message: getErrorMessage(error) || 'Failed to generate budget estimation' }))
       console.error('Budget estimation error:', error)
     }
   }
@@ -76,8 +82,8 @@ export default function AiSuggestionsPage() {
       })
       toast.success(tCommon('actionSuccess'))
       console.log('Shooting day suggestions:', result)
-    } catch (error: any) {
-      toast.error(tCommon('actionError', { message: error?.message || 'Failed to generate shooting day suggestions' }))
+    } catch (error: unknown) {
+      toast.error(tCommon('actionError', { message: getErrorMessage(error) || 'Failed to generate shooting day suggestions' }))
       console.error('Shooting day generation error:', error)
     }
   }
@@ -94,6 +100,27 @@ export default function AiSuggestionsPage() {
       case 'medium': return 'bg-warning/20 text-warning-foreground'
       case 'low': return 'bg-success/15 text-success'
       default: return 'bg-secondary text-secondary-foreground'
+    }
+  }
+
+  const getPriorityLabel = (priority: string) => {
+    switch (priority) {
+      case 'high': return t('recommendations.priorityMatrix.high')
+      case 'medium': return t('recommendations.priorityMatrix.medium')
+      case 'low': return t('recommendations.priorityMatrix.low')
+      default: return priority
+    }
+  }
+
+  const getSuggestionTypeLabel = (suggestionType: AiSuggestion['suggestion_type']) => {
+    switch (suggestionType) {
+      case 'budget': return t('suggestions.filter.types.budget')
+      case 'schedule': return t('suggestions.filter.types.schedule')
+      case 'casting': return t('suggestions.filter.types.casting')
+      case 'logistics': return t('suggestions.filter.types.logistics')
+      case 'equipment': return t('suggestions.filter.types.equipment')
+      case 'other': return t('suggestions.filter.types.other')
+      default: return suggestionType
     }
   }
 
@@ -290,12 +317,12 @@ export default function AiSuggestionsPage() {
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
-                              <Badge variant="secondary">{suggestion.suggestion_type}</Badge>
+                              <Badge variant="secondary">{getSuggestionTypeLabel(suggestion.suggestion_type)}</Badge>
                               <Badge className={getPriorityColor(suggestion.priority)}>
-                                {suggestion.priority}
+                                {getPriorityLabel(suggestion.priority)}
                               </Badge>
                               <Badge className={getConfidenceColor(suggestion.confidence)}>
-                                {Math.round(suggestion.confidence * 100)}% confidence
+                                {Math.round(suggestion.confidence * 100)}%
                               </Badge>
                             </div>
                             <CardTitle className="text-lg mt-1">{suggestion.suggestion_text}</CardTitle>

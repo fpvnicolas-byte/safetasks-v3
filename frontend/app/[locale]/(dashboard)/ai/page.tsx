@@ -125,6 +125,37 @@ export default function AiFeaturesPage() {
     }
   }
 
+  const getPriorityLabel = (priority: string) => {
+    switch (priority) {
+      case 'high': return t('recommendations.priorityMatrix.high')
+      case 'medium': return t('recommendations.priorityMatrix.medium')
+      case 'low': return t('recommendations.priorityMatrix.low')
+      default: return priority
+    }
+  }
+
+  const getSuggestionTypeLabel = (suggestionType: AiSuggestion['suggestion_type']) => {
+    switch (suggestionType) {
+      case 'budget': return t('suggestions.filter.types.budget')
+      case 'schedule': return t('suggestions.filter.types.schedule')
+      case 'casting': return t('suggestions.filter.types.casting')
+      case 'logistics': return t('suggestions.filter.types.logistics')
+      case 'equipment': return t('suggestions.filter.types.equipment')
+      case 'other': return t('suggestions.filter.types.other')
+      default: return suggestionType
+    }
+  }
+
+  const getRecommendationTypeLabel = (recommendationType: AiRecommendation['recommendation_type']) => {
+    switch (recommendationType) {
+      case 'shooting_day': return t('recommendations.filter.types.shootingDay')
+      case 'budget': return t('recommendations.filter.types.budget')
+      case 'schedule': return t('recommendations.filter.types.schedule')
+      case 'equipment': return t('recommendations.filter.types.equipment')
+      default: return recommendationType
+    }
+  }
+
   const calculatePercentage = (current: number, limit: number | null): number => {
     if (limit === null) return 0
     if (limit === 0) return 100
@@ -481,9 +512,9 @@ export default function AiFeaturesPage() {
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Badge variant="secondary">{suggestion.suggestion_type}</Badge>
+                        <Badge variant="secondary">{getSuggestionTypeLabel(suggestion.suggestion_type)}</Badge>
                         <Badge className={getPriorityColor(suggestion.priority)}>
-                          {suggestion.priority}
+                          {getPriorityLabel(suggestion.priority)}
                         </Badge>
                         <Badge className={getConfidenceColor(suggestion.confidence)}>
                           {Math.round(suggestion.confidence * 100)}%
@@ -580,9 +611,9 @@ export default function AiFeaturesPage() {
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline">{recommendation.recommendation_type}</Badge>
+                        <Badge variant="outline">{getRecommendationTypeLabel(recommendation.recommendation_type)}</Badge>
                         <Badge className={getPriorityColor(recommendation.priority)}>
-                          {recommendation.priority}
+                          {getPriorityLabel(recommendation.priority)}
                         </Badge>
                         <Badge className={getConfidenceColor(recommendation.confidence)}>
                           {Math.round(recommendation.confidence * 100)}%
