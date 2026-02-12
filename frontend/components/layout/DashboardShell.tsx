@@ -171,8 +171,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <MobileNav isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         <div className="flex-1 min-h-screen min-w-0">
-          <TrialBanner />
           <Header onSidebarToggle={() => setSidebarOpen(!sidebarOpen)} />
+          <TrialBanner />
           <main className="flex-1 p-8">{children}</main>
         </div>
       </div>

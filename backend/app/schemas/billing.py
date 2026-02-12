@@ -65,6 +65,8 @@ class BillingUsageResponse(BaseModel):
     stripe_customer_id: Optional[str]
     stripe_subscription_id: Optional[str]
     trial_ends_at: Optional[datetime]
+    access_ends_at: Optional[datetime]
+    days_until_access_end: Optional[int]
     usage: UsageInfo
     limits: LimitsInfo
     subscription: Optional[SubscriptionInfo]

@@ -23,6 +23,7 @@ from app.api import deps as deps_module
 from app.services import billing as billing_module
 from app.services.billing import (
     _is_redirect_url_allowed,
+    ensure_access_end_for_paid_org,
     has_active_access,
 )
 from app.services.infinity_pay import InfinityPayService
@@ -200,8 +201,12 @@ class TestCheckoutCreationGuardrails:
         current_plan_result = MagicMock()
         current_plan_result.scalar_one_or_none.return_value = org_plan
 
+        ledger_result = MagicMock()
+        ledger_result.scalars.return_value.first.return_value = None
+
         mock_db = AsyncMock()
-        mock_db.execute = AsyncMock(return_value=current_plan_result)
+        mock_db.execute = AsyncMock(side_effect=[ledger_result, current_plan_result, current_plan_result])
+        mock_db.add = MagicMock()
 
         with patch.object(
             billing_module.settings, "FRONTEND_URL", "https://safetasks.vercel.app"
@@ -221,6 +226,82 @@ class TestCheckoutCreationGuardrails:
         assert exc.value.status_code == 409
         assert "active plan" in str(exc.value.detail)
         mock_create.assert_not_called()
+
+
+class TestLegacyAccessEndBackfill:
+    """Tests for automatic backfill of missing access_ends_at."""
+
+    @pytest.mark.asyncio
+    async def test_infers_access_end_from_latest_ledger_event(self):
+        org = FakeOrganization(
+            plan="professional",
+            billing_status="active",
+            subscription_status="active",
+            access_ends_at=None,
+        )
+        paid_at = datetime.now(timezone.utc) - timedelta(days=3)
+        event = SimpleNamespace(
+            plan_name="professional",
+            status="succeeded",
+            processed_at=paid_at,
+            received_at=paid_at,
+        )
+
+        ledger_result = MagicMock()
+        ledger_result.scalars.return_value.first.return_value = event
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(return_value=ledger_result)
+        mock_db.add = MagicMock()
+
+        access_end = await ensure_access_end_for_paid_org(mock_db, org)
+        assert access_end is not None
+        expected = paid_at + timedelta(days=30)
+        assert abs((access_end - expected).total_seconds()) < 5
+        assert org.access_ends_at == access_end
+        mock_db.add.assert_called_once_with(org)
+
+    @pytest.mark.asyncio
+    async def test_falls_back_to_now_plus_plan_duration_when_no_ledger(self):
+        org = FakeOrganization(
+            plan="professional_annual",
+            billing_status="active",
+            subscription_status="active",
+            access_ends_at=None,
+        )
+
+        ledger_result = MagicMock()
+        ledger_result.scalars.return_value.first.return_value = None
+
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(return_value=ledger_result)
+        mock_db.add = MagicMock()
+
+        before = datetime.now(timezone.utc)
+        access_end = await ensure_access_end_for_paid_org(mock_db, org)
+        after = datetime.now(timezone.utc)
+
+        assert access_end is not None
+        assert before + timedelta(days=365) <= access_end <= after + timedelta(days=365, seconds=1)
+        assert org.access_ends_at == access_end
+        mock_db.add.assert_called_once_with(org)
+
+    @pytest.mark.asyncio
+    async def test_skips_non_paid_statuses(self):
+        org = FakeOrganization(
+            plan="professional",
+            billing_status="trial_active",
+            subscription_status="trialing",
+            access_ends_at=None,
+        )
+        mock_db = AsyncMock()
+        mock_db.add = MagicMock()
+
+        access_end = await ensure_access_end_for_paid_org(mock_db, org)
+
+        assert access_end is None
+        assert org.access_ends_at is None
+        mock_db.add.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_allows_trial_active_org_to_purchase_professional(self):
@@ -349,7 +430,12 @@ class TestCheckoutPermissionDependency:
     async def test_allows_blocked_org_to_open_checkout(self):
         checker = deps_module.require_billing_checkout()
         profile = SimpleNamespace(organization_id=uuid4())
-        organization = SimpleNamespace(billing_status="blocked", subscription_status="past_due")
+        organization = SimpleNamespace(
+            billing_status="blocked",
+            subscription_status="past_due",
+            trial_ends_at=None,
+            access_ends_at=None,
+        )
 
         with patch(
             "app.api.deps.get_organization_record",
@@ -364,7 +450,12 @@ class TestCheckoutPermissionDependency:
     async def test_allows_past_due_org_to_open_checkout(self):
         checker = deps_module.require_billing_checkout()
         profile = SimpleNamespace(organization_id=uuid4())
-        organization = SimpleNamespace(billing_status="past_due", subscription_status="past_due")
+        organization = SimpleNamespace(
+            billing_status="past_due",
+            subscription_status="past_due",
+            trial_ends_at=None,
+            access_ends_at=None,
+        )
 
         with patch(
             "app.api.deps.get_organization_record",
@@ -379,7 +470,12 @@ class TestCheckoutPermissionDependency:
     async def test_blocks_canceled_org_from_opening_checkout(self):
         checker = deps_module.require_billing_checkout()
         profile = SimpleNamespace(organization_id=uuid4())
-        organization = SimpleNamespace(billing_status="canceled", subscription_status="cancelled")
+        organization = SimpleNamespace(
+            billing_status="canceled",
+            subscription_status="cancelled",
+            trial_ends_at=None,
+            access_ends_at=None,
+        )
 
         with patch(
             "app.api.deps.get_organization_record",
@@ -390,6 +486,94 @@ class TestCheckoutPermissionDependency:
                 await checker(profile=profile, db=AsyncMock())
 
         assert exc.value.status_code == 403
+
+
+# ---------------------------------------------------------------------------
+# 1d. Billing hard-lock dependency behavior
+# ---------------------------------------------------------------------------
+
+class TestBillingHardLockDependencies:
+    """Tests for server-side blocking (cannot be bypassed by frontend inspect)."""
+
+    @pytest.mark.asyncio
+    async def test_require_billing_read_blocks_past_due(self):
+        checker = deps_module.require_billing_read()
+        profile = SimpleNamespace(organization_id=uuid4())
+        organization = SimpleNamespace(
+            billing_status="past_due",
+            subscription_status="past_due",
+            trial_ends_at=None,
+            access_ends_at=None,
+        )
+
+        with patch(
+            "app.api.deps.get_organization_record",
+            new_callable=AsyncMock,
+            return_value=organization,
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await checker(profile=profile, db=AsyncMock())
+
+        assert exc.value.status_code == 402
+
+    @pytest.mark.asyncio
+    async def test_check_permissions_v2_blocks_past_due(self):
+        checker = deps_module.check_permissions_v2(["admin"])
+        profile = SimpleNamespace(
+            organization_id=uuid4(),
+            role_v2="admin",
+            role="admin",
+            is_master_owner=False,
+        )
+        organization = SimpleNamespace(
+            billing_status="past_due",
+            subscription_status="past_due",
+            trial_ends_at=None,
+            access_ends_at=None,
+        )
+
+        with patch(
+            "app.api.deps.get_organization_record",
+            new_callable=AsyncMock,
+            return_value=organization,
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await checker(profile=profile, db=AsyncMock())
+
+        assert exc.value.status_code == 402
+
+    @pytest.mark.asyncio
+    async def test_check_permissions_v2_auto_blocks_expired_access(self):
+        checker = deps_module.check_permissions_v2(["admin"])
+        profile = SimpleNamespace(
+            organization_id=uuid4(),
+            role_v2="admin",
+            role="admin",
+            is_master_owner=False,
+        )
+        organization = SimpleNamespace(
+            billing_status="active",
+            subscription_status="active",
+            trial_ends_at=None,
+            access_ends_at=datetime.now(timezone.utc) - timedelta(days=1),
+        )
+        mock_db = AsyncMock()
+        mock_db.add = MagicMock()
+        mock_db.commit = AsyncMock()
+
+        with patch(
+            "app.api.deps.get_organization_record",
+            new_callable=AsyncMock,
+            return_value=organization,
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await checker(profile=profile, db=mock_db)
+
+        assert exc.value.status_code == 403
+        assert organization.billing_status == "blocked"
+        assert organization.subscription_status == "past_due"
+        mock_db.add.assert_called_once_with(organization)
+        mock_db.commit.assert_called_once()
 
 
 # ---------------------------------------------------------------------------
@@ -990,6 +1174,43 @@ class TestCronCheckPlans:
             assert org.billing_status == "blocked"
             mock_email.assert_called_once()
             mock_db.add.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_long_expired_org_still_gets_blocked(self):
+        """Orgs expired for more than 2 days must still be blocked."""
+        old_expiry = datetime.now(timezone.utc) - timedelta(days=10)
+        org = FakeOrganization(
+            access_ends_at=old_expiry,
+            billing_status="active",
+            subscription_status="active",
+        )
+        profile = FakeProfile()
+
+        with patch("app.cron_check_plans.SessionLocal") as MockSession, \
+             patch("app.cron_check_plans.send_plan_expired_notice") as mock_email, \
+             patch("app.cron_check_plans.send_plan_expiry_warning"):
+
+            mock_db = AsyncMock()
+            MockSession.return_value.__aenter__ = AsyncMock(return_value=mock_db)
+            MockSession.return_value.__aexit__ = AsyncMock(return_value=False)
+
+            org_result = MagicMock()
+            org_result.scalars.return_value.all.return_value = [org]
+
+            profile_result = MagicMock()
+            profile_result.scalar_one_or_none.return_value = profile
+
+            mock_db.execute = AsyncMock(side_effect=[org_result, profile_result])
+            mock_db.commit = AsyncMock()
+            mock_db.add = MagicMock()
+
+            from app.cron_check_plans import check_expiring_plans
+            await check_expiring_plans()
+
+            assert org.billing_status == "blocked"
+            assert org.subscription_status == "past_due"
+            mock_email.assert_not_called()
+            mock_db.add.assert_called()
 
 
 # ---------------------------------------------------------------------------

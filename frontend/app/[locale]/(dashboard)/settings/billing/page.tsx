@@ -48,6 +48,8 @@ interface UsageData {
   stripe_subscription_id?: string | null
   billing_status: string
   trial_ends_at: string | null
+  access_ends_at?: string | null
+  days_until_access_end?: number | null
   usage: {
     projects: number
     clients: number
@@ -99,6 +101,15 @@ const formatTrialTimeRemaining = (trialEndsAt: string, locale: string): string |
 
   const hours = Math.ceil(diff / (1000 * 60 * 60))
   return rtf.format(hours, 'hour')
+}
+
+const formatDaysToExpiry = (days: number, locale: string): string => {
+  if (days <= 0) return '0'
+  try {
+    return new Intl.NumberFormat(locale).format(days)
+  } catch {
+    return String(days)
+  }
 }
 
 export default function BillingPage() {
@@ -244,12 +255,22 @@ export default function BillingPage() {
     )
     : null
   const planRenewalDate =
-    usageData.subscription?.current_period_end || usageData.trial_ends_at
+    usageData.subscription?.current_period_end || usageData.access_ends_at || usageData.trial_ends_at
   const planRenewalLabel = formatPlanDate(planRenewalDate)
   const cancelScheduleDate =
     usageData.subscription?.cancel_at || usageData.subscription?.current_period_end
   const cancelScheduleLabel = formatPlanDate(cancelScheduleDate)
   const isCancelScheduled = usageData.subscription?.cancel_at_period_end
+  const daysUntilAccessEnd = usageData.days_until_access_end ?? null
+  const showRenewalWarning =
+    !isTrial &&
+    daysUntilAccessEnd !== null &&
+    daysUntilAccessEnd >= 0 &&
+    daysUntilAccessEnd <= 5
+  const showAccessExpiredWarning =
+    !isTrial &&
+    daysUntilAccessEnd !== null &&
+    daysUntilAccessEnd < 0
   const limitItems = [
     {
       label: t('billingPage.usage.metrics.projects'),
@@ -405,6 +426,44 @@ export default function BillingPage() {
                   <div>
                     <div className="font-semibold">{t('billingPage.currentPlan.paymentRequiredTitle')}</div>
                     <div className="text-sm">{t('billingPage.currentPlan.paymentRequiredMessage')}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showRenewalWarning && (
+              <div className="p-4 bg-warning/10 border border-warning/20 rounded-lg">
+                <div className="flex items-center gap-2 text-warning-foreground">
+                  <CreditCard className="h-5 w-5" />
+                  <div>
+                    <div className="font-semibold">
+                      {translateOrFallback('billingPage.currentPlan.renewalWarningTitle', 'Renewal required soon')}
+                    </div>
+                    <div className="text-sm">
+                      {translateOrFallback(
+                        'billingPage.currentPlan.renewalWarningMessage',
+                        'Your plan ends in {days} days. Renew to avoid automatic block.',
+                      ).replace('{days}', formatDaysToExpiry(daysUntilAccessEnd, locale))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showAccessExpiredWarning && (
+              <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <div className="flex items-center gap-2 text-destructive-foreground">
+                  <CreditCard className="h-5 w-5" />
+                  <div>
+                    <div className="font-semibold">
+                      {translateOrFallback('billingPage.currentPlan.accessExpiredTitle', 'Plan expired')}
+                    </div>
+                    <div className="text-sm">
+                      {translateOrFallback(
+                        'billingPage.currentPlan.accessExpiredMessage',
+                        'Your access period has expired. Renew your plan to unblock access.',
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

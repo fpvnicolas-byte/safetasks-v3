@@ -273,12 +273,8 @@ def check_permissions_v2(required_roles: list[str]):
         if effective_role == "owner":
             # Even owners are blocked if org is canceled/blocked
             organization = await get_organization_record(profile, db)
-            status_value = _normalize_billing_status(organization)
-            if status_value in {"canceled", "blocked"}:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Billing is not active. Access denied."
-                )
+            status_value = await _enforce_realtime_billing_state(organization, db)
+            _raise_if_platform_blocked_by_billing(status_value)
             return profile
 
         if effective_role not in required_roles:
@@ -288,12 +284,8 @@ def check_permissions_v2(required_roles: list[str]):
             )
 
         organization = await get_organization_record(profile, db)
-        status_value = _normalize_billing_status(organization)
-        if status_value in {"canceled", "blocked"}:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Billing is not active. Access denied."
-            )
+        status_value = await _enforce_realtime_billing_state(organization, db)
+        _raise_if_platform_blocked_by_billing(status_value)
 
         return profile
 
@@ -330,6 +322,57 @@ def _normalize_billing_status(organization: Organization) -> str:
     return legacy_map.get(organization.subscription_status or "", "active")
 
 
+async def _enforce_realtime_billing_state(
+    organization: Organization,
+    db: AsyncSession
+) -> str:
+    """
+    Keep billing status consistent in real-time.
+
+    This avoids relying exclusively on cron for blocking expired access.
+    """
+    status_value = _normalize_billing_status(organization)
+    now = datetime.now(timezone.utc)
+    trial_ends_at = getattr(organization, "trial_ends_at", None)
+    access_ends_at = getattr(organization, "access_ends_at", None)
+
+    # Real-time trial expiration
+    if status_value == "trial_active" and trial_ends_at:
+        if trial_ends_at <= now:
+            organization.billing_status = "trial_ended"
+            db.add(organization)
+            await db.commit()
+            return "trial_ended"
+
+    # Real-time paid access expiration
+    if status_value in {"active", "past_due", "billing_pending_review"} and access_ends_at:
+        if access_ends_at <= now:
+            organization.billing_status = "blocked"
+            organization.subscription_status = "past_due"
+            db.add(organization)
+            await db.commit()
+            return "blocked"
+
+    return status_value
+
+
+def _raise_if_platform_blocked_by_billing(status_value: str) -> None:
+    """
+    Raise when organization billing state should block regular platform usage.
+    """
+    if status_value in {"canceled", "blocked"}:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Billing is not active. Access denied."
+        )
+
+    if status_value in {"trial_ended", "past_due", "billing_pending_review"}:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="Billing is not active. Please update payment to continue."
+        )
+
+
 def require_billing_active():
     """
     Block mutations for non-active billing states.
@@ -344,30 +387,8 @@ def require_billing_active():
             return profile
 
         organization = await get_organization_record(profile, db)
-        status_value = _normalize_billing_status(organization)
-
-        if status_value in {"canceled", "blocked"}:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Billing is not active. Access denied."
-            )
-
-        if status_value in {"trial_ended", "past_due", "billing_pending_review"}:
-            raise HTTPException(
-                status_code=status.HTTP_402_PAYMENT_REQUIRED,
-                detail="Billing is not active. Please update payment to continue."
-            )
-
-        # Real-time trial expiration check - don't rely solely on cron job
-        if status_value == "trial_active" and organization.trial_ends_at:
-            if organization.trial_ends_at <= datetime.now(timezone.utc):
-                organization.billing_status = "trial_ended"
-                db.add(organization)
-                await db.commit()
-                raise HTTPException(
-                    status_code=status.HTTP_402_PAYMENT_REQUIRED,
-                    detail="Your trial has expired. Please select a plan to continue."
-                )
+        status_value = await _enforce_realtime_billing_state(organization, db)
+        _raise_if_platform_blocked_by_billing(status_value)
 
         return profile
 
@@ -376,7 +397,7 @@ def require_billing_active():
 
 def require_billing_read():
     """
-    Block all access for canceled/blocked organizations.
+    Block all regular platform access for non-active billing states.
     """
     async def billing_checker(
         profile: Profile = Depends(get_current_profile),
@@ -386,13 +407,8 @@ def require_billing_read():
             return profile
 
         organization = await get_organization_record(profile, db)
-        status_value = _normalize_billing_status(organization)
-
-        if status_value in {"canceled", "blocked"}:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Billing is not active. Access denied."
-            )
+        status_value = await _enforce_realtime_billing_state(organization, db)
+        _raise_if_platform_blocked_by_billing(status_value)
 
         return profile
 
@@ -418,7 +434,7 @@ def require_billing_checkout():
             return profile
 
         organization = await get_organization_record(profile, db)
-        status_value = _normalize_billing_status(organization)
+        status_value = await _enforce_realtime_billing_state(organization, db)
 
         if status_value == "canceled":
             raise HTTPException(

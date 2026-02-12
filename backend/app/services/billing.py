@@ -16,6 +16,14 @@ from app.services.infinity_pay import infinity_pay_service
 
 logger = logging.getLogger(__name__)
 
+PLAN_DURATION_DAYS = {
+    "starter": 30,
+    "professional": 30,
+    "professional_annual": 365,
+}
+
+PAID_ACTIVE_BILLING_STATUSES = {"active", "billing_pending_review"}
+
 
 async def get_pro_trial_plan(db: AsyncSession) -> Plan:
     """Get the pro_trial plan."""
@@ -139,7 +147,7 @@ def _has_active_paid_access(organization: Organization) -> bool:
         return True
 
     # Legacy fallback: some active paid orgs may not have access_ends_at populated.
-    if organization.billing_status in {"active", "billing_pending_review"}:
+    if organization.billing_status in PAID_ACTIVE_BILLING_STATUSES:
         return True
 
     # Additional legacy fallback for older subscription-based states.
@@ -147,6 +155,98 @@ def _has_active_paid_access(organization: Organization) -> bool:
         return True
 
     return False
+
+
+async def _resolve_org_plan_name(db: AsyncSession, organization: Organization) -> Optional[str]:
+    """Resolve organization plan name, preferring canonical plans table."""
+    if organization.plan_id:
+        query = select(Plan).where(Plan.id == organization.plan_id)
+        result = await db.execute(query)
+        plan = result.scalar_one_or_none()
+        if plan and plan.name:
+            return plan.name
+
+    return organization.plan
+
+
+async def _infer_access_end_from_ledger(
+    db: AsyncSession,
+    organization: Organization,
+) -> Optional[datetime]:
+    """Infer paid access end using the latest successful billing event."""
+    query = (
+        select(BillingEvent)
+        .where(
+            BillingEvent.organization_id == organization.id,
+            BillingEvent.plan_name.isnot(None),
+            BillingEvent.plan_name.in_(list(PLAN_DURATION_DAYS.keys())),
+            BillingEvent.status.in_(["succeeded", "processed"]),
+        )
+        .order_by(BillingEvent.processed_at.desc().nullslast(), BillingEvent.received_at.desc())
+    )
+    result = await db.execute(query)
+    event = result.scalars().first()
+    if not event or not event.plan_name:
+        return None
+
+    duration_days = PLAN_DURATION_DAYS.get(event.plan_name)
+    if not duration_days:
+        return None
+
+    base_dt = event.processed_at or event.received_at
+    if not base_dt:
+        return None
+
+    return base_dt + timedelta(days=duration_days)
+
+
+async def ensure_access_end_for_paid_org(
+    db: AsyncSession,
+    organization: Organization,
+) -> Optional[datetime]:
+    """
+    Ensure paid organizations have an `access_ends_at` value.
+
+    This is a legacy-repair guard for orgs migrated from older billing states
+    where status/plan were active but expiration was never persisted.
+    """
+    if organization.access_ends_at is not None:
+        return organization.access_ends_at
+
+    is_paid_status = (
+        organization.billing_status in PAID_ACTIVE_BILLING_STATUSES
+        or organization.subscription_status == "active"
+    )
+    if not is_paid_status:
+        return None
+
+    inferred_end = await _infer_access_end_from_ledger(db, organization)
+    source = "ledger"
+
+    if inferred_end is None:
+        plan_name = await _resolve_org_plan_name(db, organization)
+        duration_days = PLAN_DURATION_DAYS.get(plan_name or "")
+        if duration_days is None:
+            logger.warning(
+                "Could not infer access_ends_at for org %s (plan=%s, plan_id=%s)",
+                organization.id,
+                organization.plan,
+                organization.plan_id,
+            )
+            return None
+
+        inferred_end = datetime.now(timezone.utc) + timedelta(days=duration_days)
+        source = "fallback_now_plus_plan_duration"
+
+    organization.access_ends_at = inferred_end
+    db.add(organization)
+    logger.warning(
+        "Backfilled access_ends_at for org %s using %s: %s",
+        organization.id,
+        source,
+        inferred_end.isoformat(),
+    )
+    return inferred_end
 
 
 async def create_infinitypay_checkout_link(
@@ -198,6 +298,8 @@ async def create_infinitypay_checkout_link(
         current_plan = current_plan_result.scalar_one_or_none()
         if current_plan and current_plan.name:
             current_plan_name = current_plan.name
+
+    await ensure_access_end_for_paid_org(db, organization)
 
     if _has_active_paid_access(organization):
         active_until = organization.access_ends_at.isoformat() if organization.access_ends_at else "unknown"
@@ -343,24 +445,17 @@ async def process_infinitypay_webhook(
 
     metadata_plan = payload.get("plan_name") or plan_from_order_nsu
     
-    # Valid plan names and their access durations
-    PLAN_DURATIONS = {
-        "starter": 30,
-        "professional": 30,
-        "professional_annual": 365,
-    }
-    
     # Amount-based fallback mapping (amount_cents → plan_name, duration)
     AMOUNT_TO_PLAN = {
-        3990: ("starter", 30),
-        8990: ("professional", 30),
-        75500: ("professional_annual", 365),
+        3990: ("starter", PLAN_DURATION_DAYS["starter"]),
+        8990: ("professional", PLAN_DURATION_DAYS["professional"]),
+        75500: ("professional_annual", PLAN_DURATION_DAYS["professional_annual"]),
     }
     
-    if metadata_plan and metadata_plan in PLAN_DURATIONS:
+    if metadata_plan and metadata_plan in PLAN_DURATION_DAYS:
         # Trusted metadata from our checkout link
         new_plan_name = metadata_plan
-        duration_days = PLAN_DURATIONS[metadata_plan]
+        duration_days = PLAN_DURATION_DAYS[metadata_plan]
     elif amount_cents in AMOUNT_TO_PLAN:
         # Fallback: infer from amount
         new_plan_name, duration_days = AMOUNT_TO_PLAN[amount_cents]

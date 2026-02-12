@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel
 
-from app.api.deps import get_current_profile, get_db, require_billing_checkout, require_billing_read
+from app.api.deps import get_current_profile, get_db, require_billing_checkout
 from app.core.config import settings
 from app.models.profiles import Profile
 from app.models.billing import Plan
@@ -155,7 +155,7 @@ async def create_checkout_link(
     return CheckoutLinkResponse(url=url)
 
 
-@router.get("/usage", response_model=BillingUsageResponse, dependencies=[Depends(require_billing_read())])
+@router.get("/usage", response_model=BillingUsageResponse, dependencies=[Depends(require_billing_checkout())])
 async def get_usage(
     profile: Profile = Depends(get_current_profile),
     db: AsyncSession = Depends(get_db)
@@ -166,6 +166,11 @@ async def get_usage(
     from app.services.entitlements import get_entitlement, _get_or_create_usage
 
     organization = await get_organization_record(profile, db)
+    original_access_end = organization.access_ends_at
+    await billing_service.ensure_access_end_for_paid_org(db, organization)
+    if original_access_end is None and organization.access_ends_at is not None:
+        await db.commit()
+
     entitlement = await get_entitlement(db, organization)
     usage = await _get_or_create_usage(db, organization.id)
 
@@ -183,11 +188,9 @@ async def get_usage(
     # or return None to indicate no recurring sub.
     subscription_info = None
     
-    # Logic for trial/pre-paid status
-    is_active = billing_service.has_active_access(organization)
-    
-    # Override billing_status if expired? 
-    # The service currently relies on DB state.
+    days_until_access_end = None
+    if organization.access_ends_at:
+        days_until_access_end = (organization.access_ends_at - datetime.now(timezone.utc)).days
     
     return BillingUsageResponse(
         organization_id=organization.id,
@@ -199,6 +202,8 @@ async def get_usage(
         stripe_customer_id=organization.stripe_customer_id,
         stripe_subscription_id=organization.stripe_subscription_id,
         trial_ends_at=organization.trial_ends_at,
+        access_ends_at=organization.access_ends_at,
+        days_until_access_end=days_until_access_end,
         usage={
             "projects": usage.projects_count,
             "clients": usage.clients_count,

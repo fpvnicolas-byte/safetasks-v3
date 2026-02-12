@@ -12,6 +12,7 @@ from app.db.session import SessionLocal
 from app.models.organizations import Organization
 from app.models.profiles import Profile
 from app.services.email_service import send_plan_expiry_warning, send_plan_expired_notice
+from app.services.billing import ensure_access_end_for_paid_org
 from app.core.config import settings
 
 # Setup logging
@@ -37,7 +38,9 @@ async def check_expiring_plans():
         
         for org in organizations:
             if not org.access_ends_at:
-                continue
+                await ensure_access_end_for_paid_org(db, org)
+                if not org.access_ends_at:
+                    continue
                 
             days_left = (org.access_ends_at - now).days
             
@@ -67,11 +70,14 @@ async def check_expiring_plans():
                 logger.info(f"Sending 1-day warning to {user_email} for org {org.name}")
                 send_plan_expiry_warning(user_email, org.name, 1, renew_link)
                 
-            elif days_left < 0 and days_left > -2: # Expired yesterday/today
-                logger.info(f"Sending EXPIRED notice to {user_email} for org {org.name}")
-                send_plan_expired_notice(user_email, org.name, renew_link)
+            elif days_left < 0:
+                # Send expired notice only for very recent expiration window to avoid
+                # repetitive notification spam in long-expired organizations.
+                if days_left > -2:
+                    logger.info(f"Sending EXPIRED notice to {user_email} for org {org.name}")
+                    send_plan_expired_notice(user_email, org.name, renew_link)
                 
-                # Block access for expired organizations
+                # Block access for any expired organization.
                 if org.billing_status != 'blocked':
                     org.billing_status = 'blocked'
                     org.subscription_status = 'past_due'

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import { Zap, TrendingUp } from 'lucide-react'
+import { CreditCard, Zap, TrendingUp } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,8 @@ import { useAuth } from '@/contexts/AuthContext'
 interface BillingUsage {
   billing_status: string
   trial_ends_at: string | null
+  access_ends_at: string | null
+  days_until_access_end: number | null
 }
 
 const formatRelativeTime = (locale: string, diffMs: number) => {
@@ -70,40 +72,80 @@ export function TrialBanner() {
 
   const isTrialActive = usage.billing_status === 'trial_active'
   const isTrialEnded = usage.billing_status === 'trial_ended' || (trialInfo?.diffMs ?? 1) <= 0
+  const isPaymentRequired = ['past_due', 'blocked', 'billing_pending_review'].includes(usage.billing_status)
+  const hasAccessEnd = typeof usage.days_until_access_end === 'number'
+  const isRenewalSoon =
+    !isTrialActive &&
+    !isTrialEnded &&
+    !isPaymentRequired &&
+    hasAccessEnd &&
+    (usage.days_until_access_end as number) >= 0 &&
+    (usage.days_until_access_end as number) <= 5
+  const isAccessExpired =
+    !isTrialActive &&
+    !isTrialEnded &&
+    !isPaymentRequired &&
+    hasAccessEnd &&
+    (usage.days_until_access_end as number) < 0
 
-  if (!isTrialActive && !isTrialEnded) {
+  if (!isTrialActive && !isTrialEnded && !isPaymentRequired && !isRenewalSoon && !isAccessExpired) {
     return null
   }
 
   const timeLabel = trialInfo ? formatRelativeTime(locale, trialInfo.diffMs) : t('timeFallback')
+  const renewalDays = usage.days_until_access_end ?? 0
+
+  let title = t('trialEndingTitle')
+  let message = t('trialEndingMessage', { time: timeLabel })
+  let isDestructive = false
+  let showSecondary = true
+  let primaryLabel = t('ctaPrimary')
+
+  if (isTrialEnded) {
+    title = t('trialEndedTitle')
+    message = t('trialEndedMessage')
+    isDestructive = true
+  } else if (isPaymentRequired) {
+    title = t('paymentRequiredTitle')
+    message = t('paymentRequiredMessage')
+    isDestructive = true
+    showSecondary = false
+    primaryLabel = t('ctaPayNow')
+  } else if (isAccessExpired) {
+    title = t('accessExpiredTitle')
+    message = t('accessExpiredMessage')
+    isDestructive = true
+    showSecondary = false
+    primaryLabel = t('ctaPayNow')
+  } else if (isRenewalSoon) {
+    title = t('renewalSoonTitle')
+    message = t('renewalSoonMessage', { days: renewalDays })
+    primaryLabel = t('ctaPayNow')
+  }
 
   return (
     <div className="px-6 pt-6">
-      <Alert variant={isTrialEnded ? 'destructive' : 'default'} className="flex items-start justify-between gap-4">
-        {isTrialEnded ? <TrendingUp /> : <Zap />}
+      <Alert variant={isDestructive ? 'destructive' : 'default'} className="flex items-start justify-between gap-4">
+        {isTrialActive ? <Zap /> : isDestructive ? <CreditCard /> : <TrendingUp />}
         <div className="flex-1">
-          <AlertTitle>
-            {isTrialEnded ? t('trialEndedTitle') : t('trialEndingTitle')}
-          </AlertTitle>
+          <AlertTitle>{title}</AlertTitle>
           <AlertDescription>
-            <p>
-              {isTrialEnded
-                ? t('trialEndedMessage')
-                : t('trialEndingMessage', { time: timeLabel })}
-            </p>
+            <p>{message}</p>
           </AlertDescription>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button asChild size="sm">
             <LocaleLink href="/settings/billing/plans">
-              {t('ctaPrimary')}
+              {primaryLabel}
             </LocaleLink>
           </Button>
-          <Button asChild size="sm" variant="outline">
-            <LocaleLink href="/pricing">
-              {t('ctaSecondary')}
-            </LocaleLink>
-          </Button>
+          {showSecondary && (
+            <Button asChild size="sm" variant="outline">
+              <LocaleLink href="/pricing">
+                {t('ctaSecondary')}
+              </LocaleLink>
+            </Button>
+          )}
         </div>
       </Alert>
     </div>
