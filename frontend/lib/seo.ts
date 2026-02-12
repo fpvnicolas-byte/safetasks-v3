@@ -6,6 +6,17 @@ export const SITE_NAME = 'SafeTasks'
 
 export const PUBLIC_INDEXABLE_PATHS = ['', '/pricing'] as const
 
+const STATIC_OG_IMAGES: Record<Locale, { landing: string; pricing: string }> = {
+  en: {
+    landing: '/og/og-home-en.png',
+    pricing: '/og/og-pricing-en.png',
+  },
+  'pt-br': {
+    landing: '/og/og-home-ptbr.png',
+    pricing: '/og/og-pricing-ptbr.png',
+  },
+}
+
 interface LocaleSeoCopy {
   siteTitle: string
   siteDescription: string
@@ -88,11 +99,11 @@ export function getLanguageAlternates(path = ''): Record<string, string> {
 }
 
 export function getLandingOpenGraphImagePath(locale: Locale): string {
-  return getLocalizedPath(locale, '/opengraph-image')
+  return STATIC_OG_IMAGES[locale]?.landing ?? STATIC_OG_IMAGES[defaultLocale].landing
 }
 
 export function getLandingTwitterImagePath(locale: Locale): string {
-  return getLocalizedPath(locale, '/twitter-image')
+  return getLandingOpenGraphImagePath(locale)
 }
 
 export function getOpenGraphLogoPath(locale: Locale): string {
@@ -100,9 +111,9 @@ export function getOpenGraphLogoPath(locale: Locale): string {
 }
 
 export function getPricingOpenGraphImagePath(locale: Locale): string {
-  return getLocalizedPath(locale, '/pricing/opengraph-image')
+  return STATIC_OG_IMAGES[locale]?.pricing ?? STATIC_OG_IMAGES[defaultLocale].pricing
 }
 
 export function getPricingTwitterImagePath(locale: Locale): string {
-  return getLocalizedPath(locale, '/pricing/twitter-image')
+  return getPricingOpenGraphImagePath(locale)
 }
