@@ -3,8 +3,31 @@ import { createClient } from '@/lib/supabase/client'
 import { logger } from '@/lib/utils/logger'
 
 const getBaseUrl = () => {
-  // Always return the full backend URL to bypass Next.js rewrites which might be stripping headers
-  return process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
+  // Always return the full backend URL to bypass Next.js rewrites which might be stripping headers.
+  const rawUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000').trim()
+  let normalized = rawUrl
+
+  // If the env var is set without protocol, derive a safe default protocol.
+  if (!/^https?:\/\//i.test(normalized)) {
+    const protocol =
+      typeof window !== 'undefined' && window.location.protocol === 'https:'
+        ? 'https://'
+        : 'http://'
+    normalized = `${protocol}${normalized.replace(/^\/+/, '')}`
+  }
+
+  // Prevent mixed-content errors when frontend runs on HTTPS.
+  if (typeof window !== 'undefined' && window.location.protocol === 'https:' && normalized.startsWith('http://')) {
+    const upgraded = normalized.replace(/^http:\/\//i, 'https://')
+    logger.warn('API Client - Upgrading backend URL to HTTPS to avoid mixed content', {
+      from: normalized,
+      to: upgraded,
+    })
+    normalized = upgraded
+  }
+
+  // Keep consistent URL joins in request() below.
+  return normalized.replace(/\/+$/, '')
 }
 
 const API_BASE_URL = getBaseUrl()
@@ -123,11 +146,16 @@ class ApiClient {
       }
 
       // Parse JSON response safely
-      let data: any = {}
+      let data: Record<string, unknown> = {}
       try {
         const text = await response.text()
         try {
-          data = JSON.parse(text)
+          const parsed = JSON.parse(text) as unknown
+          if (parsed && typeof parsed === 'object') {
+            data = parsed as Record<string, unknown>
+          } else {
+            data = { message: parsed, detail: parsed }
+          }
         } catch {
           // If not JSON, use text as message
           console.error('API Client - Received non-JSON response:', text)
@@ -203,10 +231,11 @@ class ApiClient {
       clearTimeout(timeoutId)
 
       if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        const networkCause = (error as TypeError & { cause?: unknown }).cause
         logger.error('API Client - Network Error (Failed to fetch)', {
           url: `${this.baseURL}${endpoint}`,
           message: error.message,
-          cause: (error as any).cause,
+          cause: networkCause,
           error: error.toString(),
           stack: error.stack,
         })
