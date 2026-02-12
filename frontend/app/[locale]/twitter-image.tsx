@@ -1,6 +1,7 @@
 import { ImageResponse } from 'next/og'
 
 import { getValidLocale } from '@/i18n/config'
+import { OG_ALPHA, OG_HEX_COLORS } from '@/lib/og-colors'
 import { getSeoCopy } from '@/lib/seo'
 
 export const runtime = 'edge'
@@ -31,8 +32,8 @@ export default async function TwitterImage({ params }: ImageProps) {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          background: 'linear-gradient(145deg, #0f172a 0%, #111827 45%, #1e293b 100%)',
-          color: '#f8fafc',
+          background: `linear-gradient(145deg, ${OG_HEX_COLORS.background} 0%, ${OG_HEX_COLORS.surface} 45%, ${OG_HEX_COLORS.surfaceAlt} 100%)`,
+          color: OG_HEX_COLORS.foreground,
           padding: '56px 64px',
           fontFamily: 'ui-sans-serif, system-ui, sans-serif',
         }}
@@ -43,9 +44,9 @@ export default async function TwitterImage({ params }: ImageProps) {
           justifyContent: 'center',
           alignSelf: 'flex-start',
           borderRadius: 999,
-          background: 'rgba(245,158,11,0.2)',
-          color: '#fcd34d',
-          border: '1px solid rgba(245,158,11,0.45)',
+          background: OG_ALPHA.warningChip,
+          color: OG_HEX_COLORS.warning,
+          border: `1px solid ${OG_ALPHA.warningBorder}`,
           fontSize: 18,
           padding: '9px 16px',
           letterSpacing: '0.08em',
@@ -56,7 +57,7 @@ export default async function TwitterImage({ params }: ImageProps) {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 1000 }}>
-          <div style={{ fontSize: 32, color: '#cbd5e1', fontWeight: 500 }}>SafeTasks</div>
+          <div style={{ fontSize: 32, color: OG_HEX_COLORS.muted, fontWeight: 500 }}>SafeTasks</div>
           <div style={{
             display: 'flex',
             flexDirection: 'column',
@@ -67,7 +68,7 @@ export default async function TwitterImage({ params }: ImageProps) {
           }}>
             {seo.landingTitle}
           </div>
-          <div style={{ fontSize: 30, color: '#cbd5e1', lineHeight: 1.3 }}>
+          <div style={{ fontSize: 30, color: OG_HEX_COLORS.muted, lineHeight: 1.3 }}>
             {seo.landingDescription}
           </div>
         </div>
@@ -76,10 +77,10 @@ export default async function TwitterImage({ params }: ImageProps) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          borderTop: '1px solid rgba(148,163,184,0.35)',
+          borderTop: `1px solid ${OG_ALPHA.mutedBorderSoft}`,
           paddingTop: 22,
           fontSize: 24,
-          color: '#e2e8f0',
+          color: OG_HEX_COLORS.muted,
         }}>
           <span>{ctaLabel}</span>
           <span>{locale.toUpperCase()}</span>

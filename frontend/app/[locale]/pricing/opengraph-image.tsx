@@ -1,6 +1,7 @@
 import { ImageResponse } from 'next/og'
 
 import { getValidLocale } from '@/i18n/config'
+import { OG_ALPHA, OG_HEX_COLORS } from '@/lib/og-colors'
 import { getSeoCopy } from '@/lib/seo'
 
 export const runtime = 'edge'
@@ -37,8 +38,8 @@ export default async function PricingOpenGraphImage({ params }: ImageProps) {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          background: 'radial-gradient(circle at 80% 10%, rgba(245,158,11,0.25), transparent 40%), radial-gradient(circle at 15% 90%, rgba(56,189,248,0.2), transparent 35%), #111827',
-          color: '#f8fafc',
+          background: `radial-gradient(circle at 80% 10%, ${OG_ALPHA.warningGlow}, transparent 40%), radial-gradient(circle at 15% 90%, ${OG_ALPHA.infoGlow}, transparent 35%), ${OG_HEX_COLORS.surface}`,
+          color: OG_HEX_COLORS.foreground,
           padding: '52px 64px',
           fontFamily: 'ui-sans-serif, system-ui, sans-serif',
         }}
@@ -46,17 +47,17 @@ export default async function PricingOpenGraphImage({ params }: ImageProps) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <span style={{ fontSize: 28, fontWeight: 700 }}>SafeTasks Pricing</span>
-            <span style={{ fontSize: 18, color: '#cbd5e1' }}>Production OS</span>
+            <span style={{ fontSize: 18, color: OG_HEX_COLORS.muted }}>Production OS</span>
           </div>
           <span
             style={{
-              border: '1px solid rgba(148,163,184,0.45)',
+              border: `1px solid ${OG_ALPHA.mutedBorder}`,
               borderRadius: 999,
               padding: '8px 16px',
               fontSize: 18,
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
-              color: '#e2e8f0',
+              color: OG_HEX_COLORS.muted,
             }}
           >
             {locale.toUpperCase()}
@@ -78,7 +79,7 @@ export default async function PricingOpenGraphImage({ params }: ImageProps) {
             style={{
               fontSize: 30,
               lineHeight: 1.28,
-              color: '#cbd5e1',
+              color: OG_HEX_COLORS.muted,
             }}
           >
             {seo.pricingDescription}
@@ -91,11 +92,11 @@ export default async function PricingOpenGraphImage({ params }: ImageProps) {
               <span
                 key={label}
                 style={{
-                  border: '1px solid rgba(226,232,240,0.32)',
+                  border: `1px solid ${OG_ALPHA.mutedBorderSofter}`,
                   borderRadius: 999,
                   padding: '10px 16px',
-                  background: 'rgba(15,23,42,0.6)',
-                  color: '#f8fafc',
+                  background: OG_ALPHA.surfaceTint,
+                  color: OG_HEX_COLORS.foreground,
                   fontSize: 18,
                   fontWeight: 600,
                 }}
@@ -108,8 +109,8 @@ export default async function PricingOpenGraphImage({ params }: ImageProps) {
             style={{
               borderRadius: 999,
               padding: '10px 16px',
-              background: '#f59e0b',
-              color: '#111827',
+              background: OG_HEX_COLORS.primary,
+              color: OG_HEX_COLORS.background,
               fontSize: 17,
               fontWeight: 700,
               letterSpacing: '0.02em',

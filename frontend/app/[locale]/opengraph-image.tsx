@@ -1,6 +1,7 @@
 import { ImageResponse } from 'next/og'
 
 import { getValidLocale } from '@/i18n/config'
+import { OG_ALPHA, OG_HEX_COLORS } from '@/lib/og-colors'
 import { getSeoCopy } from '@/lib/seo'
 
 export const runtime = 'edge'
@@ -38,8 +39,8 @@ export default async function OpenGraphImage({ params }: ImageProps) {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          background: 'radial-gradient(circle at 85% 20%, rgba(251,191,36,0.28), transparent 38%), radial-gradient(circle at 8% 88%, rgba(16,185,129,0.2), transparent 35%), #0f172a',
-          color: '#f8fafc',
+          background: `radial-gradient(circle at 85% 20%, ${OG_ALPHA.warningGlow}, transparent 38%), radial-gradient(circle at 8% 88%, ${OG_ALPHA.successGlow}, transparent 35%), ${OG_HEX_COLORS.background}`,
+          color: OG_HEX_COLORS.foreground,
           padding: '52px 64px',
           fontFamily: 'ui-sans-serif, system-ui, sans-serif',
         }}
@@ -54,8 +55,8 @@ export default async function OpenGraphImage({ params }: ImageProps) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: '#f59e0b',
-                color: '#111827',
+                background: OG_HEX_COLORS.warning,
+                color: OG_HEX_COLORS.background,
                 fontSize: 28,
                 fontWeight: 700,
               }}
@@ -64,7 +65,7 @@ export default async function OpenGraphImage({ params }: ImageProps) {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 28, fontWeight: 700 }}>SafeTasks</span>
-              <span style={{ fontSize: 18, color: '#cbd5e1' }}>Production OS</span>
+              <span style={{ fontSize: 18, color: OG_HEX_COLORS.muted }}>Production OS</span>
             </div>
           </div>
           <div style={{
@@ -72,8 +73,8 @@ export default async function OpenGraphImage({ params }: ImageProps) {
             alignItems: 'center',
             justifyContent: 'center',
             borderRadius: 999,
-            border: '1px solid rgba(148,163,184,0.45)',
-            color: '#e2e8f0',
+            border: `1px solid ${OG_ALPHA.mutedBorder}`,
+            color: OG_HEX_COLORS.muted,
             padding: '8px 16px',
             fontSize: 18,
             textTransform: 'uppercase',
@@ -97,7 +98,7 @@ export default async function OpenGraphImage({ params }: ImageProps) {
           <div style={{
             fontSize: 30,
             lineHeight: 1.3,
-            color: '#cbd5e1',
+            color: OG_HEX_COLORS.muted,
             maxWidth: 1000,
           }}>
             {seo.landingDescription}
@@ -114,9 +115,9 @@ export default async function OpenGraphImage({ params }: ImageProps) {
                   alignItems: 'center',
                   justifyContent: 'center',
                   borderRadius: 999,
-                  border: '1px solid rgba(226,232,240,0.32)',
-                  background: 'rgba(15,23,42,0.55)',
-                  color: '#e2e8f0',
+                  border: `1px solid ${OG_ALPHA.mutedBorderSofter}`,
+                  background: OG_ALPHA.surfaceTint,
+                  color: OG_HEX_COLORS.muted,
                   padding: '10px 18px',
                   fontSize: 18,
                   fontWeight: 600,
@@ -132,8 +133,8 @@ export default async function OpenGraphImage({ params }: ImageProps) {
               alignItems: 'center',
               justifyContent: 'center',
               borderRadius: 999,
-              background: '#f59e0b',
-              color: '#111827',
+              background: OG_HEX_COLORS.primary,
+              color: OG_HEX_COLORS.background,
               padding: '10px 18px',
               fontSize: 18,
               fontWeight: 700,

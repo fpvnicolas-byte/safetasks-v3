@@ -15,10 +15,26 @@ export default function TestHooksPage() {
   })
 
   const showResult = (testId: string, message: string, type: 'success' | 'error' | 'loading' = 'loading') => {
+    const statusColor =
+      type === 'success'
+        ? 'var(--success)'
+        : type === 'error'
+          ? 'var(--destructive)'
+          : 'var(--warning)'
+
     setResults(prev => ({
       ...prev,
-      [testId]: `<span style="color: ${type === 'success' ? 'green' : type === 'error' ? 'red' : 'orange'}">${message}</span>`
+      [testId]: `<span style="color: ${statusColor}">${message}</span>`
     }))
+  }
+
+  const panelStyle: React.CSSProperties = {
+    margin: '20px 0',
+    padding: '20px',
+    border: '1px solid var(--border)',
+    borderRadius: '8px',
+    background: 'var(--card)',
+    color: 'var(--card-foreground)',
   }
 
   const testGetAllClients = async () => {
@@ -141,34 +157,34 @@ export default function TestHooksPage() {
   }
 
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif', margin: '20px' }}>
+    <div style={{ fontFamily: 'Arial, sans-serif', margin: '20px', color: 'var(--foreground)' }}>
       <h1>SafeTasks V3 Hook Test Page</h1>
       
-      <div style={{ margin: '20px 0', padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
+      <div style={panelStyle}>
         <h2>Test 1: Get All Clients</h2>
         <button onClick={testGetAllClients}>Test Get All Clients</button>
         <div dangerouslySetInnerHTML={{ __html: results.test1 || '' }} />
       </div>
 
-      <div style={{ margin: '20px 0', padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
+      <div style={panelStyle}>
         <h2>Test 2: Get Single Client</h2>
         <button onClick={testGetSingleClient}>Test Get Single Client</button>
         <div dangerouslySetInnerHTML={{ __html: results.test2 || '' }} />
       </div>
 
-      <div style={{ margin: '20px 0', padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
+      <div style={panelStyle}>
         <h2>Test 3: Create Client</h2>
         <button onClick={testCreateClient}>Test Create Client</button>
         <div dangerouslySetInnerHTML={{ __html: results.test3 || '' }} />
       </div>
 
-      <div style={{ margin: '20px 0', padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
+      <div style={panelStyle}>
         <h2>Test 4: Update Client</h2>
         <button onClick={testUpdateClient}>Test Update Client</button>
         <div dangerouslySetInnerHTML={{ __html: results.test4 || '' }} />
       </div>
 
-      <div style={{ margin: '20px 0', padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
+      <div style={panelStyle}>
         <h2>Test 5: Delete Client</h2>
         <button onClick={testDeleteClient}>Test Delete Client</button>
         <div dangerouslySetInnerHTML={{ __html: results.test5 || '' }} />

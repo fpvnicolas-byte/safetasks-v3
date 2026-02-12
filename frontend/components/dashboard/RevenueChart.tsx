@@ -69,8 +69,8 @@ export function RevenueChart({ data }: RevenueChartProps) {
         </div>
         <CardAction>
           <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${isPositiveGrowth
-              ? 'bg-[oklch(0.62_0.16_150/0.15)] text-[oklch(0.62_0.16_150)]'
-              : 'bg-[oklch(0.7_0.2_25/0.15)] text-[oklch(0.7_0.2_25)]'
+              ? 'bg-success/15 text-success'
+              : 'bg-destructive/15 text-destructive'
             }`}>
             {isPositiveGrowth ? (
               <TrendingUp className="h-3.5 w-3.5" />

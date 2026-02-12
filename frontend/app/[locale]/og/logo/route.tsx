@@ -1,6 +1,7 @@
 import { ImageResponse } from 'next/og'
 
 import { getValidLocale } from '@/i18n/config'
+import { OG_ALPHA, OG_HEX_COLORS } from '@/lib/og-colors'
 
 export const runtime = 'edge'
 
@@ -23,9 +24,9 @@ export async function GET(
           alignItems: 'center',
           justifyContent: 'center',
           gap: 18,
-          color: '#f8fafc',
+          color: OG_HEX_COLORS.foreground,
           background:
-            'radial-gradient(circle at 20% 18%, rgba(251,191,36,0.24), transparent 35%), radial-gradient(circle at 82% 90%, rgba(16,185,129,0.18), transparent 40%), #0f172a',
+            `radial-gradient(circle at 20% 18%, ${OG_ALPHA.warningGlow}, transparent 35%), radial-gradient(circle at 82% 90%, ${OG_ALPHA.successGlow}, transparent 40%), ${OG_HEX_COLORS.background}`,
           fontFamily: 'ui-sans-serif, system-ui, sans-serif',
         }}
       >
@@ -37,28 +38,28 @@ export async function GET(
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: '#f59e0b',
-            color: '#111827',
+            background: OG_HEX_COLORS.primary,
+            color: OG_HEX_COLORS.background,
             fontSize: 102,
             fontWeight: 800,
-            boxShadow: '0 18px 42px -20px rgba(0,0,0,0.55)',
+            boxShadow: `0 18px 42px -20px ${OG_ALPHA.shadow}`,
           }}
         >
           S
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
           <span style={{ fontSize: 56, fontWeight: 700, letterSpacing: '-0.02em' }}>SafeTasks</span>
-          <span style={{ fontSize: 24, color: '#cbd5e1', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+          <span style={{ fontSize: 24, color: OG_HEX_COLORS.muted, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
             Production OS
           </span>
         </div>
         <span
           style={{
             marginTop: 8,
-            border: '1px solid rgba(148,163,184,0.42)',
+            border: `1px solid ${OG_ALPHA.mutedBorder}`,
             borderRadius: 999,
             padding: '8px 14px',
-            color: '#e2e8f0',
+            color: OG_HEX_COLORS.muted,
             fontSize: 16,
             letterSpacing: '0.08em',
             textTransform: 'uppercase',
