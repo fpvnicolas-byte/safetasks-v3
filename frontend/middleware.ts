@@ -77,7 +77,7 @@ export async function middleware(request: NextRequest) {
   // 4. Protected Routes Logic
   // We strip locale to check path groups
 
-  const protectedRoutes = ['/dashboard', '/projects', '/financials', '/settings', '/onboarding']
+  const protectedRoutes = ['/dashboard', '/projects', '/financials', '/settings', '/onboarding', '/platform']
   const isProtectedRoute = protectedRoutes.some(route =>
     pathWithoutLocale.startsWith(route)
   )

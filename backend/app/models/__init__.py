@@ -21,6 +21,8 @@ from .ai import ScriptAnalysis, AiSuggestion, AiRecommendation, AiUsageLog
 from .billing import Plan, Entitlement, OrganizationUsage, BillingEvent
 from .access import ProjectAssignment
 
+from .refunds import BillingPurchase, RefundRequest, RefundTransaction, RefundEvent
+from .platform import PlatformAdminUser
 
 __all__ = [
     "BankAccount",
@@ -66,4 +68,9 @@ __all__ = [
     "BillingEvent",
     "ProjectAssignment",
     "OrganizationInvite",
+    "BillingPurchase",
+    "RefundRequest",
+    "RefundTransaction",
+    "RefundEvent",
+    "PlatformAdminUser",
 ]

@@ -12,6 +12,7 @@ from fastapi import HTTPException, status
 from app.core.config import settings
 from app.models.billing import BillingEvent, Plan, OrganizationUsage
 from app.models.organizations import Organization
+from app.models.refunds import BillingPurchase
 from app.services.infinity_pay import infinity_pay_service
 
 logger = logging.getLogger(__name__)
@@ -487,6 +488,21 @@ async def process_infinitypay_webhook(
         }
     )
     db.add(ledger_entry)
+    await db.flush()
+
+    # Persist canonical purchase row for refund workflows.
+    purchase_amount_cents = paid_amount_cents or amount_cents
+    purchase = BillingPurchase(
+        organization_id=organization.id,
+        source_billing_event_id=ledger_entry.id,
+        provider="infinitypay",
+        external_charge_id=transaction_nsu,
+        plan_name=new_plan_name,
+        amount_paid_cents=purchase_amount_cents,
+        currency="BRL",
+        paid_at=datetime.now(timezone.utc),
+    )
+    db.add(purchase)
 
     # 3. Grant Access
     query = select(Plan).where(Plan.name == new_plan_name)

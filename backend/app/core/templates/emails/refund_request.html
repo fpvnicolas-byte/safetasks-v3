@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>New Refund Request</title>
+</head>
+<body style="font-family: sans-serif; padding: 20px;">
+    <h2>New Refund Request Needs Review</h2>
+    <p>A user has requested a refund for a purchase.</p>
+    
+    <ul>
+        <li><strong>Organization:</strong> {{ org_name }} ({{ org_id }})</li>
+        <li><strong>Requester:</strong> {{ requester_email }}</li>
+        <li><strong>Amount Paid:</strong> R$ {{ amount_paid }}</li>
+        <li><strong>Reason:</strong> {{ reason }}</li>
+        <li><strong>Requested At:</strong> {{ requested_at }}</li>
+    </ul>
+
+    <p><strong>Action Required:</strong></p>
+    <ol>
+        <li>Log in to the Platform Review Dashboard.</li>
+        <li>Review usage consumption.</li>
+        <li>Approve or Reject the request.</li>
+        <li>If Approved, manually refund in InfinityPay/Stripe.</li>
+    </ol>
+    
+    <p>
+        <a href="{{ dashboard_url }}/platform/review/refunds/{{ request_id }}" 
+           style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+           Review Request
+        </a>
+    </p>
+</body>
+</html>

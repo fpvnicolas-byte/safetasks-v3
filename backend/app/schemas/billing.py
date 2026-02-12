@@ -84,5 +84,24 @@ class PortalSessionRequest(BaseModel):
     return_url: Optional[AnyHttpUrl] = None
 
 
+
 class PortalSessionResponse(BaseModel):
     url: str
+
+
+class BillingPurchaseResponse(BaseModel):
+    id: UUID
+    organization_id: UUID
+    provider: str
+    plan_name: Optional[str]
+    amount_paid_cents: int
+    currency: str
+    paid_at: datetime
+    total_refunded_cents: int
+    created_at: datetime
+    
+    # We can add computed properties if needed, but client can compute check
+    
+    class Config:
+        from_attributes = True
+

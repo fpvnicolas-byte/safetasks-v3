@@ -18,6 +18,7 @@ from app.schemas.billing import (
     EntitlementInfo,
     PlanInfo,
     SubscriptionInfo,
+    BillingPurchaseResponse,
 )
 from app.services import billing as billing_service
 from app.api.deps import get_organization_record
@@ -249,7 +250,36 @@ def _serialize_plan_info(plan: Plan, entitlement) -> PlanInfo:
     )
 
 
+
 def _timestamp_to_datetime(value: Optional[int]) -> Optional[datetime]:
     if value is None:
         return None
     return datetime.fromtimestamp(value, tz=timezone.utc)
+
+
+@router.get("/history", response_model=list[BillingPurchaseResponse])
+async def get_billing_history(
+    profile: Profile = Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db),
+    skip: int = 0,
+    limit: int = 100
+) -> list[BillingPurchaseResponse]:
+    """
+    Get billing history (purchases) for the current organization.
+    """
+    from app.models.refunds import BillingPurchase
+
+    if not profile.organization_id:
+        return []
+
+    # Verify access (read-only is fine)
+    # require_read_only is not strictly needed if we just return own data, but good practice.
+    
+    query = select(BillingPurchase).where(
+        BillingPurchase.organization_id == profile.organization_id
+    ).order_by(BillingPurchase.paid_at.desc()).offset(skip).limit(limit)
+    
+    result = await db.execute(query)
+    purchases = result.scalars().all()
+    
+    return purchases

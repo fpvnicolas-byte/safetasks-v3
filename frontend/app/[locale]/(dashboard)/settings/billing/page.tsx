@@ -9,6 +9,7 @@ import { ArrowLeft, CreditCard, TrendingUp, Zap, Users, FolderOpen, FileText, Ha
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/api/client'
+import { BillingHistory } from '@/components/billing/BillingHistory'
 import { useLocale, useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
 
@@ -599,6 +600,8 @@ export default function BillingPage() {
           </div>
         </CardContent>
       </Card>
+
+      <BillingHistory />
     </div>
   )
 }

@@ -13,6 +13,7 @@ from app.db.session import get_db
 from app.models.profiles import Profile
 from app.models.access import ProjectAssignment
 from app.models.organizations import Organization
+from app.models.platform import PlatformAdminUser
 
 logger = logging.getLogger(__name__)
 
@@ -445,6 +446,31 @@ def require_billing_checkout():
         return profile
 
     return billing_checker
+
+
+async def require_platform_admin(
+    profile: Profile = Depends(get_current_profile),
+    db: AsyncSession = Depends(get_db)
+) -> Profile:
+    """
+    Verify user is an internal platform administrator.
+    This check is independent of organization roles.
+    """
+    query = select(PlatformAdminUser).where(
+        PlatformAdminUser.profile_id == profile.id,
+        PlatformAdminUser.is_active == True
+    )
+    result = await db.execute(query)
+    admin_user = result.scalar_one_or_none()
+    
+    if not admin_user:
+        logger.warning(f"Access denied: User {profile.id} attempted platform admin access")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Platform Admin access required."
+        )
+        
+    return profile
 
 
 def require_master_owner():
