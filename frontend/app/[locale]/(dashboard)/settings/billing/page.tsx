@@ -433,13 +433,13 @@ export default function BillingPage() {
 
             {showRenewalWarning && (
               <div className="p-4 bg-warning/10 border border-warning/20 rounded-lg">
-                <div className="flex items-center gap-2 text-warning-foreground">
+                <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
                   <CreditCard className="h-5 w-5" />
                   <div>
-                    <div className="font-semibold">
+                    <div className="font-semibold text-amber-900 dark:text-amber-100">
                       {translateOrFallback('billingPage.currentPlan.renewalWarningTitle', 'Renewal required soon')}
                     </div>
-                    <div className="text-sm">
+                    <div className="text-sm text-amber-800/90 dark:text-amber-200/90">
                       {translateOrFallback(
                         'billingPage.currentPlan.renewalWarningMessage',
                         'Your plan ends in {days} days. Renew to avoid automatic block.',
