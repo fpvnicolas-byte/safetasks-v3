@@ -24,7 +24,7 @@ import {
   Clock,
   Target
 } from 'lucide-react'
-import type { AiSuggestion } from '@/types'
+import type { AiSuggestion, ScriptAnalysis } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
 
 export default function AiSuggestionsPage() {
@@ -147,6 +147,15 @@ export default function AiSuggestionsPage() {
     analyses: analyses || [],
     projectId: selectedProjectId,
   })
+
+  const getAnalysisSummary = (analysis: ScriptAnalysis | null): string => {
+    if (!analysis) return ''
+    const scenes = analysis.analysis_result?.scenes?.length ?? 0
+    const characters = analysis.analysis_result?.characters?.length ?? 0
+    const locations = analysis.analysis_result?.locations?.length ?? 0
+    const equipment = analysis.analysis_result?.suggested_equipment?.length ?? 0
+    return `${t('suggestions.list.scenes')}: ${scenes} • ${t('suggestions.list.characters')}: ${characters} • ${t('suggestions.list.locations')}: ${locations} • ${t('suggestions.list.equipment')}: ${equipment}`
+  }
 
   return (
     <div className="space-y-6">
@@ -329,8 +338,8 @@ export default function AiSuggestionsPage() {
 	                        </div>
 	                      </div>
 	                      {group.analysis && (
-	                        <div className="mt-1 text-xs text-muted-foreground whitespace-pre-wrap break-words">
-	                          {group.analysis.script_text}
+	                        <div className="mt-1 text-xs text-muted-foreground">
+	                          {getAnalysisSummary(group.analysis)}
 	                        </div>
 	                      )}
 	                    </div>

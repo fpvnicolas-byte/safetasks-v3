@@ -165,6 +165,15 @@ export default function AiFeaturesPage() {
     projectId: suggestionsProjectId,
   })
 
+  const getAnalysisSummary = (analysis: ScriptAnalysis | null): string => {
+    if (!analysis) return ''
+    const scenes = analysis.analysis_result?.scenes?.length ?? 0
+    const characters = analysis.analysis_result?.characters?.length ?? 0
+    const locations = analysis.analysis_result?.locations?.length ?? 0
+    const equipment = analysis.analysis_result?.suggested_equipment?.length ?? 0
+    return `${t('suggestions.list.scenes')}: ${scenes} • ${t('suggestions.list.characters')}: ${characters} • ${t('suggestions.list.locations')}: ${locations} • ${t('suggestions.list.equipment')}: ${equipment}`
+  }
+
   const calculatePercentage = (current: number, limit: number | null): number => {
     if (limit === null) return 0
     if (limit === 0) return 100
@@ -530,8 +539,8 @@ export default function AiFeaturesPage() {
 	                      </div>
 	                    </div>
 	                    {group.analysis && (
-	                      <div className="mt-1 text-xs text-muted-foreground whitespace-pre-wrap break-words">
-	                        {group.analysis.script_text}
+	                      <div className="mt-1 text-xs text-muted-foreground">
+	                        {getAnalysisSummary(group.analysis)}
 	                      </div>
 	                    )}
 	                  </div>
