@@ -37,6 +37,27 @@ from app.api.v1.endpoints.ai_schemas import (
 
 router = APIRouter()
 
+
+def _map_ai_error_to_http(error_message: str) -> tuple[int, str]:
+    """Map provider/internal AI failures to user-facing HTTP responses."""
+    message = (error_message or "").strip() or "AI request failed"
+    lowered = message.lower()
+
+    if any(tag in lowered for tag in ("resource exhausted", "429", "too many requests", "rate limit")):
+        return status.HTTP_429_TOO_MANY_REQUESTS, message
+    if any(tag in lowered for tag in ("timed out", "timeout", "deadline exceeded")):
+        return status.HTTP_504_GATEWAY_TIMEOUT, message
+    if "service unavailable" in lowered:
+        return status.HTTP_503_SERVICE_UNAVAILABLE, message
+
+    return status.HTTP_503_SERVICE_UNAVAILABLE, message
+
+
+def _raise_for_ai_error(error_message: str) -> None:
+    http_status, detail = _map_ai_error_to_http(error_message)
+    raise HTTPException(status_code=http_status, detail=detail)
+
+
 def infer_suggestion_type(text: str) -> str:
     """
     Best-effort classifier for AiSuggestion.suggestion_type.
@@ -169,6 +190,8 @@ async def process_script_analysis(
             script_content=script_content,
             project_id=project_id
         )
+        if isinstance(analysis_result, dict) and analysis_result.get("error"):
+            _raise_for_ai_error(str(analysis_result["error"]))
 
         # Generate production suggestions
         suggestions = await ai_engine_service.suggest_production_elements(
@@ -176,6 +199,8 @@ async def process_script_analysis(
             script_analysis=analysis_result,
             project_context={"project_id": str(project_id)}
         )
+        if isinstance(suggestions, dict) and suggestions.get("error"):
+            _raise_for_ai_error(str(suggestions["error"]))
 
         # Save script analysis to database
         saved_analysis = await script_analysis_service.create_from_ai_result(
@@ -620,10 +645,7 @@ async def estimate_budget(
 
         # ai_engine_service returns {"error": "..."} on failures/timeouts.
         if isinstance(result, dict) and result.get("error"):
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=str(result["error"]),
-            )
+            _raise_for_ai_error(str(result["error"]))
         
         # Log successful usage
         processing_time_ms = int((time.time() - start_time) * 1000)
@@ -720,10 +742,7 @@ async def generate_shooting_day_suggestions(
                 project_id=request.project_id
             )
             if isinstance(analysis_result, dict) and analysis_result.get("error"):
-                raise HTTPException(
-                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail=str(analysis_result["error"]),
-                )
+                _raise_for_ai_error(str(analysis_result["error"]))
             analysis_data = analysis_result
         else:
             # 2. Fallback: look for existing analysis in DB
@@ -749,10 +768,7 @@ async def generate_shooting_day_suggestions(
             project_context={"project_id": str(request.project_id)}
         )
         if isinstance(suggestions, dict) and suggestions.get("error"):
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=str(suggestions["error"]),
-            )
+            _raise_for_ai_error(str(suggestions["error"]))
 
         shooting_day_data = suggestions.get("shooting_day_suggestions", [])
 
@@ -887,10 +903,7 @@ async def analyze_script_content(
 
         # ai_engine_service returns a structured dict with "error" on failures/timeouts.
         if isinstance(analysis_result, dict) and analysis_result.get("error"):
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=str(analysis_result["error"]),
-            )
+            _raise_for_ai_error(str(analysis_result["error"]))
 
         # Save script analysis to database
         saved_analysis = await script_analysis_service.create_from_ai_result(
@@ -1093,6 +1106,8 @@ async def analyze_text_content(
             organization_id=organization_id,
             script_content=request.text
         )
+        if isinstance(result, dict) and result.get("error"):
+            _raise_for_ai_error(str(result["error"]))
 
         return result
 

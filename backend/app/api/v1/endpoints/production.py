@@ -170,6 +170,8 @@ async def process_ai_breakdown_generation(
             script_content="Sample script for demonstration",  # In real implementation, get from project
             project_id=project_id
         )
+        if isinstance(analysis_result, dict) and analysis_result.get("error"):
+            raise RuntimeError(str(analysis_result["error"]))
 
         # Commit the analysis to database
         commit_result = await production_service.commit_ai_analysis(

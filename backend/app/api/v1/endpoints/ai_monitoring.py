@@ -118,24 +118,26 @@ async def validate_ai_configuration(
     Tests API key validity, service connectivity, and basic functionality.
     Returns detailed validation results for troubleshooting.
     """
+    organization_id = None
     try:
+        organization = await get_organization_record(profile, db)
+        organization_id = str(organization.id)
+
         # Check if organization has access to AI features
         if not settings.GEMINI_API_KEY:
             return {
                 "status": "failed",
                 "error": "AI features not configured",
                 "message": "GEMINI_API_KEY not configured in environment",
-                "organization_id": str(organization.id),
+                "organization_id": organization_id,
                 "timestamp": "2024-01-01T00:00:00Z"
             }
-        
-        organization = await get_organization_record(profile, db)
 
         # Perform API key validation
         validation_result = await ai_engine_service.validate_api_key()
         
         # Add organization context
-        validation_result["organization_id"] = str(organization.id)
+        validation_result["organization_id"] = organization_id
         
         return validation_result
         
@@ -145,7 +147,7 @@ async def validate_ai_configuration(
             detail={
                 "status": "failed",
                 "error": f"Validation failed: {str(e)}",
-                "organization_id": str(organization.id),
+                "organization_id": organization_id,
                 "timestamp": "2024-01-01T00:00:00Z"
             }
         )

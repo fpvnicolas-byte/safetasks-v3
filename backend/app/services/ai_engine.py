@@ -3,12 +3,31 @@ import logging
 import time
 import asyncio
 import hashlib
+import random
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Union
 from uuid import UUID
 
 import google.generativeai as genai
 from app.core.config import settings
+
+try:
+    from google.api_core.exceptions import (
+        ResourceExhausted,
+        ServiceUnavailable,
+        DeadlineExceeded,
+        InternalServerError,
+        TooManyRequests,
+    )
+    RETRYABLE_PROVIDER_EXCEPTIONS = (
+        ResourceExhausted,
+        ServiceUnavailable,
+        DeadlineExceeded,
+        InternalServerError,
+        TooManyRequests,
+    )
+except Exception:  # pragma: no cover - defensive fallback for optional provider internals
+    RETRYABLE_PROVIDER_EXCEPTIONS = ()
 
 # Import logging configuration
 from app.core.logging_config import (
@@ -26,6 +45,9 @@ MAX_SCRIPT_LENGTH = 50000  # Maximum characters for script content
 MAX_RESPONSE_TOKENS = 4096  # Maximum tokens for AI response
 TIMEOUT_SECONDS = 60  # Request timeout in seconds
 MAX_RETRY_ATTEMPTS = 3  # Maximum retry attempts for failed requests
+MAX_CONCURRENT_API_CALLS = 2  # Protect provider quota from local request bursts
+RETRY_BASE_DELAY_SECONDS = 1.0
+RETRY_MAX_DELAY_SECONDS = 8.0
 
 
 class AIEngineService:
@@ -48,14 +70,18 @@ class AIEngineService:
         self._request_count = 0
         self._error_count = 0
         self._total_processing_time = 0
-        
-        # Initialize with comprehensive logging
+        self._api_semaphore = asyncio.Semaphore(MAX_CONCURRENT_API_CALLS)
+
+        self._initialize_model()
+
+    def _initialize_model(self) -> None:
+        """Configure Gemini model and service state."""
         if settings.GEMINI_API_KEY:
             try:
                 genai.configure(api_key=settings.GEMINI_API_KEY)
                 self.model = genai.GenerativeModel('gemini-2.0-flash')
                 self.is_active = True
-                
+
                 # Production-ready initialization logging
                 logger.info(
                     "Gemini AI initialized successfully",
@@ -66,8 +92,10 @@ class AIEngineService:
                         "timestamp": datetime.now(timezone.utc).isoformat()
                     }
                 )
-                
+
             except Exception as e:
+                self.model = None
+                self.is_active = False
                 logger.error(
                     "Failed to initialize Gemini AI",
                     extra={
@@ -77,8 +105,9 @@ class AIEngineService:
                         "timestamp": datetime.now(timezone.utc).isoformat()
                     }
                 )
-                self.is_active = False
         else:
+            self.model = None
+            self.is_active = False
             logger.warning(
                 "GEMINI_API_KEY not found in settings. AI features disabled.",
                 extra={
@@ -87,6 +116,115 @@ class AIEngineService:
                     "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             )
+
+    def _is_retryable_error(self, error: Exception) -> bool:
+        """Detect transient provider errors worth retrying."""
+        if RETRYABLE_PROVIDER_EXCEPTIONS and isinstance(error, RETRYABLE_PROVIDER_EXCEPTIONS):
+            return True
+
+        error_type = type(error).__name__
+        error_message = str(error).lower()
+
+        if error_type in {"ResourceExhausted", "TooManyRequests", "ServiceUnavailable", "DeadlineExceeded", "InternalServerError"}:
+            return True
+
+        return any(
+            snippet in error_message
+            for snippet in (
+                "429",
+                "resource exhausted",
+                "too many requests",
+                "rate limit",
+                "service unavailable",
+                "deadline exceeded",
+                "event loop is closed",
+            )
+        )
+
+    @staticmethod
+    def _retry_delay_seconds(attempt: int) -> float:
+        """Exponential backoff with light jitter to avoid synchronized retries."""
+        backoff = min(RETRY_BASE_DELAY_SECONDS * (2 ** (attempt - 1)), RETRY_MAX_DELAY_SECONDS)
+        jitter = random.uniform(0.0, 0.5)
+        return backoff + jitter
+
+    async def _generate_content_with_retry(
+        self,
+        *,
+        request_id: str,
+        organization_id: UUID,
+        operation: str,
+        prompt: str,
+        generation_config: Any,
+    ) -> Any:
+        """
+        Execute Gemini request with bounded concurrency and retry/backoff for
+        transient provider failures (e.g. 429 ResourceExhausted).
+        """
+        last_error: Optional[Exception] = None
+
+        for attempt in range(1, MAX_RETRY_ATTEMPTS + 1):
+            try:
+                if not self.model:
+                    raise RuntimeError("AI model is not initialized")
+
+                async with self._api_semaphore:
+                    return await asyncio.wait_for(
+                        self.model.generate_content_async(
+                            prompt,
+                            generation_config=generation_config,
+                        ),
+                        timeout=TIMEOUT_SECONDS,
+                    )
+
+            except asyncio.TimeoutError as e:
+                last_error = e
+                if attempt >= MAX_RETRY_ATTEMPTS:
+                    raise
+
+                delay_seconds = self._retry_delay_seconds(attempt)
+                logger.warning(
+                    "Retrying AI request after timeout",
+                    extra={
+                        "request_id": request_id,
+                        "organization_id": str(organization_id),
+                        "operation": operation,
+                        "attempt": attempt,
+                        "max_attempts": MAX_RETRY_ATTEMPTS,
+                        "retry_delay_seconds": round(delay_seconds, 3),
+                    }
+                )
+                await asyncio.sleep(delay_seconds)
+
+            except Exception as e:
+                last_error = e
+
+                if "event loop is closed" in str(e).lower():
+                    # Recreate the SDK client state; this can happen in reused worker/test loops.
+                    self._initialize_model()
+
+                if not self._is_retryable_error(e) or attempt >= MAX_RETRY_ATTEMPTS:
+                    raise
+
+                delay_seconds = self._retry_delay_seconds(attempt)
+                logger.warning(
+                    "Retrying AI request after transient provider error",
+                    extra={
+                        "request_id": request_id,
+                        "organization_id": str(organization_id),
+                        "operation": operation,
+                        "attempt": attempt,
+                        "max_attempts": MAX_RETRY_ATTEMPTS,
+                        "retry_delay_seconds": round(delay_seconds, 3),
+                        "error_type": type(e).__name__,
+                        "error_message": str(e),
+                    }
+                )
+                await asyncio.sleep(delay_seconds)
+
+        if last_error:
+            raise last_error
+        raise RuntimeError("AI request failed without a captured exception")
 
     async def analyze_script_content(
         self,
@@ -195,16 +333,16 @@ class AIEngineService:
             elif analysis_type == "scenes":
                 max_output_tokens = 3072
 
-            response = await asyncio.wait_for(
-                self.model.generate_content_async(
-                    prompt,
-                    generation_config=genai.types.GenerationConfig(
-                        temperature=0.1,  # Low temperature for consistent analysis
-                        max_output_tokens=max_output_tokens,
-                        response_mime_type="application/json",
-                    ),
+            response = await self._generate_content_with_retry(
+                request_id=request_id,
+                organization_id=organization_id,
+                operation="script_analysis",
+                prompt=prompt,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.1,  # Low temperature for consistent analysis
+                    max_output_tokens=max_output_tokens,
+                    response_mime_type="application/json",
                 ),
-                timeout=TIMEOUT_SECONDS,
             )
             
             api_response_time = time.time() - api_start_time
@@ -434,16 +572,16 @@ class AIEngineService:
 
             # Call Gemini API with monitoring
             api_start_time = time.time()
-            response = await asyncio.wait_for(
-                self.model.generate_content_async(
-                    prompt,
-                    generation_config=genai.types.GenerationConfig(
-                        temperature=0.2,  # Slightly higher temperature for creative suggestions
-                        max_output_tokens=3000,
-                        response_mime_type="application/json",
-                    ),
+            response = await self._generate_content_with_retry(
+                request_id=request_id,
+                organization_id=organization_id,
+                operation="production_suggestions",
+                prompt=prompt,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.2,  # Slightly higher temperature for creative suggestions
+                    max_output_tokens=3000,
+                    response_mime_type="application/json",
                 ),
-                timeout=TIMEOUT_SECONDS,
             )
             
             api_response_time = time.time() - api_start_time
@@ -757,16 +895,16 @@ Focus on actionable suggestions that help production planning and logistics.
 
             # Call Gemini API with monitoring
             api_start_time = time.time()
-            response = await asyncio.wait_for(
-                self.model.generate_content_async(
-                    prompt,
-                    generation_config=genai.types.GenerationConfig(
-                        temperature=0.2,
-                        max_output_tokens=2000,
-                        response_mime_type="application/json",
-                    ),
+            response = await self._generate_content_with_retry(
+                request_id=request_id,
+                organization_id=organization_id,
+                operation="budget_estimation",
+                prompt=prompt,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.2,
+                    max_output_tokens=2000,
+                    response_mime_type="application/json",
                 ),
-                timeout=TIMEOUT_SECONDS,
             )
             
             api_response_time = time.time() - api_start_time
