@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { getValidLocale } from '@/i18n/config'
 import {
   SITE_NAME,
+  getAbsoluteUrl,
   getAbsoluteLocaleUrl,
   getLanguageAlternates,
   getOpenGraphLogoPath,
@@ -24,9 +25,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const seo = getSeoCopy(locale)
 
   const canonical = getAbsoluteLocaleUrl(locale, '/pricing')
-  const ogImage = getPricingOpenGraphImagePath(locale)
-  const ogLogo = getOpenGraphLogoPath(locale)
-  const twitterImage = getPricingTwitterImagePath(locale)
+  const ogImage = getAbsoluteUrl(getPricingOpenGraphImagePath(locale))
+  const ogLogo = getAbsoluteUrl(getOpenGraphLogoPath(locale))
+  const twitterImage = getAbsoluteUrl(getPricingTwitterImagePath(locale))
 
   return {
     title: seo.pricingTitle,

@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
 import {
   SITE_NAME,
+  getAbsoluteUrl,
   getLandingOpenGraphImagePath,
   getLandingTwitterImagePath,
   getOpenGraphLogoPath,
@@ -31,6 +32,9 @@ export async function generateMetadata({ params }: Pick<LocaleLayoutProps, 'para
   const { locale: requestedLocale } = await params
   const locale = isValidLocale(requestedLocale) ? requestedLocale : defaultLocale
   const seo = getSeoCopy(locale)
+  const landingOgImageUrl = getAbsoluteUrl(getLandingOpenGraphImagePath(locale))
+  const landingTwitterImageUrl = getAbsoluteUrl(getLandingTwitterImagePath(locale))
+  const logoImageUrl = getAbsoluteUrl(getOpenGraphLogoPath(locale))
 
   return {
     metadataBase: new URL(getSiteUrl()),
@@ -45,13 +49,13 @@ export async function generateMetadata({ params }: Pick<LocaleLayoutProps, 'para
       type: 'website',
       images: [
         {
-          url: getLandingOpenGraphImagePath(locale),
+          url: landingOgImageUrl,
           width: 1200,
           height: 630,
           alt: seo.siteTitle,
         },
         {
-          url: getOpenGraphLogoPath(locale),
+          url: logoImageUrl,
           width: 512,
           height: 512,
           alt: `${SITE_NAME} logo`,
@@ -62,7 +66,7 @@ export async function generateMetadata({ params }: Pick<LocaleLayoutProps, 'para
       card: 'summary_large_image',
       title: seo.siteTitle,
       description: seo.siteDescription,
-      images: [getLandingTwitterImagePath(locale)],
+      images: [landingTwitterImageUrl],
     },
   }
 }

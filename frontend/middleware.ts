@@ -22,6 +22,28 @@ export async function middleware(request: NextRequest) {
     return intlResponse;
   }
 
+  const pathname = request.nextUrl.pathname;
+  const localePattern = new RegExp(`^/(${locales.join('|')})`);
+  const pathWithoutLocale = pathname.replace(localePattern, '');
+
+  // Public metadata/preview assets should not pay auth overhead.
+  const publicMetadataAssetPaths = [
+    '/opengraph-image',
+    '/twitter-image',
+    '/og/logo',
+    '/pricing/opengraph-image',
+    '/pricing/twitter-image',
+  ];
+  const isPublicMetadataAsset = publicMetadataAssetPaths.some(
+    (route) => pathWithoutLocale === route || pathWithoutLocale.startsWith(`${route}/`)
+  );
+  if (isPublicMetadataAsset) {
+    return NextResponse.next({
+      request,
+      headers: intlResponse.headers,
+    });
+  }
+
   // 2. Setup Supabase Client
   let supabaseResponse = NextResponse.next({
     request,
@@ -52,17 +74,8 @@ export async function middleware(request: NextRequest) {
   // 3. Auth Logic
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Extract path without locale for logic checks
-  // e.g. /en/dashboard -> /dashboard
-  const pathname = request.nextUrl.pathname;
-  const pathnameIsMissingLocale = locales.every(
-    (locale) => !pathname.startsWith(`/${locale}`) && pathname !== `/${locale}`
-  );
-
   // 4. Protected Routes Logic
-  // We need to strip locale to check path
-  const localePattern = new RegExp(`^/(${locales.join('|')})`);
-  const pathWithoutLocale = pathname.replace(localePattern, '');
+  // We strip locale to check path groups
 
   const protectedRoutes = ['/dashboard', '/projects', '/financials', '/settings', '/onboarding']
   const isProtectedRoute = protectedRoutes.some(route =>

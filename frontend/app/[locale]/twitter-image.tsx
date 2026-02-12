@@ -20,6 +20,7 @@ export default async function TwitterImage({ params }: ImageProps) {
   const seo = getSeoCopy(locale)
 
   const kicker = locale === 'pt-br' ? 'Plataforma para produtoras audiovisuais' : 'Platform for audiovisual production teams'
+  const ctaLabel = locale === 'pt-br' ? 'Criar conta gratis' : 'Create free account'
 
   return new ImageResponse(
     (
@@ -64,10 +65,10 @@ export default async function TwitterImage({ params }: ImageProps) {
             letterSpacing: '-0.02em',
             fontWeight: 700,
           }}>
-            {seo.pricingTitle}
+            {seo.landingTitle}
           </div>
           <div style={{ fontSize: 30, color: '#cbd5e1', lineHeight: 1.3 }}>
-            {seo.pricingDescription}
+            {seo.landingDescription}
           </div>
         </div>
 
@@ -80,7 +81,7 @@ export default async function TwitterImage({ params }: ImageProps) {
           fontSize: 24,
           color: '#e2e8f0',
         }}>
-          <span>SafeTasks Production OS</span>
+          <span>{ctaLabel}</span>
           <span>{locale.toUpperCase()}</span>
         </div>
       </div>

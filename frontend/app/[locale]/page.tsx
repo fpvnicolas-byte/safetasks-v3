@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { getValidLocale } from '@/i18n/config'
 import {
   SITE_NAME,
+  getAbsoluteUrl,
   getAbsoluteLocaleUrl,
   getLanguageAlternates,
   getLandingOpenGraphImagePath,
@@ -24,9 +25,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const seo = getSeoCopy(locale)
 
   const canonical = getAbsoluteLocaleUrl(locale)
-  const ogImage = getLandingOpenGraphImagePath(locale)
-  const ogLogo = getOpenGraphLogoPath(locale)
-  const twitterImage = getLandingTwitterImagePath(locale)
+  const ogImage = getAbsoluteUrl(getLandingOpenGraphImagePath(locale))
+  const ogLogo = getAbsoluteUrl(getOpenGraphLogoPath(locale))
+  const twitterImage = getAbsoluteUrl(getLandingTwitterImagePath(locale))
 
   return {
     title: seo.landingTitle,

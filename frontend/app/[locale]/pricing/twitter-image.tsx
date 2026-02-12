@@ -20,6 +20,7 @@ export default async function PricingTwitterImage({ params }: ImageProps) {
   const seo = getSeoCopy(locale)
 
   const kicker = locale === 'pt-br' ? 'Planos por tamanho de equipe' : 'Plans by team size'
+  const ctaLabel = locale === 'pt-br' ? 'Comece o teste de 7 dias' : 'Start 7-day trial'
 
   return new ImageResponse(
     (
@@ -88,7 +89,7 @@ export default async function PricingTwitterImage({ params }: ImageProps) {
             color: '#e2e8f0',
           }}
         >
-          <span>SafeTasks Production OS</span>
+          <span>{ctaLabel}</span>
           <span>{locale.toUpperCase()}</span>
         </div>
       </div>

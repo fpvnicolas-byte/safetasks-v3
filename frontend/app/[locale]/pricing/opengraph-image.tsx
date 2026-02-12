@@ -18,6 +18,11 @@ export default async function PricingOpenGraphImage({ params }: ImageProps) {
   const { locale: requestedLocale } = await params
   const locale = getValidLocale(requestedLocale)
   const seo = getSeoCopy(locale)
+  const headline =
+    locale === 'pt-br'
+      ? 'Escolha o plano da sua produtora'
+      : 'Choose your production plan'
+  const ctaLabel = locale === 'pt-br' ? 'Comece o teste de 7 dias' : 'Start 7-day trial'
 
   const planLabels = locale === 'pt-br'
     ? ['Starter', 'Professional', 'Anual', 'Enterprise']
@@ -67,7 +72,7 @@ export default async function PricingOpenGraphImage({ params }: ImageProps) {
               letterSpacing: '-0.02em',
             }}
           >
-            {seo.pricingTitle}
+            {headline}
           </div>
           <div
             style={{
@@ -80,23 +85,39 @@ export default async function PricingOpenGraphImage({ params }: ImageProps) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          {planLabels.map((label) => (
-            <span
-              key={label}
-              style={{
-                border: '1px solid rgba(226,232,240,0.32)',
-                borderRadius: 999,
-                padding: '10px 16px',
-                background: 'rgba(15,23,42,0.6)',
-                color: '#f8fafc',
-                fontSize: 18,
-                fontWeight: 600,
-              }}
-            >
-              {label}
-            </span>
-          ))}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {planLabels.map((label) => (
+              <span
+                key={label}
+                style={{
+                  border: '1px solid rgba(226,232,240,0.32)',
+                  borderRadius: 999,
+                  padding: '10px 16px',
+                  background: 'rgba(15,23,42,0.6)',
+                  color: '#f8fafc',
+                  fontSize: 18,
+                  fontWeight: 600,
+                }}
+              >
+                {label}
+              </span>
+            ))}
+          </div>
+          <div
+            style={{
+              borderRadius: 999,
+              padding: '10px 16px',
+              background: '#f59e0b',
+              color: '#111827',
+              fontSize: 17,
+              fontWeight: 700,
+              letterSpacing: '0.02em',
+              textTransform: 'uppercase',
+            }}
+          >
+            {ctaLabel}
+          </div>
         </div>
       </div>
     ),

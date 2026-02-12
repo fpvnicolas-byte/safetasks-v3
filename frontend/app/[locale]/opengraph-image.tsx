@@ -23,6 +23,11 @@ export default async function OpenGraphImage({ params }: ImageProps) {
   const { locale: requestedLocale } = await params
   const locale = getValidLocale(requestedLocale)
   const seo = getSeoCopy(locale)
+  const headline =
+    locale === 'pt-br'
+      ? 'Sistema de Producao para Equipes Audiovisuais'
+      : 'Production OS for Film Teams'
+  const ctaLabel = locale === 'pt-br' ? 'Criar conta gratis' : 'Create free account'
 
   return new ImageResponse(
     (
@@ -87,7 +92,7 @@ export default async function OpenGraphImage({ params }: ImageProps) {
             fontWeight: 700,
             letterSpacing: '-0.02em',
           }}>
-            {seo.landingTitle}
+            {headline}
           </div>
           <div style={{
             fontSize: 30,
@@ -99,26 +104,45 @@ export default async function OpenGraphImage({ params }: ImageProps) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          {BADGES[locale].map((badge) => (
-            <div
-              key={badge}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: 999,
-                border: '1px solid rgba(226,232,240,0.32)',
-                background: 'rgba(15,23,42,0.55)',
-                color: '#e2e8f0',
-                padding: '10px 18px',
-                fontSize: 18,
-                fontWeight: 600,
-              }}
-            >
-              {badge}
-            </div>
-          ))}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            {BADGES[locale].map((badge) => (
+              <div
+                key={badge}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 999,
+                  border: '1px solid rgba(226,232,240,0.32)',
+                  background: 'rgba(15,23,42,0.55)',
+                  color: '#e2e8f0',
+                  padding: '10px 18px',
+                  fontSize: 18,
+                  fontWeight: 600,
+                }}
+              >
+                {badge}
+              </div>
+            ))}
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 999,
+              background: '#f59e0b',
+              color: '#111827',
+              padding: '10px 18px',
+              fontSize: 18,
+              fontWeight: 700,
+              letterSpacing: '0.02em',
+              textTransform: 'uppercase',
+            }}
+          >
+            {ctaLabel}
+          </div>
         </div>
       </div>
     ),
