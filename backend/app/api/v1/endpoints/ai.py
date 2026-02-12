@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from uuid import UUID
 from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 import hashlib
 import time
+import json
 
 from app.api.deps import (
     get_current_organization,
@@ -56,6 +57,92 @@ def _map_ai_error_to_http(error_message: str) -> tuple[int, str]:
 def _raise_for_ai_error(error_message: str) -> None:
     http_status, detail = _map_ai_error_to_http(error_message)
     raise HTTPException(status_code=http_status, detail=detail)
+
+
+def _resolve_response_language(
+    *,
+    script_content: Optional[str] = None,
+    analysis_result: Optional[Dict[str, Any]] = None,
+) -> str:
+    """
+    Resolve response language for downstream AI or server-generated text.
+    Priority:
+    1) analysis metadata.response_language
+    2) language detected from script content
+    3) language detected from analysis payload text
+    4) English fallback
+    """
+    if isinstance(analysis_result, dict):
+        metadata = analysis_result.get("metadata")
+        if isinstance(metadata, dict):
+            metadata_language = metadata.get("response_language")
+            if isinstance(metadata_language, str) and metadata_language.strip():
+                normalized = metadata_language.strip().lower()
+                if normalized.startswith("pt"):
+                    return "pt-BR"
+                if normalized.startswith("en"):
+                    return "en"
+
+    if script_content and script_content.strip():
+        return ai_engine_service.detect_content_language(script_content)
+
+    if isinstance(analysis_result, dict):
+        payload_text = json.dumps(analysis_result, ensure_ascii=False)
+        if payload_text.strip():
+            return ai_engine_service.detect_content_language(payload_text)
+
+    return "en"
+
+
+def _is_pt_br(language: str) -> bool:
+    return (language or "").lower().startswith("pt")
+
+
+def _localized_text(language: str, *, pt_br: str, en: str) -> str:
+    return pt_br if _is_pt_br(language) else en
+
+
+def _equipment_recommendation_copy(language: str, equipment_list: List[str]) -> tuple[str, str]:
+    if _is_pt_br(language):
+        return (
+            "Recomendações de Equipamentos",
+            f"Com base na análise do roteiro, os seguintes equipamentos são recomendados: {', '.join(equipment_list)}",
+        )
+    return (
+        "Equipment Recommendations",
+        f"Based on script analysis, the following equipment is recommended: {', '.join(equipment_list)}",
+    )
+
+
+def _schedule_recommendation_copy(
+    language: str,
+    scene_count: int,
+    location_count: int,
+) -> tuple[str, str, List[str]]:
+    if _is_pt_br(language):
+        action_items = [
+            f"Planejar {scene_count} cenas",
+            f"Coordenar {location_count} locações únicas" if location_count else "Coordenar locações e autorizações",
+            "Agendar autorizações de locação",
+            "Planejar disponibilidade de equipe e elenco",
+        ]
+        description = (
+            f"Seu roteiro contém {scene_count} cenas em {location_count} locações. "
+            "Um bom planejamento de cronograma será essencial para eficiência."
+        )
+        return ("Recomendações de Cronograma de Produção", description, action_items)
+
+    action_items = [
+        f"Plan for {scene_count} scenes",
+        f"Coordinate {location_count} unique locations" if location_count else "Coordinate locations and permits",
+        "Schedule location permits",
+        "Plan crew and talent availability",
+    ]
+    description = (
+        f"Your script contains {scene_count} scenes across {location_count} locations. "
+        "Proper scheduling will be critical for efficiency."
+    )
+    return ("Production Schedule Recommendations", description, action_items)
 
 
 def infer_suggestion_type(text: str) -> str:
@@ -192,12 +279,17 @@ async def process_script_analysis(
         )
         if isinstance(analysis_result, dict) and analysis_result.get("error"):
             _raise_for_ai_error(str(analysis_result["error"]))
+        response_language = _resolve_response_language(
+            script_content=script_content,
+            analysis_result=analysis_result,
+        )
 
         # Generate production suggestions
         suggestions = await ai_engine_service.suggest_production_elements(
             organization_id=organization_id,
             script_analysis=analysis_result,
-            project_context={"project_id": str(project_id)}
+            project_context={"project_id": str(project_id)},
+            response_language=response_language,
         )
         if isinstance(suggestions, dict) and suggestions.get("error"):
             _raise_for_ai_error(str(suggestions["error"]))
@@ -250,8 +342,22 @@ async def process_script_analysis(
             db=db,
             organization_id=organization_id,
             profile_id=profile_id,
-            title="Script Analysis Complete",
-            message=f"AI analysis of your script is ready. Found {len(analysis_result.get('characters', []))} characters and {len(analysis_result.get('scenes', []))} scenes.",
+            title=_localized_text(
+                response_language,
+                pt_br="Análise de Roteiro Concluída",
+                en="Script Analysis Complete",
+            ),
+            message=_localized_text(
+                response_language,
+                pt_br=(
+                    f"A análise de IA do seu roteiro está pronta. "
+                    f"Foram encontrados {len(analysis_result.get('characters', []))} personagens e {len(analysis_result.get('scenes', []))} cenas."
+                ),
+                en=(
+                    f"AI analysis of your script is ready. Found {len(analysis_result.get('characters', []))} "
+                    f"characters and {len(analysis_result.get('scenes', []))} scenes."
+                ),
+            ),
             type="success",
             metadata={
                 "analysis_id": str(saved_analysis.id),
@@ -262,6 +368,8 @@ async def process_script_analysis(
         )
 
     except Exception as e:
+        response_language = ai_engine_service.detect_content_language(script_content or "")
+
         # Log failed usage
         processing_time_ms = int((time.time() - start_time) * 1000)
         await ai_usage_log_service.log_request(
@@ -280,8 +388,16 @@ async def process_script_analysis(
             db=db,
             organization_id=organization_id,
             profile_id=profile_id,
-            title="Script Analysis Failed",
-            message=f"Failed to analyze script: {str(e)}",
+            title=_localized_text(
+                response_language,
+                pt_br="Falha na Análise de Roteiro",
+                en="Script Analysis Failed",
+            ),
+            message=_localized_text(
+                response_language,
+                pt_br=f"Falha ao analisar o roteiro: {str(e)}",
+                en=f"Failed to analyze script: {str(e)}",
+            ),
             type="error",
             metadata={"error": str(e), "project_id": str(project_id)}
         )
@@ -348,18 +464,31 @@ async def analyze_script(
         )
 
         # Create initial notification
+        response_language = ai_engine_service.detect_content_language(script_content)
         await notification_service.create_for_user(
             db=db,
             organization_id=organization_id,
             profile_id=profile.id,
-            title="Script Analysis Started",
-            message="AI is analyzing your script. You'll receive a notification when it's complete.",
+            title=_localized_text(
+                response_language,
+                pt_br="Análise de Roteiro Iniciada",
+                en="Script Analysis Started",
+            ),
+            message=_localized_text(
+                response_language,
+                pt_br="A IA está analisando seu roteiro. Você receberá uma notificação quando terminar.",
+                en="AI is analyzing your script. You'll receive a notification when it's complete.",
+            ),
             type="info",
             metadata={"project_id": str(project_id), "status": "processing"}
         )
 
         return {
-            "message": "Script analysis started. Check notifications for results.",
+            "message": _localized_text(
+                response_language,
+                pt_br="Análise de roteiro iniciada. Verifique as notificações para os resultados.",
+                en="Script analysis started. Check notifications for results.",
+            ),
             "project_id": str(project_id),
             "status": "processing"
         }
@@ -646,6 +775,10 @@ async def estimate_budget(
         # ai_engine_service returns {"error": "..."} on failures/timeouts.
         if isinstance(result, dict) and result.get("error"):
             _raise_for_ai_error(str(result["error"]))
+        response_language = _resolve_response_language(
+            script_content=request.script_content,
+            analysis_result=result,
+        )
         
         # Log successful usage
         processing_time_ms = int((time.time() - start_time) * 1000)
@@ -663,7 +796,11 @@ async def estimate_budget(
 
         # Merge with base response
         return {
-            "message": "Budget estimation generated successfully",
+            "message": _localized_text(
+                response_language,
+                pt_br="Estimativa de orçamento gerada com sucesso",
+                en="Budget estimation generated successfully",
+            ),
             "project_id": str(request.project_id),
             "estimation_type": request.estimation_type,
             "estimated_budget_cents": result.get("estimated_budget_cents", 0),
@@ -733,6 +870,7 @@ async def generate_shooting_day_suggestions(
         
         # Determine source data for suggestions
         analysis_data = {}
+        response_language = "en"
         
         # 1. If script content is provided in request, analyze it on the fly
         if request.script_content and len(request.script_content.strip()) > 0:
@@ -744,6 +882,10 @@ async def generate_shooting_day_suggestions(
             if isinstance(analysis_result, dict) and analysis_result.get("error"):
                 _raise_for_ai_error(str(analysis_result["error"]))
             analysis_data = analysis_result
+            response_language = _resolve_response_language(
+                script_content=request.script_content,
+                analysis_result=analysis_result,
+            )
         else:
             # 2. Fallback: look for existing analysis in DB
             query = select(ScriptAnalysis).where(
@@ -754,6 +896,9 @@ async def generate_shooting_day_suggestions(
             
             if latest_analysis and latest_analysis.analysis_result:
                 analysis_data = latest_analysis.analysis_result
+                response_language = _resolve_response_language(
+                    analysis_result=analysis_data,
+                )
 
         if not analysis_data:
             raise HTTPException(
@@ -765,7 +910,8 @@ async def generate_shooting_day_suggestions(
         suggestions = await ai_engine_service.suggest_production_elements(
             organization_id=organization_id,
             script_analysis=analysis_data,
-            project_context={"project_id": str(request.project_id)}
+            project_context={"project_id": str(request.project_id)},
+            response_language=response_language,
         )
         if isinstance(suggestions, dict) and suggestions.get("error"):
             _raise_for_ai_error(str(suggestions["error"]))
@@ -787,7 +933,11 @@ async def generate_shooting_day_suggestions(
         )
         
         return {
-            "message": "Shooting day suggestions generated",
+            "message": _localized_text(
+                response_language,
+                pt_br="Sugestões de dia de filmagem geradas",
+                en="Shooting day suggestions generated",
+            ),
             "project_id": str(request.project_id),
             "suggestion_type": request.suggestion_type,
             "suggestions": shooting_day_data,
@@ -880,8 +1030,16 @@ async def analyze_script_content(
             duplicate_result = await db.execute(duplicate_query)
             duplicate_analysis = duplicate_result.scalar_one_or_none()
             if duplicate_analysis:
+                duplicate_language = _resolve_response_language(
+                    script_content=request.script_content,
+                    analysis_result=duplicate_analysis.analysis_result,
+                )
                 return {
-                    "message": "Script analysis already exists for this content",
+                    "message": _localized_text(
+                        duplicate_language,
+                        pt_br="A análise deste conteúdo já existe",
+                        en="Script analysis already exists for this content",
+                    ),
                     "project_id": str(request.project_id),
                     "analysis_type": request.analysis_type,
                     "result": duplicate_analysis.analysis_result,
@@ -904,6 +1062,10 @@ async def analyze_script_content(
         # ai_engine_service returns a structured dict with "error" on failures/timeouts.
         if isinstance(analysis_result, dict) and analysis_result.get("error"):
             _raise_for_ai_error(str(analysis_result["error"]))
+        response_language = _resolve_response_language(
+            script_content=request.script_content,
+            analysis_result=analysis_result,
+        )
 
         # Save script analysis to database
         saved_analysis = await script_analysis_service.create_from_ai_result(
@@ -977,13 +1139,17 @@ async def analyze_script_content(
                     break
 
         if equipment_list:
+            equipment_title, equipment_description = _equipment_recommendation_copy(
+                response_language,
+                equipment_list,
+            )
             await ai_recommendation_service.create_from_ai_result(
                 db=db,
                 organization_id=organization_id,
                 project_id=request.project_id,
                 recommendation_type="equipment",
-                title="Equipment Recommendations",
-                description=f'Based on script analysis, the following equipment is recommended: {", ".join(equipment_list)}',
+                title=equipment_title,
+                description=equipment_description,
                 confidence=0.80,
                 priority="high",
                 action_items=equipment_list,
@@ -1004,20 +1170,19 @@ async def analyze_script_content(
                     elif isinstance(loc, str) and loc.strip():
                         locations.add(loc.strip())
 
-            action_items = [
-                f"Plan for {scene_count} scenes",
-                f"Coordinate {len(locations)} unique locations" if locations else "Coordinate locations and permits",
-                "Schedule location permits",
-                "Plan crew and talent availability",
-            ]
+            schedule_title, schedule_description, action_items = _schedule_recommendation_copy(
+                response_language,
+                scene_count,
+                len(locations),
+            )
 
             await ai_recommendation_service.create_from_ai_result(
                 db=db,
                 organization_id=organization_id,
                 project_id=request.project_id,
                 recommendation_type="schedule",
-                title="Production Schedule Recommendations",
-                description=f"Your script contains {scene_count} scenes across {len(locations)} locations. Proper scheduling will be critical for efficiency.",
+                title=schedule_title,
+                description=schedule_description,
                 confidence=0.85,
                 priority="high",
                 action_items=action_items,
@@ -1038,7 +1203,11 @@ async def analyze_script_content(
         )
 
         return {
-            "message": "Script analysis completed",
+            "message": _localized_text(
+                response_language,
+                pt_br="Análise de roteiro concluída",
+                en="Script analysis completed",
+            ),
             "project_id": str(request.project_id),
             "analysis_type": request.analysis_type,
             "result": analysis_result,

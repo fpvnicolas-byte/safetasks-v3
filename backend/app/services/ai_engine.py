@@ -4,6 +4,7 @@ import time
 import asyncio
 import hashlib
 import random
+import re
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Union
 from uuid import UUID
@@ -48,6 +49,48 @@ MAX_RETRY_ATTEMPTS = 3  # Maximum retry attempts for failed requests
 MAX_CONCURRENT_API_CALLS = 2  # Protect provider quota from local request bursts
 RETRY_BASE_DELAY_SECONDS = 1.0
 RETRY_MAX_DELAY_SECONDS = 8.0
+
+SUPPORTED_RESPONSE_LANGUAGES = {"pt-br", "pt", "en", "en-us", "en-gb"}
+PT_BR_DIACRITICS_PATTERN = re.compile(r"[àáâãçéêíóôõú]")
+PT_BR_LANGUAGE_MARKERS = (
+    "roteiro",
+    "cena",
+    "cenas",
+    "personagem",
+    "personagens",
+    "produção",
+    "filmagem",
+    "orçamento",
+    "equipamento",
+    "locação",
+    "interior",
+    "exterior",
+    "não",
+    "com",
+    "para",
+    "uma",
+    "que",
+    "está",
+)
+EN_LANGUAGE_MARKERS = (
+    "script",
+    "scene",
+    "scenes",
+    "character",
+    "characters",
+    "production",
+    "shooting",
+    "budget",
+    "equipment",
+    "location",
+    "interior",
+    "exterior",
+    "not",
+    "with",
+    "for",
+    "the",
+    "is",
+)
 
 
 class AIEngineService:
@@ -226,6 +269,96 @@ class AIEngineService:
             raise last_error
         raise RuntimeError("AI request failed without a captured exception")
 
+    @staticmethod
+    def _normalize_response_language(language: Optional[str]) -> str:
+        """Normalize locale identifiers to supported response language values."""
+        if not language:
+            return "en"
+        normalized = language.strip().lower()
+        if normalized not in SUPPORTED_RESPONSE_LANGUAGES:
+            if normalized.startswith("pt"):
+                return "pt-BR"
+            if normalized.startswith("en"):
+                return "en"
+            return "en"
+        if normalized.startswith("pt"):
+            return "pt-BR"
+        if normalized.startswith("en"):
+            return "en"
+        return "en"
+
+    @staticmethod
+    def _language_label(response_language: str) -> str:
+        return "Brazilian Portuguese (pt-BR)" if response_language == "pt-BR" else "English (en)"
+
+    @classmethod
+    def _count_language_markers(cls, sample: str, markers: tuple[str, ...]) -> int:
+        total = 0
+        for marker in markers:
+            total += len(re.findall(rf"\b{re.escape(marker)}\b", sample))
+        return total
+
+    def detect_content_language(self, text: str) -> str:
+        """
+        Lightweight language detector for request content.
+        Returns "pt-BR" or "en".
+        """
+        if not text:
+            return "en"
+
+        sample = text.strip().lower()[:12000]
+        if not sample:
+            return "en"
+
+        if PT_BR_DIACRITICS_PATTERN.search(sample):
+            return "pt-BR"
+
+        pt_hits = self._count_language_markers(sample, PT_BR_LANGUAGE_MARKERS)
+        en_hits = self._count_language_markers(sample, EN_LANGUAGE_MARKERS)
+
+        if pt_hits > en_hits:
+            return "pt-BR"
+        return "en"
+
+    def _infer_response_language(
+        self,
+        *,
+        response_language: Optional[str] = None,
+        script_content: Optional[str] = None,
+        script_analysis: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        """
+        Resolve response language in priority order:
+        explicit param -> analysis metadata -> content detection -> English.
+        """
+        if response_language:
+            return self._normalize_response_language(response_language)
+
+        if isinstance(script_analysis, dict):
+            metadata = script_analysis.get("metadata")
+            if isinstance(metadata, dict):
+                metadata_language = metadata.get("response_language")
+                if isinstance(metadata_language, str) and metadata_language.strip():
+                    return self._normalize_response_language(metadata_language)
+
+        if script_content and script_content.strip():
+            return self.detect_content_language(script_content)
+
+        if isinstance(script_analysis, dict):
+            analysis_text = json.dumps(script_analysis, ensure_ascii=False)
+            if analysis_text.strip():
+                return self.detect_content_language(analysis_text)
+
+        return "en"
+
+    def _response_language_instruction(self, response_language: str) -> str:
+        language_label = self._language_label(response_language)
+        return (
+            f"Use {language_label} for all human-readable text values "
+            "(descriptions, notes, reasoning, recommendations). "
+            "Keep JSON keys and constrained enum tokens exactly as specified."
+        )
+
     async def analyze_script_content(
         self,
         *,
@@ -233,6 +366,7 @@ class AIEngineService:
         script_content: str,
         project_id: Optional[UUID] = None,
         analysis_type: str = "full",
+        response_language: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Analyze script content and extract production elements.
@@ -308,9 +442,18 @@ class AIEngineService:
             
             # Content hash for audit trail
             content_hash = hashlib.sha256(clean_content.encode()).hexdigest()
+            resolved_language = self._infer_response_language(
+                response_language=response_language,
+                script_content=clean_content,
+            )
             
             # Create the analysis prompt with monitoring
-            prompt = self._build_script_analysis_prompt(clean_content, project_id, analysis_type=analysis_type)
+            prompt = self._build_script_analysis_prompt(
+                clean_content,
+                project_id,
+                analysis_type=analysis_type,
+                response_language=resolved_language,
+            )
             
             # Performance monitoring
             prompt_build_time = time.time() - start_time
@@ -380,6 +523,7 @@ class AIEngineService:
                 "project_id": str(project_id) if project_id else None,
                 "model_used": "gemini-2.0-flash",
                 "analysis_type": "script_breakdown",
+                "response_language": resolved_language,
                 "request_id": request_id,
                 "content_hash": content_hash,
                 "processing_times": {
@@ -495,7 +639,8 @@ class AIEngineService:
         *,
         organization_id: UUID,
         script_analysis: Dict[str, Any],
-        project_context: Optional[Dict[str, Any]] = None
+        project_context: Optional[Dict[str, Any]] = None,
+        response_language: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Generate production suggestions based on script analysis.
@@ -557,7 +702,15 @@ class AIEngineService:
             
             # Create prompt with monitoring
             prompt_start_time = time.time()
-            prompt = self._build_production_suggestions_prompt(script_analysis, project_context)
+            resolved_language = self._infer_response_language(
+                response_language=response_language,
+                script_analysis=script_analysis,
+            )
+            prompt = self._build_production_suggestions_prompt(
+                script_analysis,
+                project_context,
+                response_language=resolved_language,
+            )
             prompt_build_time = time.time() - prompt_start_time
             
             logger.debug(
@@ -618,6 +771,7 @@ class AIEngineService:
                 "organization_id": str(organization_id),
                 "model_used": "gemini-2.0-flash",
                 "suggestion_type": "production_elements",
+                "response_language": resolved_language,
                 "request_id": request_id,
                 "input_content_metrics": content_metrics,
                 "processing_times": {
@@ -714,6 +868,7 @@ class AIEngineService:
         project_id: Optional[UUID],
         *,
         analysis_type: str = "full",
+        response_language: str = "en",
     ) -> str:
         """Build the prompt for script analysis."""
         focus_instructions = {
@@ -722,6 +877,9 @@ class AIEngineService:
             "scenes": "Focus on extracting SCENES only. Keep other arrays empty.",
             "locations": "Focus on extracting LOCATIONS only. Keep other arrays empty.",
         }.get(analysis_type, "Provide a balanced, end-to-end breakdown.")
+        language_instruction = self._response_language_instruction(
+            self._normalize_response_language(response_language)
+        )
 
         return f"""
 Analyze this film script and extract key production elements for production planning.
@@ -730,6 +888,7 @@ Important:
 - Return ONLY valid JSON (no markdown, no commentary).
 - Always include the keys: characters, locations, scenes, suggested_equipment, production_notes.
 - {focus_instructions}
+- {language_instruction}
 - Keep the output concise and bounded: max 30 characters, 25 locations, 50 scenes, 8 equipment categories, 10 production notes.
 - Keep descriptions under 20 words.
 
@@ -780,11 +939,20 @@ Return a JSON object with the following structure:
 }}
 """
 
-    def _build_production_suggestions_prompt(self, script_analysis: Dict[str, Any], project_context: Optional[Dict[str, Any]]) -> str:
+    def _build_production_suggestions_prompt(
+        self,
+        script_analysis: Dict[str, Any],
+        project_context: Optional[Dict[str, Any]],
+        *,
+        response_language: str = "en",
+    ) -> str:
         """Build the prompt for production suggestions."""
         context_str = ""
         if project_context:
             context_str = f"\nProject Context: {json.dumps(project_context)}"
+        language_instruction = self._response_language_instruction(
+            self._normalize_response_language(response_language)
+        )
 
         return f"""
 Based on this script analysis, provide practical production suggestions:
@@ -826,6 +994,7 @@ Return a JSON object with:
 }}
 
 Focus on actionable suggestions that help production planning and logistics.
+{language_instruction}
 """
 
     async def estimate_project_budget(
@@ -834,7 +1003,8 @@ Focus on actionable suggestions that help production planning and logistics.
         organization_id: UUID,
         script_content: str,
         estimation_type: str = "detailed",
-        project_context: Optional[Dict[str, Any]] = None
+        project_context: Optional[Dict[str, Any]] = None,
+        response_language: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Estimate project budget based on script content.
@@ -872,15 +1042,25 @@ Focus on actionable suggestions that help production planning and logistics.
                 raise ValueError("Script content is empty")
 
             # Content metrics for monitoring
+            resolved_language = self._infer_response_language(
+                response_language=response_language,
+                script_content=script_content,
+            )
             content_metrics = {
                 "content_length": len(script_content),
                 "estimation_type": estimation_type,
-                "project_context_provided": bool(project_context)
+                "project_context_provided": bool(project_context),
+                "response_language": resolved_language,
             }
             
             # Create prompt with monitoring
             prompt_start_time = time.time()
-            prompt = self._build_budget_estimation_prompt(script_content, estimation_type, project_context)
+            prompt = self._build_budget_estimation_prompt(
+                script_content,
+                estimation_type,
+                project_context,
+                response_language=resolved_language,
+            )
             prompt_build_time = time.time() - prompt_start_time
             
             logger.debug(
@@ -939,6 +1119,7 @@ Focus on actionable suggestions that help production planning and logistics.
             estimation["metadata"] = {
                 "organization_id": str(organization_id),
                 "model_used": "gemini-2.0-flash",
+                "response_language": resolved_language,
                 "request_id": request_id,
                 "processing_times": {
                     "total_ms": int(processing_time * 1000),
@@ -1000,11 +1181,21 @@ Focus on actionable suggestions that help production planning and logistics.
                 "processing_time_ms": int((time.time() - start_time) * 1000)
             }
 
-    def _build_budget_estimation_prompt(self, script_content: str, estimation_type: str, project_context: Optional[Dict[str, Any]]) -> str:
+    def _build_budget_estimation_prompt(
+        self,
+        script_content: str,
+        estimation_type: str,
+        project_context: Optional[Dict[str, Any]],
+        *,
+        response_language: str = "en",
+    ) -> str:
         """Build the prompt for budget estimation."""
         context_str = ""
         if project_context:
             context_str = f"Project Context: {json.dumps(project_context)}"
+        language_instruction = self._response_language_instruction(
+            self._normalize_response_language(response_language)
+        )
 
         detail_level = "Provide a high-level estimate."
         if estimation_type == "detailed":
@@ -1039,6 +1230,7 @@ Focus on actionable suggestions that help production planning and logistics.
         }}
         
         Provide realistic market rates for a standard independent production.
+        {language_instruction}
         """
 
     async def validate_content_ownership(
