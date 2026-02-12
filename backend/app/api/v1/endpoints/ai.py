@@ -791,7 +791,8 @@ async def get_ai_suggestions(
 
         # Query suggestions from database
         query = select(AiSuggestion).where(
-            AiSuggestion.project_id == project_id
+            AiSuggestion.project_id == project_id,
+            AiSuggestion.organization_id == organization_id,
         ).order_by(AiSuggestion.created_at.desc())
         
         result = await db.execute(query)

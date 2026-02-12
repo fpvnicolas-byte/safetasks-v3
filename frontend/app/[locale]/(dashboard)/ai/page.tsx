@@ -38,7 +38,9 @@ export default function AiFeaturesPage() {
   const router = useRouter()
   const { organizationId } = useAuth()
 
-  const [selectedProjectId, setSelectedProjectId] = useState<string>('')
+  const [analysisProjectId, setAnalysisProjectId] = useState<string>('')
+  const [suggestionsProjectId, setSuggestionsProjectId] = useState<string>('')
+  const [recommendationsProjectId, setRecommendationsProjectId] = useState<string>('')
   const [scriptText, setScriptText] = useState<string>('')
   const [analysisType, setAnalysisType] = useState<string>('full')
   const [deletingAnalysisId, setDeletingAnalysisId] = useState<string | null>(null)
@@ -46,8 +48,8 @@ export default function AiFeaturesPage() {
 
   // Queries
   const { data: analyses, isLoading: isLoadingAnalyses } = useAiAnalysis(organizationId!)
-  const { data: suggestions, isLoading: isLoadingSuggestions } = useAiSuggestions(selectedProjectId)
-  const { data: recommendations, isLoading: isLoadingRecommendations } = useAiRecommendations(selectedProjectId)
+  const { data: suggestions, isLoading: isLoadingSuggestions } = useAiSuggestions(suggestionsProjectId)
+  const { data: recommendations, isLoading: isLoadingRecommendations } = useAiRecommendations(recommendationsProjectId)
   const { data: projects, isLoading: isLoadingProjects } = useProjects(organizationId || undefined)
   const { mutateAsync: analyzeScript, isPending: isAnalyzing } = useAnalyzeScript()
   const { mutateAsync: deleteAnalysis } = useDeleteAiAnalysis()
@@ -68,7 +70,7 @@ export default function AiFeaturesPage() {
   }
 
   const handleScriptAnalysis = async () => {
-    if (!selectedProjectId) {
+    if (!analysisProjectId) {
       toast.error(tFeedback('selectProject'))
       return
     }
@@ -80,7 +82,7 @@ export default function AiFeaturesPage() {
 
     try {
       await analyzeScript({
-        project_id: selectedProjectId,
+        project_id: analysisProjectId,
         analysis_type: analysisType as 'full' | 'characters' | 'scenes' | 'locations',
         script_content: scriptText
       })
@@ -328,7 +330,7 @@ export default function AiFeaturesPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="project-select">{t('analysisForm.selectProject')}</Label>
-                  <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                  <Select value={analysisProjectId} onValueChange={setAnalysisProjectId}>
                     <SelectTrigger id="project-select">
                       <SelectValue placeholder={t('analysisForm.selectProjectPlaceholder')} />
                     </SelectTrigger>
@@ -368,7 +370,7 @@ export default function AiFeaturesPage() {
                   <div className="flex gap-2">
                     <Button
                       onClick={handleScriptAnalysis}
-                      disabled={isAnalyzing || !selectedProjectId || !scriptText.trim()}
+                      disabled={isAnalyzing || !analysisProjectId || !scriptText.trim()}
                       className="flex-1"
                     >
                       {isAnalyzing ? (
@@ -468,11 +470,11 @@ export default function AiFeaturesPage() {
 	            <CardContent className="py-4">
 	              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
 	                <div className="space-y-2">
-	                  <Label htmlFor="project-select-suggestions">{t('analysisForm.selectProject')}</Label>
-	                  <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
-	                    <SelectTrigger id="project-select-suggestions">
-	                      <SelectValue placeholder={t('analysisForm.selectProjectPlaceholder')} />
-	                    </SelectTrigger>
+                  <Label htmlFor="project-select-suggestions">{t('analysisForm.selectProject')}</Label>
+                  <Select value={suggestionsProjectId} onValueChange={setSuggestionsProjectId}>
+                    <SelectTrigger id="project-select-suggestions">
+                      <SelectValue placeholder={t('analysisForm.selectProjectPlaceholder')} />
+                    </SelectTrigger>
 	                    <SelectContent>
 	                      {isLoadingProjects ? (
 	                        <div className="p-2 text-sm text-muted-foreground">{tCommonLabels('loading')}</div>
@@ -547,12 +549,12 @@ export default function AiFeaturesPage() {
               ))}
             </div>
 	          ) : (
-	            <Card>
-	              <CardContent className="py-8 text-center text-muted-foreground">
-	                {selectedProjectId ? t('empty.suggestions') : tFeedback('selectProject')}
-	              </CardContent>
-	            </Card>
-	          )}
+		            <Card>
+		              <CardContent className="py-8 text-center text-muted-foreground">
+		                {suggestionsProjectId ? t('empty.suggestions') : tFeedback('selectProject')}
+		              </CardContent>
+		            </Card>
+		          )}
 	        </TabsContent>
 
 	        <TabsContent value="recommendations" className="space-y-6">
@@ -567,11 +569,11 @@ export default function AiFeaturesPage() {
 	            <CardContent className="py-4">
 	              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
 	                <div className="space-y-2">
-	                  <Label htmlFor="project-select-recommendations">{t('analysisForm.selectProject')}</Label>
-	                  <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
-	                    <SelectTrigger id="project-select-recommendations">
-	                      <SelectValue placeholder={t('analysisForm.selectProjectPlaceholder')} />
-	                    </SelectTrigger>
+		                  <Label htmlFor="project-select-recommendations">{t('analysisForm.selectProject')}</Label>
+		                  <Select value={recommendationsProjectId} onValueChange={setRecommendationsProjectId}>
+		                    <SelectTrigger id="project-select-recommendations">
+		                      <SelectValue placeholder={t('analysisForm.selectProjectPlaceholder')} />
+		                    </SelectTrigger>
 	                    <SelectContent>
 	                      {isLoadingProjects ? (
 	                        <div className="p-2 text-sm text-muted-foreground">{tCommonLabels('loading')}</div>
@@ -656,12 +658,12 @@ export default function AiFeaturesPage() {
               ))}
             </div>
 	          ) : (
-	            <Card>
-	              <CardContent className="py-8 text-center text-muted-foreground">
-	                {selectedProjectId ? t('empty.recommendations') : tFeedback('selectProject')}
-	              </CardContent>
-	            </Card>
-	          )}
+		            <Card>
+		              <CardContent className="py-8 text-center text-muted-foreground">
+		                {recommendationsProjectId ? t('empty.recommendations') : tFeedback('selectProject')}
+		              </CardContent>
+		            </Card>
+		          )}
 	        </TabsContent>
 
         <TabsContent value="analysis" className="space-y-6">
