@@ -21,7 +21,7 @@ from app.db.session import get_db
 from app.services.ai_engine import ai_engine_service
 from app.services.notifications import notification_service
 from app.services.storage import storage_service
-from app.services.entitlements import ensure_ai_credits, increment_ai_usage
+from app.services.entitlements import ensure_and_reserve_ai_credits
 from app.modules.ai.service import (
     script_analysis_service,
     ai_suggestion_service,
@@ -628,8 +628,7 @@ async def analyze_script(
         """
 
         organization = await get_organization_record(profile, db)
-        await ensure_ai_credits(db, organization, credits_to_add=1)
-        await increment_ai_usage(db, organization.id, credits_added=1)
+        await ensure_and_reserve_ai_credits(db, organization, credits_to_add=1)
 
         # Start background processing
         background_tasks.add_task(
@@ -961,8 +960,7 @@ async def estimate_budget(
             )
 
         organization = await get_organization_record(profile, db)
-        await ensure_ai_credits(db, organization, credits_to_add=1)
-        await increment_ai_usage(db, organization.id, credits_added=1)
+        await ensure_and_reserve_ai_credits(db, organization, credits_to_add=1)
 
         # Generate real budget estimation
         result = await ai_engine_service.estimate_project_budget(
@@ -1063,8 +1061,7 @@ async def generate_shooting_day_suggestions(
             )
 
         organization = await get_organization_record(profile, db)
-        await ensure_ai_credits(db, organization, credits_to_add=1)
-        await increment_ai_usage(db, organization.id, credits_added=1)
+        await ensure_and_reserve_ai_credits(db, organization, credits_to_add=1)
 
         # Generate real shooting day suggestions
         
@@ -1248,8 +1245,7 @@ async def analyze_script_content(
                 }
 
         organization = await get_organization_record(profile, db)
-        await ensure_ai_credits(db, organization, credits_to_add=1)
-        await increment_ai_usage(db, organization.id, credits_added=1)
+        await ensure_and_reserve_ai_credits(db, organization, credits_to_add=1)
 
         # Analyze the script with AI
         analysis_result = await ai_engine_service.analyze_script_content(
@@ -1473,8 +1469,7 @@ async def analyze_text_content(
             )
 
         organization = await get_organization_record(profile, db)
-        await ensure_ai_credits(db, organization, credits_to_add=1)
-        await increment_ai_usage(db, organization.id, credits_added=1)
+        await ensure_and_reserve_ai_credits(db, organization, credits_to_add=1)
 
         result = await ai_engine_service.analyze_script_content(
             organization_id=organization_id,

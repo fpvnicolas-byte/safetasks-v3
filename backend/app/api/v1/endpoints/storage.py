@@ -14,7 +14,7 @@ from app.api.deps import (
 )
 from app.db.session import get_db
 from app.services.storage import storage_service
-from app.services.entitlements import ensure_storage_capacity, increment_storage_usage, decrement_storage_usage
+from app.services.entitlements import ensure_and_reserve_storage_capacity, decrement_storage_usage
 from app.schemas.storage import (
     FileUploadResponse, SignedUrlRequest, SignedUrlResponse,
 )
@@ -44,7 +44,7 @@ async def upload_file(
         file_content = await file.read()
 
         organization = await get_organization_record(profile, db)
-        await ensure_storage_capacity(db, organization, bytes_to_add=len(file_content))
+        await ensure_and_reserve_storage_capacity(db, organization, bytes_to_add=len(file_content))
 
         # Determine bucket based on module/file type
         if module == "kits":
@@ -62,7 +62,6 @@ async def upload_file(
             entity_id=entity_id
         )
 
-        await increment_storage_usage(db, organization_id, bytes_added=len(file_content))
         return FileUploadResponse(**result)
 
     except ValueError as e:

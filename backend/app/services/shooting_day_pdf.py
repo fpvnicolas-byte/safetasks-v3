@@ -380,6 +380,7 @@ class ShootingDayPDFService:
             Dict with PDF path, bucket, size, and signed URL
         """
         from app.services.storage import storage_service
+        from app.services.entitlements import ensure_and_reserve_storage_capacity
 
         # Generate PDF
         pdf_bytes = await self.generate_pdf(
@@ -401,6 +402,12 @@ class ShootingDayPDFService:
         date_str = shooting_day.date.strftime("%Y-%m-%d") if shooting_day.date else datetime.now().strftime("%Y-%m-%d")
 
         filename = f"ShootingDay_{project_name}_{date_str}.pdf"
+
+        await ensure_and_reserve_storage_capacity(
+            db,
+            organization,
+            bytes_to_add=len(pdf_bytes)
+        )
 
         # Upload to storage (using shooting_day ID as entity_id for folder organization)
         upload_result = await storage_service.upload_file(

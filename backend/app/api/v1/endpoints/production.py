@@ -10,11 +10,13 @@ from app.api.deps import (
     get_current_profile,
     enforce_project_assignment,
     require_billing_active,
+    get_organization_record,
 )
 from app.db.session import get_db
 from app.services.production import production_service
 from app.services.ai_engine import ai_engine_service
 from app.services.notifications import notification_service
+from app.services.entitlements import ensure_and_reserve_ai_credits
 from app.schemas.production import ProjectBreakdown, AIScriptAnalysisCommit, Scene, Character
 from app.models.scheduling import ShootingDay
 
@@ -118,6 +120,9 @@ async def generate_breakdown_from_ai(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Project already has scenes. Use commit-ai-analysis to add more."
             )
+
+        organization = await get_organization_record(profile, db)
+        await ensure_and_reserve_ai_credits(db, organization, credits_to_add=1)
 
         # Start background analysis and commit
         background_tasks.add_task(

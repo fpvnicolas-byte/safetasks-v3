@@ -11,6 +11,7 @@ from app.schemas.organizations import OrganizationCreate, OrganizationUpdate
 from app.schemas.clients import ClientCreate, ClientUpdate
 from app.schemas.projects import ProjectCreate, ProjectUpdate
 from app.schemas.proposals import ProposalCreate, ProposalUpdate, ProposalApproval
+from app.services.entitlements import ensure_and_reserve_resource_limit
 from uuid import UUID
 
 
@@ -352,6 +353,12 @@ class ProposalService(BaseService[ProposalModel, ProposalCreate, ProposalUpdate]
             if approval_data.notes:
                 # TODO: Store approval notes in proposal metadata if needed
                 pass
+
+            organization = await db.get(OrganizationModel, organization_id)
+            if not organization:
+                raise ValueError("Organization not found")
+
+            await ensure_and_reserve_resource_limit(db, organization, resource="projects")
 
             # Create new project from proposal
             project_data = ProjectCreate(

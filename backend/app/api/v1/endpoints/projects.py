@@ -31,7 +31,7 @@ from app.models.projects import project_services
 from app.models.scheduling import ShootingDay as ShootingDayModel
 from app.models.transactions import Transaction as TransactionModel
 from app.modules.commercial.service import project_service, client_service
-from app.services.entitlements import ensure_resource_limit, increment_usage_count
+from app.services.entitlements import ensure_and_reserve_resource_limit, increment_usage_count
 from app.schemas.projects import Project, ProjectCreate, ProjectUpdate, ProjectWithClient, ProjectStats
 
 router = APIRouter()
@@ -87,8 +87,7 @@ async def create_project(
     Validates that the client belongs to the same organization.
     """
     organization = await get_organization_record(profile, db)
-    project_count = await project_service.count(db=db, organization_id=organization_id)
-    await ensure_resource_limit(db, organization, resource="projects", current_count=project_count)
+    await ensure_and_reserve_resource_limit(db, organization, resource="projects")
 
     # Validate that the client belongs to the same organization
     client = await client_service.get(
@@ -108,8 +107,6 @@ async def create_project(
         organization_id=organization_id,
         obj_in=project_in
     )
-    await increment_usage_count(db, organization_id, resource="projects", delta=1)
-
     # Load client relationship for response
     return await project_service.get(
         db=db,

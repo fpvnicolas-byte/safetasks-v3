@@ -14,7 +14,7 @@ from app.models.commercial import Supplier
 from app.models.billing import OrganizationUsage
 from app.models.organizations import Organization
 from app.schemas.invites import InviteCreate, InviteOut, InviteCreateResponse
-from app.services.entitlements import ensure_resource_limit, increment_usage_count
+from app.services.entitlements import ensure_and_reserve_resource_limit
 from app.api.deps import get_effective_role
 
 
@@ -184,20 +184,10 @@ async def accept_invite(
     if accepting_profile.organization_id is not None:
         raise HTTPException(status_code=409, detail="You already belong to an organization.")
 
-    # Seat enforcement with row lock
-    usage_result = await db.execute(
-        select(OrganizationUsage)
-        .where(OrganizationUsage.org_id == invite.org_id)
-        .with_for_update()
-    )
-    usage = usage_result.scalar_one_or_none()
-
     org = await db.get(Organization, invite.org_id)
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found.")
-
-    current_count = usage.users_count if usage else 0
-    await ensure_resource_limit(db, org, resource="users", current_count=current_count)
+    await ensure_and_reserve_resource_limit(db, org, resource="users")
 
     # Set profile fields
     accepting_profile.organization_id = invite.org_id
@@ -211,9 +201,6 @@ async def accept_invite(
         if supplier and supplier.organization_id == invite.org_id:
             supplier.profile_id = accepting_profile.id
             db.add(supplier)
-
-    # Increment seat count
-    await increment_usage_count(db, invite.org_id, resource="users", delta=1)
 
     # Update invite
     invite.status = "accepted"

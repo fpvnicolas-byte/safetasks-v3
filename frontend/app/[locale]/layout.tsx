@@ -3,29 +3,61 @@ import { BillingProvider } from '@/contexts/BillingContext'
 import { QueryProvider } from '@/lib/api/query-provider'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
+import { SITE_NAME, getOpenGraphImagePath, getSeoCopy, getSiteUrl, getTwitterImagePath } from '@/lib/seo'
+import { SpeedInsights } from '@vercel/speed-insights/next'
+import type { Metadata } from 'next'
 import { NextIntlClientProvider } from 'next-intl'
 import { notFound } from 'next/navigation'
-import { locales, isValidLocale, defaultLocale, type Locale } from '@/i18n/config'
+import { defaultLocale, isValidLocale, locales } from '@/i18n/config'
 import '../globals.css'
 
-export const metadata = {
-  title: 'SafeTasks V3 - Film Production Management',
-  description: 'Professional film production management platform',
+interface LocaleLayoutProps {
+  children: React.ReactNode
+  params: Promise<{ locale: string }>
 }
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }))
 }
 
-import { SpeedInsights } from "@vercel/speed-insights/next"
+export async function generateMetadata({ params }: Pick<LocaleLayoutProps, 'params'>): Promise<Metadata> {
+  const { locale: requestedLocale } = await params
+  const locale = isValidLocale(requestedLocale) ? requestedLocale : defaultLocale
+  const seo = getSeoCopy(locale)
 
-export default async function LocaleLayout({
-  children,
-  params
-}: {
-  children: React.ReactNode
-  params: Promise<{ locale: string }>
-}) {
+  return {
+    metadataBase: new URL(getSiteUrl()),
+    applicationName: SITE_NAME,
+    title: {
+      default: seo.siteTitle,
+      template: `%s | ${SITE_NAME}`,
+    },
+    description: seo.siteDescription,
+    openGraph: {
+      title: seo.siteTitle,
+      description: seo.siteDescription,
+      siteName: SITE_NAME,
+      locale: seo.openGraphLocale,
+      type: 'website',
+      images: [
+        {
+          url: getOpenGraphImagePath(locale),
+          width: 1200,
+          height: 630,
+          alt: seo.siteTitle,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: seo.siteTitle,
+      description: seo.siteDescription,
+      images: [getTwitterImagePath(locale)],
+    },
+  }
+}
+
+export default async function LocaleLayout({ children, params }: LocaleLayoutProps) {
   const { locale } = await params
 
   // Ensure that the incoming `locale` is valid
@@ -34,7 +66,7 @@ export default async function LocaleLayout({
   }
 
   // Explicitly load messages to avoid plugin config issues
-  let messages;
+  let messages: Record<string, unknown>;
   try {
     // We use a relative path from the app/[locale] folder to the messages folder
     // Adjust depth: app/[locale] -> app -> frontend -> messages

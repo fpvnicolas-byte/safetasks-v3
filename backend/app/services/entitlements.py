@@ -1,10 +1,14 @@
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from fastapi import HTTPException, status
 
 from app.models.billing import Entitlement, OrganizationUsage
+from app.models.clients import Client
 from app.models.organizations import Organization
+from app.models.profiles import Profile
+from app.models.projects import Project
+from app.models.proposals import Proposal
 
 
 async def get_entitlement(db: AsyncSession, organization: Organization) -> Entitlement | None:
@@ -74,6 +78,39 @@ async def _get_or_create_usage(db: AsyncSession, organization_id: UUID) -> Organ
     return usage
 
 
+async def _lock_usage_row(db: AsyncSession, organization_id: UUID) -> OrganizationUsage:
+    # Serialize quota mutations per organization to avoid race-condition bypasses.
+    await db.execute(
+        select(Organization.id)
+        .where(Organization.id == organization_id)
+        .with_for_update()
+    )
+    return await _get_or_create_usage(db, organization_id)
+
+
+async def _count_resource_records(
+    db: AsyncSession,
+    organization_id: UUID,
+    resource: str
+) -> int | None:
+    if resource == "projects":
+        query = select(func.count(Project.id)).where(Project.organization_id == organization_id)
+    elif resource == "clients":
+        query = select(func.count(Client.id)).where(Client.organization_id == organization_id)
+    elif resource == "proposals":
+        query = select(func.count(Proposal.id)).where(Proposal.organization_id == organization_id)
+    elif resource == "users":
+        query = select(func.count(Profile.id)).where(
+            Profile.organization_id == organization_id,
+            Profile.is_active.is_(True),
+        )
+    else:
+        return None
+
+    result = await db.execute(query)
+    return int(result.scalar() or 0)
+
+
 async def ensure_storage_capacity(
     db: AsyncSession,
     organization: Organization,
@@ -89,13 +126,32 @@ async def ensure_storage_capacity(
         raise _limit_error("storage")
 
 
+async def ensure_and_reserve_storage_capacity(
+    db: AsyncSession,
+    organization: Organization,
+    *,
+    bytes_to_add: int
+) -> None:
+    entitlement = await get_entitlement(db, organization)
+    if not entitlement or entitlement.max_storage_bytes is None:
+        return
+
+    usage = await _lock_usage_row(db, organization.id)
+    current = usage.storage_bytes_used or 0
+    if current + bytes_to_add > entitlement.max_storage_bytes:
+        raise _limit_error("storage")
+
+    usage.storage_bytes_used = current + bytes_to_add
+    db.add(usage)
+
+
 async def increment_storage_usage(
     db: AsyncSession,
     organization_id: UUID,
     *,
     bytes_added: int
 ) -> None:
-    usage = await _get_or_create_usage(db, organization_id)
+    usage = await _lock_usage_row(db, organization_id)
     usage.storage_bytes_used = (usage.storage_bytes_used or 0) + bytes_added
     db.add(usage)
 
@@ -106,7 +162,7 @@ async def decrement_storage_usage(
     *,
     bytes_removed: int
 ) -> None:
-    usage = await _get_or_create_usage(db, organization_id)
+    usage = await _lock_usage_row(db, organization_id)
     current = usage.storage_bytes_used or 0
     usage.storage_bytes_used = max(0, current - bytes_removed)
     db.add(usage)
@@ -127,13 +183,32 @@ async def ensure_ai_credits(
         raise _limit_error("AI credits")
 
 
+async def ensure_and_reserve_ai_credits(
+    db: AsyncSession,
+    organization: Organization,
+    *,
+    credits_to_add: int = 1
+) -> None:
+    entitlement = await get_entitlement(db, organization)
+    if not entitlement or entitlement.ai_credits is None:
+        return
+
+    usage = await _lock_usage_row(db, organization.id)
+    current = usage.ai_credits_used or 0
+    if current + credits_to_add > entitlement.ai_credits:
+        raise _limit_error("AI credits")
+
+    usage.ai_credits_used = current + credits_to_add
+    db.add(usage)
+
+
 async def increment_ai_usage(
     db: AsyncSession,
     organization_id: UUID,
     *,
     credits_added: int = 1
 ) -> None:
-    usage = await _get_or_create_usage(db, organization_id)
+    usage = await _lock_usage_row(db, organization_id)
     usage.ai_credits_used = (usage.ai_credits_used or 0) + credits_added
     db.add(usage)
 
@@ -145,7 +220,7 @@ async def increment_usage_count(
     resource: str,
     delta: int = 1
 ) -> None:
-    usage = await _get_or_create_usage(db, organization_id)
+    usage = await _lock_usage_row(db, organization_id)
     field_map = {
         "projects": "projects_count",
         "clients": "clients_count",
@@ -156,5 +231,45 @@ async def increment_usage_count(
     if not field:
         return
     current = getattr(usage, field) or 0
+    setattr(usage, field, max(0, current + delta))
+    db.add(usage)
+
+
+async def ensure_and_reserve_resource_limit(
+    db: AsyncSession,
+    organization: Organization,
+    *,
+    resource: str,
+    delta: int = 1
+) -> None:
+    entitlement = await get_entitlement(db, organization)
+    if not entitlement:
+        return
+
+    limit_map = {
+        "projects": entitlement.max_projects,
+        "clients": entitlement.max_clients,
+        "proposals": entitlement.max_proposals,
+        "users": entitlement.max_users,
+    }
+    field_map = {
+        "projects": "projects_count",
+        "clients": "clients_count",
+        "proposals": "proposals_count",
+        "users": "users_count",
+    }
+
+    limit = limit_map.get(resource)
+    field = field_map.get(resource)
+    if field is None:
+        return
+
+    usage = await _lock_usage_row(db, organization.id)
+    actual_current = await _count_resource_records(db, organization.id, resource)
+    current = actual_current if actual_current is not None else (getattr(usage, field) or 0)
+    setattr(usage, field, current)
+    if limit is not None and current + delta > limit:
+        raise _limit_error(resource)
+
     setattr(usage, field, max(0, current + delta))
     db.add(usage)

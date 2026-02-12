@@ -370,6 +370,7 @@ class InvoicePDFService:
             Dict with PDF path, bucket, size, and signed URL
         """
         from app.services.storage import storage_service
+        from app.services.entitlements import ensure_and_reserve_storage_capacity
 
         # Generate PDF
         pdf_bytes = await self.generate_pdf(
@@ -391,6 +392,12 @@ class InvoicePDFService:
         date_str = datetime.now().strftime("%Y-%m-%d")
 
         filename = f"Invoice_{client_name}_{invoice_number}_{date_str}.pdf"
+
+        await ensure_and_reserve_storage_capacity(
+            db,
+            organization,
+            bytes_to_add=len(pdf_bytes)
+        )
 
         # Upload to storage (using invoice ID as entity_id for folder organization)
         upload_result = await storage_service.upload_file(

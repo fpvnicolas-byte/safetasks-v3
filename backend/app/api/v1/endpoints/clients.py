@@ -14,7 +14,7 @@ from app.api.deps import (
 from app.db.session import get_db
 from app.modules.commercial.service import client_service
 from app.schemas.clients import Client, ClientCreate, ClientUpdate
-from app.services.entitlements import ensure_resource_limit, increment_usage_count
+from app.services.entitlements import ensure_and_reserve_resource_limit, increment_usage_count
 
 router = APIRouter()
 
@@ -53,15 +53,13 @@ async def create_client(
     Create a new client in the current user's organization.
     """
     organization = await get_organization_record(profile, db)
-    client_count = await client_service.count(db=db, organization_id=organization_id)
-    await ensure_resource_limit(db, organization, resource="clients", current_count=client_count)
+    await ensure_and_reserve_resource_limit(db, organization, resource="clients")
 
     client = await client_service.create(
         db=db,
         organization_id=organization_id,
         obj_in=client_in
     )
-    await increment_usage_count(db, organization_id, resource="clients", delta=1)
     return client
 
 

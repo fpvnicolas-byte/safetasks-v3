@@ -14,7 +14,7 @@ from app.models.organizations import Organization as OrganizationModel
 from app.models.profiles import Profile
 from app.services.billing import setup_trial_for_organization
 from app.services.financial import bank_account_service
-from app.services.entitlements import increment_usage_count
+from app.services.entitlements import ensure_and_reserve_resource_limit
 
 import re
 import uuid
@@ -193,7 +193,7 @@ async def create_organization_onboarding(
     profile.role = "admin"
     profile.is_master_owner = True
     db.add(profile)
-    await increment_usage_count(db, organization.id, resource="users", delta=1)
+    await ensure_and_reserve_resource_limit(db, organization, resource="users")
 
     await db.commit()
     await db.refresh(organization)

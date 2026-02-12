@@ -20,7 +20,7 @@ from app.schemas.proposals import (
     Proposal, ProposalCreate, ProposalUpdate,
     ProposalWithClient, ProposalApproval
 )
-from app.services.entitlements import ensure_resource_limit, increment_usage_count
+from app.services.entitlements import ensure_and_reserve_resource_limit, increment_usage_count
 
 router = APIRouter()
 
@@ -77,15 +77,13 @@ async def create_proposal(
     organization_id = profile.organization_id
     try:
         organization = await get_organization_record(profile, db)
-        proposal_count = await proposal_service.count(db=db, organization_id=organization_id)
-        await ensure_resource_limit(db, organization, resource="proposals", current_count=proposal_count)
+        await ensure_and_reserve_resource_limit(db, organization, resource="proposals")
 
         proposal = await proposal_service.create(
             db=db,
             organization_id=organization_id,
             obj_in=proposal_in
         )
-        await increment_usage_count(db, organization_id, resource="proposals", delta=1)
         return proposal
     except ValueError as e:
         raise HTTPException(
