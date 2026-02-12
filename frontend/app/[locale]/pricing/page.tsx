@@ -5,6 +5,7 @@ import {
   SITE_NAME,
   getAbsoluteLocaleUrl,
   getLanguageAlternates,
+  getOpenGraphLogoPath,
   getPricingOpenGraphImagePath,
   getPricingTwitterImagePath,
   getSeoCopy,
@@ -24,6 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const canonical = getAbsoluteLocaleUrl(locale, '/pricing')
   const ogImage = getPricingOpenGraphImagePath(locale)
+  const ogLogo = getOpenGraphLogoPath(locale)
   const twitterImage = getPricingTwitterImagePath(locale)
 
   return {
@@ -46,6 +48,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
           width: 1200,
           height: 630,
           alt: seo.pricingTitle,
+        },
+        {
+          url: ogLogo,
+          width: 512,
+          height: 512,
+          alt: `${SITE_NAME} logo`,
         },
       ],
     },

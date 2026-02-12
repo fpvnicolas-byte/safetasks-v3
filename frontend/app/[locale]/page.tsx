@@ -7,6 +7,7 @@ import {
   getLanguageAlternates,
   getLandingOpenGraphImagePath,
   getLandingTwitterImagePath,
+  getOpenGraphLogoPath,
   getSeoCopy,
 } from '@/lib/seo'
 import { getLandingJsonLd } from '@/lib/structured-data'
@@ -24,6 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const canonical = getAbsoluteLocaleUrl(locale)
   const ogImage = getLandingOpenGraphImagePath(locale)
+  const ogLogo = getOpenGraphLogoPath(locale)
   const twitterImage = getLandingTwitterImagePath(locale)
 
   return {
@@ -46,6 +48,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
           width: 1200,
           height: 630,
           alt: seo.landingTitle,
+        },
+        {
+          url: ogLogo,
+          width: 512,
+          height: 512,
+          alt: `${SITE_NAME} logo`,
         },
       ],
     },

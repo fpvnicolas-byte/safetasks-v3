@@ -95,6 +95,10 @@ export function getLandingTwitterImagePath(locale: Locale): string {
   return getLocalizedPath(locale, '/twitter-image')
 }
 
+export function getOpenGraphLogoPath(locale: Locale): string {
+  return getLocalizedPath(locale, '/og/logo')
+}
+
 export function getPricingOpenGraphImagePath(locale: Locale): string {
   return getLocalizedPath(locale, '/pricing/opengraph-image')
 }

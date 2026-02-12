@@ -1,6 +1,13 @@
 import type { Locale } from '@/i18n/config'
 
-import { SITE_NAME, getAbsoluteLocaleUrl, getSeoCopy, getSiteUrl } from '@/lib/seo'
+import {
+  SITE_NAME,
+  getAbsoluteLocaleUrl,
+  getAbsoluteUrl,
+  getOpenGraphLogoPath,
+  getSeoCopy,
+  getSiteUrl,
+} from '@/lib/seo'
 
 export type JsonLdNode = Record<string, unknown>
 
@@ -17,6 +24,7 @@ function getPlanNames(locale: Locale): string[] {
 function getCommonNodes(locale: Locale): JsonLdNode[] {
   const seo = getSeoCopy(locale)
   const siteUrl = getSiteUrl()
+  const logoUrl = getAbsoluteUrl(getOpenGraphLogoPath(locale))
   const language = getLanguageTag(locale)
 
   return [
@@ -26,7 +34,7 @@ function getCommonNodes(locale: Locale): JsonLdNode[] {
       '@id': `${siteUrl}/#organization`,
       name: SITE_NAME,
       url: siteUrl,
-      logo: `${siteUrl}/favicon.ico`,
+      logo: logoUrl,
       description: seo.siteDescription,
     },
     {

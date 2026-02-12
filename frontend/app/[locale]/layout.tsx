@@ -7,6 +7,7 @@ import {
   SITE_NAME,
   getLandingOpenGraphImagePath,
   getLandingTwitterImagePath,
+  getOpenGraphLogoPath,
   getSeoCopy,
   getSiteUrl,
 } from '@/lib/seo'
@@ -48,6 +49,12 @@ export async function generateMetadata({ params }: Pick<LocaleLayoutProps, 'para
           width: 1200,
           height: 630,
           alt: seo.siteTitle,
+        },
+        {
+          url: getOpenGraphLogoPath(locale),
+          width: 512,
+          height: 512,
+          alt: `${SITE_NAME} logo`,
         },
       ],
     },
