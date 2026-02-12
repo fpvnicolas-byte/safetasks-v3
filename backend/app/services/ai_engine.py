@@ -889,8 +889,9 @@ Important:
 - Always include the keys: characters, locations, scenes, suggested_equipment, production_notes.
 - {focus_instructions}
 - {language_instruction}
-- Keep the output concise and bounded: max 30 characters, 25 locations, 50 scenes, 8 equipment categories, 10 production notes.
-- Keep descriptions under 20 words.
+- Keep the output bounded for reliability: max 25 locations, 50 scenes, 8 equipment categories, 10 production notes.
+- Write complete, actionable production_notes with enough context (roughly 12-24 words, up to about 220 characters each).
+- Keep descriptions short but informative (roughly 8-25 words).
 
 Script Content (excerpt):
 {script_content[:10000]}

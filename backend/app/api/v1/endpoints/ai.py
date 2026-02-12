@@ -289,6 +289,26 @@ def infer_suggestion_type(text: str) -> str:
         "licencas",
         "music licensing",
     ]
+    post_production_keywords = [
+        "vfx",
+        "visual effects",
+        "efeitos visuais",
+        "post-production",
+        "pos-producao",
+        "pos producao",
+        "finalizacao",
+        "render",
+        "cgi",
+        "compositing",
+        "composicao",
+        "motion graphics",
+        "grafismo",
+        "color grading",
+        "correcao de cor",
+        "contraste",
+        "ui",
+        "interface",
+    ]
     equipment_keywords = [
         "camera",
         "camara",
@@ -316,12 +336,6 @@ def infer_suggestion_type(text: str) -> str:
         "gimbal",
         "tripod",
         "tripe",
-        "vfx",
-        "visual effects",
-        "efeitos visuais",
-        "contraste",
-        "color grading",
-        "correcao de cor",
     ]
 
     if any(k in t for k in casting_keywords):
@@ -332,11 +346,41 @@ def infer_suggestion_type(text: str) -> str:
         return "logistics"
     if any(k in t for k in budget_keywords):
         return "budget"
+    if any(k in t for k in post_production_keywords):
+        return "other"
     if any(k in t for k in equipment_keywords):
         return "equipment"
 
     # Post-production / legal / general notes end up here.
     return "other"
+
+
+def is_post_production_note(text: str) -> bool:
+    t = _normalize_hint_text(text)
+    if not t:
+        return False
+
+    post_production_keywords = [
+        "vfx",
+        "visual effects",
+        "efeitos visuais",
+        "post-production",
+        "pos-producao",
+        "pos producao",
+        "finalizacao",
+        "render",
+        "cgi",
+        "compositing",
+        "composicao",
+        "motion graphics",
+        "grafismo",
+        "color grading",
+        "correcao de cor",
+        "contraste",
+        "ui",
+        "interface",
+    ]
+    return any(k in t for k in post_production_keywords)
 
 
 def infer_suggestion_priority_confidence(text: str, suggestion_type: str) -> tuple[str, float]:
@@ -809,6 +853,8 @@ async def get_ai_suggestions(
             inferred_type = infer_suggestion_type(suggestion.suggestion_text or "")
             if suggestion_type == "other" and inferred_type != "other":
                 suggestion_type = inferred_type
+            elif suggestion_type == "equipment" and is_post_production_note(suggestion.suggestion_text or ""):
+                suggestion_type = "other"
 
             is_legacy_default = priority == "medium" and abs((confidence or 0.0) - 0.75) < 1e-9
             if is_legacy_default:

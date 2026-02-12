@@ -329,9 +329,8 @@ export default function AiSuggestionsPage() {
 	                        </div>
 	                      </div>
 	                      {group.analysis && (
-	                        <div className="mt-1 text-xs text-muted-foreground">
-	                          {group.analysis.script_text.substring(0, 140)}
-	                          {group.analysis.script_text.length > 140 ? '...' : ''}
+	                        <div className="mt-1 text-xs text-muted-foreground whitespace-pre-wrap break-words">
+	                          {group.analysis.script_text}
 	                        </div>
 	                      )}
 	                    </div>

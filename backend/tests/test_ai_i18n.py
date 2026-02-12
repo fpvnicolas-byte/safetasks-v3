@@ -1,5 +1,6 @@
 from app.api.v1.endpoints.ai import (
     _equipment_recommendation_copy,
+    is_post_production_note,
     infer_suggestion_priority_confidence,
     infer_suggestion_type,
     _localized_text,
@@ -100,7 +101,7 @@ def test_schedule_recommendation_copy_is_localized():
 
 def test_infer_suggestion_type_handles_portuguese_keywords():
     assert infer_suggestion_type("Seguranca chuva.") == "schedule"
-    assert infer_suggestion_type("Efeitos visuais no set.") == "equipment"
+    assert infer_suggestion_type("Efeitos visuais no set.") == "other"
     assert infer_suggestion_type("Min. cenario e locacao.") == "logistics"
 
 
@@ -118,3 +119,9 @@ def test_infer_suggestion_priority_confidence_varies_by_content():
     assert high_confidence > 0.8
     assert low_priority == "low"
     assert low_confidence < 0.7
+
+
+def test_is_post_production_note_detects_pt_br_terms():
+    assert is_post_production_note("Efeitos visuais.")
+    assert is_post_production_note("Alto contraste.")
+    assert not is_post_production_note("Seguranca chuva.")
