@@ -16,12 +16,21 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, patch, MagicMock
 from uuid import uuid4
 
+from fastapi import HTTPException
+
 from app.services import billing as billing_module
 from app.services.billing import (
     _is_redirect_url_allowed,
     has_active_access,
 )
 from app.services.infinity_pay import InfinityPayService
+
+
+# This module is unit-test only (all DB interactions are mocked), so avoid
+# forcing live DB schema truncation from app/tests/conftest.py.
+@pytest.fixture(autouse=True)
+async def _truncate_public_schema():
+    yield
 
 
 # ---------------------------------------------------------------------------
@@ -161,6 +170,101 @@ class TestInfinityPayService:
             )
             assert url == "https://pay.infinitepay.io/scan/abc123"
             mock_post.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_create_checkout_link_accepts_nested_data_checkout_url(self, service):
+        with patch("httpx.AsyncClient") as MockClient:
+            mock_post = AsyncMock(return_value=MockResponse({
+                "data": {
+                    "checkout_url": "https://pay.infinitepay.io/scan/nested123"
+                }
+            }))
+            MockClient.return_value.__aenter__ = AsyncMock(
+                return_value=MagicMock(post=mock_post)
+            )
+            MockClient.return_value.__aexit__ = AsyncMock(return_value=False)
+
+            url = await service.create_checkout_link(
+                items=[{"quantity": 1, "price": 3990, "description": "Starter Plan"}],
+                metadata={"order_nsu": "123_456"}
+            )
+            assert url == "https://pay.infinitepay.io/scan/nested123"
+
+    @pytest.mark.asyncio
+    async def test_create_checkout_link_raises_if_checkout_url_missing(self, service):
+        with patch("httpx.AsyncClient") as MockClient:
+            mock_post = AsyncMock(return_value=MockResponse({
+                "success": True
+            }))
+            MockClient.return_value.__aenter__ = AsyncMock(
+                return_value=MagicMock(post=mock_post)
+            )
+            MockClient.return_value.__aexit__ = AsyncMock(return_value=False)
+
+            with pytest.raises(HTTPException) as exc:
+                await service.create_checkout_link(
+                    items=[{"quantity": 1, "price": 3990, "description": "Starter Plan"}],
+                    metadata={"order_nsu": "123_456"}
+                )
+            assert exc.value.status_code == 502
+
+    @pytest.mark.asyncio
+    async def test_create_checkout_link_omits_delivery_address_for_plan_sales(self, service):
+        with patch("httpx.AsyncClient") as MockClient:
+            mock_post = AsyncMock(return_value=MockResponse({
+                "checkout_url": "https://pay.infinitepay.io/scan/abc123"
+            }))
+            mock_client = MagicMock(post=mock_post)
+            MockClient.return_value.__aenter__ = AsyncMock(return_value=mock_client)
+            MockClient.return_value.__aexit__ = AsyncMock(return_value=False)
+
+            _ = await service.create_checkout_link(
+                items=[{"quantity": 1, "price": 8990, "description": "Professional Plan"}],
+                metadata={"order_nsu": "org_123_plan_456"},
+                customer={
+                    "name": "Joao Silva",
+                    "email": "joao@email.com",
+                    "phone_number": "+5511999999999",
+                    "address": {
+                        "cep": "12345678",
+                        "street": "Rua X",
+                        "number": "123",
+                    },
+                },
+            )
+
+            sent_payload = mock_post.call_args.kwargs["json"]
+            assert "address" not in sent_payload
+            assert sent_payload["customer"] == {
+                "name": "Joao Silva",
+                "email": "joao@email.com",
+                "phone_number": "+5511999999999",
+            }
+
+    @pytest.mark.asyncio
+    async def test_create_checkout_link_drops_customer_when_only_address_fields_exist(self, service):
+        with patch("httpx.AsyncClient") as MockClient:
+            mock_post = AsyncMock(return_value=MockResponse({
+                "checkout_url": "https://pay.infinitepay.io/scan/abc123"
+            }))
+            mock_client = MagicMock(post=mock_post)
+            MockClient.return_value.__aenter__ = AsyncMock(return_value=mock_client)
+            MockClient.return_value.__aexit__ = AsyncMock(return_value=False)
+
+            _ = await service.create_checkout_link(
+                items=[{"quantity": 1, "price": 8990, "description": "Professional Plan"}],
+                metadata={"order_nsu": "org_123_plan_456"},
+                customer={
+                    "address": {
+                        "cep": "12345678",
+                        "street": "Rua X",
+                        "number": "123",
+                    },
+                },
+            )
+
+            sent_payload = mock_post.call_args.kwargs["json"]
+            assert "customer" not in sent_payload
 
     @pytest.mark.asyncio
     async def test_verify_payment_success(self, service):

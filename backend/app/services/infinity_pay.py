@@ -33,6 +33,32 @@ class InfinityPayService:
 
         return None
 
+    @staticmethod
+    def _sanitize_customer(customer: Dict) -> Dict:
+        """
+        Keep only checkout-safe identity fields for plan sales.
+
+        Important:
+        - Do NOT pass delivery/shipping address fields for SaaS plan purchases.
+        - Ignore empty values.
+        """
+        if not isinstance(customer, dict):
+            return {}
+
+        allowed_keys = {"name", "email", "phone_number"}
+        sanitized: Dict[str, str] = {}
+        for key in allowed_keys:
+            value = customer.get(key)
+            if value is None:
+                continue
+            if isinstance(value, str):
+                value = value.strip()
+                if not value:
+                    continue
+            sanitized[key] = value
+
+        return sanitized
+
     async def create_checkout_link(
         self,
         items: List[Dict],
@@ -71,7 +97,9 @@ class InfinityPayService:
             payload["webhook_url"] = self.webhook_url
             
         if customer:
-            payload["customer"] = customer
+            sanitized_customer = self._sanitize_customer(customer)
+            if sanitized_customer:
+                payload["customer"] = sanitized_customer
 
         logger.info(f"Creating InfinityPay checkout for order {metadata.get('order_nsu')}")
         
