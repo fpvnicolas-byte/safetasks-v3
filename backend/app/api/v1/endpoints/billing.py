@@ -6,13 +6,13 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from pydantic import BaseModel
 
 from app.api.deps import get_current_profile, get_db, require_billing_checkout
 from app.core.config import settings
 from app.models.profiles import Profile
-from app.models.billing import Plan
+from app.models.billing import Plan, BillingEvent
 from app.schemas.billing import (
     BillingUsageResponse,
     EntitlementInfo,
@@ -272,14 +272,72 @@ async def get_billing_history(
     if not profile.organization_id:
         return []
 
-    # Verify access (read-only is fine)
-    # require_read_only is not strictly needed if we just return own data, but good practice.
-    
     query = select(BillingPurchase).where(
         BillingPurchase.organization_id == profile.organization_id
     ).order_by(BillingPurchase.paid_at.desc()).offset(skip).limit(limit)
-    
+
     result = await db.execute(query)
     purchases = result.scalars().all()
-    
+
+    # Backward-compatible auto-backfill:
+    # Older organizations may have payment ledger events but no billing_purchases rows.
+    # Create missing purchase rows from successful payment events so billing history/refunds can work.
+    if not purchases:
+        event_query = (
+            select(BillingEvent)
+            .where(
+                BillingEvent.organization_id == profile.organization_id,
+                BillingEvent.event_type == "payment_success",
+                BillingEvent.status.in_(["succeeded", "processed"]),
+            )
+            .order_by(BillingEvent.processed_at.desc().nullslast(), BillingEvent.received_at.desc())
+            .limit(limit)
+        )
+        event_result = await db.execute(event_query)
+        events = event_result.scalars().all()
+
+        created_any = False
+        for event in events:
+            if not event.amount_cents or event.amount_cents <= 0:
+                continue
+
+            if event.external_id:
+                existing_query = select(BillingPurchase).where(
+                    BillingPurchase.organization_id == profile.organization_id,
+                    or_(
+                        BillingPurchase.source_billing_event_id == event.id,
+                        BillingPurchase.external_charge_id == event.external_id,
+                    ),
+                )
+            else:
+                existing_query = select(BillingPurchase).where(
+                    BillingPurchase.organization_id == profile.organization_id,
+                    BillingPurchase.source_billing_event_id == event.id,
+                )
+
+            existing_result = await db.execute(existing_query)
+            existing = existing_result.scalar_one_or_none()
+            if existing:
+                continue
+
+            purchase = BillingPurchase(
+                organization_id=profile.organization_id,
+                source_billing_event_id=event.id,
+                provider=event.provider or "infinitypay",
+                external_charge_id=event.external_id,
+                plan_name=event.plan_name,
+                amount_paid_cents=event.amount_cents,
+                currency=event.currency or "BRL",
+                paid_at=event.processed_at or event.received_at or datetime.now(timezone.utc),
+                total_refunded_cents=0,
+            )
+            db.add(purchase)
+            created_any = True
+
+        if created_any:
+            await db.commit()
+
+        result = await db.execute(query)
+        purchases = result.scalars().all()
+
     return purchases

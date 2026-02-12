@@ -59,58 +59,77 @@ export function BillingHistory() {
         return diffDays <= 7 && purchase.total_refunded_cents < purchase.amount_paid_cents
     }
 
-    if (isLoading) {
-        return <div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div>
+    const getRefundStatusLabel = (purchase: BillingPurchase) => {
+        if (purchase.total_refunded_cents >= purchase.amount_paid_cents) {
+            return 'Fully refunded'
+        }
+        if (isEligibleForRefund(purchase)) {
+            return 'Refund available'
+        }
+        return 'Refund window closed'
     }
 
-    if (purchases.length === 0) {
-        return null
+    if (isLoading) {
+        return <div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div>
     }
 
     return (
         <Card className="mt-8">
             <CardHeader>
                 <CardTitle>{t('title', 'Billing History')}</CardTitle>
-                <CardDescription>{t('description', 'View your recent payments and receipts.')}</CardDescription>
+                <CardDescription>
+                    {t('description', 'View your recent payments and receipts. Refund requests are available for 7 days after purchase.')}
+                </CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="space-y-4">
-                    {purchases.map((purchase) => (
-                        <div key={purchase.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
-                            <div className="flex items-start gap-4">
-                                <div className="p-2 bg-muted rounded-full">
-                                    <Receipt className="h-4 w-4 text-muted-foreground" />
+                {purchases.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                        No billing purchases found yet for this organization.
+                    </p>
+                ) : (
+                    <div className="space-y-4">
+                        {purchases.map((purchase) => (
+                            <div key={purchase.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
+                                <div className="flex items-start gap-4">
+                                    <div className="p-2 bg-muted rounded-full">
+                                        <Receipt className="h-4 w-4 text-muted-foreground" />
+                                    </div>
+                                    <div>
+                                        <div className="font-medium">
+                                            {purchase.plan_name || 'Billed Charge'}
+                                        </div>
+                                        <div className="text-sm text-muted-foreground">
+                                            {formatDate(purchase.paid_at)} • {purchase.provider}
+                                        </div>
+                                        <div className="mt-1">
+                                            <Badge variant="outline" className="text-xs">
+                                                {getRefundStatusLabel(purchase)}
+                                            </Badge>
+                                        </div>
+                                        {purchase.total_refunded_cents > 0 && (
+                                            <Badge variant="outline" className="mt-1 text-xs text-amber-600 border-amber-200">
+                                                Refunded: {formatCurrency(purchase.total_refunded_cents, purchase.currency)}
+                                            </Badge>
+                                        )}
+                                    </div>
                                 </div>
-                                <div>
-                                    <div className="font-medium">
-                                        {purchase.plan_name || 'Billed Charge'}
-                                    </div>
-                                    <div className="text-sm text-muted-foreground">
-                                        {formatDate(purchase.paid_at)} • {purchase.provider}
-                                    </div>
-                                    {purchase.total_refunded_cents > 0 && (
-                                        <Badge variant="outline" className="mt-1 text-xs text-amber-600 border-amber-200">
-                                            Refunded: {formatCurrency(purchase.total_refunded_cents, purchase.currency)}
-                                        </Badge>
+                                <div className="text-right">
+                                    <div className="font-bold">{formatCurrency(purchase.amount_paid_cents, purchase.currency)}</div>
+                                    {isEligibleForRefund(purchase) && (
+                                        <Button
+                                            variant="link"
+                                            size="sm"
+                                            className="text-xs h-auto p-0 mt-1 text-muted-foreground hover:text-destructive"
+                                            onClick={() => setSelectedPurchase(purchase)}
+                                        >
+                                            Request Refund
+                                        </Button>
                                     )}
                                 </div>
                             </div>
-                            <div className="text-right">
-                                <div className="font-bold">{formatCurrency(purchase.amount_paid_cents, purchase.currency)}</div>
-                                {isEligibleForRefund(purchase) && (
-                                    <Button
-                                        variant="link"
-                                        size="sm"
-                                        className="text-xs h-auto p-0 mt-1 text-muted-foreground hover:text-destructive"
-                                        onClick={() => setSelectedPurchase(purchase)}
-                                    >
-                                        Request Refund
-                                    </Button>
-                                )}
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
             </CardContent>
 
             {selectedPurchase && (
