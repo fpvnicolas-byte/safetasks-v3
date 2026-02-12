@@ -15,26 +15,12 @@ import {
   HardDrive,
   ShieldCheck,
   Sparkles,
-  UsersRound,
 } from 'lucide-react'
-import { Playfair_Display, Space_Grotesk } from 'next/font/google'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { locales, localeNames, type Locale } from '@/i18n/config'
-
-const display = Playfair_Display({
-  subsets: ['latin'],
-  weight: ['600', '700'],
-  variable: '--font-landing-display',
-})
-
-const body = Space_Grotesk({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-landing-body',
-})
 
 export default function LandingPage() {
   const t = useTranslations('landing')
@@ -170,7 +156,7 @@ export default function LandingPage() {
 
   return (
     <div
-      className={`${body.variable} ${display.variable} min-h-screen bg-[#f2ece2] text-slate-900 [font-family:var(--font-landing-body)]`}
+      className="min-h-screen bg-[#f2ece2] text-slate-900 [font-family:'Avenir_Next','Segoe_UI',ui-sans-serif,sans-serif]"
     >
       <div className="relative overflow-hidden">
         <div className="pointer-events-none absolute -top-40 left-1/2 h-[480px] w-[480px] -translate-x-1/2 rounded-full bg-amber-400/20 blur-[140px]" />
@@ -222,7 +208,7 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-[0.4em] text-slate-400">{t('hero.eyebrow')}</p>
-                  <h1 className="mt-4 text-4xl font-semibold leading-tight md:text-6xl [font-family:var(--font-landing-display)]">
+                  <h1 className="mt-4 text-4xl font-semibold leading-tight md:text-6xl [font-family:'Iowan_Old_Style','Palatino_Linotype','Times_New_Roman',serif]">
                     {t('hero.title')}
                   </h1>
                   <p className="mt-4 text-lg text-slate-300 md:text-xl">
@@ -303,7 +289,7 @@ export default function LandingPage() {
           <section id="modules" className="mt-24 space-y-10">
             <div className="max-w-2xl">
               <p className="text-xs uppercase tracking-[0.35em] text-slate-500">{t('nav.modules')}</p>
-              <h2 className="mt-3 text-3xl font-semibold md:text-4xl [font-family:var(--font-landing-display)]">
+              <h2 className="mt-3 text-3xl font-semibold md:text-4xl [font-family:'Iowan_Old_Style','Palatino_Linotype','Times_New_Roman',serif]">
                 {t('sections.modules.title')}
               </h2>
               <p className="mt-3 text-slate-600">{t('sections.modules.subtitle')}</p>
@@ -335,7 +321,7 @@ export default function LandingPage() {
           >
             <div>
               <p className="text-xs uppercase tracking-[0.35em] text-slate-500">{t('nav.workflow')}</p>
-              <h2 className="mt-3 text-3xl font-semibold md:text-4xl [font-family:var(--font-landing-display)]">
+              <h2 className="mt-3 text-3xl font-semibold md:text-4xl [font-family:'Iowan_Old_Style','Palatino_Linotype','Times_New_Roman',serif]">
                 {t('sections.workflow.title')}
               </h2>
               <p className="mt-3 text-slate-600">{t('sections.workflow.subtitle')}</p>
@@ -363,7 +349,7 @@ export default function LandingPage() {
           <section id="access" className="mt-24 scroll-mt-24 space-y-10">
             <div className="max-w-2xl">
               <p className="text-xs uppercase tracking-[0.35em] text-slate-500">{t('nav.features')}</p>
-              <h2 className="mt-3 text-3xl font-semibold md:text-4xl [font-family:var(--font-landing-display)]">
+              <h2 className="mt-3 text-3xl font-semibold md:text-4xl [font-family:'Iowan_Old_Style','Palatino_Linotype','Times_New_Roman',serif]">
                 {t('sections.access.title')}
               </h2>
               <p className="mt-3 text-slate-600">{t('sections.access.subtitle')}</p>
@@ -388,7 +374,7 @@ export default function LandingPage() {
           <section className="mt-24 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
             <div className="space-y-6">
               <p className="text-xs uppercase tracking-[0.35em] text-slate-500">{t('sections.integrations.title')}</p>
-              <h2 className="text-3xl font-semibold md:text-4xl [font-family:var(--font-landing-display)]">
+              <h2 className="text-3xl font-semibold md:text-4xl [font-family:'Iowan_Old_Style','Palatino_Linotype','Times_New_Roman',serif]">
                 {t('sections.integrations.title')}
               </h2>
               <p className="text-slate-600">{t('sections.integrations.subtitle')}</p>
@@ -414,11 +400,11 @@ export default function LandingPage() {
                 </div>
                 <div className="space-y-5">
                   <div>
-                    <p className="text-lg font-semibold">"{t('testimonials.one.quote')}"</p>
+                    <p className="text-lg font-semibold">&ldquo;{t('testimonials.one.quote')}&rdquo;</p>
                     <p className="text-sm text-slate-600">{t('testimonials.one.name')} · {t('testimonials.one.role')}</p>
                   </div>
                   <div>
-                    <p className="text-lg font-semibold">"{t('testimonials.two.quote')}"</p>
+                    <p className="text-lg font-semibold">&ldquo;{t('testimonials.two.quote')}&rdquo;</p>
                     <p className="text-sm text-slate-600">{t('testimonials.two.name')} · {t('testimonials.two.role')}</p>
                   </div>
                 </div>
@@ -430,7 +416,7 @@ export default function LandingPage() {
             <Card className="border-slate-200/80 bg-slate-900 text-amber-100">
               <CardContent className="flex flex-col items-start gap-6 p-8 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <h2 className="text-3xl font-semibold [font-family:var(--font-landing-display)]">{t('sections.cta.title')}</h2>
+                  <h2 className="text-3xl font-semibold [font-family:'Iowan_Old_Style','Palatino_Linotype','Times_New_Roman',serif]">{t('sections.cta.title')}</h2>
                   <p className="mt-2 text-slate-300">{t('sections.cta.subtitle')}</p>
                 </div>
                 <div className="flex flex-wrap gap-3">

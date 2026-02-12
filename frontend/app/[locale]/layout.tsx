@@ -3,7 +3,13 @@ import { BillingProvider } from '@/contexts/BillingContext'
 import { QueryProvider } from '@/lib/api/query-provider'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
-import { SITE_NAME, getOpenGraphImagePath, getSeoCopy, getSiteUrl, getTwitterImagePath } from '@/lib/seo'
+import {
+  SITE_NAME,
+  getLandingOpenGraphImagePath,
+  getLandingTwitterImagePath,
+  getSeoCopy,
+  getSiteUrl,
+} from '@/lib/seo'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import type { Metadata } from 'next'
 import { NextIntlClientProvider } from 'next-intl'
@@ -28,10 +34,7 @@ export async function generateMetadata({ params }: Pick<LocaleLayoutProps, 'para
   return {
     metadataBase: new URL(getSiteUrl()),
     applicationName: SITE_NAME,
-    title: {
-      default: seo.siteTitle,
-      template: `%s | ${SITE_NAME}`,
-    },
+    title: seo.siteTitle,
     description: seo.siteDescription,
     openGraph: {
       title: seo.siteTitle,
@@ -41,7 +44,7 @@ export async function generateMetadata({ params }: Pick<LocaleLayoutProps, 'para
       type: 'website',
       images: [
         {
-          url: getOpenGraphImagePath(locale),
+          url: getLandingOpenGraphImagePath(locale),
           width: 1200,
           height: 630,
           alt: seo.siteTitle,
@@ -52,7 +55,7 @@ export async function generateMetadata({ params }: Pick<LocaleLayoutProps, 'para
       card: 'summary_large_image',
       title: seo.siteTitle,
       description: seo.siteDescription,
-      images: [getTwitterImagePath(locale)],
+      images: [getLandingTwitterImagePath(locale)],
     },
   }
 }

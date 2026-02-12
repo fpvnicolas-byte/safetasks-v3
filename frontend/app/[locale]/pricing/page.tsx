@@ -5,10 +5,11 @@ import {
   SITE_NAME,
   getAbsoluteLocaleUrl,
   getLanguageAlternates,
-  getOpenGraphImagePath,
+  getPricingOpenGraphImagePath,
+  getPricingTwitterImagePath,
   getSeoCopy,
-  getTwitterImagePath,
 } from '@/lib/seo'
+import { getPricingJsonLd } from '@/lib/structured-data'
 
 import PricingPageClient from '../_components/pricing-page-client'
 
@@ -22,8 +23,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const seo = getSeoCopy(locale)
 
   const canonical = getAbsoluteLocaleUrl(locale, '/pricing')
-  const ogImage = getOpenGraphImagePath(locale)
-  const twitterImage = getTwitterImagePath(locale)
+  const ogImage = getPricingOpenGraphImagePath(locale)
+  const twitterImage = getPricingTwitterImagePath(locale)
 
   return {
     title: seo.pricingTitle,
@@ -61,6 +62,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export default function PricingPage() {
-  return <PricingPageClient />
+export default async function PricingPage({ params }: PageProps) {
+  const { locale: requestedLocale } = await params
+  const locale = getValidLocale(requestedLocale)
+  const jsonLdNodes = getPricingJsonLd(locale)
+
+  return (
+    <>
+      {jsonLdNodes.map((node, index) => (
+        <script
+          key={`pricing-jsonld-${index}`}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(node) }}
+        />
+      ))}
+      <PricingPageClient />
+    </>
+  )
 }

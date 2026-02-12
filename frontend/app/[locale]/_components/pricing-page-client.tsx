@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { Check, CreditCard, Sparkles, Stars } from 'lucide-react'
-import { Playfair_Display, Space_Grotesk } from 'next/font/google'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -23,18 +22,6 @@ const BILLING_PLAN_KEY_MAP: Record<PricingPlanKey, string> = {
   proAnnual: 'professional_annual',
   enterprise: 'enterprise',
 }
-
-const display = Playfair_Display({
-  subsets: ['latin'],
-  weight: ['600', '700'],
-  variable: '--font-pricing-display',
-})
-
-const body = Space_Grotesk({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-pricing-body',
-})
 
 export default function PricingPage() {
   const t = useTranslations('pricing')
@@ -69,7 +56,7 @@ export default function PricingPage() {
 
   return (
     <div
-      className={`${body.variable} ${display.variable} min-h-screen bg-[#f2ece2] text-slate-900 [font-family:var(--font-pricing-body)]`}
+      className="min-h-screen bg-[#f2ece2] text-slate-900 [font-family:'Avenir_Next','Segoe_UI',ui-sans-serif,sans-serif]"
     >
       <div className="relative overflow-hidden">
         <div className="pointer-events-none absolute -top-40 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-amber-400/20 blur-[140px]" />
@@ -79,7 +66,7 @@ export default function PricingPage() {
           <header className="flex flex-col items-center justify-between gap-6 text-center md:flex-row md:text-left">
             <div>
               <p className="text-xs uppercase tracking-[0.35em] text-slate-500">{t('eyebrow')}</p>
-              <h1 className="mt-3 text-4xl font-semibold md:text-5xl [font-family:var(--font-pricing-display)]">{t('title')}</h1>
+              <h1 className="mt-3 text-4xl font-semibold md:text-5xl [font-family:'Iowan_Old_Style','Palatino_Linotype','Times_New_Roman',serif]">{t('title')}</h1>
               <p className="mt-3 text-slate-600">{t('subtitle')}</p>
             </div>
             <Button variant="outline" asChild className="border-slate-300 text-slate-700 hover:bg-slate-100">
@@ -160,7 +147,7 @@ export default function PricingPage() {
           <section className="mt-16 grid gap-8 lg:grid-cols-[1fr_1.2fr]">
             <Card className="border-slate-200/80 bg-white/85 text-slate-900">
               <CardContent className="space-y-4 p-6">
-                <h2 className="text-2xl font-semibold [font-family:var(--font-pricing-display)]">{t('includes.title')}</h2>
+                <h2 className="text-2xl font-semibold [font-family:'Iowan_Old_Style','Palatino_Linotype','Times_New_Roman',serif]">{t('includes.title')}</h2>
                 <div className="space-y-3 text-sm text-slate-600">
                   {(Array.isArray(includes) ? includes : []).map((item) => (
                     <div key={item} className="flex items-center gap-2">
@@ -175,7 +162,7 @@ export default function PricingPage() {
 
             <Card className="border-slate-200/80 bg-white/85 text-slate-900">
               <CardContent className="space-y-6 p-6">
-                <h2 className="text-2xl font-semibold [font-family:var(--font-pricing-display)]">{t('faq.title')}</h2>
+                <h2 className="text-2xl font-semibold [font-family:'Iowan_Old_Style','Palatino_Linotype','Times_New_Roman',serif]">{t('faq.title')}</h2>
                 <div className="space-y-5 text-sm text-slate-600">
                   {(Array.isArray(faqItems) ? faqItems : []).map((item) => (
                     <div key={item.q}>
@@ -192,7 +179,7 @@ export default function PricingPage() {
             <Card className="border-slate-200/80 bg-slate-900 text-amber-100">
               <CardContent className="flex flex-col items-start justify-between gap-4 p-8 md:flex-row md:items-center">
                 <div>
-                  <h2 className="text-3xl font-semibold [font-family:var(--font-pricing-display)]">{t('cta.title')}</h2>
+                  <h2 className="text-3xl font-semibold [font-family:'Iowan_Old_Style','Palatino_Linotype','Times_New_Roman',serif]">{t('cta.title')}</h2>
                   <p className="mt-2 text-slate-300">{t('cta.subtitle')}</p>
                 </div>
                 <div className="flex flex-wrap gap-3">

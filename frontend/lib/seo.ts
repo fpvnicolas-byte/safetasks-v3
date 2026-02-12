@@ -87,10 +87,18 @@ export function getLanguageAlternates(path = ''): Record<string, string> {
   return alternates
 }
 
-export function getOpenGraphImagePath(locale: Locale): string {
+export function getLandingOpenGraphImagePath(locale: Locale): string {
   return getLocalizedPath(locale, '/opengraph-image')
 }
 
-export function getTwitterImagePath(locale: Locale): string {
+export function getLandingTwitterImagePath(locale: Locale): string {
   return getLocalizedPath(locale, '/twitter-image')
+}
+
+export function getPricingOpenGraphImagePath(locale: Locale): string {
+  return getLocalizedPath(locale, '/pricing/opengraph-image')
+}
+
+export function getPricingTwitterImagePath(locale: Locale): string {
+  return getLocalizedPath(locale, '/pricing/twitter-image')
 }

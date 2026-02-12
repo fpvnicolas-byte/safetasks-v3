@@ -5,10 +5,11 @@ import {
   SITE_NAME,
   getAbsoluteLocaleUrl,
   getLanguageAlternates,
-  getOpenGraphImagePath,
+  getLandingOpenGraphImagePath,
+  getLandingTwitterImagePath,
   getSeoCopy,
-  getTwitterImagePath,
 } from '@/lib/seo'
+import { getLandingJsonLd } from '@/lib/structured-data'
 
 import LandingPageClient from './_components/landing-page-client'
 
@@ -22,8 +23,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const seo = getSeoCopy(locale)
 
   const canonical = getAbsoluteLocaleUrl(locale)
-  const ogImage = getOpenGraphImagePath(locale)
-  const twitterImage = getTwitterImagePath(locale)
+  const ogImage = getLandingOpenGraphImagePath(locale)
+  const twitterImage = getLandingTwitterImagePath(locale)
 
   return {
     title: seo.landingTitle,
@@ -61,6 +62,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export default function LandingPage() {
-  return <LandingPageClient />
+export default async function LandingPage({ params }: PageProps) {
+  const { locale: requestedLocale } = await params
+  const locale = getValidLocale(requestedLocale)
+  const jsonLdNodes = getLandingJsonLd(locale)
+
+  return (
+    <>
+      {jsonLdNodes.map((node, index) => (
+        <script
+          key={`landing-jsonld-${index}`}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(node) }}
+        />
+      ))}
+      <LandingPageClient />
+    </>
+  )
 }
