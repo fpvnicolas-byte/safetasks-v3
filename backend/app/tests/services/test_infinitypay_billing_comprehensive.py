@@ -148,7 +148,7 @@ class TestCheckoutCreationGuardrails:
                 )
 
         assert exc.value.status_code == 409
-        assert "already active" in str(exc.value.detail)
+        assert "active plan" in str(exc.value.detail)
         mock_create.assert_not_called()
 
     @pytest.mark.asyncio
@@ -183,7 +183,7 @@ class TestCheckoutCreationGuardrails:
                 )
 
         assert exc.value.status_code == 409
-        assert "already active" in str(exc.value.detail)
+        assert "active plan" in str(exc.value.detail)
         mock_create.assert_not_called()
 
     @pytest.mark.asyncio
@@ -219,7 +219,7 @@ class TestCheckoutCreationGuardrails:
                 )
 
         assert exc.value.status_code == 409
-        assert "already active" in str(exc.value.detail)
+        assert "active plan" in str(exc.value.detail)
         mock_create.assert_not_called()
 
     @pytest.mark.asyncio
@@ -261,7 +261,7 @@ class TestCheckoutCreationGuardrails:
         assert mock_create.call_count == 1
 
     @pytest.mark.asyncio
-    async def test_allows_upgrade_to_different_plan_when_active(self):
+    async def test_blocks_purchase_of_different_plan_when_active(self):
         current_plan = FakePlan(name="starter")
         target_plan = FakePlan(name="professional")
         org = FakeOrganization(
@@ -286,17 +286,18 @@ class TestCheckoutCreationGuardrails:
             billing_module.infinity_pay_service,
             "create_checkout_link",
             new_callable=AsyncMock,
-            return_value="https://pay.infinitepay.io/scan/upgrade123",
         ) as mock_create:
-            url = await billing_module.create_infinitypay_checkout_link(
-                db=mock_db,
-                organization=org,
-                plan_name="professional",
-                redirect_url="https://safetasks.vercel.app/settings/billing",
-            )
+            with pytest.raises(HTTPException) as exc:
+                await billing_module.create_infinitypay_checkout_link(
+                    db=mock_db,
+                    organization=org,
+                    plan_name="professional",
+                    redirect_url="https://safetasks.vercel.app/settings/billing",
+                )
 
-        assert url == "https://pay.infinitepay.io/scan/upgrade123"
-        assert mock_create.call_count == 1
+        assert exc.value.status_code == 409
+        assert "active plan" in str(exc.value.detail)
+        mock_create.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_allows_same_plan_purchase_after_expiry(self):

@@ -199,11 +199,12 @@ async def create_infinitypay_checkout_link(
         if current_plan and current_plan.name:
             current_plan_name = current_plan.name
 
-    if _has_active_paid_access(organization) and current_plan_name == plan_name:
+    if _has_active_paid_access(organization):
         active_until = organization.access_ends_at.isoformat() if organization.access_ends_at else "unknown"
+        current_label = current_plan_name or "unknown"
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=f"Selected plan is already active until {active_until}"
+            detail=f"Organization already has an active plan ({current_label}) until {active_until}"
         )
 
     # Get the plan ID from DB to ensure validity
