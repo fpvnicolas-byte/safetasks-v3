@@ -6,14 +6,14 @@ import {
   getAbsoluteUrl,
   getAbsoluteLocaleUrl,
   getLanguageAlternates,
+  getLandingOpenGraphImagePath,
+  getLandingTwitterImagePath,
   getOpenGraphLogoPath,
-  getPricingOpenGraphImagePath,
-  getPricingTwitterImagePath,
   getSeoCopy,
 } from '@/lib/seo'
-import { getPricingJsonLd } from '@/lib/structured-data'
+import { getLandingJsonLd } from '@/lib/structured-data'
 
-import PricingPageClient from '../_components/pricing-page-client'
+import LandingPageClient from '../_components/landing-page-client'
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -24,21 +24,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const locale = getValidLocale(requestedLocale)
   const seo = getSeoCopy(locale)
 
-  const canonical = getAbsoluteLocaleUrl(locale, '/pricing')
-  const ogImage = getAbsoluteUrl(getPricingOpenGraphImagePath(locale))
+  const canonical = getAbsoluteLocaleUrl(locale)
+  const ogImage = getAbsoluteUrl(getLandingOpenGraphImagePath(locale))
   const ogLogo = getAbsoluteUrl(getOpenGraphLogoPath(locale))
-  const twitterImage = getAbsoluteUrl(getPricingTwitterImagePath(locale))
+  const twitterImage = getAbsoluteUrl(getLandingTwitterImagePath(locale))
 
   return {
-    title: seo.pricingTitle,
-    description: seo.pricingDescription,
+    title: seo.landingTitle,
+    description: seo.landingDescription,
     alternates: {
       canonical,
-      languages: getLanguageAlternates('/pricing'),
+      languages: getLanguageAlternates(''),
     },
     openGraph: {
-      title: seo.pricingTitle,
-      description: seo.pricingDescription,
+      title: seo.landingTitle,
+      description: seo.landingDescription,
       url: canonical,
       siteName: SITE_NAME,
       locale: seo.openGraphLocale,
@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
           url: ogImage,
           width: 1200,
           height: 630,
-          alt: seo.pricingTitle,
+          alt: seo.landingTitle,
         },
         {
           url: ogLogo,
@@ -60,8 +60,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     },
     twitter: {
       card: 'summary_large_image',
-      title: seo.pricingTitle,
-      description: seo.pricingDescription,
+      title: seo.landingTitle,
+      description: seo.landingDescription,
       images: [twitterImage],
     },
     robots: {
@@ -71,21 +71,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export default async function PricingPage({ params }: PageProps) {
+export default async function LandingPage({ params }: PageProps) {
   const { locale: requestedLocale } = await params
   const locale = getValidLocale(requestedLocale)
-  const jsonLdNodes = getPricingJsonLd(locale)
+  const jsonLdNodes = getLandingJsonLd(locale)
 
   return (
     <>
       {jsonLdNodes.map((node, index) => (
         <script
-          key={`pricing-jsonld-${index}`}
+          key={`landing-jsonld-${index}`}
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(node) }}
         />
       ))}
-      <PricingPageClient />
+      <LandingPageClient />
     </>
   )
 }
