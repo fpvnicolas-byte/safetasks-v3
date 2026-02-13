@@ -2496,6 +2496,20 @@
         },
         "unlimited": "Unlimited"
       },
+      "history": {
+        "title": "Billing History",
+        "description": "View your recent payments and receipts. Refund requests are available for 7 days after purchase.",
+        "loadError": "Failed to load billing history",
+        "emptyState": "No billing purchases found yet for this organization.",
+        "fallbackPlanName": "Billed Charge",
+        "requestRefund": "Request Refund",
+        "refundedAmount": "Refunded: {amount}",
+        "status": {
+          "fullyRefunded": "Fully refunded",
+          "refundAvailable": "Refund available",
+          "windowClosed": "Refund window closed"
+        }
+      },
       "messages": {
         "success": "Plan updated successfully!",
         "canceled": "Upgrade canceled.",

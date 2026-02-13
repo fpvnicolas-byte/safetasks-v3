@@ -2496,6 +2496,20 @@
         },
         "unlimited": "Ilimitado"
       },
+      "history": {
+        "title": "Histórico de Cobrança",
+        "description": "Veja seus pagamentos e comprovantes recentes. Solicitações de reembolso ficam disponíveis por 7 dias após a compra.",
+        "loadError": "Falha ao carregar histórico de cobrança",
+        "emptyState": "Ainda não há compras registradas para esta organização.",
+        "fallbackPlanName": "Cobrança faturada",
+        "requestRefund": "Solicitar reembolso",
+        "refundedAmount": "Reembolsado: {amount}",
+        "status": {
+          "fullyRefunded": "Totalmente reembolsado",
+          "refundAvailable": "Reembolso disponível",
+          "windowClosed": "Janela de reembolso encerrada"
+        }
+      },
       "messages": {
         "success": "Plano atualizado com sucesso!",
         "canceled": "Upgrade cancelado.",

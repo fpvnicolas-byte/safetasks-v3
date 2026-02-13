@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Receipt } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { apiClient } from '@/lib/api/client'
 import { toast } from 'sonner'
 import { RefundRequestModal } from './RefundRequestModal'
@@ -22,6 +22,7 @@ interface BillingPurchase {
 
 export function BillingHistory() {
     const t = useTranslations('settings.billingPage.history')
+    const locale = useLocale()
     const [purchases, setPurchases] = useState<BillingPurchase[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [selectedPurchase, setSelectedPurchase] = useState<BillingPurchase | null>(null)
@@ -33,23 +34,23 @@ export function BillingHistory() {
                 setPurchases(data)
             } catch (err) {
                 console.error('Failed to load billing history', err)
-                toast.error('Failed to load billing history')
+                toast.error(t('loadError'))
             } finally {
                 setIsLoading(false)
             }
         }
         fetchHistory()
-    }, [])
+    }, [t])
 
     const formatCurrency = (cents: number, currency: string) => {
-        return new Intl.NumberFormat('pt-BR', {
+        return new Intl.NumberFormat(locale, {
             style: 'currency',
-            currency: currency,
+            currency: currency || 'BRL',
         }).format(cents / 100)
     }
 
     const formatDate = (dateString: string) => {
-        return new Intl.DateTimeFormat('pt-BR').format(new Date(dateString))
+        return new Intl.DateTimeFormat(locale).format(new Date(dateString))
     }
 
     const isEligibleForRefund = (purchase: BillingPurchase) => {
@@ -61,12 +62,12 @@ export function BillingHistory() {
 
     const getRefundStatusLabel = (purchase: BillingPurchase) => {
         if (purchase.total_refunded_cents >= purchase.amount_paid_cents) {
-            return 'Fully refunded'
+            return t('status.fullyRefunded')
         }
         if (isEligibleForRefund(purchase)) {
-            return 'Refund available'
+            return t('status.refundAvailable')
         }
-        return 'Refund window closed'
+        return t('status.windowClosed')
     }
 
     if (isLoading) {
@@ -76,15 +77,15 @@ export function BillingHistory() {
     return (
         <Card className="mt-8">
             <CardHeader>
-                <CardTitle>{t('title', 'Billing History')}</CardTitle>
+                <CardTitle>{t('title')}</CardTitle>
                 <CardDescription>
-                    {t('description', 'View your recent payments and receipts. Refund requests are available for 7 days after purchase.')}
+                    {t('description')}
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 {purchases.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
-                        No billing purchases found yet for this organization.
+                        {t('emptyState')}
                     </p>
                 ) : (
                     <div className="space-y-4">
@@ -96,7 +97,7 @@ export function BillingHistory() {
                                     </div>
                                     <div>
                                         <div className="font-medium">
-                                            {purchase.plan_name || 'Billed Charge'}
+                                            {purchase.plan_name || t('fallbackPlanName')}
                                         </div>
                                         <div className="text-sm text-muted-foreground">
                                             {formatDate(purchase.paid_at)} • {purchase.provider}
@@ -108,7 +109,9 @@ export function BillingHistory() {
                                         </div>
                                         {purchase.total_refunded_cents > 0 && (
                                             <Badge variant="outline" className="mt-1 text-xs text-amber-600 border-amber-200">
-                                                Refunded: {formatCurrency(purchase.total_refunded_cents, purchase.currency)}
+                                                {t('refundedAmount', {
+                                                    amount: formatCurrency(purchase.total_refunded_cents, purchase.currency),
+                                                })}
                                             </Badge>
                                         )}
                                     </div>
@@ -122,7 +125,7 @@ export function BillingHistory() {
                                             className="text-xs h-auto p-0 mt-1 text-muted-foreground hover:text-destructive"
                                             onClick={() => setSelectedPurchase(purchase)}
                                         >
-                                            Request Refund
+                                            {t('requestRefund')}
                                         </Button>
                                     )}
                                 </div>
