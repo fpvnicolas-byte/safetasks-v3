@@ -59,7 +59,9 @@ export default function PlatformLayout({
         <div className="min-h-screen bg-background">
             <header className="border-b bg-card px-6 py-4">
                 <div className="flex items-center gap-4">
-                    <h1 className="text-xl font-bold font-display">Platform Admin</h1>
+                    <Link href={`/${locale}/platform`} className="text-xl font-bold font-display hover:text-primary transition-colors">
+                        Platform Admin
+                    </Link>
                     <nav className="flex gap-4 text-sm">
                         <Link href={`/${locale}/platform/refunds`} className="hover:text-primary">
                             Refunds Queue

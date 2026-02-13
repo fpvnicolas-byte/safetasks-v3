@@ -3767,6 +3767,20 @@
     }
   },
   "platform": {
+    "dashboard": {
+      "title": "Platform Admin",
+      "subtitle": "Manage your platform from here.",
+      "sections": {
+        "bugReports": {
+          "title": "Bug Reports",
+          "desc": "View and manage user-reported bugs and feature requests"
+        },
+        "refunds": {
+          "title": "Refunds Queue",
+          "desc": "Review and process refund requests from users"
+        }
+      }
+    },
     "bugReports": {
       "title": "Bug Reports",
       "columns": {

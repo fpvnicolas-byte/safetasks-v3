@@ -3767,6 +3767,20 @@
     }
   },
   "platform": {
+    "dashboard": {
+      "title": "Admin da Plataforma",
+      "subtitle": "Gerencie sua plataforma a partir daqui.",
+      "sections": {
+        "bugReports": {
+          "title": "Relatorios de Bug",
+          "desc": "Visualize e gerencie bugs e sugestoes reportados pelos usuarios"
+        },
+        "refunds": {
+          "title": "Fila de Reembolsos",
+          "desc": "Revise e processe solicitacoes de reembolso dos usuarios"
+        }
+      }
+    },
     "bugReports": {
       "title": "Relatorios de Bug",
       "columns": {
