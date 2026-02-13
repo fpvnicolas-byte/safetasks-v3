@@ -216,7 +216,37 @@
     "archived": "Archived",
     "activeCount": "{count} active",
     "ofTotal": "of total",
-    "days": "days"
+    "days": "days",
+    "bugReport": "Report Bug",
+    "exportData": "Export",
+    "exportCSV": "Export as CSV",
+    "exportPDF": "Export as PDF",
+    "bugReportModal": {
+      "title": "Report a Bug",
+      "description": "Help us improve SafeTasks by reporting issues you encounter.",
+      "fields": {
+        "titleLabel": "Title",
+        "titlePlaceholder": "Brief description of the issue",
+        "categoryLabel": "Category",
+        "categoryPlaceholder": "Select a category",
+        "categoryOptions": {
+          "bug": "Bug",
+          "featureRequest": "Feature Request",
+          "other": "Other"
+        },
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Describe the issue in detail..."
+      },
+      "actions": {
+        "submit": "Submit Report",
+        "cancel": "Cancel"
+      },
+      "messages": {
+        "requiredFields": "Please fill in all required fields",
+        "submitSuccess": "Report submitted successfully!",
+        "submitError": "Failed to submit report"
+      }
+    }
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -3734,6 +3764,36 @@
       "cancel": "Cancel",
       "success": "Contact saved successfully",
       "error": "Failed to save contact"
+    }
+  },
+  "platform": {
+    "bugReports": {
+      "title": "Bug Reports",
+      "columns": {
+        "open": "Open",
+        "in_review": "In Review",
+        "resolved": "Resolved",
+        "closed": "Closed"
+      },
+      "card": {
+        "bug": "Bug",
+        "featureRequest": "Feature Request",
+        "other": "Other"
+      },
+      "detail": {
+        "title": "Bug Report Details",
+        "reporter": "Reporter",
+        "organization": "Organization",
+        "category": "Category",
+        "status": "Status",
+        "description": "Description",
+        "adminNotes": "Admin Notes",
+        "adminNotesPlaceholder": "Add internal notes...",
+        "save": "Save Notes",
+        "back": "Back to Board",
+        "saved": "Notes saved",
+        "saveFailed": "Failed to save notes"
+      }
     }
   }
 }

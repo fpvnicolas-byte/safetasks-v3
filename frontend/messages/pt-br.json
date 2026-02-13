@@ -216,7 +216,37 @@
     "archived": "Arquivado",
     "activeCount": "{count} ativos",
     "ofTotal": "do total",
-    "days": "dias"
+    "days": "dias",
+    "bugReport": "Reportar Bug",
+    "exportData": "Exportar",
+    "exportCSV": "Exportar como CSV",
+    "exportPDF": "Exportar como PDF",
+    "bugReportModal": {
+      "title": "Reportar um Bug",
+      "description": "Nos ajude a melhorar o SafeTasks reportando problemas encontrados.",
+      "fields": {
+        "titleLabel": "Titulo",
+        "titlePlaceholder": "Breve descricao do problema",
+        "categoryLabel": "Categoria",
+        "categoryPlaceholder": "Selecione uma categoria",
+        "categoryOptions": {
+          "bug": "Bug",
+          "featureRequest": "Sugestao de Funcionalidade",
+          "other": "Outro"
+        },
+        "descriptionLabel": "Descricao",
+        "descriptionPlaceholder": "Descreva o problema em detalhes..."
+      },
+      "actions": {
+        "submit": "Enviar Relatorio",
+        "cancel": "Cancelar"
+      },
+      "messages": {
+        "requiredFields": "Por favor, preencha todos os campos obrigatorios",
+        "submitSuccess": "Relatorio enviado com sucesso!",
+        "submitError": "Falha ao enviar relatorio"
+      }
+    }
   },
   "navigation": {
     "dashboard": "Painel",
@@ -3734,6 +3764,36 @@
       "cancel": "Cancelar",
       "success": "Contato salvo com sucesso",
       "error": "Falha ao salvar contato"
+    }
+  },
+  "platform": {
+    "bugReports": {
+      "title": "Relatorios de Bug",
+      "columns": {
+        "open": "Aberto",
+        "in_review": "Em Analise",
+        "resolved": "Resolvido",
+        "closed": "Fechado"
+      },
+      "card": {
+        "bug": "Bug",
+        "featureRequest": "Sugestao",
+        "other": "Outro"
+      },
+      "detail": {
+        "title": "Detalhes do Relatorio",
+        "reporter": "Relator",
+        "organization": "Organizacao",
+        "category": "Categoria",
+        "status": "Status",
+        "description": "Descricao",
+        "adminNotes": "Notas do Admin",
+        "adminNotesPlaceholder": "Adicionar notas internas...",
+        "save": "Salvar Notas",
+        "back": "Voltar ao Quadro",
+        "saved": "Notas salvas",
+        "saveFailed": "Falha ao salvar notas"
+      }
     }
   }
 }
