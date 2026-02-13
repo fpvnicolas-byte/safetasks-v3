@@ -4,7 +4,7 @@ const DEFAULT_SITE_URL = 'https://safetasks.vercel.app'
 
 export const SITE_NAME = 'SafeTasks'
 
-export const PUBLIC_INDEXABLE_PATHS = ['', '/pricing'] as const
+export const PUBLIC_INDEXABLE_PATHS = ['', '/pricing', '/faq', '/about'] as const
 
 const STATIC_OG_IMAGES: Record<Locale, { landing: string; pricing: string }> = {
   en: {
@@ -24,6 +24,10 @@ interface LocaleSeoCopy {
   landingDescription: string
   pricingTitle: string
   pricingDescription: string
+  faqTitle: string
+  faqDescription: string
+  aboutTitle: string
+  aboutDescription: string
   openGraphLocale: string
 }
 
@@ -38,6 +42,12 @@ const SEO_COPY: Record<Locale, LocaleSeoCopy> = {
     pricingTitle: 'SafeTasks Pricing | Plans for Film Teams and Studios',
     pricingDescription:
       'Choose a SafeTasks plan based on your team size and usage. Start with trial access and upgrade as productions scale.',
+    faqTitle: 'FAQ | SafeTasks — Billing, Refunds & Support',
+    faqDescription:
+      'Find answers about SafeTasks subscriptions, refund policy, data privacy, account management, and platform usage.',
+    aboutTitle: 'About SafeTasks | Production Management for Film Teams',
+    aboutDescription:
+      'Learn about SafeTasks — the production management platform built for audiovisual teams. Our mission, values, and team.',
     openGraphLocale: 'en_US',
   },
   'pt-br': {
@@ -50,6 +60,12 @@ const SEO_COPY: Record<Locale, LocaleSeoCopy> = {
     pricingTitle: 'Planos SafeTasks | Escala para Equipes e Produtoras',
     pricingDescription:
       'Escolha o plano SafeTasks ideal para o tamanho da sua equipe e nivel de uso. Comece com trial e evolua conforme a producao cresce.',
+    faqTitle: 'FAQ | SafeTasks — Cobrança, Reembolso e Suporte',
+    faqDescription:
+      'Encontre respostas sobre assinaturas, política de reembolso, privacidade de dados, gestão de conta e uso da plataforma SafeTasks.',
+    aboutTitle: 'Sobre o SafeTasks | Gestão de Produção Audiovisual',
+    aboutDescription:
+      'Conheça o SafeTasks — a plataforma de gestão de produção para equipes audiovisuais. Nossa missão, valores e equipe.',
     openGraphLocale: 'pt_BR',
   },
 }

@@ -16,6 +16,14 @@ const PAGE_CONFIG: Record<(typeof PUBLIC_INDEXABLE_PATHS)[number], { priority: n
     priority: 0.8,
     changeFrequency: 'monthly',
   },
+  '/faq': {
+    priority: 0.7,
+    changeFrequency: 'monthly',
+  },
+  '/about': {
+    priority: 0.6,
+    changeFrequency: 'monthly',
+  },
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {
