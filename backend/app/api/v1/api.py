@@ -8,6 +8,7 @@ from app.api.v1.endpoints import (
     ai_monitoring, services, project_assignments, billing, whatsapp,
     stripe_connect, invites, team, contacts,
     refunds, platform_refunds,
+    bug_reports, platform_bug_reports,
 )
 
 api_router = APIRouter()
@@ -204,4 +205,16 @@ api_router.include_router(
     platform_refunds.router,
     prefix="/platform/refunds",
     tags=["platform_refunds"]
+)
+
+api_router.include_router(
+    bug_reports.router,
+    prefix="/bug-reports",
+    tags=["bug_reports"]
+)
+
+api_router.include_router(
+    platform_bug_reports.router,
+    prefix="/platform/bug-reports",
+    tags=["platform_bug_reports"]
 )
