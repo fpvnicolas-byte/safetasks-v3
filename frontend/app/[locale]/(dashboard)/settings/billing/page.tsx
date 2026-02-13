@@ -9,9 +9,10 @@ import { ArrowLeft, CreditCard, TrendingUp, Zap, Users, FolderOpen, FileText, Ha
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/api/client'
-import { BillingHistory } from '@/components/billing/BillingHistory'
 import { useLocale, useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
+import dynamic from 'next/dynamic'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface UsageData {
   organization_id: string
@@ -112,6 +113,26 @@ const formatDaysToExpiry = (days: number, locale: string): string => {
     return String(days)
   }
 }
+
+const BillingHistory = dynamic(
+  () => import('@/components/billing/BillingHistory').then((mod) => ({ default: mod.BillingHistory })),
+  {
+    loading: () => (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-56" />
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton key={index} className="h-14 w-full" />
+          ))}
+        </CardContent>
+      </Card>
+    ),
+    ssr: false,
+  }
+)
 
 export default function BillingPage() {
   const { organizationId } = useAuth()
@@ -218,10 +239,40 @@ export default function BillingPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">{t('billingPage.loading')}</p>
+      <div className="space-y-8">
+        <div className="rounded-xl border bg-card/60 px-6 py-5">
+          <Link
+            href={`/${locale}/settings`}
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {t('billingPage.backButton')}
+          </Link>
+          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            {t('billingPage.breadcrumb')}
+          </div>
+          <div className="mt-2">
+            <h1 className="text-3xl font-bold tracking-tight font-display">{t('billingPage.title')}</h1>
+            <p className="text-muted-foreground">
+              {t('billingPage.description')}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <Card key={index}>
+              <CardHeader>
+                <Skeleton className="h-6 w-40" />
+                <Skeleton className="h-4 w-52" />
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     )
@@ -229,10 +280,30 @@ export default function BillingPage() {
 
   if (!usageData) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <p className="text-muted-foreground">{t('billingPage.emptyState')}</p>
+      <div className="space-y-8">
+        <div className="rounded-xl border bg-card/60 px-6 py-5">
+          <Link
+            href={`/${locale}/settings`}
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {t('billingPage.backButton')}
+          </Link>
+          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            {t('billingPage.breadcrumb')}
+          </div>
+          <div className="mt-2">
+            <h1 className="text-3xl font-bold tracking-tight font-display">{t('billingPage.title')}</h1>
+            <p className="text-muted-foreground">
+              {t('billingPage.description')}
+            </p>
+          </div>
         </div>
+        <Card>
+          <CardContent className="pt-6 text-muted-foreground">
+            {t('billingPage.emptyState')}
+          </CardContent>
+        </Card>
       </div>
     )
   }

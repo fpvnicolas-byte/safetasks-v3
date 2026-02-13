@@ -20,6 +20,7 @@ import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
 import { ErrorDialog } from '@/components/ui/error-dialog'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
+import { Skeleton } from '@/components/ui/skeleton'
 
 function TabPanelFallback() {
   return (
@@ -88,11 +89,14 @@ export default function ProjectDetailPage() {
   const [scripts, setScripts] = useState<FileUploadResponse[]>([])
   const [shootingDayFiles, setShootingDayFiles] = useState<FileUploadResponse[]>([])
   const [media, setMedia] = useState<FileUploadResponse[]>([])
+  const [activeTab, setActiveTab] = useState('details')
+
+  const shouldLoadFiles = !isFreelancer && activeTab === 'files'
 
   // File persistence hooks
-  const { data: scriptFiles = [] } = useFiles('scripts', organizationId || undefined)
-  const { data: shootingDayFilesData = [] } = useFiles('shooting-days', organizationId || undefined)
-  const { data: mediaFiles = [] } = useFiles('media', organizationId || undefined)
+  const { data: scriptFiles = [] } = useFiles(shouldLoadFiles ? 'scripts' : '', organizationId || undefined)
+  const { data: shootingDayFilesData = [] } = useFiles(shouldLoadFiles ? 'shooting-days' : '', organizationId || undefined)
+  const { data: mediaFiles = [] } = useFiles(shouldLoadFiles ? 'media' : '', organizationId || undefined)
 
   // Initialize scripts with existing files
   useEffect(() => {
@@ -188,15 +192,56 @@ export default function ProjectDetailPage() {
   }
 
   if (isLoading) {
-    return <DetailPageSkeleton />
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">{t('details.projectInformation')}</h1>
+            <p className="text-muted-foreground">{t('errors.loadingProject')}</p>
+          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Card key={index}>
+              <CardHeader>
+                <Skeleton className="h-4 w-24" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-20" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <DetailPageSkeleton />
+      </div>
+    )
   }
 
   if (error) {
-    return <div>{t('errors.loadingProject')}: {error.message}</div>
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{t('details.projectInformation')}</h1>
+          <p className="text-muted-foreground">{t('errors.loadingProject')}</p>
+        </div>
+        <Card className="border-destructive/30">
+          <CardContent className="pt-6">
+            {t('errors.loadingProject')}: {error.message}
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   if (!project) {
-    return <div>{t('errors.projectNotFound')}</div>
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{t('details.projectInformation')}</h1>
+          <p className="text-muted-foreground">{t('errors.projectNotFound')}</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -271,7 +316,7 @@ export default function ProjectDetailPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="details">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex flex-wrap sm:inline-flex w-full sm:w-auto !h-auto gap-1 p-1.5 mb-3">
           <TabsTrigger value="details" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[30%] sm:min-w-0">{t('details.tabs.details')}</TabsTrigger>
           <TabsTrigger value="shooting-days" className="flex-1 sm:flex-auto text-[11px] sm:text-sm px-2 sm:px-3 py-1.5 min-w-[30%] sm:min-w-0">{t('details.tabs.shootingDays')}</TabsTrigger>

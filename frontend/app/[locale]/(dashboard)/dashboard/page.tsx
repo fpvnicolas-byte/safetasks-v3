@@ -6,7 +6,7 @@ import { useExecutiveDashboard } from '@/lib/api/hooks/useAnalytics'
 import { useProjects } from '@/lib/api/hooks'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Loader2, DollarSign, TrendingUp, Package, Cloud, FolderOpen } from 'lucide-react'
+import { DollarSign, TrendingUp, Package, Cloud, FolderOpen } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils/money'
 import dynamic from 'next/dynamic'
 import { useTranslations } from 'next-intl'
@@ -88,30 +88,97 @@ const safeToFixed = (value: number | string | null | undefined, decimals: number
 export default function DashboardPage() {
   const { user, organizationId } = useAuth()
   const { data: dashboard, isLoading, error } = useExecutiveDashboard(12)
-  const { data: projects } = useProjects(organizationId || undefined)
+  const { data: projects } = useProjects(error && !dashboard ? organizationId || undefined : undefined)
   const t = useTranslations('dashboard')
   const [isBugReportOpen, setIsBugReportOpen] = useState(false)
 
-  // Show loading state
-  if (isLoading) {
+  const activeProjects = projects?.filter((project) =>
+    project.status !== 'archived' && project.status !== 'delivered'
+  ).length || 0
+
+  if (isLoading && !dashboard) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="space-y-8">
+        <div className="rounded-xl border bg-card/60 px-6 py-5">
+          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            Dashboard / Overview
+          </div>
+          <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight font-display">{t('title')}</h1>
+              <p className="text-sm sm:text-base lg:text-lg text-muted-foreground">
+                {t('welcome', { email: user?.email ?? '' })}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" disabled aria-busy="true">
+                ...
+              </Button>
+              <Button disabled>{t('bugReport')}</Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Card key={index}>
+              <CardHeader className="pb-2">
+                <Skeleton className="h-4 w-28" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-24 mb-2" />
+                <Skeleton className="h-3 w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-36" />
+              <Skeleton className="h-4 w-40" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <Skeleton key={index} className="h-4 w-full" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-28" />
+              <Skeleton className="h-4 w-32" />
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <Skeleton key={index} className="h-[104px] w-full" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     )
   }
 
   // Fallback to simple dashboard if analytics fail
   if (error || !dashboard) {
-    const activeProjects = projects?.filter(p =>
-      p.status !== 'archived' && p.status !== 'delivered'
-    ).length || 0
-
     return (
       <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
-          <p className="text-muted-foreground">{t('welcome', { email: user?.email ?? '' })}</p>
+        <div className="rounded-xl border bg-card/60 px-6 py-5">
+          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            Dashboard / Overview
+          </div>
+          <div className="mt-2">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight font-display">{t('title')}</h1>
+            <p className="text-sm sm:text-base lg:text-lg text-muted-foreground">
+              {t('welcome', { email: user?.email ?? '' })}
+            </p>
+          </div>
         </div>
 
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">

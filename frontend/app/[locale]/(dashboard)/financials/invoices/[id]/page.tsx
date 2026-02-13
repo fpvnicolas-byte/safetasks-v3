@@ -20,6 +20,7 @@ import { InvoiceStatus } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { toast } from 'sonner'
+import { Skeleton } from '@/components/ui/skeleton'
 
 function AsyncCardFallback() {
   return (
@@ -171,15 +172,69 @@ export default function InvoiceDetailPage() {
   }
 
   if (isLoading) {
-    return <div>{t('loading')}</div>
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center gap-4">
+          <Button asChild variant="outline" size="sm">
+            <Link href="/financials?tab=invoices">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {t('actions.back')}
+            </Link>
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight font-display">{t('loading')}</h1>
+            <p className="text-muted-foreground">{t('info.title')}</p>
+          </div>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-40" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Skeleton className="h-6 w-full" />
+                <Skeleton className="h-6 w-full" />
+                <Skeleton className="h-6 w-2/3" />
+              </CardContent>
+            </Card>
+          </div>
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
   }
 
   if (error) {
-    return <div>{t('errors.load', { message: error.message })}</div>
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('loading')}</h1>
+        </div>
+        <Alert variant="destructive">
+          <AlertDescription>{t('errors.load', { message: error.message })}</AlertDescription>
+        </Alert>
+      </div>
+    )
   }
 
   if (!invoice) {
-    return <div>{t('errors.notFound')}</div>
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight font-display">{t('errors.notFound')}</h1>
+        </div>
+      </div>
+    )
   }
 
   const dueDate = new Date(invoice.due_date)

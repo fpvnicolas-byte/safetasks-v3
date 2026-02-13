@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { useAuth } from '@/contexts/AuthContext'
 import { useStripeConnectStatus, useStripeConnectOnboard, useStripeConnectDisconnect } from '@/lib/api/hooks'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,11 +12,11 @@ import { Separator } from '@/components/ui/separator'
 import { ArrowLeft, CreditCard, ExternalLink, CheckCircle2, XCircle, Loader2, Unlink } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function PaymentMethodsPage() {
   const t = useTranslations('settings.paymentMethods')
   const tCommon = useTranslations('common')
-  const { organizationId } = useAuth()
   const [isDisconnecting, setIsDisconnecting] = useState(false)
 
   const searchParams = useSearchParams()
@@ -71,8 +70,48 @@ export default function PaymentMethodsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="space-y-8">
+        <div className="rounded-xl border bg-card/60 px-6 py-5">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            <Link href="/settings" className="hover:text-foreground transition-colors">
+              Settings
+            </Link>
+            <span>/</span>
+            <span>{t('title')}</span>
+          </div>
+          <div className="mt-2 flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight font-display">{t('title')}</h1>
+              <p className="text-muted-foreground">{t('description')}</p>
+            </div>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/settings">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                {tCommon('back')}
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-12 w-12 rounded-lg" />
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-40" />
+                  <Skeleton className="h-4 w-56" />
+                </div>
+              </div>
+              <Skeleton className="h-6 w-28 rounded-full" />
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </CardContent>
+        </Card>
       </div>
     )
   }
