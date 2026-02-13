@@ -2682,7 +2682,9 @@
       "workflow": "Fluxo",
       "pricing": "Preços",
       "signIn": "Entrar",
-      "getStarted": "Iniciar teste"
+      "getStarted": "Iniciar teste",
+      "faq": "FAQ",
+      "about": "Sobre"
     },
     "hero": {
       "eyebrow": "Feito para produtoras audiovisuais",
@@ -3816,6 +3818,222 @@
         "saved": "Notas salvas",
         "saveFailed": "Falha ao salvar notas"
       }
+    }
+  },
+  "faq": {
+    "meta": {
+      "title": "FAQ | SafeTasks",
+      "description": "Encontre respostas para perguntas frequentes sobre o SafeTasks, incluindo cobrança, reembolso, privacidade de dados e uso da plataforma."
+    },
+    "hero": {
+      "eyebrow": "SUPORTE",
+      "title": "Perguntas Frequentes",
+      "subtitle": "Encontre respostas sobre cobrança, reembolso, privacidade e uso do SafeTasks."
+    },
+    "categories": {
+      "subscriptions": {
+        "title": "Assinaturas e Planos",
+        "items": [
+          {
+            "q": "Quais planos o SafeTasks oferece?",
+            "a": "O SafeTasks oferece três planos: Starter para equipes pequenas, Professional para produtoras em crescimento e Enterprise para grandes estúdios. Todos os planos incluem recursos essenciais de gestão de projetos, com planos superiores desbloqueando ferramentas financeiras avançadas, mais armazenamento e suporte prioritário."
+          },
+          {
+            "q": "Como funciona o período de teste gratuito?",
+            "a": "Toda nova conta começa com um período de teste gratuito de 14 dias do plano Professional. Não é necessário cartão de crédito. Ao final do período de teste, você pode escolher um plano pago ou sua conta será rebaixada para acesso limitado."
+          },
+          {
+            "q": "Como faço para fazer upgrade ou downgrade do meu plano?",
+            "a": "Você pode alterar seu plano a qualquer momento em Configurações > Cobrança. Upgrades entram em vigor imediatamente com cobrança proporcional. Downgrades entram em vigor no final do ciclo de cobrança atual."
+          },
+          {
+            "q": "Quais métodos de pagamento são aceitos?",
+            "a": "Aceitamos todos os principais cartões de crédito (Visa, Mastercard, American Express) e Pix através do nosso processador de pagamentos Stripe. Todas as transações são processadas com segurança."
+          }
+        ]
+      },
+      "refunds": {
+        "title": "Política de Reembolso",
+        "items": [
+          {
+            "q": "Qual é a política de reembolso?",
+            "a": "De acordo com o Código de Defesa do Consumidor (CDC, Art. 49), você tem o direito de cancelar e receber reembolso integral dentro de 7 dias a partir da data da contratação, por qualquer motivo. Este direito de arrependimento se aplica a todos os planos de assinatura contratados online."
+          },
+          {
+            "q": "Como solicito um reembolso?",
+            "a": "Para solicitar um reembolso dentro do prazo de 7 dias de arrependimento, acesse Configurações > Cobrança > Cancelar Assinatura ou envie um e-mail para support@safetasks.com. Solicitações de reembolso dentro do prazo de 7 dias são processadas automaticamente sem necessidade de justificativa."
+          },
+          {
+            "q": "Quanto tempo leva para processar um reembolso?",
+            "a": "Os reembolsos são processados em até 5-10 dias úteis após a confirmação da solicitação. O valor será devolvido ao método de pagamento original. Para pagamentos com cartão de crédito, o reembolso pode levar um ciclo de fatura adicional para aparecer no extrato."
+          },
+          {
+            "q": "Posso obter reembolso após o prazo de 7 dias de arrependimento?",
+            "a": "Após o prazo de 7 dias de arrependimento, cancelamentos passam a valer no final do ciclo de cobrança atual. Você manterá acesso aos recursos do seu plano até essa data. Reembolsos proporcionais podem ser concedidos caso a caso para planos anuais — entre em contato com support@safetasks.com."
+          }
+        ]
+      },
+      "cancellation": {
+        "title": "Cancelamento",
+        "items": [
+          {
+            "q": "Como cancelo minha assinatura?",
+            "a": "Acesse Configurações > Cobrança e clique em 'Cancelar Assinatura'. Você também pode entrar em contato com support@safetasks.com. O cancelamento entra em vigor no final do período de cobrança atual, e você mantém acesso até lá."
+          },
+          {
+            "q": "O que acontece com meus dados após o cancelamento?",
+            "a": "Após o cancelamento, seus dados são mantidos por 90 dias caso você decida reativar sua conta. Após 90 dias, seus dados serão permanentemente excluídos de acordo com nossa política de retenção de dados. Você pode solicitar exclusão imediata entrando em contato com o suporte."
+          },
+          {
+            "q": "Posso reativar minha conta após o cancelamento?",
+            "a": "Sim. Dentro de 90 dias do cancelamento, você pode reativar sua conta e todos os seus dados serão restaurados. Basta fazer login e escolher um novo plano na página de cobrança."
+          }
+        ]
+      },
+      "privacy": {
+        "title": "Privacidade e Proteção de Dados",
+        "items": [
+          {
+            "q": "Quais dados o SafeTasks coleta?",
+            "a": "Coletamos os dados necessários para fornecer nossos serviços: informações da conta (nome, e-mail), dados de projetos criados por você, análises de uso e informações de pagamento processadas com segurança através do Stripe. Não vendemos seus dados a terceiros."
+          },
+          {
+            "q": "Como o SafeTasks cumpre a LGPD?",
+            "a": "O SafeTasks cumpre integralmente a Lei Geral de Proteção de Dados (LGPD). Realizamos o tratamento de dados pessoais com base em interesse legítimo e necessidade contratual. Você pode exercer seus direitos como titular dos dados a qualquer momento."
+          },
+          {
+            "q": "Quais são meus direitos como titular dos dados sob a LGPD?",
+            "a": "Sob a LGPD, você tem direito a: acessar seus dados pessoais, corrigir dados incorretos, solicitar a exclusão de seus dados, obter portabilidade dos dados, revogar o consentimento e receber informações sobre com quais entidades seus dados foram compartilhados. Exerça esses direitos em Configurações > Conta ou enviando e-mail para privacy@safetasks.com."
+          },
+          {
+            "q": "Onde meus dados são armazenados?",
+            "a": "Seus dados são armazenados em servidores seguros fornecidos por Supabase e Vercel, com data centers localizados principalmente nos Estados Unidos. Todas as transferências de dados cumprem as regulamentações aplicáveis de proteção de dados, incluindo os requisitos da LGPD para transferências internacionais."
+          }
+        ]
+      },
+      "account": {
+        "title": "Conta e Segurança",
+        "items": [
+          {
+            "q": "Como crio uma conta?",
+            "a": "Clique em 'Iniciar Teste Gratuito' na nossa página inicial ou acesse a página de registro. Você pode se cadastrar com seu endereço de e-mail. Verifique seu e-mail para ativar sua conta."
+          },
+          {
+            "q": "Como excluo minha conta?",
+            "a": "Acesse Configurações > Conta > Excluir Conta. Isso agendará sua conta e todos os dados associados para exclusão permanente após um período de carência de 30 dias, conforme exigido pela LGPD. Entre em contato com o suporte se precisar de exclusão imediata."
+          },
+          {
+            "q": "Como redefino minha senha?",
+            "a": "Clique em 'Esqueci a Senha' na página de login e digite seu e-mail. Você receberá um link de redefinição de senha válido por 24 horas."
+          },
+          {
+            "q": "Como gerencio membros da equipe?",
+            "a": "Proprietários e administradores da conta podem convidar membros da equipe em Configurações > Equipe. Cada membro recebe uma função (Produtor, Financeiro, Freelancer) que determina seu nível de acesso dentro dos projetos."
+          }
+        ]
+      },
+      "platform": {
+        "title": "Uso da Plataforma",
+        "items": [
+          {
+            "q": "Quais navegadores são suportados?",
+            "a": "O SafeTasks funciona em todos os navegadores modernos: Chrome, Firefox, Safari e Edge (duas versões mais recentes). Recomendamos o Chrome para a melhor experiência."
+          },
+          {
+            "q": "Posso usar o SafeTasks no celular?",
+            "a": "Sim. O SafeTasks é totalmente responsivo e funciona em navegadores móveis. Embora ainda não tenhamos um aplicativo nativo, a experiência web móvel é otimizada para uso no set e em movimento."
+          },
+          {
+            "q": "Posso exportar meus dados?",
+            "a": "Sim. Você pode exportar dados de projetos, relatórios financeiros e contatos em suas respectivas páginas. As exportações estão disponíveis nos formatos CSV e PDF, dependendo do tipo de dado."
+          },
+          {
+            "q": "Quais são os limites de armazenamento?",
+            "a": "Os limites de armazenamento variam por plano: Starter inclui 5GB, Professional inclui 50GB e Enterprise inclui armazenamento ilimitado. O armazenamento é usado para uploads de arquivos, documentos e ativos de mídia gerenciados pela plataforma."
+          }
+        ]
+      }
+    },
+    "contact": {
+      "title": "Ainda tem dúvidas?",
+      "description": "Nossa equipe de suporte está aqui para ajudar.",
+      "cta": "Falar com o Suporte",
+      "email": "support@safetasks.com"
+    }
+  },
+  "about": {
+    "meta": {
+      "title": "Sobre Nós | SafeTasks",
+      "description": "Conheça o SafeTasks — a plataforma de gestão de produção para equipes audiovisuais. Nossa missão, história e equipe."
+    },
+    "hero": {
+      "eyebrow": "SOBRE NÓS",
+      "title": "Feito para equipes de produção audiovisual",
+      "subtitle": "SafeTasks é uma plataforma de gestão de produção projetada para simplificar o caos da produção de cinema, TV e conteúdo."
+    },
+    "story": {
+      "title": "Nossa História",
+      "paragraphs": [
+        "Gerenciar produções audiovisuais sempre foi complexo — planilhas dispersas, orçamentos desorganizados, intermináveis cadeias de e-mail e nenhuma fonte única de verdade para toda a equipe.",
+        "O SafeTasks nasceu da experiência direta de produtores que viveram esse caos. Construímos a plataforma que gostaríamos que existisse: um workspace unificado onde cada função — de produtores executivos a freelancers — pode colaborar, acompanhar finanças, gerenciar cronogramas e manter as produções funcionando sem problemas.",
+        "Hoje, o SafeTasks ajuda equipes de produção em todo o Brasil e além a organizar seu trabalho, controlar custos e entregar projetos no prazo."
+      ]
+    },
+    "values": {
+      "title": "Nossos Valores",
+      "items": [
+        {
+          "title": "Simplicidade",
+          "description": "A produção já é complexa o suficiente. Nossas ferramentas devem simplificar, não adicionar mais camadas."
+        },
+        {
+          "title": "Segurança",
+          "description": "Seus dados de produção e financeiros merecem proteção de nível empresarial. Levamos a segurança a sério."
+        },
+        {
+          "title": "Colaboração",
+          "description": "Grandes produções são um esforço de equipe. Nossa plataforma é construída em torno de funções, permissões e fluxos de trabalho compartilhados."
+        },
+        {
+          "title": "Inovação",
+          "description": "Evoluímos continuamente a plataforma com insights baseados em IA e ferramentas modernas para mantê-lo à frente."
+        }
+      ]
+    },
+    "team": {
+      "title": "Nossa Equipe",
+      "subtitle": "As pessoas por trás do SafeTasks.",
+      "members": [
+        {
+          "name": "Membro da Equipe",
+          "role": "Fundador e CEO",
+          "bio": "Produtor audiovisual que se tornou empreendedor de tecnologia. Criou o SafeTasks para resolver os problemas que enfrentava diariamente no set."
+        },
+        {
+          "name": "Membro da Equipe",
+          "role": "CTO",
+          "bio": "Engenheiro full-stack apaixonado por construir ferramentas que capacitam equipes criativas."
+        },
+        {
+          "name": "Membro da Equipe",
+          "role": "Head de Produto",
+          "bio": "Designer de produto focado em criar experiências intuitivas para fluxos de trabalho complexos."
+        }
+      ]
+    },
+    "contact": {
+      "title": "Entre em Contato",
+      "description": "Tem perguntas, ideias de parceria ou feedback? Adoraríamos ouvir de você.",
+      "cta": "Fale Conosco",
+      "email": "contact@safetasks.com"
+    }
+  },
+  "publicFooter": {
+    "copyright": "© 2026 SafeTasks. Todos os direitos reservados.",
+    "links": {
+      "faq": "FAQ",
+      "about": "Sobre Nós",
+      "pricing": "Preços"
     }
   }
 }

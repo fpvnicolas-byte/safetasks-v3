@@ -2682,7 +2682,9 @@
       "workflow": "Workflow",
       "pricing": "Pricing",
       "signIn": "Sign In",
-      "getStarted": "Start Trial"
+      "getStarted": "Start Trial",
+      "faq": "FAQ",
+      "about": "About"
     },
     "hero": {
       "eyebrow": "Built for audiovisual production companies",
@@ -3816,6 +3818,222 @@
         "saved": "Notes saved",
         "saveFailed": "Failed to save notes"
       }
+    }
+  },
+  "faq": {
+    "meta": {
+      "title": "FAQ | SafeTasks",
+      "description": "Find answers to frequently asked questions about SafeTasks, including billing, refunds, data privacy, and platform usage."
+    },
+    "hero": {
+      "eyebrow": "SUPPORT",
+      "title": "Frequently Asked Questions",
+      "subtitle": "Find answers about billing, refunds, privacy, and using SafeTasks."
+    },
+    "categories": {
+      "subscriptions": {
+        "title": "Subscriptions & Plans",
+        "items": [
+          {
+            "q": "What plans does SafeTasks offer?",
+            "a": "SafeTasks offers three plans: Starter for small teams, Professional for growing production companies, and Enterprise for large studios. All plans include core project management features, with higher tiers unlocking advanced financial tools, more storage, and priority support."
+          },
+          {
+            "q": "How does the free trial work?",
+            "a": "Every new account starts with a 14-day free trial of the Professional plan. No credit card is required. At the end of the trial, you can choose a paid plan or your account will be downgraded to limited access."
+          },
+          {
+            "q": "How do I upgrade or downgrade my plan?",
+            "a": "You can change your plan at any time from Settings > Billing. Upgrades take effect immediately with prorated billing. Downgrades take effect at the end of your current billing cycle."
+          },
+          {
+            "q": "What payment methods are accepted?",
+            "a": "We accept all major credit cards (Visa, Mastercard, American Express) and Pix via our payment processor Stripe. All transactions are processed securely."
+          }
+        ]
+      },
+      "refunds": {
+        "title": "Refund Policy",
+        "items": [
+          {
+            "q": "What is your refund policy?",
+            "a": "In accordance with the Brazilian Consumer Defense Code (CDC, Art. 49), you have the right to cancel and receive a full refund within 7 days of your purchase, for any reason. This right of withdrawal (direito de arrependimento) applies to all subscription plans contracted online."
+          },
+          {
+            "q": "How do I request a refund?",
+            "a": "To request a refund within the 7-day withdrawal period, go to Settings > Billing > Cancel Subscription or send an email to support@safetasks.com. Refund requests within the 7-day period are processed automatically without the need for justification."
+          },
+          {
+            "q": "How long does a refund take to process?",
+            "a": "Refunds are processed within 5-10 business days after the request is confirmed. The amount will be returned to the original payment method. For credit card payments, the refund may take an additional billing cycle to appear on your statement."
+          },
+          {
+            "q": "Can I get a refund after the 7-day withdrawal period?",
+            "a": "After the 7-day withdrawal period, cancellations take effect at the end of the current billing cycle. You will retain access to your plan features until that date. Prorated refunds may be issued on a case-by-case basis for annual plans — contact support@safetasks.com."
+          }
+        ]
+      },
+      "cancellation": {
+        "title": "Cancellation",
+        "items": [
+          {
+            "q": "How do I cancel my subscription?",
+            "a": "Go to Settings > Billing and click 'Cancel Subscription'. You can also contact support@safetasks.com. Cancellation takes effect at the end of your current billing period, and you retain access until then."
+          },
+          {
+            "q": "What happens to my data after cancellation?",
+            "a": "After cancellation, your data is retained for 90 days in case you decide to reactivate your account. After 90 days, your data will be permanently deleted in accordance with our data retention policy. You can request immediate deletion by contacting support."
+          },
+          {
+            "q": "Can I reactivate my account after cancellation?",
+            "a": "Yes. Within 90 days of cancellation, you can reactivate your account and all your data will be restored. Simply log in and choose a new plan from the billing page."
+          }
+        ]
+      },
+      "privacy": {
+        "title": "Privacy & Data Protection",
+        "items": [
+          {
+            "q": "What data does SafeTasks collect?",
+            "a": "We collect the data necessary to provide our services: account information (name, email), project data you create, usage analytics, and payment information processed securely through Stripe. We do not sell your data to third parties."
+          },
+          {
+            "q": "How does SafeTasks comply with LGPD?",
+            "a": "SafeTasks fully complies with the Brazilian General Data Protection Law (Lei Geral de Proteção de Dados - LGPD). We process data based on legitimate interest and contractual necessity. You can exercise your LGPD rights at any time."
+          },
+          {
+            "q": "What are my data rights under LGPD?",
+            "a": "Under LGPD, you have the right to: access your personal data, correct inaccurate data, request deletion of your data, obtain data portability, revoke consent, and receive information about which entities your data has been shared with. Exercise these rights via Settings > Account or by emailing privacy@safetasks.com."
+          },
+          {
+            "q": "Where is my data stored?",
+            "a": "Your data is stored on secure servers provided by Supabase and Vercel, with data centers primarily located in the United States. All data transfers comply with applicable data protection regulations including LGPD requirements for international transfers."
+          }
+        ]
+      },
+      "account": {
+        "title": "Account & Security",
+        "items": [
+          {
+            "q": "How do I create an account?",
+            "a": "Click 'Start Free Trial' on our homepage or go to the registration page. You can sign up with your email address. Verify your email to activate your account."
+          },
+          {
+            "q": "How do I delete my account?",
+            "a": "Go to Settings > Account > Delete Account. This will schedule your account and all associated data for permanent deletion after a 30-day grace period, as required by LGPD. Contact support if you need immediate deletion."
+          },
+          {
+            "q": "How do I reset my password?",
+            "a": "Click 'Forgot Password' on the login page and enter your email. You will receive a password reset link valid for 24 hours."
+          },
+          {
+            "q": "How do I manage team members?",
+            "a": "Account owners and admins can invite team members from Settings > Team. Each member is assigned a role (Producer, Finance, Freelancer) that determines their access level within projects."
+          }
+        ]
+      },
+      "platform": {
+        "title": "Platform Usage",
+        "items": [
+          {
+            "q": "Which browsers are supported?",
+            "a": "SafeTasks works on all modern browsers: Chrome, Firefox, Safari, and Edge (latest two versions). We recommend Chrome for the best experience."
+          },
+          {
+            "q": "Can I use SafeTasks on mobile?",
+            "a": "Yes. SafeTasks is fully responsive and works on mobile browsers. While we don't have a native app yet, the mobile web experience is optimized for on-set and on-the-go usage."
+          },
+          {
+            "q": "Can I export my data?",
+            "a": "Yes. You can export project data, financial reports, and contacts from their respective pages. Exports are available in CSV and PDF formats depending on the data type."
+          },
+          {
+            "q": "What are the storage limits?",
+            "a": "Storage limits vary by plan: Starter includes 5GB, Professional includes 50GB, and Enterprise includes unlimited storage. Storage is used for file uploads, documents, and media assets managed through the platform."
+          }
+        ]
+      }
+    },
+    "contact": {
+      "title": "Still have questions?",
+      "description": "Our support team is here to help.",
+      "cta": "Contact Support",
+      "email": "support@safetasks.com"
+    }
+  },
+  "about": {
+    "meta": {
+      "title": "About Us | SafeTasks",
+      "description": "Learn about SafeTasks — the production management platform built for audiovisual teams. Our mission, story, and team."
+    },
+    "hero": {
+      "eyebrow": "ABOUT US",
+      "title": "Built for audiovisual production teams",
+      "subtitle": "SafeTasks is a production management platform designed to simplify the chaos of film, TV, and content production."
+    },
+    "story": {
+      "title": "Our Story",
+      "paragraphs": [
+        "Managing audiovisual productions has always been complex — scattered spreadsheets, disorganized budgets, endless email chains, and no single source of truth for the entire team.",
+        "SafeTasks was born from the firsthand experience of producers who lived this chaos. We built the platform we wished existed: a unified workspace where every role — from executive producers to freelancers — can collaborate, track finances, manage schedules, and keep productions running smoothly.",
+        "Today, SafeTasks helps production teams across Brazil and beyond organize their work, control costs, and deliver projects on time."
+      ]
+    },
+    "values": {
+      "title": "Our Values",
+      "items": [
+        {
+          "title": "Simplicity",
+          "description": "Production is complex enough. Our tools should make it simpler, not add more layers."
+        },
+        {
+          "title": "Security",
+          "description": "Your production data and financials deserve enterprise-grade protection. We take security seriously."
+        },
+        {
+          "title": "Collaboration",
+          "description": "Great productions are a team effort. Our platform is built around roles, permissions, and shared workflows."
+        },
+        {
+          "title": "Innovation",
+          "description": "We continuously evolve the platform with AI-powered insights and modern tools to keep you ahead."
+        }
+      ]
+    },
+    "team": {
+      "title": "Our Team",
+      "subtitle": "The people behind SafeTasks.",
+      "members": [
+        {
+          "name": "Team Member",
+          "role": "Founder & CEO",
+          "bio": "Audiovisual producer turned tech entrepreneur. Built SafeTasks to solve the problems he faced daily on set."
+        },
+        {
+          "name": "Team Member",
+          "role": "CTO",
+          "bio": "Full-stack engineer passionate about building tools that empower creative teams."
+        },
+        {
+          "name": "Team Member",
+          "role": "Head of Product",
+          "bio": "Product designer focused on creating intuitive experiences for complex workflows."
+        }
+      ]
+    },
+    "contact": {
+      "title": "Get in Touch",
+      "description": "Have questions, partnership ideas, or feedback? We'd love to hear from you.",
+      "cta": "Contact Us",
+      "email": "contact@safetasks.com"
+    }
+  },
+  "publicFooter": {
+    "copyright": "© 2026 SafeTasks. All rights reserved.",
+    "links": {
+      "faq": "FAQ",
+      "about": "About Us",
+      "pricing": "Pricing"
     }
   }
 }
