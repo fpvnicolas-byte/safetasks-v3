@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { locales, localeNames, type Locale } from '@/i18n/config'
+import { PublicHeader } from '@/components/public/PublicHeader'
 
 export default function LandingPage() {
   const t = useTranslations('landing')
@@ -163,33 +164,21 @@ export default function LandingPage() {
         <div className="pointer-events-none absolute top-40 right-[-10%] h-[380px] w-[380px] rounded-full bg-emerald-400/20 blur-[140px]" />
 
         <div className="container mx-auto px-4 pb-24 pt-10">
-          <header className="flex flex-col items-center justify-between gap-6 text-center md:flex-row md:text-left">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-amber-300 shadow-lg">
-                <Clapperboard className="h-6 w-6" />
-              </div>
-              <div>
-                <div className="text-lg font-semibold tracking-tight">SafeTasks</div>
-                <div className="text-xs uppercase tracking-[0.32em] text-slate-500">Production OS</div>
-              </div>
-            </div>
-            <nav className="flex flex-wrap items-center justify-center gap-4 text-sm text-slate-600 md:justify-end">
-              <a href="#modules" onClick={handleNavClick('modules')} className="hover:text-slate-900">
-                {t('nav.modules')}
-              </a>
-              <a href="#workflow" onClick={handleNavClick('workflow')} className="hover:text-slate-900">
-                {t('nav.workflow')}
-              </a>
-              <a href="#access" onClick={handleNavClick('access')} className="hover:text-slate-900">
-                {t('nav.features')}
-              </a>
-              <Link href={`${basePath}/pricing`} className="hover:text-slate-900">{t('nav.pricing')}</Link>
-              <Link href={`${basePath}/auth/login`} className="hover:text-slate-900">{t('nav.signIn')}</Link>
-              <Button asChild size="sm" className="bg-slate-900 text-amber-200 hover:bg-slate-800">
-                <Link href={`${basePath}/auth/register`}>{t('nav.getStarted')}</Link>
-              </Button>
-            </nav>
-          </header>
+          <PublicHeader
+            extraNav={
+              <>
+                <a href="#modules" onClick={handleNavClick('modules')} className="hover:text-slate-900">
+                  {t('nav.modules')}
+                </a>
+                <a href="#workflow" onClick={handleNavClick('workflow')} className="hover:text-slate-900">
+                  {t('nav.workflow')}
+                </a>
+                <a href="#access" onClick={handleNavClick('access')} className="hover:text-slate-900">
+                  {t('nav.features')}
+                </a>
+              </>
+            }
+          />
 
           <section className="relative mt-10 overflow-hidden rounded-[36px] bg-[#0f1115] text-slate-50 shadow-2xl">
             <div className="pointer-events-none absolute -left-24 top-0 h-64 w-64 rounded-full bg-emerald-400/25 blur-[120px]" />
