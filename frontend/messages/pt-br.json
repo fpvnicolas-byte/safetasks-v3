@@ -2510,6 +2510,33 @@
           "windowClosed": "Janela de reembolso encerrada"
         }
       },
+      "refundModal": {
+        "title": "Solicitar reembolso",
+        "description": "Você pode solicitar reembolso em até 7 dias após a compra. O valor está sujeito ao desconto de uso consumido.",
+        "refundFor": "Reembolso para:",
+        "fallbackPlanName": "Cobrança faturada",
+        "fields": {
+          "reasonLabel": "Motivo",
+          "reasonPlaceholder": "Selecione um motivo",
+          "reasonOptions": {
+            "accidentalPurchase": "Compra acidental",
+            "featuresNotAsExpected": "Recursos não atenderam ao esperado",
+            "foundBetterAlternative": "Encontrei alternativa melhor",
+            "other": "Outro"
+          },
+          "detailsLabel": "Detalhes adicionais (opcional)",
+          "detailsPlaceholder": "Conte mais sobre o motivo da solicitação de reembolso..."
+        },
+        "actions": {
+          "cancel": "Cancelar",
+          "submit": "Enviar solicitação"
+        },
+        "messages": {
+          "reasonRequired": "Selecione um motivo",
+          "submitSuccess": "Solicitação de reembolso enviada com sucesso. Faremos a análise em breve.",
+          "submitError": "Falha ao enviar solicitação de reembolso"
+        }
+      },
       "messages": {
         "success": "Plano atualizado com sucesso!",
         "canceled": "Upgrade cancelado.",

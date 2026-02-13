@@ -33,7 +33,7 @@ export function RefundRequestModal({ purchase, isOpen, onClose }: RefundRequestM
 
     const handleSubmit = async () => {
         if (!reasonCode) {
-            toast.error('Please select a reason')
+            toast.error(t('messages.reasonRequired'))
             return
         }
 
@@ -44,7 +44,7 @@ export function RefundRequestModal({ purchase, isOpen, onClose }: RefundRequestM
                 reason_code: reasonCode,
                 reason_detail: reasonDetail
             })
-            toast.success('Refund request submitted successfully. We will review it shortly.')
+            toast.success(t('messages.submitSuccess'))
             onClose()
         } catch (error: unknown) {
             console.error('Refund request failed', error)
@@ -54,7 +54,7 @@ export function RefundRequestModal({ purchase, isOpen, onClose }: RefundRequestM
                 'message' in error &&
                 typeof (error as { message?: unknown }).message === 'string'
                     ? (error as { message: string }).message
-                    : 'Failed to submit refund request'
+                    : t('messages.submitError')
             toast.error(message)
         } finally {
             setIsSubmitting(false)
@@ -65,49 +65,50 @@ export function RefundRequestModal({ purchase, isOpen, onClose }: RefundRequestM
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>{t('title', 'Request Refund')}</DialogTitle>
+                    <DialogTitle>{t('title')}</DialogTitle>
                     <DialogDescription>
-                        {t('description', 'You can request a refund within 7 days of purchase. Amount is subject to usage deduction.')}
+                        {t('description')}
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4 py-4">
                     <div className="text-sm font-medium">
-                        Refund for: <span className="font-bold">{purchase.plan_name}</span>
+                        {t('refundFor')}{' '}
+                        <span className="font-bold">{purchase.plan_name || t('fallbackPlanName')}</span>
                     </div>
 
                     <div className="space-y-2">
-                        <Label>Reason</Label>
+                        <Label>{t('fields.reasonLabel')}</Label>
                         <Select value={reasonCode} onValueChange={setReasonCode}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Select a reason" />
+                                <SelectValue placeholder={t('fields.reasonPlaceholder')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="accidental_purchase">Accidental Purchase</SelectItem>
-                                <SelectItem value="features_not_as_expected">Features not as expected</SelectItem>
-                                <SelectItem value="found_better_alternative">Found better alternative</SelectItem>
-                                <SelectItem value="other">Other</SelectItem>
+                                <SelectItem value="accidental_purchase">{t('fields.reasonOptions.accidentalPurchase')}</SelectItem>
+                                <SelectItem value="features_not_as_expected">{t('fields.reasonOptions.featuresNotAsExpected')}</SelectItem>
+                                <SelectItem value="found_better_alternative">{t('fields.reasonOptions.foundBetterAlternative')}</SelectItem>
+                                <SelectItem value="other">{t('fields.reasonOptions.other')}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
                     <div className="space-y-2">
-                        <Label>Additional Details (Optional)</Label>
+                        <Label>{t('fields.detailsLabel')}</Label>
                         <Textarea
                             value={reasonDetail}
                             onChange={(e) => setReasonDetail(e.target.value)}
-                            placeholder="Tell us more about why you are requesting a refund..."
+                            placeholder={t('fields.detailsPlaceholder')}
                         />
                     </div>
                 </div>
 
                 <DialogFooter>
                     <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
-                        Cancel
+                        {t('actions.cancel')}
                     </Button>
                     <Button onClick={handleSubmit} disabled={isSubmitting || !reasonCode}>
                         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Submit Request
+                        {t('actions.submit')}
                     </Button>
                 </DialogFooter>
             </DialogContent>

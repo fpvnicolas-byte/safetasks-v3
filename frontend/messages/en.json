@@ -2510,6 +2510,33 @@
           "windowClosed": "Refund window closed"
         }
       },
+      "refundModal": {
+        "title": "Request Refund",
+        "description": "You can request a refund within 7 days of purchase. Amount is subject to usage deduction.",
+        "refundFor": "Refund for:",
+        "fallbackPlanName": "Billed Charge",
+        "fields": {
+          "reasonLabel": "Reason",
+          "reasonPlaceholder": "Select a reason",
+          "reasonOptions": {
+            "accidentalPurchase": "Accidental Purchase",
+            "featuresNotAsExpected": "Features not as expected",
+            "foundBetterAlternative": "Found better alternative",
+            "other": "Other"
+          },
+          "detailsLabel": "Additional Details (Optional)",
+          "detailsPlaceholder": "Tell us more about why you are requesting a refund..."
+        },
+        "actions": {
+          "cancel": "Cancel",
+          "submit": "Submit Request"
+        },
+        "messages": {
+          "reasonRequired": "Please select a reason",
+          "submitSuccess": "Refund request submitted successfully. We will review it shortly.",
+          "submitError": "Failed to submit refund request"
+        }
+      },
       "messages": {
         "success": "Plan updated successfully!",
         "canceled": "Upgrade canceled.",
