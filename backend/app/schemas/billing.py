@@ -98,10 +98,10 @@ class BillingPurchaseResponse(BaseModel):
     currency: str
     paid_at: datetime
     total_refunded_cents: int
+    has_refund_request: bool = False
     created_at: datetime
     
     # We can add computed properties if needed, but client can compute check
     
     class Config:
         from_attributes = True
-

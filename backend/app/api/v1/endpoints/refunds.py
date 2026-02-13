@@ -25,7 +25,11 @@ async def request_refund(
     Submit a refund request for a purchase.
     """
     # 1. Verify Purchase Ownership
-    q = select(BillingPurchase).where(BillingPurchase.id == params.purchase_id)
+    q = (
+        select(BillingPurchase)
+        .where(BillingPurchase.id == params.purchase_id)
+        .with_for_update()
+    )
     res = await db.execute(q)
     purchase = res.scalar_one_or_none()
     

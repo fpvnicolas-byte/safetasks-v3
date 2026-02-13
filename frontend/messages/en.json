@@ -2506,6 +2506,7 @@
         "refundedAmount": "Refunded: {amount}",
         "status": {
           "fullyRefunded": "Fully refunded",
+          "alreadyRequested": "Refund requested",
           "refundAvailable": "Refund available",
           "windowClosed": "Refund window closed"
         }

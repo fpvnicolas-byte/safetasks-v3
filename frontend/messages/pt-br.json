@@ -2506,6 +2506,7 @@
         "refundedAmount": "Reembolsado: {amount}",
         "status": {
           "fullyRefunded": "Totalmente reembolsado",
+          "alreadyRequested": "Reembolso solicitado",
           "refundAvailable": "Reembolso disponível",
           "windowClosed": "Janela de reembolso encerrada"
         }

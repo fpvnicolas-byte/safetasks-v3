@@ -18,6 +18,7 @@ interface BillingPurchase {
     paid_at: string
     provider: string
     total_refunded_cents: number
+    has_refund_request?: boolean
 }
 
 export function BillingHistory() {
@@ -54,6 +55,9 @@ export function BillingHistory() {
     }
 
     const isEligibleForRefund = (purchase: BillingPurchase) => {
+        if (purchase.has_refund_request) {
+            return false
+        }
         const paidAt = new Date(purchase.paid_at).getTime()
         const now = Date.now()
         const diffDays = (now - paidAt) / (1000 * 60 * 60 * 24)
@@ -63,6 +67,9 @@ export function BillingHistory() {
     const getRefundStatusLabel = (purchase: BillingPurchase) => {
         if (purchase.total_refunded_cents >= purchase.amount_paid_cents) {
             return t('status.fullyRefunded')
+        }
+        if (purchase.has_refund_request) {
+            return t('status.alreadyRequested')
         }
         if (isEligibleForRefund(purchase)) {
             return t('status.refundAvailable')

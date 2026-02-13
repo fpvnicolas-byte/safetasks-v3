@@ -84,11 +84,10 @@ class RefundEligibilityService:
     @staticmethod
     async def validate_duplicate_request(db: AsyncSession, purchase_id: UUID) -> None:
         """
-        Ensure no active refund request exists for this purchase.
+        Ensure only one refund request can ever exist for the purchase.
         """
         query = select(RefundRequest).where(
-            RefundRequest.purchase_id == purchase_id,
-            RefundRequest.status.in_(["requested", "processing", "approved"])
+            RefundRequest.purchase_id == purchase_id
         )
         result = await db.execute(query)
         existing = result.scalar_one_or_none()
@@ -96,7 +95,7 @@ class RefundEligibilityService:
         if existing:
              raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="A refund request is already active for this purchase."
+                detail="A refund request already exists for this purchase."
             )
 
 refund_eligibility_service = RefundEligibilityService()

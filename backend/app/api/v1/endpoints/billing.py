@@ -267,7 +267,7 @@ async def get_billing_history(
     """
     Get billing history (purchases) for the current organization.
     """
-    from app.models.refunds import BillingPurchase
+    from app.models.refunds import BillingPurchase, RefundRequest
 
     if not profile.organization_id:
         return []
@@ -340,4 +340,28 @@ async def get_billing_history(
         result = await db.execute(query)
         purchases = result.scalars().all()
 
-    return purchases
+    purchase_ids = [p.id for p in purchases]
+    purchases_with_refund_request = set()
+    if purchase_ids:
+        refund_result = await db.execute(
+            select(RefundRequest.purchase_id).where(
+                RefundRequest.purchase_id.in_(purchase_ids)
+            )
+        )
+        purchases_with_refund_request = {row[0] for row in refund_result.all()}
+
+    return [
+        BillingPurchaseResponse(
+            id=p.id,
+            organization_id=p.organization_id,
+            provider=p.provider,
+            plan_name=p.plan_name,
+            amount_paid_cents=p.amount_paid_cents,
+            currency=p.currency,
+            paid_at=p.paid_at,
+            total_refunded_cents=p.total_refunded_cents,
+            has_refund_request=p.id in purchases_with_refund_request,
+            created_at=p.created_at,
+        )
+        for p in purchases
+    ]
