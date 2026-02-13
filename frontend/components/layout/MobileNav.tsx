@@ -19,6 +19,10 @@ import {
 import { LocaleLink } from '@/components/LocaleLink'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/AuthContext'
+import { useEffect, useState } from 'react'
+import { apiClient } from '@/lib/api/client'
+import { Badge } from '@/components/ui/badge'
+import { Shield } from 'lucide-react'
 
 type Role = 'owner' | 'admin' | 'producer' | 'finance' | 'freelancer'
 
@@ -47,10 +51,18 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
   const t = useTranslations('navigation')
   const pathname = usePathname()
   const { profile } = useAuth()
+  const [isPlatformAdmin, setIsPlatformAdmin] = useState(false)
 
   const effectiveRole = (profile?.effective_role || profile?.role_v2 || 'owner') as Role
 
   const visibleNav = navigation.filter((item) => item.roles.includes(effectiveRole))
+
+  useEffect(() => {
+    if (!profile) return
+    apiClient.get('/api/v1/platform/bug-reports/?limit=1')
+      .then(() => setIsPlatformAdmin(true))
+      .catch(() => setIsPlatformAdmin(false))
+  }, [profile])
 
   return (
     <>
@@ -98,6 +110,27 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
                 </LocaleLink>
               )
             })}
+            {isPlatformAdmin && (
+              <LocaleLink
+                href="/platform"
+                onClick={onClose}
+                className={cn(
+                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors w-full',
+                  'min-h-[44px] min-w-[44px] p-3 mt-2 border-t border-sidebar-border pt-3',
+                  pathname.startsWith('/platform')
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                    : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground'
+                )}
+              >
+                <Shield className="h-5 w-5" />
+                <span className="flex items-center gap-2">
+                  {t('platform')}
+                  <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                    Super
+                  </Badge>
+                </span>
+              </LocaleLink>
+            )}
           </nav>
         </div>
       </aside>
