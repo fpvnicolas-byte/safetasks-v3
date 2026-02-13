@@ -64,6 +64,9 @@ export default function PlatformLayout({
                         <Link href={`/${locale}/platform/refunds`} className="hover:text-primary">
                             Refunds Queue
                         </Link>
+                        <Link href={`/${locale}/platform/bug-reports`} className="hover:text-primary">
+                            Bug Reports
+                        </Link>
                     </nav>
                 </div>
             </header>
