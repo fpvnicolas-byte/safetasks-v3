@@ -6,6 +6,8 @@ import { Check, CreditCard, Sparkles, Stars } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { PublicHeader } from '@/components/public/PublicHeader'
+import { PublicFooter } from '@/components/public/PublicFooter'
 import { useAuth } from '@/contexts/AuthContext'
 
 type PricingPlanKey = 'starter' | 'pro' | 'proAnnual' | 'enterprise'
@@ -62,17 +64,14 @@ export default function PricingPage() {
         <div className="pointer-events-none absolute -top-40 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-amber-400/20 blur-[140px]" />
         <div className="pointer-events-none absolute top-32 right-[-10%] h-[360px] w-[360px] rounded-full bg-emerald-400/20 blur-[140px]" />
 
-        <div className="container mx-auto px-4 pb-20 pt-12">
-          <header className="flex flex-col items-center justify-between gap-6 text-center md:flex-row md:text-left">
-            <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-slate-500">{t('eyebrow')}</p>
-              <h1 className="mt-3 text-4xl font-semibold md:text-5xl [font-family:'Iowan_Old_Style','Palatino_Linotype','Times_New_Roman',serif]">{t('title')}</h1>
-              <p className="mt-3 text-slate-600">{t('subtitle')}</p>
-            </div>
-            <Button variant="outline" asChild className="border-slate-300 text-slate-700 hover:bg-slate-100">
-              <Link href={`${basePath}`}>{t('backToHome')}</Link>
-            </Button>
-          </header>
+        <div className="container mx-auto px-4 pb-20 pt-10">
+          <PublicHeader />
+
+          <section className="mt-14 text-center">
+            <p className="text-xs uppercase tracking-[0.35em] text-slate-500">{t('eyebrow')}</p>
+            <h1 className="mt-3 text-4xl font-semibold md:text-5xl [font-family:'Iowan_Old_Style','Palatino_Linotype','Times_New_Roman',serif]">{t('title')}</h1>
+            <p className="mt-3 text-slate-600">{t('subtitle')}</p>
+          </section>
 
           <section className="mt-14 grid gap-6 lg:grid-cols-4">
             {plans.map((plan, index) => {
@@ -195,6 +194,8 @@ export default function PricingPage() {
           </section>
         </div>
       </div>
+
+      <PublicFooter />
     </div>
   )
 }
