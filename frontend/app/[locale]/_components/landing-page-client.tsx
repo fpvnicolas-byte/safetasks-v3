@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import {
   ArrowUpRight,
@@ -19,35 +18,13 @@ import {
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { locales, localeNames, type Locale } from '@/i18n/config'
 import { PublicHeader } from '@/components/public/PublicHeader'
+import { PublicFooter } from '@/components/public/PublicFooter'
 
 export default function LandingPage() {
   const t = useTranslations('landing')
-  const tCommon = useTranslations('common')
   const locale = useLocale()
   const basePath = `/${locale}`
-  const pathname = usePathname()
-  const router = useRouter()
-  const searchParams = useSearchParams()
-
-  const buildLocalePath = (nextLocale: Locale) => {
-    const segments = pathname.split('/')
-    if (segments.length > 1) {
-      segments[1] = nextLocale
-      return segments.join('/')
-    }
-    return `/${nextLocale}`
-  }
-
-  const handleLocaleChange = (nextLocale: string) => {
-    if (nextLocale === locale) return
-    const nextPath = buildLocalePath(nextLocale as Locale)
-    const queryString = searchParams.toString()
-    const hash = typeof window !== 'undefined' ? window.location.hash : ''
-    router.push(`${nextPath}${queryString ? `?${queryString}` : ''}${hash}`)
-  }
 
   const handleNavClick = (sectionId: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault()
@@ -422,28 +399,7 @@ export default function LandingPage() {
         </div>
       </div>
 
-      <footer className="border-t border-slate-200/60 py-8">
-        <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 text-center text-sm text-slate-500 md:flex-row md:text-left">
-          <div>{t('footer')}</div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
-              {tCommon('language')}
-            </span>
-            <Select value={locale} onValueChange={handleLocaleChange}>
-              <SelectTrigger size="sm" className="w-[180px] border-slate-300 bg-white/80 text-slate-700">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent align="end">
-                {locales.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {localeNames[option]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   )
 }
