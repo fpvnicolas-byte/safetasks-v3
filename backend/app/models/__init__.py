@@ -23,6 +23,7 @@ from .access import ProjectAssignment
 
 from .refunds import BillingPurchase, RefundRequest, RefundTransaction, RefundEvent
 from .platform import PlatformAdminUser
+from .bug_reports import BugReport
 
 __all__ = [
     "BankAccount",
@@ -73,4 +74,5 @@ __all__ = [
     "RefundTransaction",
     "RefundEvent",
     "PlatformAdminUser",
+    "BugReport",
 ]
