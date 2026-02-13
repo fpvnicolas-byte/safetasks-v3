@@ -53,7 +53,7 @@ import {
   Shield,
   Crown,
 } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 
 const ROLE_TRANSLATION_KEYS = {
@@ -88,6 +88,7 @@ function getRolesCanInvite(effectiveRole: string): string[] {
 export function ContactsTeamTab() {
   const t = useTranslations('contacts')
   const tTeam = useTranslations('team')
+  const locale = useLocale()
   const { organizationId, profile } = useAuth()
   const effectiveRole = profile?.effective_role || ''
 
@@ -234,6 +235,13 @@ export function ContactsTeamTab() {
     setCopied(false)
   }
 
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString(locale, {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })
+
   return (
     <div className="space-y-6">
       <ConfirmDeleteDialog
@@ -322,7 +330,7 @@ export function ContactsTeamTab() {
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell>{new Date(member.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell>{formatDate(member.created_at)}</TableCell>
                     <TableCell className="text-right">
                       {canRemove(member) && (
                         <Button
@@ -373,8 +381,8 @@ export function ContactsTeamTab() {
                         {getRoleLabel(invite.role_v2)}
                       </Badge>
                     </TableCell>
-                    <TableCell>{new Date(invite.created_at).toLocaleDateString()}</TableCell>
-                    <TableCell>{new Date(invite.expires_at).toLocaleDateString()}</TableCell>
+                    <TableCell>{formatDate(invite.created_at)}</TableCell>
+                    <TableCell>{formatDate(invite.expires_at)}</TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button
                         variant="ghost"
