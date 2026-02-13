@@ -34,7 +34,7 @@ const NotificationItem = ({ notification, onMarkRead }: { notification: Notifica
         const translated = tMessagesUnsafe(defaultText, metadata || {})
         if (translated.includes('notifications.messages.')) return defaultText
         return translated
-      } catch (e) {
+      } catch {
         return defaultText
       }
     }
@@ -91,8 +91,8 @@ const NotificationItem = ({ notification, onMarkRead }: { notification: Notifica
 export function NotificationsBell() {
   const [open, setOpen] = useState(false)
 
-  // Connect WebSocket for real-time updates
-  const { isConnected } = useNotificationWebSocket()
+  // Delay WebSocket connection until the user opens the menu.
+  const { isConnected } = useNotificationWebSocket({ enabled: open })
 
   // Disable polling when WebSocket is connected
   const pollingInterval = isConnected ? false : 30000

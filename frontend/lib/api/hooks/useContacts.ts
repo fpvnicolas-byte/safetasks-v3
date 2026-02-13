@@ -4,7 +4,11 @@ import { Contact, ContactDetail, ContactFilters } from '@/types'
 
 const CONTACTS_KEY = 'contacts'
 
-export function useContacts(filters?: ContactFilters) {
+interface UseContactsOptions {
+  enabled?: boolean
+}
+
+export function useContacts(filters?: ContactFilters, options?: UseContactsOptions) {
   return useQuery({
     queryKey: [CONTACTS_KEY, filters],
     queryFn: () => {
@@ -18,6 +22,7 @@ export function useContacts(filters?: ContactFilters) {
       const url = queryString ? `/api/v1/contacts/?${queryString}` : '/api/v1/contacts/'
       return apiClient.get<Contact[]>(url)
     },
+    enabled: options?.enabled ?? true,
   })
 }
 

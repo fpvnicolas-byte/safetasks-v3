@@ -1,5 +1,6 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useState } from 'react'
 import { useProposals, useDeleteProposal } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
@@ -7,15 +8,43 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
-import { Plus, Search, Edit, Trash2, FileText, Eye } from 'lucide-react'
+import { Plus, Search } from 'lucide-react'
 import Link from 'next/link'
-import { Proposal, ProposalStatus, formatCurrency } from '@/types'
+import { ProposalStatus } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
-import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
-import { ErrorDialog } from '@/components/ui/error-dialog'
+import { Skeleton } from '@/components/ui/skeleton'
+
+const ProposalsListSection = dynamic(
+  () => import('./_components/ProposalsListSection').then((mod) => mod.ProposalsListSection),
+  {
+    ssr: false,
+    loading: () => (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-4 w-56 mt-1" />
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+        </CardContent>
+      </Card>
+    ),
+  }
+)
+
+const ErrorDialog = dynamic(
+  () => import('@/components/ui/error-dialog').then((mod) => mod.ErrorDialog),
+  { ssr: false }
+)
+
+const ConfirmDeleteDialog = dynamic(
+  () => import('@/components/ui/confirm-delete-dialog').then((mod) => mod.ConfirmDeleteDialog),
+  { ssr: false }
+)
 
 export default function ProposalsPage() {
   const { organizationId } = useAuth()
@@ -31,11 +60,10 @@ export default function ProposalsPage() {
   )
   const deleteProposal = useDeleteProposal()
 
-  // Apply search filter
-  const filteredProposals = allProposals?.filter(proposal => {
-    const matchesSearch = !searchQuery ||
-      proposal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      proposal.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredProposals = allProposals?.filter((proposal) => {
+    const matchesSearch = !searchQuery
+      || proposal.title.toLowerCase().includes(searchQuery.toLowerCase())
+      || proposal.description?.toLowerCase().includes(searchQuery.toLowerCase())
 
     return matchesSearch
   }) || []
@@ -47,7 +75,6 @@ export default function ProposalsPage() {
     askConfirmation: confirmDelete,
     closeConfirmation: cancelDelete,
     targetId: idToDelete,
-    additionalData: proposalTitle
   } = useConfirmDelete()
 
   const handleDeleteProposal = async () => {
@@ -67,9 +94,7 @@ export default function ProposalsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
-          <p className="text-muted-foreground">
-            {t('description')}
-          </p>
+          <p className="text-muted-foreground">{t('description')}</p>
         </div>
         <Button asChild>
           <Link href="/proposals/new">
@@ -79,13 +104,10 @@ export default function ProposalsPage() {
         </Button>
       </div>
 
-      {/* Filters */}
       <Card>
         <CardHeader>
           <CardTitle>{t('filter.title')}</CardTitle>
-          <CardDescription>
-            {t('filter.description')}
-          </CardDescription>
+          <CardDescription>{t('filter.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-4">
@@ -123,7 +145,9 @@ export default function ProposalsPage() {
               <label className="text-sm font-medium">{t('filter.results')}</label>
               <div className="flex items-center justify-center h-10 px-3 py-2 bg-muted rounded-md">
                 <span className="text-sm font-medium">
-                  {filteredProposals.length !== 1 ? t('filter.proposalCount_other', { count: filteredProposals.length }) : t('filter.proposalCount', { count: 1 })}
+                  {filteredProposals.length !== 1
+                    ? t('filter.proposalCount_other', { count: filteredProposals.length })
+                    : t('filter.proposalCount', { count: 1 })}
                 </span>
               </div>
             </div>
@@ -131,148 +155,37 @@ export default function ProposalsPage() {
         </CardContent>
       </Card>
 
-      {/* Proposals Grid */}
-      {isLoading ? (
-        <div>{t('loading')}</div>
-      ) : error ? (
-        <div>{t('error', { message: error.message })}</div>
-      ) : filteredProposals.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredProposals.map((proposal) => (
-            <ProposalCard
-              key={proposal.id}
-              proposal={proposal}
-              onDelete={() => confirmDelete(proposal.id, proposal.title)}
-              t={t}
-              locale={locale}
-            />
-          ))}
-        </div>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('empty.title')}</CardTitle>
-            <CardDescription>
-              {searchQuery || statusFilter !== 'all'
-                ? t('empty.noMatches')
-                : t('empty.getStarted')
-              }
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-sm text-muted-foreground mb-4">
-                {t('empty.helpText')}
-              </p>
-              <Button asChild>
-                <Link href="/proposals/new">
-                  <Plus className="mr-2 h-4 w-4" />
-                  {t('empty.createProposal')}
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-      <ErrorDialog
-        open={errorDialog.open}
-        onOpenChange={closeError}
-        title={errorDialog.title}
-        message={errorDialog.message}
-        validationErrors={errorDialog.validationErrors}
-        statusCode={errorDialog.statusCode}
+      <ProposalsListSection
+        isLoading={isLoading}
+        errorMessage={error?.message}
+        proposals={filteredProposals}
+        searchQuery={searchQuery}
+        statusFilter={statusFilter}
+        locale={locale}
+        onDelete={confirmDelete}
       />
 
-      <ConfirmDeleteDialog
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
-        onConfirm={handleDeleteProposal}
-        title={t('delete.title')}
-        description={t('delete.description')}
-        loading={deleteProposal.isPending}
-      />
+      {errorDialog.open ? (
+        <ErrorDialog
+          open={errorDialog.open}
+          onOpenChange={closeError}
+          title={errorDialog.title}
+          message={errorDialog.message}
+          validationErrors={errorDialog.validationErrors}
+          statusCode={errorDialog.statusCode}
+        />
+      ) : null}
+
+      {deleteOpen ? (
+        <ConfirmDeleteDialog
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+          onConfirm={handleDeleteProposal}
+          title={t('delete.title')}
+          description={t('delete.description')}
+          loading={deleteProposal.isPending}
+        />
+      ) : null}
     </div>
-  )
-}
-
-interface ProposalCardProps {
-  proposal: Proposal
-  onDelete: () => void
-  t: (key: string, values?: Record<string, string | number>) => string
-  locale: string
-}
-
-function ProposalCard({ proposal, onDelete, t, locale }: ProposalCardProps) {
-  const getStatusVariant = (status: ProposalStatus) => {
-    switch (status) {
-      case 'approved': return 'default' // Greenish (default is black/primary, but usually good for success in shadcn themes if customized, otherwise use outline/secondary)
-      case 'rejected': return 'destructive'
-      case 'sent': return 'secondary' // Blueish
-      case 'draft': return 'outline'
-      case 'expired': return 'destructive'
-      default: return 'outline'
-    }
-  }
-
-  // Assuming backend returns valid_until as ISO date string
-  const validUntil = proposal.valid_until ? new Date(proposal.valid_until).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'
-
-  return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex-1 mr-2">
-            <CardTitle className="text-lg line-clamp-1">{proposal.title}</CardTitle>
-            <CardDescription className="line-clamp-1">
-              <span className="font-medium text-foreground">{proposal.client?.name}</span>
-              <span className="mx-1">•</span>
-              {t('card.created')} {new Date(proposal.created_at).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-            </CardDescription>
-          </div>
-          <Badge variant={getStatusVariant(proposal.status)}>
-            {t(proposal.status)}
-          </Badge>
-        </div>
-      </CardHeader>
-
-      <CardContent className="space-y-4">
-        <div className="flex justify-between items-center text-sm">
-          <span className="text-muted-foreground">{t('card.totalAmount')}</span>
-          <span className="font-semibold text-lg">
-            {proposal.total_amount_cents !== null ? formatCurrency(proposal.total_amount_cents, proposal.currency) : 'N/A'}
-          </span>
-        </div>
-
-        {proposal.valid_until && (
-          <div className="text-sm text-muted-foreground">
-            {t('card.validUntil')} {validUntil}
-          </div>
-        )}
-
-        <div className="flex gap-2 pt-2">
-          <Button asChild variant="outline" size="sm" className="flex-1">
-            <Link href={`/proposals/${proposal.id}`}>
-              <Eye className="mr-2 h-3 w-3" />
-              {t('card.view')}
-            </Link>
-          </Button>
-          <Button asChild variant="outline" size="sm" className="flex-1">
-            <Link href={`/proposals/${proposal.id}/edit`}>
-              <Edit className="mr-2 h-3 w-3" />
-              {t('card.edit')}
-            </Link>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onDelete}
-            className="text-destructive hover:text-destructive"
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
   )
 }

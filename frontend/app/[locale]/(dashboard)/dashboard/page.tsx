@@ -9,9 +9,6 @@ import { Button } from '@/components/ui/button'
 import { Loader2, DollarSign, TrendingUp, Package, Cloud, FolderOpen } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils/money'
 import dynamic from 'next/dynamic'
-import { QuickActions } from '@/components/dashboard/QuickActions'
-import { BugReportModal } from '@/components/dashboard/BugReportModal'
-import { ExportMenu } from '@/components/dashboard/ExportMenu'
 import { useTranslations } from 'next-intl'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -36,6 +33,42 @@ const RecentTransactions = dynamic(
 )
 const EquipmentUtilization = dynamic(
   () => import('@/components/dashboard/EquipmentUtilization').then(mod => ({ default: mod.EquipmentUtilization })),
+  { ssr: false }
+)
+const QuickActions = dynamic(
+  () => import('@/components/dashboard/QuickActions').then(mod => ({ default: mod.QuickActions })),
+  {
+    loading: () => (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-4 w-44 mt-1" />
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-[104px] w-full" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    ),
+    ssr: false,
+  }
+)
+const ExportMenu = dynamic(
+  () => import('@/components/dashboard/ExportMenu').then(mod => ({ default: mod.ExportMenu })),
+  {
+    loading: () => (
+      <Button variant="outline" disabled aria-busy="true">
+        ...
+      </Button>
+    ),
+    ssr: false,
+  }
+)
+const BugReportModal = dynamic(
+  () => import('@/components/dashboard/BugReportModal').then(mod => ({ default: mod.BugReportModal })),
   { ssr: false }
 )
 
@@ -131,7 +164,9 @@ export default function DashboardPage() {
             <ExportMenu data={dashboard} />
             <Button onClick={() => setIsBugReportOpen(true)}>{t('bugReport')}</Button>
           </div>
-          <BugReportModal isOpen={isBugReportOpen} onClose={() => setIsBugReportOpen(false)} />
+          {isBugReportOpen ? (
+            <BugReportModal isOpen={isBugReportOpen} onClose={() => setIsBugReportOpen(false)} />
+          ) : null}
         </div>
       </div>
 

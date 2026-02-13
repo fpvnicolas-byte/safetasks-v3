@@ -1,5 +1,6 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useRef, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import {
@@ -7,15 +8,12 @@ import {
   useChangeRole,
   useRemoveMember,
   useInvites,
-  useCreateInvite,
   useRevokeInvite,
   useResendInvite,
   type TeamMember,
   type InviteOut,
 } from '@/lib/api/hooks'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -27,14 +25,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -45,8 +35,6 @@ import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import {
   UserPlus,
   Users,
-  Copy,
-  Check,
   Loader2,
   RotateCw,
   XCircle,
@@ -85,6 +73,16 @@ function getRolesCanInvite(effectiveRole: string): string[] {
   }
 }
 
+const TeamInviteModal = dynamic(
+  () => import('./_components/TeamInviteModal').then((mod) => mod.TeamInviteModal),
+  { ssr: false }
+)
+
+const TeamResendLinkModal = dynamic(
+  () => import('./_components/TeamResendLinkModal').then((mod) => mod.TeamResendLinkModal),
+  { ssr: false }
+)
+
 export default function TeamPage() {
   const t = useTranslations('team')
   const { organizationId, profile } = useAuth()
@@ -92,10 +90,9 @@ export default function TeamPage() {
 
   // Data
   const { data: members, isLoading: membersLoading } = useTeamMembers(organizationId || '')
-  const { data: invites, isLoading: invitesLoading } = useInvites(organizationId || '')
+  const { data: invites } = useInvites(organizationId || '')
 
   // Mutations
-  const createInvite = useCreateInvite()
   const revokeInvite = useRevokeInvite()
   const resendInvite = useResendInvite()
   const changeRole = useChangeRole()
@@ -103,10 +100,6 @@ export default function TeamPage() {
 
   // UI state
   const [inviteOpen, setInviteOpen] = useState(false)
-  const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState('')
-  const [inviteLink, setInviteLink] = useState('')
-  const [copied, setCopied] = useState(false)
   const [resendLinkOpen, setResendLinkOpen] = useState(false)
   const [resendLink, setResendLink] = useState('')
   const [resendCopied, setResendCopied] = useState(false)
@@ -120,30 +113,6 @@ export default function TeamPage() {
   const invitableRoles = getRolesCanInvite(effectiveRole)
 
   // Handlers
-  const handleCreateInvite = async () => {
-    if (!inviteEmail || !inviteRole) return
-    try {
-      const result = await createInvite.mutateAsync({
-        email: inviteEmail,
-        role_v2: inviteRole,
-      })
-      setInviteLink(result.invite_link)
-      if (result.seat_warning) {
-        toast.warning(result.seat_warning)
-      }
-      toast.success(t('inviteCreated'))
-    } catch (err: unknown) {
-      const status = err?.statusCode
-      if (status === 409) {
-        toast.error(t('inviteAlreadyPending'))
-      } else if (status === 402) {
-        toast.error(t('seatLimitReached'))
-      } else {
-        toast.error(err?.message || t('inviteError'))
-      }
-    }
-  }
-
   const handleResend = async (invite: InviteOut) => {
     if (isResendingRef.current) return
     isResendingRef.current = true
@@ -203,24 +172,10 @@ export default function TeamPage() {
     }
   }
 
-  const copyLink = async (link: string) => {
-    await navigator.clipboard.writeText(link)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
   const copyResendLink = async (link: string) => {
     await navigator.clipboard.writeText(link)
     setResendCopied(true)
     setTimeout(() => setResendCopied(false), 2000)
-  }
-
-  const resetInviteModal = () => {
-    setInviteOpen(false)
-    setInviteEmail('')
-    setInviteRole('')
-    setInviteLink('')
-    setCopied(false)
   }
 
   const canRemove = (member: TeamMember) => {
@@ -257,12 +212,7 @@ export default function TeamPage() {
             <p className="text-muted-foreground">{t('description')}</p>
           </div>
           {invitableRoles.length > 0 && (
-            <Button onClick={() => {
-              setInviteOpen(true)
-              if (invitableRoles.length === 1) {
-                setInviteRole(invitableRoles[0])
-              }
-            }}>
+            <Button onClick={() => setInviteOpen(true)}>
               <UserPlus className="mr-2 h-4 w-4" />
               {t('inviteMember')}
             </Button>
@@ -425,114 +375,32 @@ export default function TeamPage() {
         </Card>
       )}
 
-      {/* Resend Link Modal */}
-      <Dialog
-        open={resendLinkOpen}
-        onOpenChange={(open) => {
-          setResendLinkOpen(open)
-          if (!open) {
-            setResendLink('')
-            setResendCopied(false)
-            setResendTargetEmail('')
-          }
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('resendLinkTitle')}</DialogTitle>
-            <DialogDescription>
-              {t('resendLinkDescription', { email: resendTargetEmail })}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <Input value={resendLink} readOnly className="flex-1 text-xs" />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => copyResendLink(resendLink)}
-                disabled={!resendLink}
-              >
-                {resendCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">{t('resendLinkNote')}</p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setResendLinkOpen(false)}>
-              {t('close')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {resendLinkOpen ? (
+        <TeamResendLinkModal
+          open={resendLinkOpen}
+          onOpenChange={(open) => {
+            setResendLinkOpen(open)
+            if (!open) {
+              setResendLink('')
+              setResendCopied(false)
+              setResendTargetEmail('')
+            }
+          }}
+          resendLink={resendLink}
+          resendCopied={resendCopied}
+          resendTargetEmail={resendTargetEmail}
+          onCopyLink={copyResendLink}
+        />
+      ) : null}
 
-      {/* Invite Modal */}
-      <Dialog open={inviteOpen} onOpenChange={(open) => { if (!open) resetInviteModal() }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('inviteModalTitle')}</DialogTitle>
-            <DialogDescription>{t('inviteModalDescription')}</DialogDescription>
-          </DialogHeader>
-
-          {inviteLink ? (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">{t('inviteLinkReady')}</p>
-              <div className="flex gap-2">
-                <Input value={inviteLink} readOnly className="flex-1 text-xs" />
-                <Button variant="outline" size="icon" onClick={() => copyLink(inviteLink)}>
-                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t('emailLabel')}</Label>
-                <Input
-                  type="email"
-                  placeholder={t('emailPlaceholder')}
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>{t('roleLabel')}</Label>
-                {invitableRoles.length === 1 ? (
-                  <Input value={ROLE_LABELS[invitableRoles[0]] || invitableRoles[0]} readOnly />
-                ) : (
-                  <Select value={inviteRole} onValueChange={setInviteRole}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('selectRole')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {invitableRoles.map((role) => (
-                        <SelectItem key={role} value={role}>
-                          {ROLE_LABELS[role] || role}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button variant="outline" onClick={resetInviteModal}>
-              {inviteLink ? t('close') : t('cancel')}
-            </Button>
-            {!inviteLink && (
-              <Button
-                onClick={handleCreateInvite}
-                disabled={!inviteEmail || !inviteRole || createInvite.isPending}
-              >
-                {createInvite.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {t('sendInvite')}
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {inviteOpen ? (
+        <TeamInviteModal
+          open={inviteOpen}
+          onOpenChange={setInviteOpen}
+          invitableRoles={invitableRoles}
+          roleLabels={ROLE_LABELS}
+        />
+      ) : null}
     </div>
   )
 }

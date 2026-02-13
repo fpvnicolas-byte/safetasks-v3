@@ -1,8 +1,8 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useAuth } from '@/contexts/AuthContext'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { NotificationsBell } from '@/components/NotificationsBell'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -19,6 +19,14 @@ import { LocaleLink } from '@/components/LocaleLink'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { locales, localeNames, type Locale } from '@/i18n/config'
+
+const NotificationsBell = dynamic(
+  () => import('@/components/NotificationsBell').then((mod) => mod.NotificationsBell),
+  {
+    ssr: false,
+    loading: () => <div className="h-9 w-9" aria-hidden="true" />,
+  }
+)
 
 interface HeaderProps {
   onSidebarToggle: () => void

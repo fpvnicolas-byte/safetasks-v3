@@ -1,14 +1,19 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
-import { MobileNav } from '@/components/layout/MobileNav'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { TrialBanner } from '@/components/billing/TrialBanner'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from 'next-intl'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
+
+const MobileNav = dynamic(
+  () => import('@/components/layout/MobileNav').then((mod) => mod.MobileNav),
+  { ssr: false }
+)
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -167,8 +172,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         {/* Desktop Sidebar */}
         <Sidebar />
 
-        {/* Mobile Navigation */}
-        <MobileNav isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        {/* Mobile navigation loads only when opened */}
+        {sidebarOpen ? (
+          <MobileNav isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        ) : null}
 
         <div className="flex-1 min-h-screen min-w-0">
           <Header onSidebarToggle={() => setSidebarOpen(!sidebarOpen)} />
