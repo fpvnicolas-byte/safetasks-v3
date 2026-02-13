@@ -198,7 +198,14 @@
       "revenue": "Receita",
       "expenses": "Despesas",
       "netProfit": "Lucro Líquido",
-      "keyInsights": "Insights Principais"
+      "keyInsights": "Insights Principais",
+      "insights": {
+        "revenueGrowthAccelerating": "Crescimento da receita acelerando - considere escalar a produção",
+        "revenueDeclineDetected": "Queda de receita detectada - revise estratégias de preço e marketing",
+        "negativeProfitMargin": "Margem de lucro negativa neste mês - revise o controle de custos",
+        "strongProfitability": "Lucratividade forte - excelente saúde financeira",
+        "businessMetricsStable": "Métricas do negócio estáveis - mantenha as estratégias atuais"
+      }
     },
     "recentTransactions": {
       "title": "Transações Recentes",

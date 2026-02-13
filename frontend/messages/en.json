@@ -198,7 +198,14 @@
       "revenue": "Revenue",
       "expenses": "Expenses",
       "netProfit": "Net Profit",
-      "keyInsights": "Key Insights"
+      "keyInsights": "Key Insights",
+      "insights": {
+        "revenueGrowthAccelerating": "Revenue growth accelerating - consider scaling production",
+        "revenueDeclineDetected": "Revenue decline detected - review pricing and marketing strategies",
+        "negativeProfitMargin": "Negative profit margin this month - review cost controls",
+        "strongProfitability": "Strong profitability - excellent financial health",
+        "businessMetricsStable": "Business metrics stable - maintain current strategies"
+      }
     },
     "recentTransactions": {
       "title": "Recent Transactions",

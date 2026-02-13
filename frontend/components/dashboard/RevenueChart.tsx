@@ -3,26 +3,52 @@
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardAction } from '@/components/ui/card'
 import { TrendsData } from '@/types'
-import { formatCurrency } from '@/lib/utils/money'
 import { TrendingUp, TrendingDown, Lightbulb } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 interface RevenueChartProps {
   data: TrendsData
+}
+
+const INSIGHT_TRANSLATION_KEYS: Record<string, string> = {
+  'Revenue growth accelerating - consider scaling production': 'revenueGrowthAccelerating',
+  'Revenue decline detected - review pricing and marketing strategies': 'revenueDeclineDetected',
+  'Negative profit margin this month - review cost controls': 'negativeProfitMargin',
+  'Strong profitability - excellent financial health': 'strongProfitability',
+  'Business metrics stable - maintain current strategies': 'businessMetricsStable',
+}
+
+function toIntlLocale(locale: string): string {
+  return locale === 'pt-br' ? 'pt-BR' : 'en-US'
+}
+
+function toCurrency(locale: string): string {
+  return locale === 'pt-br' ? 'BRL' : 'USD'
 }
 
 /**
  * Format a YYYY-MM string into a short human-readable month label.
  * e.g. "2026-01" → "Jan 26"
  */
-function formatMonth(monthStr: string): string {
+function formatMonth(monthStr: string, locale: string): string {
   const [year, month] = monthStr.split('-')
   const date = new Date(Number(year), Number(month) - 1)
-  return date.toLocaleString('en-US', { month: 'short', year: '2-digit' })
+  return date.toLocaleString(toIntlLocale(locale), { month: 'short', year: '2-digit' })
 }
 
 export function RevenueChart({ data }: RevenueChartProps) {
+  const locale = useLocale()
   const t = useTranslations('dashboard.revenueChart')
+  const currencyFormatter = new Intl.NumberFormat(toIntlLocale(locale), {
+    style: 'currency',
+    currency: toCurrency(locale),
+  })
+  const formatLocalizedCurrency = (cents: number): string => currencyFormatter.format(cents / 100)
+  const translateInsight = (insight: string): string => {
+    const key = INSIGHT_TRANSLATION_KEYS[insight]
+    return key ? t(`insights.${key}`) : insight
+  }
+
   const trends = data.monthly_financial_trends || []
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
@@ -88,16 +114,16 @@ export function RevenueChart({ data }: RevenueChartProps) {
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-lg bg-chart-2/10 px-3 py-2">
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{t('revenue')}</div>
-              <div className="text-sm font-bold text-chart-2">{formatCurrency(activeTrend.revenue_cents)}</div>
+              <div className="text-sm font-bold text-chart-2">{formatLocalizedCurrency(activeTrend.revenue_cents)}</div>
             </div>
             <div className="rounded-lg bg-chart-4/10 px-3 py-2">
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{t('expenses')}</div>
-              <div className="text-sm font-bold text-chart-4">{formatCurrency(activeTrend.expenses_cents)}</div>
+              <div className="text-sm font-bold text-chart-4">{formatLocalizedCurrency(activeTrend.expenses_cents)}</div>
             </div>
             <div className="rounded-lg bg-chart-1/10 px-3 py-2">
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{t('netProfit')}</div>
               <div className={`text-sm font-bold ${activeTrend.net_profit_cents >= 0 ? 'text-chart-1' : 'text-destructive'}`}>
-                {formatCurrency(activeTrend.net_profit_cents)}
+                {formatLocalizedCurrency(activeTrend.net_profit_cents)}
               </div>
             </div>
           </div>
@@ -135,20 +161,20 @@ export function RevenueChart({ data }: RevenueChartProps) {
                     <div
                       className="flex-1 max-w-[28px] rounded-t-sm bg-chart-2 transition-all duration-500 ease-out"
                       style={{ height: `${Math.max(revenueH, 4)}%` }}
-                      title={`${t('revenue')}: ${formatCurrency(trend.revenue_cents)}`}
+                      title={`${t('revenue')}: ${formatLocalizedCurrency(trend.revenue_cents)}`}
                     />
                     {/* Expenses bar */}
                     <div
                       className="flex-1 max-w-[28px] rounded-t-sm bg-chart-4 transition-all duration-500 ease-out"
                       style={{ height: `${Math.max(expenseH, 4)}%` }}
-                      title={`${t('expenses')}: ${formatCurrency(trend.expenses_cents)}`}
+                      title={`${t('expenses')}: ${formatLocalizedCurrency(trend.expenses_cents)}`}
                     />
                     {/* Net Profit bar */}
                     <div
                       className={`flex-1 max-w-[28px] rounded-t-sm transition-all duration-500 ease-out ${trend.net_profit_cents >= 0 ? 'bg-chart-1' : 'bg-destructive'
                         }`}
                       style={{ height: `${Math.max(profitH, 4)}%` }}
-                      title={`${t('netProfit')}: ${formatCurrency(trend.net_profit_cents)}`}
+                      title={`${t('netProfit')}: ${formatLocalizedCurrency(trend.net_profit_cents)}`}
                     />
                   </div>
                 )
@@ -163,7 +189,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
                   className={`flex-1 text-center text-[10px] sm:text-xs font-medium transition-colors duration-200 ${hoveredIndex === index ? 'text-foreground' : 'text-muted-foreground'
                     }`}
                 >
-                  {formatMonth(trend.month)}
+                  {formatMonth(trend.month, locale)}
                 </div>
               ))}
             </div>
@@ -196,7 +222,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
                     className="flex items-start gap-2 rounded-lg bg-muted/40 px-3 py-2 text-sm text-muted-foreground"
                   >
                     <Lightbulb className="h-3.5 w-3.5 mt-0.5 shrink-0 text-chart-4" />
-                    <span>{insight}</span>
+                    <span>{translateInsight(insight)}</span>
                   </div>
                 ))}
               </div>
