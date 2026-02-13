@@ -5,8 +5,9 @@ import { useAuth } from '@/contexts/AuthContext'
 import { apiClient } from '@/lib/api/client'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, ArrowLeft } from 'lucide-react'
 import { useLocale } from 'next-intl'
+import { Button } from '@/components/ui/button'
 
 export default function PlatformLayout({
     children,
@@ -58,18 +59,26 @@ export default function PlatformLayout({
     return (
         <div className="min-h-screen bg-background">
             <header className="border-b bg-card px-6 py-4">
-                <div className="flex items-center gap-4">
-                    <Link href={`/${locale}/platform`} className="text-xl font-bold font-display hover:text-primary transition-colors">
-                        Platform Admin
+                <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-4">
+                        <Link href={`/${locale}/platform`} className="text-xl font-bold font-display hover:text-primary transition-colors">
+                            Platform Admin
+                        </Link>
+                        <nav className="flex gap-4 text-sm">
+                            <Link href={`/${locale}/platform/refunds`} className="hover:text-primary">
+                                Refunds Queue
+                            </Link>
+                            <Link href={`/${locale}/platform/bug-reports`} className="hover:text-primary">
+                                Bug Reports
+                            </Link>
+                        </nav>
+                    </div>
+                    <Link href={`/${locale}/dashboard`}>
+                        <Button variant="outline" size="sm">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Back to Dashboard
+                        </Button>
                     </Link>
-                    <nav className="flex gap-4 text-sm">
-                        <Link href={`/${locale}/platform/refunds`} className="hover:text-primary">
-                            Refunds Queue
-                        </Link>
-                        <Link href={`/${locale}/platform/bug-reports`} className="hover:text-primary">
-                            Bug Reports
-                        </Link>
-                    </nav>
                 </div>
             </header>
             <main className="p-6">
