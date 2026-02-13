@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useExecutiveDashboard } from '@/lib/api/hooks/useAnalytics'
 import { useProjects } from '@/lib/api/hooks'
@@ -9,6 +10,8 @@ import { Loader2, DollarSign, TrendingUp, Package, Cloud, FolderOpen } from 'luc
 import { formatCurrency } from '@/lib/utils/money'
 import dynamic from 'next/dynamic'
 import { QuickActions } from '@/components/dashboard/QuickActions'
+import { BugReportModal } from '@/components/dashboard/BugReportModal'
+import { ExportMenu } from '@/components/dashboard/ExportMenu'
 import { useTranslations } from 'next-intl'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -54,6 +57,7 @@ export default function DashboardPage() {
   const { data: dashboard, isLoading, error } = useExecutiveDashboard(12)
   const { data: projects } = useProjects(organizationId || undefined)
   const t = useTranslations('dashboard')
+  const [isBugReportOpen, setIsBugReportOpen] = useState(false)
 
   // Show loading state
   if (isLoading) {
@@ -124,9 +128,10 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline">Export</Button>
-            <Button>Create report</Button>
+            <ExportMenu data={dashboard} />
+            <Button onClick={() => setIsBugReportOpen(true)}>{t('bugReport')}</Button>
           </div>
+          <BugReportModal isOpen={isBugReportOpen} onClose={() => setIsBugReportOpen(false)} />
         </div>
       </div>
 
