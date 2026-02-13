@@ -87,7 +87,7 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
         organizationId,
       })
       router.push(`/clients/${resolvedParams.id}`)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Update client error:', err)
       showError(err, 'Error Updating Client')
     }

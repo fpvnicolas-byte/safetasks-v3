@@ -70,7 +70,7 @@ export function AssignToProjectDialog({
       toast.success(t('assignmentCreated'))
       resetForm()
       onOpenChange(false)
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(err?.message || t('assignmentError'))
     }
   }

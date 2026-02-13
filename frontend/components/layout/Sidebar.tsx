@@ -21,9 +21,8 @@ import {
 
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/AuthContext'
-import { useEffect, useState } from 'react'
-import { apiClient } from '@/lib/api/client'
 import { Badge } from '@/components/ui/badge'
+import { useIsPlatformAdmin } from '@/lib/api/hooks/usePlatform'
 
 type Role = 'owner' | 'admin' | 'producer' | 'finance' | 'freelancer'
 
@@ -47,18 +46,11 @@ export function Sidebar() {
   const t = useTranslations('navigation')
   const pathname = usePathname()
   const { profile } = useAuth()
-  const [isPlatformAdmin, setIsPlatformAdmin] = useState(false)
+  const { data: isPlatformAdmin = false } = useIsPlatformAdmin(Boolean(profile))
 
   const effectiveRole = (profile?.effective_role || profile?.role_v2 || 'owner') as Role
 
   const visibleNav = navigation.filter((item) => item.roles.includes(effectiveRole))
-
-  useEffect(() => {
-    if (!profile) return
-    apiClient.get('/api/v1/platform/bug-reports/?limit=1')
-      .then(() => setIsPlatformAdmin(true))
-      .catch(() => setIsPlatformAdmin(false))
-  }, [profile])
 
   return (
     <div className="hidden md:block fixed left-0 top-0 z-40 h-screen w-4 group/sidebar">

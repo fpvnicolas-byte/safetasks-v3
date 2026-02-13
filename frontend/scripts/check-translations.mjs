@@ -7,8 +7,12 @@
  * It helps maintain translation parity across all supported languages.
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Configuration
 const MESSAGES_DIR = path.join(__dirname, '../messages');

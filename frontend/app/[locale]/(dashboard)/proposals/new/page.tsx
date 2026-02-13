@@ -80,7 +80,7 @@ export default function NewProposalPage() {
 
       await createProposal.mutateAsync(data)
       router.push('/proposals')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Create proposal error:', err)
       showError(err, 'Error Creating Proposal')
     }

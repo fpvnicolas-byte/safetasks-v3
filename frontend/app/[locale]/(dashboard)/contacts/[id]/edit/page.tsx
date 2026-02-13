@@ -78,7 +78,7 @@ export default function EditContactPage() {
 
       await updateSupplier.mutateAsync({ supplierId: contactId, data })
       router.push(`/contacts/${contactId}`)
-    } catch (err: any) {
+    } catch (err: unknown) {
       showError(err, t('form.editError'))
     }
   }

@@ -58,7 +58,7 @@ export default function AiShootingDaySuggestionsPage() {
 
       toast.success(tCommon('actionSuccess'))
       console.log('Shooting day suggestions result:', result)
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(tCommon('actionError', { message: error?.message || 'Failed to generate shooting day suggestions' }))
       console.error('Shooting day suggestions error:', error)
     }

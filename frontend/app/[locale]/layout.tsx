@@ -1,5 +1,3 @@
-import { AuthProvider } from '@/contexts/AuthContext'
-import { BillingProvider } from '@/contexts/BillingContext'
 import { QueryProvider } from '@/lib/api/query-provider'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
@@ -111,12 +109,8 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
             disableTransitionOnChange
           >
             <QueryProvider>
-              <AuthProvider>
-                <BillingProvider>
-                  {children}
-                  <Toaster />
-                </BillingProvider>
-              </AuthProvider>
+              {children}
+              <Toaster />
             </QueryProvider>
           </ThemeProvider>
         </NextIntlClientProvider>

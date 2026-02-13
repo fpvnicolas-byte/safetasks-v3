@@ -69,7 +69,7 @@ export default function EditInventoryItemPage() {
 
       await updateItem.mutateAsync({ itemId, data })
       router.push('/inventory/items')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Update item error:', err)
       showError(err, 'Error Updating Item')
     }

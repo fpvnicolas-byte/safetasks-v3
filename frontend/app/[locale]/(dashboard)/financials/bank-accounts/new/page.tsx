@@ -69,7 +69,7 @@ export default function NewBankAccountPage() {
         account: accountData
       })
       router.push('/financials/bank-accounts')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Create bank account error:', err)
       showError(err, t('errors.createTitle'))
     }

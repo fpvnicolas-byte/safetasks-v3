@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { AuthProvider } from '@/contexts/AuthContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { apiClient } from '@/lib/api/client'
 import { useRouter } from 'next/navigation'
@@ -10,6 +11,18 @@ import { useLocale } from 'next-intl'
 import { Button } from '@/components/ui/button'
 
 export default function PlatformLayout({
+    children,
+}: {
+    children: React.ReactNode
+}) {
+    return (
+        <AuthProvider>
+            <PlatformLayoutContent>{children}</PlatformLayoutContent>
+        </AuthProvider>
+    )
+}
+
+function PlatformLayoutContent({
     children,
 }: {
     children: React.ReactNode

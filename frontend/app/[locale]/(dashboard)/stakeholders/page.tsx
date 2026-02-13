@@ -61,7 +61,7 @@ export default function StakeholdersPage() {
       await deleteStakeholder.mutateAsync(deleteTarget.id)
       toast.success(tFeedback('actionSuccess'))
       setDeleteTarget(null)
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(tFeedback('actionError', { message: 'Failed to delete stakeholder' }))
       console.error('Delete error:', error)
     } finally {

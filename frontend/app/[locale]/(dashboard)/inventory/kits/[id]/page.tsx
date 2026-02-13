@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { useParams, useRouter } from 'next/navigation'
 import { useKit, useDeleteKit, useInventoryItems } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
@@ -10,14 +11,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Pencil, Trash2, ArrowLeft, Package, CheckCircle, AlertCircle, Info, Eye, Box, Plus, ImageIcon } from 'lucide-react'
+import { Pencil, Trash2, ArrowLeft, Package, CheckCircle, AlertCircle, Info, Eye, Box, Plus, ImageIcon, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { KitStatus, FileUploadResponse } from '@/types'
-import { FileUploadZone, FileList } from '@/components/storage'
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
 import { ErrorDialog } from '@/components/ui/error-dialog'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
+
+function PhotoTabFallback() {
+  return (
+    <div className="flex justify-center py-6">
+      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+    </div>
+  )
+}
+
+const FileUploadZone = dynamic(
+  () => import('@/components/storage').then((mod) => mod.FileUploadZone),
+  { loading: PhotoTabFallback }
+)
+const FileList = dynamic(
+  () => import('@/components/storage').then((mod) => mod.FileList),
+  { loading: PhotoTabFallback }
+)
 
 export default function KitDetailPage() {
   const params = useParams()

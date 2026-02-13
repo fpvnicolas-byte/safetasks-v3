@@ -81,7 +81,7 @@ export default function EditBankAccountPage({ params }: { params: Promise<{ id: 
         data: accountData,
       })
       router.push('/financials/bank-accounts')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Update bank account error:', err)
       showError(err, t('errors.updateTitle'))
     }

@@ -51,7 +51,7 @@ export default function OnboardingPage() {
       toast.success('Organization created. Welcome!')
       await refreshProfile()
       router.replace(`/${locale}/dashboard`)
-    } catch (err: any) {
+    } catch (err: unknown) {
       const message = err?.message || 'Failed to create organization'
       setError(message)
       if (typeof message === 'string' && message.toLowerCase().includes('already belongs')) {

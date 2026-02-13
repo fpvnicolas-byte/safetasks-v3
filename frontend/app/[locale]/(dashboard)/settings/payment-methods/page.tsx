@@ -51,7 +51,7 @@ export default function PaymentMethodsPage() {
       const result = await onboard.mutateAsync(redirectUri)
       // Redirect to Stripe OAuth
       window.location.href = result.authorization_url
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(err.message || t('errors.connectFailed'))
     }
   }
@@ -62,7 +62,7 @@ export default function PaymentMethodsPage() {
       await disconnect.mutateAsync()
       toast.success(t('disconnected'))
       refetch()
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(err.message || t('errors.disconnectFailed'))
     } finally {
       setIsDisconnecting(false)

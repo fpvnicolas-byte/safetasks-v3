@@ -45,7 +45,7 @@ export default function NewContactPage() {
 
       await createSupplier.mutateAsync(data)
       router.push('/contacts')
-    } catch (err: any) {
+    } catch (err: unknown) {
       showError(err, t('form.createError'))
     }
   }

@@ -77,7 +77,7 @@ export default function EditScenePage() {
 
       await updateScene.mutateAsync({ sceneId, data })
       router.push(`/${locale}/scenes/${sceneId}`)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Update scene error:', err)
       showError(err, t('errors.updateTitle'))
     }

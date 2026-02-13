@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { DashboardShell } from '@/components/layout/DashboardShell'
+import { AuthProvider } from '@/contexts/AuthContext'
+import { BillingProvider } from '@/contexts/BillingContext'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -35,5 +37,11 @@ export default async function DashboardLayout({
     redirect(`/${locale}/auth/login`)
   }
 
-  return <DashboardShell>{children}</DashboardShell>
+  return (
+    <AuthProvider>
+      <BillingProvider>
+        <DashboardShell>{children}</DashboardShell>
+      </BillingProvider>
+    </AuthProvider>
+  )
 }

@@ -14,6 +14,8 @@ import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/AuthContext'
 
+type ApprovalTranslator = (key: string) => string
+
 interface ExpenseApprovalDialogProps {
     transaction: TransactionWithRelations | null
     open: boolean
@@ -194,7 +196,7 @@ export function ExpenseApprovalDialog({ transaction, open, onOpenChange }: Expen
     )
 }
 
-function StatusBadge({ status, t }: { status?: string, t: any }) {
+function StatusBadge({ status, t }: { status?: string, t: ApprovalTranslator }) {
     if (!status) return null
 
     const variants: Record<string, "default" | "secondary" | "destructive" | "outline" | "success"> = {
@@ -208,9 +210,10 @@ function StatusBadge({ status, t }: { status?: string, t: any }) {
     let className = ""
     if (status === 'paid') className = "bg-green-100 text-green-800 hover:bg-green-200 border-green-200"
     if (status === 'approved') className = "bg-blue-100 text-blue-800 hover:bg-blue-200 border-blue-200"
+    const badgeVariant = variants[status] ?? "outline"
 
     return (
-        <Badge variant={variants[status] as any || "outline"} className={className}>
+        <Badge variant={badgeVariant} className={className}>
             {t(status === 'pending' ? 'waitingApproval' : status)}
         </Badge>
     )

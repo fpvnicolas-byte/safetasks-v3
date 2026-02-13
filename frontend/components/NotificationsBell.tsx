@@ -18,23 +18,27 @@ import { formatDistanceToNow } from 'date-fns'
 import { useTranslations } from 'next-intl'
 import { LocaleLink } from '@/components/LocaleLink'
 
+type TranslatorFn = (key: string, values?: Record<string, unknown>) => string
+type NotificationItemData = NonNullable<ReturnType<typeof useNotifications>['data']>[number]
+
 // Helper component for individual notification item to use hooks
-const NotificationItem = ({ notification, onMarkRead }: { notification: any, onMarkRead: (id: string, e: React.MouseEvent) => void }) => {
+const NotificationItem = ({ notification, onMarkRead }: { notification: NotificationItemData, onMarkRead: (id: string, e: React.MouseEvent) => void }) => {
   const tMessages = useTranslations('notifications.messages')
+  const tMessagesUnsafe = tMessages as unknown as TranslatorFn
   const tControls = useTranslations('notifications.controls')
 
-  const getTranslatedContent = (defaultText: string, metadata: any) => {
-    const isLikelyKey = !defaultText.includes(' ') && defaultText.length < 50;
+  const getTranslatedContent = (defaultText: string, metadata?: Record<string, unknown> | null) => {
+    const isLikelyKey = !defaultText.includes(' ') && defaultText.length < 50
     if (isLikelyKey) {
       try {
-        const translated = tMessages(defaultText as any, metadata || {});
-        if (translated.includes('notifications.messages.')) return defaultText;
-        return translated;
+        const translated = tMessagesUnsafe(defaultText, metadata || {})
+        if (translated.includes('notifications.messages.')) return defaultText
+        return translated
       } catch (e) {
-        return defaultText;
+        return defaultText
       }
     }
-    return defaultText;
+    return defaultText
   }
 
   const title = getTranslatedContent(notification.title, notification.metadata)
@@ -94,12 +98,14 @@ export function NotificationsBell() {
   const pollingInterval = isConnected ? false : 30000
 
   const { data: stats } = useNotificationStats({ refetchInterval: pollingInterval })
-  const { data: notifications } = useNotifications(false, { refetchInterval: pollingInterval })
+  const { data: notifications } = useNotifications(false, {
+    enabled: open,
+    refetchInterval: open ? pollingInterval : false,
+  })
 
   const markAsRead = useMarkAsRead()
   const markAllAsRead = useMarkAllAsRead()
   const t = useTranslations('notifications')
-  const tCommon = useTranslations('common')
 
   const recentNotifications = notifications?.slice(0, 5) || []
   const unreadCount = stats?.unread_count || 0

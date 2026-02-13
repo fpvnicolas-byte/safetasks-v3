@@ -57,7 +57,7 @@ export default function AiBudgetEstimationPage() {
 
       toast.success(tCommon('actionSuccess'))
       console.log('Budget estimation result:', result)
-    } catch (error: any) {
+    } catch (error: unknown) {
       const errorMsg = error?.message || t('errors.estimateFailed')
       toast.error(tCommon('actionError', { message: errorMsg }))
       console.error('Budget estimation error:', error)

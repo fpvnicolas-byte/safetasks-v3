@@ -59,7 +59,7 @@ export default function EditCharacterPage() {
 
       await updateCharacter.mutateAsync({ characterId, data: characterData })
       router.push(`/${locale}/characters/${characterId}`)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Update character error:', err)
       showError(err, t('errors.updateTitle'))
     }

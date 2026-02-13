@@ -894,7 +894,7 @@ export interface ProposalLineItem {
 
 export interface ProposalMetadata {
   line_items?: ProposalLineItem[]
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export interface Proposal {
@@ -1310,7 +1310,7 @@ export interface ScriptAnalysis {
       quantity: number
     }>
     production_notes?: string[]
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   }
   analysis_type: AiAnalysisType
   confidence: number

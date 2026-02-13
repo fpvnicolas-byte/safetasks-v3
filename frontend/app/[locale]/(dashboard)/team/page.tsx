@@ -132,7 +132,7 @@ export default function TeamPage() {
         toast.warning(result.seat_warning)
       }
       toast.success(t('inviteCreated'))
-    } catch (err: any) {
+    } catch (err: unknown) {
       const status = err?.statusCode
       if (status === 409) {
         toast.error(t('inviteAlreadyPending'))
@@ -163,7 +163,7 @@ export default function TeamPage() {
       }
 
       toast.success(t('inviteResent'))
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(err?.message || t('resendError'))
     } finally {
       isResendingRef.current = false
@@ -175,7 +175,7 @@ export default function TeamPage() {
     try {
       await revokeInvite.mutateAsync(inviteId)
       toast.success(t('inviteRevoked'))
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(err?.message || t('revokeError'))
     }
   }
@@ -184,7 +184,7 @@ export default function TeamPage() {
     try {
       await changeRole.mutateAsync({ profileId: memberId, role_v2: newRole })
       toast.success(t('roleChanged'))
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(err?.message || t('roleChangeError'))
     }
   }
@@ -196,7 +196,7 @@ export default function TeamPage() {
       await removeMember.mutateAsync(removeTarget.id)
       setRemoveTarget(null)
       toast.success(t('memberRemoved'))
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(err?.message || t('removeError'))
     } finally {
       setIsRemoving(false)

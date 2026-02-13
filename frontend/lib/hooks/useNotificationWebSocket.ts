@@ -1,12 +1,14 @@
 'use client'
 
-import { useEffect, useRef, useCallback, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 
 const NOTIFICATIONS_KEY = 'notifications'
+const IS_DEV = process.env.NODE_ENV !== 'production'
 
 type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error'
+type WindowWithWsManager = Window & { __SAFE_TASKS_WS_MANAGER__?: WebSocketManager }
 
 interface NotificationMessage {
     type: 'notification' | 'connected'
@@ -18,7 +20,7 @@ interface NotificationMessage {
         type: string
         is_read: boolean
         created_at: string
-        metadata?: any
+        metadata?: Record<string, unknown>
     }
     message?: string
 }
@@ -62,12 +64,11 @@ class WebSocketManager {
             return new WebSocketManager()
         }
 
-        // Use global variable to persist across HMR reloads in development
-        const globalKey = '__SAFE_TASKS_WS_MANAGER__'
-        if (!(window as any)[globalKey]) {
-            (window as any)[globalKey] = new WebSocketManager()
+        const windowWithWsManager = window as WindowWithWsManager
+        if (!windowWithWsManager.__SAFE_TASKS_WS_MANAGER__) {
+            windowWithWsManager.__SAFE_TASKS_WS_MANAGER__ = new WebSocketManager()
         }
-        return (window as any)[globalKey]
+        return windowWithWsManager.__SAFE_TASKS_WS_MANAGER__
     }
 
     public subscribe(
@@ -132,7 +133,9 @@ class WebSocketManager {
             this.ws = new WebSocket(wsUrl)
 
             this.ws.onopen = () => {
-                console.log('[WS] Notifications WebSocket connected')
+                if (IS_DEV) {
+                    console.log('[WS] Notifications WebSocket connected')
+                }
                 this.updateStatus('connected')
                 this.reconnectAttempts = 0
                 this.startPing()
@@ -143,12 +146,16 @@ class WebSocketManager {
                     const message: NotificationMessage = JSON.parse(event.data)
                     this.messageListeners.forEach(listener => listener(message))
                 } catch (e) {
-                    console.warn('[WS] Failed to parse message:', e)
+                    if (IS_DEV) {
+                        console.warn('[WS] Failed to parse message:', e)
+                    }
                 }
             }
 
             this.ws.onclose = (event) => {
-                console.log('[WS] WebSocket closed:', event.code, event.reason)
+                if (IS_DEV) {
+                    console.log('[WS] WebSocket closed:', event.code, event.reason)
+                }
                 this.updateStatus('disconnected')
                 this.ws = null
                 this.stopPing()
@@ -157,18 +164,24 @@ class WebSocketManager {
                 if (this.refCount > 0 && this.reconnectAttempts < 10) {
                     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000)
                     this.reconnectAttempts++
-                    console.log(`[WS] Reconnecting in ${delay}ms...`)
+                    if (IS_DEV) {
+                        console.log(`[WS] Reconnecting in ${delay}ms...`)
+                    }
                     this.reconnectTimeout = setTimeout(() => this.connect(), delay)
                 }
             }
 
             this.ws.onerror = (error) => {
-                console.error('[WS] Error:', error)
+                if (IS_DEV) {
+                    console.error('[WS] Error:', error)
+                }
                 this.updateStatus('error')
             }
 
         } catch (e) {
-            console.error('[WS] Create failed:', e)
+            if (IS_DEV) {
+                console.error('[WS] Create failed:', e)
+            }
             this.updateStatus('error')
         }
     }
@@ -217,12 +230,16 @@ export function useNotificationWebSocket(options: UseNotificationWebSocketOption
             (newStatus) => setStatus(newStatus),
             (message) => {
                 if (message.type === 'connected') {
-                    console.log('[WS] Server confirmed connection:', message.message)
+                    if (IS_DEV) {
+                        console.log('[WS] Server confirmed connection:', message.message)
+                    }
                     return
                 }
 
                 if (message.type === 'notification') {
-                    console.log('[WS] Received notification:', message.action)
+                    if (IS_DEV) {
+                        console.log('[WS] Received notification:', message.action)
+                    }
                     // Invalidate queries globally for any listener
                     queryClient.invalidateQueries({ queryKey: [NOTIFICATIONS_KEY] })
 

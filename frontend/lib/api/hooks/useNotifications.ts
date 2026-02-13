@@ -11,7 +11,7 @@ export interface Notification {
   message: string
   type: 'info' | 'success' | 'warning' | 'error'
   is_read: boolean
-  metadata: any | null
+  metadata: Record<string, unknown> | null
   created_at: string
   read_at: string | null
 }
@@ -99,4 +99,3 @@ export function useClearAllNotifications() {
     },
   })
 }
-

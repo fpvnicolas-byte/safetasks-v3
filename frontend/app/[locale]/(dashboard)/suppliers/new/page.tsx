@@ -46,7 +46,7 @@ export default function NewSupplierPage() {
 
       await createSupplier.mutateAsync(data)
       router.push('/suppliers')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Create supplier error:', err)
       showError(err, 'Error Creating Supplier')
     }

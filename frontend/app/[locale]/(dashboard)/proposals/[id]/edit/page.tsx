@@ -102,7 +102,7 @@ export default function EditProposalPage() {
 
       await updateProposal.mutateAsync({ proposalId, data })
       router.push(`/proposals/${proposalId}`)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Update proposal error:', err)
       showError(err, 'Error Updating Proposal')
     }

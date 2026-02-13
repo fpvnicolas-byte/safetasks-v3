@@ -72,7 +72,7 @@ function NewCharacterForm() {
 
       await createCharacter.mutateAsync(characterData)
       router.push('/characters')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Create character error:', err)
       showError(err, 'Error Creating Character')
     }

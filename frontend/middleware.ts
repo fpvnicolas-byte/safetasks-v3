@@ -3,6 +3,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 import createIntlMiddleware from 'next-intl/middleware';
 import { locales, defaultLocale } from './i18n/config';
 
+const IS_DEV = process.env.NODE_ENV !== 'production'
+
 const intlMiddleware = createIntlMiddleware({
   locales: [...locales],
   defaultLocale,
@@ -13,12 +15,15 @@ export async function middleware(request: NextRequest) {
   // 1. Run Core i18n Middleware
   const intlResponse = intlMiddleware(request);
 
-  // DEBUGGING: Log middleware execution
-  console.log('[Middleware] Processing:', request.nextUrl.pathname);
+  if (IS_DEV) {
+    console.log('[Middleware] Processing:', request.nextUrl.pathname);
+  }
 
   // If i18n redirects (e.g. / -> /en), return immediately
   if (intlResponse.headers.has('Location')) {
-    console.log('[Middleware] i18n Redirecting to:', intlResponse.headers.get('Location'));
+    if (IS_DEV) {
+      console.log('[Middleware] i18n Redirecting to:', intlResponse.headers.get('Location'));
+    }
     return intlResponse;
   }
 
@@ -89,7 +94,9 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = `/${locale}/auth/login`
     url.searchParams.set('redirect', pathname)
-    console.log('[Middleware] Protected Route Redirect -> Login:', url.pathname);
+    if (IS_DEV) {
+      console.log('[Middleware] Protected Route Redirect -> Login:', url.pathname);
+    }
     return NextResponse.redirect(url)
   }
 
@@ -107,7 +114,9 @@ export async function middleware(request: NextRequest) {
     const locale = localeMatch || defaultLocale;
     const url = request.nextUrl.clone()
     url.pathname = `/${locale}/dashboard`
-    console.log('[Middleware] Auth Page Redirect -> Dashboard:', url.pathname);
+    if (IS_DEV) {
+      console.log('[Middleware] Auth Page Redirect -> Dashboard:', url.pathname);
+    }
     return NextResponse.redirect(url)
   }
 

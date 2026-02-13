@@ -94,7 +94,7 @@ export function ContactAccessTab({ contact }: ContactAccessTabProps) {
     try {
       await changeRole.mutateAsync({ profileId: contact.team_info.profile_id, role_v2: newRole })
       toast.success(tAccess('roleChanged'))
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(err?.message || tAccess('roleChangeError'))
     }
   }
@@ -106,7 +106,7 @@ export function ContactAccessTab({ contact }: ContactAccessTabProps) {
       await removeMember.mutateAsync(contact.team_info.profile_id)
       setRemoveConfirmOpen(false)
       toast.success(tAccess('accessRemoved'))
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(err?.message || tAccess('removeError'))
     } finally {
       setIsRemoving(false)
@@ -129,7 +129,7 @@ export function ContactAccessTab({ contact }: ContactAccessTabProps) {
       if (result.seat_warning) {
         toast.warning(result.seat_warning)
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       const status = err?.statusCode
       if (status === 409) toast.error(tAccess('inviteAlreadyPending'))
       else if (status === 402) toast.error(tAccess('seatLimitReached'))
@@ -144,7 +144,7 @@ export function ContactAccessTab({ contact }: ContactAccessTabProps) {
       setInviteLink(result.invite_link)
       setInviteDialogOpen(true)
       toast.success(tAccess('inviteResent'))
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(err?.message || tAccess('resendError'))
     }
   }
@@ -154,7 +154,7 @@ export function ContactAccessTab({ contact }: ContactAccessTabProps) {
     try {
       await revokeInvite.mutateAsync(contact.pending_invite.id)
       toast.success(tAccess('inviteRevoked'))
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(err?.message || tAccess('revokeError'))
     }
   }

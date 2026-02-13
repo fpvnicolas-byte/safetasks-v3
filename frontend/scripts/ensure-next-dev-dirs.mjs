@@ -1,5 +1,9 @@
-const fs = require('node:fs')
-const path = require('node:path')
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 function ensureDir(dirPath) {
   fs.mkdirSync(dirPath, { recursive: true })
@@ -9,4 +13,3 @@ function ensureDir(dirPath) {
 // Some environments (especially when switching between build/dev or using Turbopack)
 // can hit ENOENT if it doesn't exist yet.
 ensureDir(path.join(__dirname, '..', '.next', 'static', 'development'))
-

@@ -53,7 +53,7 @@ export default function NewInventoryItemPage() {
 
       await createItem.mutateAsync(data)
       router.push('/inventory/items')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Create item error:', err)
       showError(err, 'Error Creating Item')
     }

@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useTaxTable, useUpdateTaxTable, useDeleteTaxTable } from '@/lib/api/hooks'
-import { useAuth } from '@/contexts/AuthContext'
 import { TaxTableUpdate, TaxType } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,8 +23,8 @@ export default function EditTaxTablePage() {
   const t = useTranslations('financials.pages.taxTablesEdit')
   const tCommon = useTranslations('common')
 
-  const { organizationId } = useAuth()
   const [error, setError] = useState<string | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const { data: taxTable, isLoading } = useTaxTable(taxTableId)
   const updateTaxTable = useUpdateTaxTable()
   const deleteTaxTable = useDeleteTaxTable()
@@ -71,8 +70,6 @@ export default function EditTaxTablePage() {
       setError(error.message || t('errors.updateFailed'))
     }
   }
-
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   async function handleDelete() {
     if (!taxTable) return

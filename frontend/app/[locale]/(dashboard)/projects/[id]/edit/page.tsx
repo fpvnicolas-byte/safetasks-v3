@@ -68,7 +68,7 @@ export default function EditProjectPage() {
 
       await updateProject.mutateAsync(data)
       router.push(`/projects/${projectId}`)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Update project error:', err)
       showError(err, t('form.errorUpdating'))
     }

@@ -1,29 +1,58 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useParams, useRouter } from 'next/navigation'
 import { useProject, useDeleteProject, useProjectStats } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { useFiles } from '@/lib/api/hooks/useFiles'
-import { ShootingDaysTab } from '@/components/shooting-days/ShootingDaysTab'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Edit, Trash2, FileText, DollarSign, Film, FolderOpen, Users, Calendar } from 'lucide-react'
+import { Edit, Trash2, FileText, DollarSign, Film, FolderOpen, Users, Calendar, Loader2 } from 'lucide-react'
 import { LocaleLink } from '@/components/LocaleLink'
 import { formatCurrency } from '@/lib/utils/money'
 import { useState, useEffect } from 'react'
 import { DetailPageSkeleton } from '@/components/LoadingSkeletons'
-import { FileUploadZone, FileList } from '@/components/storage'
 import { FileUploadResponse } from '@/types'
 import { useTranslations, useLocale } from 'next-intl'
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
 import { ErrorDialog } from '@/components/ui/error-dialog'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
-import { ProjectExpensesTab } from '@/components/projects/ProjectExpensesTab'
-import { TeamTab } from '@/components/projects/TeamTab'
-import { ProjectAssignmentsCard } from '@/components/projects/ProjectAssignmentsCard'
+
+function TabPanelFallback() {
+  return (
+    <div className="flex justify-center py-8">
+      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    </div>
+  )
+}
+
+const ShootingDaysTab = dynamic(
+  () => import('@/components/shooting-days/ShootingDaysTab').then((mod) => mod.ShootingDaysTab),
+  { loading: TabPanelFallback }
+)
+const FileUploadZone = dynamic(
+  () => import('@/components/storage').then((mod) => mod.FileUploadZone),
+  { loading: TabPanelFallback }
+)
+const FileList = dynamic(
+  () => import('@/components/storage').then((mod) => mod.FileList),
+  { loading: TabPanelFallback }
+)
+const ProjectExpensesTab = dynamic(
+  () => import('@/components/projects/ProjectExpensesTab').then((mod) => mod.ProjectExpensesTab),
+  { loading: TabPanelFallback }
+)
+const TeamTab = dynamic(
+  () => import('@/components/projects/TeamTab').then((mod) => mod.TeamTab),
+  { loading: TabPanelFallback }
+)
+const ProjectAssignmentsCard = dynamic(
+  () => import('@/components/projects/ProjectAssignmentsCard').then((mod) => mod.ProjectAssignmentsCard),
+  { loading: TabPanelFallback }
+)
 
 export default function ProjectDetailPage() {
   const t = useTranslations('projects')

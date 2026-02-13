@@ -10,7 +10,6 @@ import { useKits } from '@/lib/api/hooks/useKits'
 import { Service } from '@/types'
 import { Loader2, Plus, Trash2, Link as LinkIcon } from 'lucide-react'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
-import { useTranslations } from 'next-intl'
 import { Badge } from '@/components/ui/badge'
 
 interface ServiceEquipmentDialogProps {
@@ -52,7 +51,7 @@ export function ServiceEquipmentDialog({ service, open, onOpenChange }: ServiceE
                 is_primary: false, // Default
             })
             setSelectedKitId('')
-        } catch (err: any) {
+        } catch (err: unknown) {
             showError(err, "Failed to link equipment")
         }
     }
@@ -61,7 +60,7 @@ export function ServiceEquipmentDialog({ service, open, onOpenChange }: ServiceE
         if (!service) return
         try {
             await unlinkEquipment.mutateAsync(kitId)
-        } catch (err: any) {
+        } catch (err: unknown) {
             showError(err, "Failed to unlink equipment")
         }
     }

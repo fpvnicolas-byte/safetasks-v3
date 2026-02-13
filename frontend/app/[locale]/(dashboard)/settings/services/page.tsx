@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { useAuth } from '@/contexts/AuthContext'
 import { useServices, useCreateService, useUpdateService, useDeleteService } from '@/lib/api/hooks/useServices'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
@@ -10,14 +11,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { ErrorDialog } from '@/components/ui/error-dialog'
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { Plus, Pencil, Trash2, Loader2, Package, Link as LinkIcon } from 'lucide-react'
 import { Service, ServiceCreate, ServiceUpdate, toCents, fromCents } from '@/types'
 import { useTranslations } from 'next-intl'
 import { formatCurrency } from '@/lib/utils/money'
-import { ServiceEquipmentDialog } from './ServiceEquipmentDialog'
+
+const ServiceEquipmentDialog = dynamic(
+  () => import('./ServiceEquipmentDialog').then((mod) => mod.ServiceEquipmentDialog)
+)
 
 export default function ServicesPage() {
     const { organizationId } = useAuth()
@@ -55,7 +59,7 @@ export default function ServicesPage() {
             }
             setIsDialogOpen(false)
             setEditingService(null)
-        } catch (err: any) {
+        } catch (err: unknown) {
             showError(err, editingService ? t('errors.updating') : t('errors.creating'))
         }
     }
@@ -69,7 +73,7 @@ export default function ServicesPage() {
         try {
             await deleteService.mutateAsync(deleteTarget.id)
             setDeleteTarget(null)
-        } catch (err: any) {
+        } catch (err: unknown) {
             showError(err, t('delete.error'))
         } finally {
             setIsDeleting(false)

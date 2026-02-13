@@ -138,7 +138,7 @@ export default function SupplierDetailPage() {
       if (result.seat_warning) {
         toast.warning(result.seat_warning)
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       const status = err?.statusCode
       if (status === 409) {
         toast.error('An invite is already pending for this email')

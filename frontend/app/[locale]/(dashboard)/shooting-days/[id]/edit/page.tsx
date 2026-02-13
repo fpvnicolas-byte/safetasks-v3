@@ -71,7 +71,7 @@ export default function EditShootingDayPage() {
 
       await updateShootingDay.mutateAsync(data)
       router.push(`/${locale}/shooting-days/${shootingDayId}`)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Update shooting day error:', err)
       showError(err, t('errors.updateTitle'))
     }

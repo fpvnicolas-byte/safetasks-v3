@@ -1,10 +1,28 @@
 'use client'
 
 import { useState } from 'react'
-import { FileUploadZone, FileList } from '@/components/storage'
+import dynamic from 'next/dynamic'
 import { FileUploadResponse } from '@/types'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Loader2 } from 'lucide-react'
+
+function StorageTabFallback() {
+  return (
+    <div className="flex justify-center py-6">
+      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+    </div>
+  )
+}
+
+const FileUploadZone = dynamic(
+  () => import('@/components/storage').then((mod) => mod.FileUploadZone),
+  { loading: StorageTabFallback }
+)
+const FileList = dynamic(
+  () => import('@/components/storage').then((mod) => mod.FileList),
+  { loading: StorageTabFallback }
+)
 
 export default function StoragePage() {
   const [uploadedFiles, setUploadedFiles] = useState<FileUploadResponse[]>([])

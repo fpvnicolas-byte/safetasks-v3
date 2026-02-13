@@ -113,17 +113,6 @@ class ApiClient {
       tokenLength: token ? token.length : 0
     })
 
-    // DEBUGGING: Print critical info to console to diagnose 403 issue
-    console.log('[DEBUG] API Client Request:', {
-      url: `${this.baseURL}${endpoint}`,
-      baseURL: this.baseURL,
-      isWindowDefined: typeof window !== 'undefined',
-      endpoint,
-      hasToken: !!token,
-      // DEBUG: Verify headers before sending matches backend expectation
-      // const authHeader = token ? `Bearer ${token}` : undefined;
-    })
-
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), timeout)
 

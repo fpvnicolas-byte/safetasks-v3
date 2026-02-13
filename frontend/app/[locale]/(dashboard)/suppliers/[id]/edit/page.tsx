@@ -81,7 +81,7 @@ export default function EditSupplierPage() {
 
       await updateSupplier.mutateAsync({ supplierId, data })
       router.push(`/suppliers/${supplierId}`)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Update supplier error:', err)
       showError(err, 'Error Updating Supplier')
     }

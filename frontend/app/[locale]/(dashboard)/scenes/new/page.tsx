@@ -58,7 +58,7 @@ function NewSceneForm() {
 
       await createScene.mutateAsync(data)
       router.push(`/scenes?project=${projectId}`)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Create scene error:', err)
       showError(err, 'Error Creating Scene')
     }

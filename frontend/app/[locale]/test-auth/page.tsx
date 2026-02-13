@@ -1,6 +1,7 @@
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
 export default function TestAuthPage() {
@@ -99,7 +100,7 @@ export default function TestAuthPage() {
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
             <h2 className="text-xl font-semibold text-yellow-800 mb-2">Not Logged In</h2>
             <p className="text-yellow-700">
-              Please <a href="/auth/login" className="underline">login</a> first, then come back to this page.
+              Please <Link href="/auth/login" className="underline">login</Link> first, then come back to this page.
             </p>
           </div>
         ) : (

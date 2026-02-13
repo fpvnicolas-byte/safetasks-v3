@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { useInvoices, useDeleteInvoice, useOverviewStats, useBankAccounts, useTransactions } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -14,9 +15,18 @@ import { formatCurrency } from '@/lib/utils/money'
 import { InvoiceWithItems, InvoiceStatus } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
-import { ExpenseApprovalDashboard } from '@/components/financials/ExpenseApprovalDashboard'
-import { BudgetApprovalDashboard } from '@/components/financials/BudgetApprovalDashboard'
-import { ProjectsFinancialsTab } from '@/components/financials/ProjectsFinancialsTab'
+const ExpenseApprovalDashboard = dynamic(
+  () => import('@/components/financials/ExpenseApprovalDashboard').then((mod) => mod.ExpenseApprovalDashboard),
+  { loading: () => <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div> }
+)
+const BudgetApprovalDashboard = dynamic(
+  () => import('@/components/financials/BudgetApprovalDashboard').then((mod) => mod.BudgetApprovalDashboard),
+  { loading: () => <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div> }
+)
+const ProjectsFinancialsTab = dynamic(
+  () => import('@/components/financials/ProjectsFinancialsTab').then((mod) => mod.ProjectsFinancialsTab),
+  { loading: () => <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div> }
+)
 
 
 const statusVariant: Record<InvoiceStatus, 'secondary' | 'info' | 'success' | 'destructive' | 'outline'> = {
@@ -33,7 +43,6 @@ export default function FinancialsPage() {
   const t = useTranslations('financials')
   const tTransactionsPage = useTranslations('financials.pages.transactions')
   const tApprovals = useTranslations('financials.approvals')
-  const tCommon = useTranslations('common')
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | 'all'>('all')
   const [activeTab, setActiveTab] = useState('overview')
 
@@ -160,7 +169,7 @@ export default function FinancialsPage() {
           ) : invoices && invoices.length > 0 ? (
             <div className="grid gap-4">
               {invoices.map((invoice) => (
-                <InvoiceCard key={invoice.id} invoice={invoice} t={t} tCommon={tCommon} locale={locale} />
+                <InvoiceCard key={invoice.id} invoice={invoice} t={t} locale={locale} />
               ))}
             </div>
           ) : (
@@ -348,11 +357,10 @@ export default function FinancialsPage() {
 interface InvoiceCardProps {
   invoice: InvoiceWithItems
   t: (key: string, values?: Record<string, string | number>) => string
-  tCommon: (key: string) => string
   locale: string
 }
 
-function InvoiceCard({ invoice, t, tCommon, locale }: InvoiceCardProps) {
+function InvoiceCard({ invoice, t, locale }: InvoiceCardProps) {
   const { organizationId } = useAuth()
   const deleteInvoice = useDeleteInvoice(organizationId || undefined)
   const [isDeleting, setIsDeleting] = useState(false)

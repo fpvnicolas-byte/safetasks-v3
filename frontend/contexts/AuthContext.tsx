@@ -221,7 +221,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       logger.info(`[AuthContext] Auth State Change: ${event}`, { userId: session?.user?.id })
 
-      if (event === 'SIGNED_OUT' || (event === 'PkceGrantFailed' as any)) {
+      if (event === 'SIGNED_OUT' || String(event) === 'PkceGrantFailed') {
         // Handle explicit sign out or failure
         setUser(null)
         setProfile(null)

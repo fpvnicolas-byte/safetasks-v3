@@ -69,7 +69,7 @@ export default function EditKitPage() {
       }
 
       router.push(`/inventory/kits/${kitId}`)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Update kit error:', err)
       showError(err, 'Error Updating Kit')
     }

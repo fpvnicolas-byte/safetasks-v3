@@ -1,5 +1,6 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useParams, useRouter } from 'next/navigation'
 import { useProposal, useDeleteProposal, useApproveProposal, useUpdateProposal } from '@/lib/api/hooks'
 import { useAuth } from '@/contexts/AuthContext'
@@ -8,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Pencil, Trash2, ArrowLeft, CheckCircle, FileText, Calendar, DollarSign, ExternalLink, Paperclip, Download, Loader2, Mail, Phone, Building } from 'lucide-react'
+import { Pencil, Trash2, ArrowLeft, CheckCircle, FileText, ExternalLink, Paperclip, Download, Loader2, Mail, Phone, Building } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency, ProposalStatus, FileUploadResponse } from '@/types'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -17,12 +18,34 @@ import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { FileUploadZone, FileList } from '@/components/storage'
 import { useLocale, useTranslations } from 'next-intl'
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
 import { ErrorDialog } from '@/components/ui/error-dialog'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
+
+function AttachmentFallback() {
+  return (
+    <div className="flex justify-center py-6">
+      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+    </div>
+  )
+}
+
+const FileUploadZone = dynamic(
+  () => import('@/components/storage').then((mod) => mod.FileUploadZone),
+  { loading: AttachmentFallback }
+)
+const FileList = dynamic(
+  () => import('@/components/storage').then((mod) => mod.FileList),
+  { loading: AttachmentFallback }
+)
+
+interface ProposalLineItem {
+  id?: string
+  description?: string
+  value_cents: number
+}
 
 export default function ProposalDetailPage() {
   const params = useParams()
@@ -235,17 +258,6 @@ export default function ProposalDetailPage() {
     }
   }
 
-  const getStatusVariant = (status: ProposalStatus) => {
-    switch (status) {
-      case 'approved': return 'success'
-      case 'rejected': return 'destructive'
-      case 'sent': return 'info'
-      case 'draft': return 'outline'
-      case 'expired': return 'destructive'
-      default: return 'outline'
-    }
-  }
-
   // Status change handler
   const handleStatusChange = async (newStatus: ProposalStatus) => {
     // Don't allow changing from 'approved' status via dropdown
@@ -277,8 +289,6 @@ export default function ProposalDetailPage() {
       default: return 'bg-gray-100 text-gray-800 border-gray-300'
     }
   }
-
-  const showApproveButton = proposal.status === 'draft' || proposal.status === 'sent'
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -522,7 +532,7 @@ export default function ProposalDetailPage() {
                     </div>
                   ))}
                   {/* Line Items */}
-                  {proposal.proposal_metadata?.line_items?.map((item: any, i: number) => (
+                  {proposal.proposal_metadata?.line_items?.map((item: ProposalLineItem, i: number) => (
                     <div key={item.id || i} className="p-4">
                       <div className="flex justify-between items-start">
                         <span className="font-medium">{item.description || t('detail.financials.unnamedItem')}</span>

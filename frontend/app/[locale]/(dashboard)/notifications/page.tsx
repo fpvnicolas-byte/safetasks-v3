@@ -20,9 +20,12 @@ import { formatDistanceToNow } from 'date-fns'
 import { useNotifications, useNotificationStats, useMarkAsRead, useMarkAllAsRead, useDeleteNotification, useClearAllNotifications } from '@/lib/api/hooks/useNotifications'
 import { useTranslations } from 'next-intl'
 
+type TranslatorFn = (key: string, values?: Record<string, unknown>) => string
+
 export default function NotificationsPage() {
   const t = useTranslations('notifications')
   const tMessages = useTranslations('notifications.messages')
+  const tMessagesUnsafe = tMessages as unknown as TranslatorFn
   const [unreadOnly, setUnreadOnly] = useState(false)
   // Disable polling here, relying on NotificationsBell (Header) which handles WS/Polling and shares the cache
   const { data: notifications, isLoading, error } = useNotifications(unreadOnly, { refetchInterval: false })
@@ -69,12 +72,12 @@ export default function NotificationsPage() {
   }
 
   // Helper to get translated text or fallback to original
-  const getTranslatedContent = (text: string, metadata: any) => {
+  const getTranslatedContent = (text: string, metadata?: Record<string, unknown> | null) => {
     const isLikelyKey = !text.includes(' ') && text.length < 50
 
     if (isLikelyKey) {
       try {
-        const translated = tMessages(text as any, metadata || {})
+        const translated = tMessagesUnsafe(text, metadata || {})
         if (translated.includes('notifications.messages.')) return text
         return translated
       } catch (e) {

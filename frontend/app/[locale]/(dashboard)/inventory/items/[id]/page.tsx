@@ -62,7 +62,7 @@ export default function InventoryItemDetailPage() {
     try {
       await deleteItem.mutateAsync(itemId)
       router.push(`/${locale}/inventory/items`)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to delete item:', err)
       cancelDelete()
       alert(tCommon('actionError', { message: err.message || 'Unknown error' }))

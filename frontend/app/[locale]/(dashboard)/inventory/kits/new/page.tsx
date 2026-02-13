@@ -54,7 +54,7 @@ export default function NewKitPage() {
       }
 
       router.push('/inventory/kits')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Create kit error:', err)
       showError(err, 'Error Creating Kit')
     }

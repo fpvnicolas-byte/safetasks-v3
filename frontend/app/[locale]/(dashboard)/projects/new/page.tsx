@@ -41,10 +41,10 @@ export default function NewProjectPage() {
     setSelectedProposalId(proposalId)
     if (!proposalId) return
 
-    const proposal = proposals?.find((p: any) => p.id === proposalId)
+    const proposal = proposals?.find((p) => p.id === proposalId)
     if (proposal) {
       setSelectedClientId(proposal.client_id)
-      setSelectedServices(proposal.services?.map((s: any) => s.id) || [])
+      setSelectedServices(proposal.services?.map((s) => s.id) || [])
       // NOTE: We do NOT auto-fill budget from proposal.total_amount_cents
       // Proposal total = client-facing price (revenue)
       // Project budget = operational costs (expenses) - a separate concept
@@ -85,7 +85,7 @@ export default function NewProjectPage() {
 
       await createProject.mutateAsync(data)
       router.push('/projects')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Create project error:', err)
       showError(err, t('form.errorCreating'))
     }
@@ -148,7 +148,7 @@ export default function NewProjectPage() {
                   {proposalsLoading ? (
                     <div className="p-2 text-xs text-muted-foreground">Loading proposals...</div>
                   ) : proposals && proposals.length > 0 ? (
-                    proposals.map((prop: any) => (
+                    proposals.map((prop) => (
                       <SelectItem
                         key={prop.id}
                         value={prop.id}

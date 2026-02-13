@@ -66,7 +66,7 @@ export default function NewClientPage() {
 
       await createClient.mutateAsync(clientData)
       router.push('/clients')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Create client error:', err)
       showError(err, 'Error Creating Client')
     }
