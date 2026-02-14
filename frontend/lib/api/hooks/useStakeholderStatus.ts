@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../client'
+import { CONTACTS_KEY } from './useContacts'
 
 export type StakeholderStatus = 'requested' | 'confirmed' | 'working' | 'completed' | 'cancelled'
 
@@ -20,6 +21,7 @@ export function useUpdateStakeholderStatus() {
       apiClient.patch(`/api/v1/stakeholders/${stakeholderId}/status`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stakeholders'] })
+      queryClient.invalidateQueries({ queryKey: [CONTACTS_KEY] })
     },
   })
 }

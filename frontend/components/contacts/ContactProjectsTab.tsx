@@ -4,6 +4,13 @@ import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   Table,
   TableBody,
   TableCell,
@@ -15,21 +22,30 @@ import { Plus, FolderOpen } from 'lucide-react'
 import { toast } from 'sonner'
 import { useLocale, useTranslations } from 'next-intl'
 import { LocaleLink } from '@/components/LocaleLink'
-import type { ContactDetail } from '@/types'
+import type { ContactDetail, StakeholderStatus } from '@/types'
 import { StakeholderStatusBadge } from '@/components/stakeholders/StakeholderStatusBadge'
 import { formatCurrency } from '@/types'
 import { AssignToProjectDialog } from '@/components/contacts/AssignToProjectDialog'
-import { useDeleteProjectAssignment } from '@/lib/api/hooks'
+import { useDeleteProjectAssignment, useUpdateStakeholderStatus } from '@/lib/api/hooks'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface ContactProjectsTabProps {
   contact: ContactDetail
 }
 
+const STATUS_ORDER: StakeholderStatus[] = ['requested', 'confirmed', 'working', 'completed', 'cancelled']
+
 export function ContactProjectsTab({ contact }: ContactProjectsTabProps) {
   const t = useTranslations('contacts.projects')
+  const tStatus = useTranslations('stakeholders.status')
   const locale = useLocale()
+  const { profile } = useAuth()
   const [assignDialogOpen, setAssignDialogOpen] = useState(false)
+  const [updatingStatusAssignmentId, setUpdatingStatusAssignmentId] = useState<string | null>(null)
   const deleteProjectAssignment = useDeleteProjectAssignment()
+  const updateStakeholderStatus = useUpdateStakeholderStatus()
+  const effectiveRole = profile?.effective_role || profile?.role_v2 || ''
+  const canManageCrewStatus = ['owner', 'admin', 'producer'].includes(effectiveRole)
   const isFreelancerMode = contact.team_info?.effective_role === 'freelancer'
   const stakeholderAssignments = contact.assignments || []
   const projectAccessAssignments = contact.project_access_assignments || []
@@ -49,6 +65,28 @@ export function ContactProjectsTab({ contact }: ContactProjectsTabProps) {
       toast.success(t('accessRemoved'))
     } catch (err: unknown) {
       toast.error((err as { message?: string })?.message || t('accessRemoveError'))
+    }
+  }
+
+  const handleStatusChange = async (
+    assignmentId: string,
+    currentStatus: StakeholderStatus | undefined,
+    newStatus: string,
+  ) => {
+    const status = currentStatus || 'requested'
+    if (!newStatus || status === newStatus) return
+
+    setUpdatingStatusAssignmentId(assignmentId)
+    try {
+      await updateStakeholderStatus.mutateAsync({
+        stakeholderId: assignmentId,
+        data: { status: newStatus as StakeholderStatus },
+      })
+      toast.success(t('statusUpdated'))
+    } catch (err: unknown) {
+      toast.error((err as { message?: string })?.message || t('statusUpdateError'))
+    } finally {
+      setUpdatingStatusAssignmentId(null)
     }
   }
 
@@ -143,7 +181,33 @@ export function ContactProjectsTab({ contact }: ContactProjectsTabProps) {
                     </TableCell>
                     <TableCell>{assignment.role}</TableCell>
                     <TableCell>
-                      <StakeholderStatusBadge status={assignment.status || 'requested'} />
+                      {canManageCrewStatus ? (
+                        <Select
+                          value={assignment.status || 'requested'}
+                          onValueChange={(newStatus) => handleStatusChange(
+                            assignment.id,
+                            assignment.status,
+                            newStatus,
+                          )}
+                          disabled={
+                            updateStakeholderStatus.isPending
+                            && updatingStatusAssignmentId === assignment.id
+                          }
+                        >
+                          <SelectTrigger className="w-[150px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {STATUS_ORDER.map((status) => (
+                              <SelectItem key={status} value={status}>
+                                {tStatus(status)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <StakeholderStatusBadge status={assignment.status || 'requested'} />
+                      )}
                     </TableCell>
                     <TableCell>
                       {assignment.rate_value_cents
@@ -201,7 +265,33 @@ export function ContactProjectsTab({ contact }: ContactProjectsTabProps) {
                     </TableCell>
                     <TableCell>{assignment.role}</TableCell>
                     <TableCell>
-                      <StakeholderStatusBadge status={assignment.status || 'requested'} />
+                      {canManageCrewStatus ? (
+                        <Select
+                          value={assignment.status || 'requested'}
+                          onValueChange={(newStatus) => handleStatusChange(
+                            assignment.id,
+                            assignment.status,
+                            newStatus,
+                          )}
+                          disabled={
+                            updateStakeholderStatus.isPending
+                            && updatingStatusAssignmentId === assignment.id
+                          }
+                        >
+                          <SelectTrigger className="w-[150px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {STATUS_ORDER.map((status) => (
+                              <SelectItem key={status} value={status}>
+                                {tStatus(status)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <StakeholderStatusBadge status={assignment.status || 'requested'} />
+                      )}
                     </TableCell>
                     <TableCell>
                       {assignment.rate_value_cents

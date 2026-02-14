@@ -9,6 +9,7 @@ import {
   useStakeholders,
   useUpdateStakeholder,
 } from '@/lib/api/hooks/useStakeholders'
+import { useUpdateStakeholderStatus } from '@/lib/api/hooks'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -41,17 +42,20 @@ import { LocaleLink } from '@/components/LocaleLink'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { StakeholderStatusBadge } from '@/components/stakeholders/StakeholderStatusBadge'
-import type { Stakeholder, RateType } from '@/types'
+import type { Stakeholder, RateType, StakeholderStatus } from '@/types'
 
 interface TeamTabProps {
   projectId: string
 }
+
+const STATUS_ORDER: StakeholderStatus[] = ['requested', 'confirmed', 'working', 'completed', 'cancelled']
 
 export function TeamTab({ projectId }: TeamTabProps) {
   const t = useTranslations('projects.details.team')
   const tCommon = useTranslations('common')
   const tFeedback = useTranslations('common.feedback')
   const tTable = useTranslations('stakeholders.table')
+  const tStatus = useTranslations('stakeholders.status')
   const { profile } = useAuth()
   const effectiveRole = profile?.effective_role || profile?.role_v2 || ''
   const canManageTeam = ['owner', 'admin', 'producer'].includes(effectiveRole)
@@ -62,6 +66,7 @@ export function TeamTab({ projectId }: TeamTabProps) {
   const createStakeholder = useCreateStakeholder()
   const updateStakeholder = useUpdateStakeholder()
   const deleteStakeholder = useDeleteStakeholder()
+  const updateStakeholderStatus = useUpdateStakeholderStatus()
 
   const activeContacts = useMemo(
     () => (contacts || []).filter((contact) => contact.is_active),
@@ -79,6 +84,7 @@ export function TeamTab({ projectId }: TeamTabProps) {
   const [editRole, setEditRole] = useState('')
   const [editRateType, setEditRateType] = useState('')
   const [editRateValue, setEditRateValue] = useState('')
+  const [updatingStatusStakeholderId, setUpdatingStatusStakeholderId] = useState<string | null>(null)
 
   const resetAddForm = () => {
     setSelectedSupplierId('')
@@ -175,6 +181,24 @@ export function TeamTab({ projectId }: TeamTabProps) {
     } catch (error: unknown) {
       toast.error((error as { message?: string })?.message || t('deleteError'))
       console.error('Delete error:', error)
+    }
+  }
+
+  const handleStatusChange = async (stakeholder: Stakeholder, newStatus: string) => {
+    const currentStatus = stakeholder.status || 'requested'
+    if (!newStatus || currentStatus === newStatus) return
+
+    setUpdatingStatusStakeholderId(stakeholder.id)
+    try {
+      await updateStakeholderStatus.mutateAsync({
+        stakeholderId: stakeholder.id,
+        data: { status: newStatus as StakeholderStatus },
+      })
+      toast.success(t('statusUpdated'))
+    } catch (error: unknown) {
+      toast.error((error as { message?: string })?.message || t('statusUpdateError'))
+    } finally {
+      setUpdatingStatusStakeholderId(null)
     }
   }
 
@@ -372,7 +396,29 @@ export function TeamTab({ projectId }: TeamTabProps) {
                     <TableCell className="font-medium">{stakeholder.name}</TableCell>
                     <TableCell>{stakeholder.role}</TableCell>
                     <TableCell>
-                      <StakeholderStatusBadge status={stakeholder.status || 'requested'} />
+                      {canManageTeam ? (
+                        <Select
+                          value={stakeholder.status || 'requested'}
+                          onValueChange={(newStatus) => handleStatusChange(stakeholder, newStatus)}
+                          disabled={
+                            updateStakeholderStatus.isPending
+                            && updatingStatusStakeholderId === stakeholder.id
+                          }
+                        >
+                          <SelectTrigger className="w-[150px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {STATUS_ORDER.map((status) => (
+                              <SelectItem key={status} value={status}>
+                                {tStatus(status)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <StakeholderStatusBadge status={stakeholder.status || 'requested'} />
+                      )}
                     </TableCell>
                     <TableCell>{stakeholder.email || '-'}</TableCell>
                     <TableCell>{stakeholder.phone || '-'}</TableCell>

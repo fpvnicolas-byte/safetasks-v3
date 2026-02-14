@@ -549,6 +549,8 @@
         "editSuccess": "Membro atualizado com sucesso",
         "editError": "Falha ao atualizar membro",
         "deleteError": "Falha ao remover membro",
+        "statusUpdated": "Status da equipe atualizado",
+        "statusUpdateError": "Falha ao atualizar o status da equipe",
         "addDialog": {
           "title": "Adicionar Membro",
           "description": "Selecione um contato e configure a função no projeto.",
@@ -3718,6 +3720,8 @@
       "removeProjectAccess": "Remover Acesso",
       "accessRemoved": "Acesso ao projeto removido",
       "accessRemoveError": "Falha ao remover acesso ao projeto",
+      "statusUpdated": "Status da atribuição atualizado",
+      "statusUpdateError": "Falha ao atualizar o status da atribuição",
       "table": {
         "project": "Projeto",
         "role": "Função",

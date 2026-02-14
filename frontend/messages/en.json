@@ -549,6 +549,8 @@
         "editSuccess": "Crew member updated successfully",
         "editError": "Failed to update crew member",
         "deleteError": "Failed to remove crew member",
+        "statusUpdated": "Crew status updated",
+        "statusUpdateError": "Failed to update crew status",
         "addDialog": {
           "title": "Add Crew Member",
           "description": "Select a contact and configure their project role.",
@@ -3718,6 +3720,8 @@
       "removeProjectAccess": "Remove Access",
       "accessRemoved": "Project access removed",
       "accessRemoveError": "Failed to remove project access",
+      "statusUpdated": "Assignment status updated",
+      "statusUpdateError": "Failed to update assignment status",
       "table": {
         "project": "Project",
         "role": "Role",
