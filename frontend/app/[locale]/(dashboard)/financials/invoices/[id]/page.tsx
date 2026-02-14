@@ -21,13 +21,10 @@ import { useLocale, useTranslations } from 'next-intl'
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
+import { DetailPageSkeleton } from '@/components/LoadingSkeletons'
 
 function AsyncCardFallback() {
-  return (
-    <div className="flex justify-center py-4">
-      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-    </div>
-  )
+  return <DetailPageSkeleton />
 }
 
 const PaymentDialog = dynamic(

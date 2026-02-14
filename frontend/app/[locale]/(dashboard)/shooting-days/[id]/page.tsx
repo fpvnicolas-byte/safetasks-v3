@@ -16,13 +16,10 @@ import { useLocale, useTranslations } from 'next-intl'
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
 import { toast } from 'sonner'
+import { DetailPageSkeleton } from '@/components/LoadingSkeletons'
 
 function AssignmentsFallback() {
-  return (
-    <div className="flex justify-center py-6">
-      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-    </div>
-  )
+  return <DetailPageSkeleton />
 }
 
 const ShootingDayAssignmentsSection = dynamic(
@@ -171,7 +168,7 @@ export default function ShootingDayDetailPage() {
   } = useConfirmDelete()
 
   if (isLoading) {
-    return <div>{t('loading')}</div>
+    return <DetailPageSkeleton />
   }
 
   if (error || !shootingDay) {

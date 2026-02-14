@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Edit, Trash2, FileText, DollarSign, Film, FolderOpen, Users, Calendar, Loader2 } from 'lucide-react'
+import { Edit, Trash2, FileText, DollarSign, Film, FolderOpen, Users, Calendar } from 'lucide-react'
 import { LocaleLink } from '@/components/LocaleLink'
 import { formatCurrency } from '@/lib/utils/money'
 import { useState, useEffect } from 'react'
@@ -23,11 +23,7 @@ import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
 import { Skeleton } from '@/components/ui/skeleton'
 
 function TabPanelFallback() {
-  return (
-    <div className="flex justify-center py-8">
-      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-    </div>
-  )
+  return <DetailPageSkeleton />
 }
 
 const ShootingDaysTab = dynamic(

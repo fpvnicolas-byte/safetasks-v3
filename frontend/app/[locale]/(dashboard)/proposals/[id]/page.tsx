@@ -23,13 +23,10 @@ import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
 import { ErrorDialog } from '@/components/ui/error-dialog'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
+import { DetailPageSkeleton } from '@/components/LoadingSkeletons'
 
 function AttachmentFallback() {
-  return (
-    <div className="flex justify-center py-6">
-      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-    </div>
-  )
+  return <DetailPageSkeleton />
 }
 
 const FileUploadZone = dynamic(
@@ -219,7 +216,7 @@ export default function ProposalDetailPage() {
   }
 
   if (isLoading) {
-    return <div>{t('detail.loading')}</div>
+    return <DetailPageSkeleton />
   }
 
   if (error || !proposal) {

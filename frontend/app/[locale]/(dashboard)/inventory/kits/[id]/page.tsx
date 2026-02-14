@@ -11,20 +11,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Pencil, Trash2, ArrowLeft, Package, CheckCircle, AlertCircle, Info, Eye, Box, Plus, ImageIcon, Loader2 } from 'lucide-react'
+import { Pencil, Trash2, ArrowLeft, Package, CheckCircle, AlertCircle, Info, Eye, Box, Plus, ImageIcon } from 'lucide-react'
 import Link from 'next/link'
 import { KitStatus, FileUploadResponse } from '@/types'
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { useConfirmDelete } from '@/lib/hooks/useConfirmDelete'
 import { ErrorDialog } from '@/components/ui/error-dialog'
 import { useErrorDialog } from '@/lib/hooks/useErrorDialog'
+import { DetailPageSkeleton } from '@/components/LoadingSkeletons'
 
 function PhotoTabFallback() {
-  return (
-    <div className="flex justify-center py-6">
-      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-    </div>
-  )
+  return <DetailPageSkeleton />
 }
 
 const FileUploadZone = dynamic(
@@ -88,7 +85,7 @@ export default function KitDetailPage() {
   }
 
   if (isLoading) {
-    return <div className="p-8 text-center text-muted-foreground">Loading kit details...</div>
+    return <DetailPageSkeleton />
   }
 
   if (error || !kit) {
