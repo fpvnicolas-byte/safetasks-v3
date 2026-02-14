@@ -1,8 +1,8 @@
 import { defaultLocale, locales, type Locale } from '@/i18n/config'
 
-const DEFAULT_SITE_URL = 'https://safetasks.vercel.app'
+const DEFAULT_SITE_URL = 'https://produzo.vercel.app'
 
-export const SITE_NAME = 'SafeTasks'
+export const SITE_NAME = 'Produzo'
 
 export const PUBLIC_INDEXABLE_PATHS = ['', '/pricing', '/faq', '/about'] as const
 
@@ -33,39 +33,39 @@ interface LocaleSeoCopy {
 
 const SEO_COPY: Record<Locale, LocaleSeoCopy> = {
   en: {
-    siteTitle: 'SafeTasks | Film Production Management Platform for Teams',
+    siteTitle: 'Produzo | Film Production Management Platform for Teams',
     siteDescription:
-      'SafeTasks helps production teams manage projects, finance, scheduling, inventory, and collaboration in one production OS.',
-    landingTitle: 'SafeTasks | Production OS for Film Teams and Studios',
+      'Produzo helps production teams manage projects, finance, scheduling, inventory, and collaboration in one production OS.',
+    landingTitle: 'Produzo | Production OS for Film Teams and Studios',
     landingDescription:
       'Run projects, approvals, team workflows, and production finance in one role-based workspace for audiovisual teams.',
-    pricingTitle: 'SafeTasks Pricing | Plans for Film Teams and Studios',
+    pricingTitle: 'Produzo Pricing | Plans for Film Teams and Studios',
     pricingDescription:
-      'Choose a SafeTasks plan based on your team size and usage. Start with trial access and upgrade as productions scale.',
-    faqTitle: 'FAQ | SafeTasks — Billing, Refunds & Support',
+      'Choose a Produzo plan based on your team size and usage. Start with trial access and upgrade as productions scale.',
+    faqTitle: 'FAQ | Produzo — Billing, Refunds & Support',
     faqDescription:
-      'Find answers about SafeTasks subscriptions, refund policy, data privacy, account management, and platform usage.',
-    aboutTitle: 'About SafeTasks | Production Management for Film Teams',
+      'Find answers about Produzo subscriptions, refund policy, data privacy, account management, and platform usage.',
+    aboutTitle: 'About Produzo | Production Management for Film Teams',
     aboutDescription:
-      'Learn about SafeTasks — the production management platform built for audiovisual teams. Our mission, values, and team.',
+      'Learn about Produzo — the production management platform built for audiovisual teams. Our mission, values, and team.',
     openGraphLocale: 'en_US',
   },
   'pt-br': {
-    siteTitle: 'SafeTasks | Plataforma de Gestao para Producao Audiovisual',
+    siteTitle: 'Produzo | Plataforma de Gestao para Producao Audiovisual',
     siteDescription:
-      'SafeTasks ajuda produtoras a gerenciar projetos, financeiro, cronograma, inventario e colaboracao em um unico sistema.',
-    landingTitle: 'SafeTasks | Sistema de Producao para Equipes Audiovisuais',
+      'Produzo ajuda produtoras a gerenciar projetos, financeiro, cronograma, inventario e colaboracao em um unico sistema.',
+    landingTitle: 'Produzo | Sistema de Producao para Equipes Audiovisuais',
     landingDescription:
       'Organize projetos, aprovacoes, fluxo da equipe e financeiro de producao em um workspace moderno e orientado por funcao.',
-    pricingTitle: 'Planos SafeTasks | Escala para Equipes e Produtoras',
+    pricingTitle: 'Planos Produzo | Escala para Equipes e Produtoras',
     pricingDescription:
-      'Escolha o plano SafeTasks ideal para o tamanho da sua equipe e nivel de uso. Comece com trial e evolua conforme a producao cresce.',
-    faqTitle: 'FAQ | SafeTasks — Cobrança, Reembolso e Suporte',
+      'Escolha o plano Produzo ideal para o tamanho da sua equipe e nivel de uso. Comece com trial e evolua conforme a producao cresce.',
+    faqTitle: 'FAQ | Produzo — Cobrança, Reembolso e Suporte',
     faqDescription:
-      'Encontre respostas sobre assinaturas, política de reembolso, privacidade de dados, gestão de conta e uso da plataforma SafeTasks.',
-    aboutTitle: 'Sobre o SafeTasks | Gestão de Produção Audiovisual',
+      'Encontre respostas sobre assinaturas, política de reembolso, privacidade de dados, gestão de conta e uso da plataforma Produzo.',
+    aboutTitle: 'Sobre o Produzo | Gestão de Produção Audiovisual',
     aboutDescription:
-      'Conheça o SafeTasks — a plataforma de gestão de produção para equipes audiovisuais. Nossa missão, valores e equipe.',
+      'Conheça o Produzo — a plataforma de gestão de produção para equipes audiovisuais. Nossa missão, valores e equipe.',
     openGraphLocale: 'pt_BR',
   },
 }

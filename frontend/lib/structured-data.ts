@@ -100,7 +100,7 @@ export function getPricingJsonLd(locale: Locale): JsonLdNode[] {
   const homeUrl = getAbsoluteLocaleUrl(locale)
   const pricingUrl = getAbsoluteLocaleUrl(locale, '/pricing')
   const language = getLanguageTag(locale)
-  const plansLabel = locale === 'pt-br' ? 'Planos SafeTasks' : 'SafeTasks Plans'
+  const plansLabel = locale === 'pt-br' ? 'Planos Produzo' : 'Produzo Plans'
   const homeLabel = locale === 'pt-br' ? 'Inicio' : 'Home'
   const pricingLabel = locale === 'pt-br' ? 'Precos' : 'Pricing'
 
