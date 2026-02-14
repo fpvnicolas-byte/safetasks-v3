@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { Loader2, Shield, UserPlus } from 'lucide-react'
 
+import { AssignmentsTableSkeleton } from '@/components/LoadingSkeletons'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -165,9 +166,7 @@ export function ProjectAssignmentsCard({ projectId }: ProjectAssignmentsCardProp
 
         <CardContent>
           {membersLoading || assignmentsLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
+            <AssignmentsTableSkeleton />
           ) : rows.length > 0 ? (
             <Table>
               <TableHeader>
