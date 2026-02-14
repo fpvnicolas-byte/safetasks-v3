@@ -115,7 +115,7 @@ async def test_notifications_system():
                 db=db,
                 organization_id=org_id,
                 profile_id=admin_id,
-                title="Welcome to Safe Tasks",
+                title="Welcome to Produzo",
                 message="Your production management system is ready!",
                 type="info",
                 metadata={"setup_complete": True}

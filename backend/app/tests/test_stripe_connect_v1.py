@@ -242,7 +242,7 @@ async def test_2_connect_onboarding_url():
     with patch.object(settings, 'STRIPE_CONNECT_CLIENT_ID', 'ca_test_client_id'):
         url = await connect_service.create_connect_onboarding_url(
             organization=org,
-            redirect_uri="https://app.safetasks.com/api/v1/stripe-connect/callback",
+            redirect_uri="https://app.produzo.app/api/v1/stripe-connect/callback",
         )
 
     assert "connect.stripe.com/oauth/authorize" in url

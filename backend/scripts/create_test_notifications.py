@@ -39,7 +39,7 @@ async def create_test_notifications():
             # Create different types of test notifications
             notifications_data = [
                 {
-                    "title": "Welcome to SafeTasks! 🎬",
+                    "title": "Welcome to Produzo! 🎬",
                     "message": "Your production management system is ready. Start by creating your first project or uploading a script for AI analysis.",
                     "type": "info"
                 },
@@ -117,6 +117,6 @@ async def create_test_notifications():
 
 
 if __name__ == "__main__":
-    print("🔔 SafeTasks Notification Test Creator")
+    print("🔔 Produzo Notification Test Creator")
     print("=" * 50)
     asyncio.run(create_test_notifications())

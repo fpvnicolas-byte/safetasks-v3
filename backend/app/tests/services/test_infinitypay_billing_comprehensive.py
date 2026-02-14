@@ -90,18 +90,18 @@ class TestRedirectUrlValidation:
 
     def test_allowed_when_url_matches_frontend(self):
         with patch("app.services.billing.settings") as mock_settings:
-            mock_settings.FRONTEND_URL = "https://app.safetasks.com"
-            assert _is_redirect_url_allowed("https://app.safetasks.com/settings/billing") is True
+            mock_settings.FRONTEND_URL = "https://app.produzo.app"
+            assert _is_redirect_url_allowed("https://app.produzo.app/settings/billing") is True
 
     def test_blocked_when_url_is_external(self):
         with patch("app.services.billing.settings") as mock_settings:
-            mock_settings.FRONTEND_URL = "https://app.safetasks.com"
+            mock_settings.FRONTEND_URL = "https://app.produzo.app"
             assert _is_redirect_url_allowed("https://evil.com/steal-cookies") is False
 
     def test_blocked_subdomain_spoof(self):
         with patch("app.services.billing.settings") as mock_settings:
-            mock_settings.FRONTEND_URL = "https://app.safetasks.com"
-            assert _is_redirect_url_allowed("https://app.safetasks.com.evil.com/x") is False
+            mock_settings.FRONTEND_URL = "https://app.produzo.app"
+            assert _is_redirect_url_allowed("https://app.produzo.app.evil.com/x") is False
 
     def test_allowed_when_no_frontend_configured(self):
         with patch("app.services.billing.settings") as mock_settings:
@@ -134,7 +134,7 @@ class TestCheckoutCreationGuardrails:
         mock_db.execute = AsyncMock(return_value=current_plan_result)
 
         with patch.object(
-            billing_module.settings, "FRONTEND_URL", "https://safetasks.vercel.app"
+            billing_module.settings, "FRONTEND_URL", "https://produzo.vercel.app"
         ), patch.object(
             billing_module.infinity_pay_service,
             "create_checkout_link",
@@ -145,7 +145,7 @@ class TestCheckoutCreationGuardrails:
                     db=mock_db,
                     organization=org,
                     plan_name="professional",
-                    redirect_url="https://safetasks.vercel.app/settings/billing",
+                    redirect_url="https://produzo.vercel.app/settings/billing",
                 )
 
         assert exc.value.status_code == 409
@@ -169,7 +169,7 @@ class TestCheckoutCreationGuardrails:
         mock_db.execute = AsyncMock(return_value=current_plan_result)
 
         with patch.object(
-            billing_module.settings, "FRONTEND_URL", "https://safetasks.vercel.app"
+            billing_module.settings, "FRONTEND_URL", "https://produzo.vercel.app"
         ), patch.object(
             billing_module.infinity_pay_service,
             "create_checkout_link",
@@ -180,7 +180,7 @@ class TestCheckoutCreationGuardrails:
                     db=mock_db,
                     organization=org,
                     plan_name="professional",
-                    redirect_url="https://safetasks.vercel.app/settings/billing",
+                    redirect_url="https://produzo.vercel.app/settings/billing",
                 )
 
         assert exc.value.status_code == 409
@@ -209,7 +209,7 @@ class TestCheckoutCreationGuardrails:
         mock_db.add = MagicMock()
 
         with patch.object(
-            billing_module.settings, "FRONTEND_URL", "https://safetasks.vercel.app"
+            billing_module.settings, "FRONTEND_URL", "https://produzo.vercel.app"
         ), patch.object(
             billing_module.infinity_pay_service,
             "create_checkout_link",
@@ -220,7 +220,7 @@ class TestCheckoutCreationGuardrails:
                     db=mock_db,
                     organization=org,
                     plan_name="professional",
-                    redirect_url="https://safetasks.vercel.app/settings/billing",
+                    redirect_url="https://produzo.vercel.app/settings/billing",
                 )
 
         assert exc.value.status_code == 409
@@ -324,7 +324,7 @@ class TestLegacyAccessEndBackfill:
         mock_db.execute = AsyncMock(side_effect=[current_plan_result, target_plan_result])
 
         with patch.object(
-            billing_module.settings, "FRONTEND_URL", "https://safetasks.vercel.app"
+            billing_module.settings, "FRONTEND_URL", "https://produzo.vercel.app"
         ), patch.object(
             billing_module.infinity_pay_service,
             "create_checkout_link",
@@ -335,7 +335,7 @@ class TestLegacyAccessEndBackfill:
                 db=mock_db,
                 organization=org,
                 plan_name="professional",
-                redirect_url="https://safetasks.vercel.app/settings/billing",
+                redirect_url="https://produzo.vercel.app/settings/billing",
             )
 
         assert url == "https://pay.infinitepay.io/scan/trial-buy"
@@ -362,7 +362,7 @@ class TestLegacyAccessEndBackfill:
         mock_db.execute = AsyncMock(side_effect=[current_plan_result, target_plan_result])
 
         with patch.object(
-            billing_module.settings, "FRONTEND_URL", "https://safetasks.vercel.app"
+            billing_module.settings, "FRONTEND_URL", "https://produzo.vercel.app"
         ), patch.object(
             billing_module.infinity_pay_service,
             "create_checkout_link",
@@ -373,7 +373,7 @@ class TestLegacyAccessEndBackfill:
                     db=mock_db,
                     organization=org,
                     plan_name="professional",
-                    redirect_url="https://safetasks.vercel.app/settings/billing",
+                    redirect_url="https://produzo.vercel.app/settings/billing",
                 )
 
         assert exc.value.status_code == 409
@@ -401,7 +401,7 @@ class TestLegacyAccessEndBackfill:
         mock_db.execute = AsyncMock(side_effect=[current_plan_result, target_plan_result])
 
         with patch.object(
-            billing_module.settings, "FRONTEND_URL", "https://safetasks.vercel.app"
+            billing_module.settings, "FRONTEND_URL", "https://produzo.vercel.app"
         ), patch.object(
             billing_module.infinity_pay_service,
             "create_checkout_link",
@@ -412,7 +412,7 @@ class TestLegacyAccessEndBackfill:
                 db=mock_db,
                 organization=org,
                 plan_name="professional",
-                redirect_url="https://safetasks.vercel.app/settings/billing",
+                redirect_url="https://produzo.vercel.app/settings/billing",
             )
 
         assert url == "https://pay.infinitepay.io/scan/renew123"
@@ -616,7 +616,7 @@ class TestInfinityPayService:
         with patch("app.services.infinity_pay.settings") as mock_settings:
             mock_settings.INFINITYPAY_HANDLE = "test-handle"
             mock_settings.INFINITYPAY_API_URL = "https://api.infinitepay.io/invoices/public/checkout"
-            mock_settings.INFINITYPAY_WEBHOOK_URL = "https://api.safetasks.com/api/v1/billing/webhooks/infinitypay"
+            mock_settings.INFINITYPAY_WEBHOOK_URL = "https://api.produzo.app/api/v1/billing/webhooks/infinitypay"
             svc = InfinityPayService()
         return svc
 

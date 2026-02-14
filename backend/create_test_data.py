@@ -30,7 +30,7 @@ async def create_data():
             org_id = uuid4()
             org = Organization(
                 id=org_id,
-                name="SafeTasks Studio Beta-2",
+                name="Produzo Studio Beta-2",
                 slug="safetasks-beta-2",
                 plan="professional",
                 subscription_status="active"
@@ -46,7 +46,7 @@ async def create_data():
             profile_id = uuid4()
             profile = Profile(
                 id=profile_id,
-                email="nicolas@safetasks.com",
+                email="nicolas@produzo.app",
                 organization_id=org_id,
                 full_name="Nicolas Bertoni",
                 role="admin"  # Valid: admin, manager, crew, viewer
