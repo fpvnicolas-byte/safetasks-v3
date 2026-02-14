@@ -24,6 +24,7 @@ import {
   Clock,
   Target
 } from 'lucide-react'
+import { ProjectsListSkeleton } from '@/components/LoadingSkeletons'
 import type { AiSuggestion, ScriptAnalysis } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
 
@@ -323,9 +324,7 @@ export default function AiSuggestionsPage() {
           </CardHeader>
           <CardContent>
             {isLoadingSuggestions ? (
-              <div className="flex justify-center items-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
+              <ProjectsListSkeleton />
 	            ) : groupedSuggestions.length > 0 ? (
 	              <div className="space-y-6">
 	                {groupedSuggestions.map((group) => (

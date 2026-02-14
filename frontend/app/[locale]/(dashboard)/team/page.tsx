@@ -43,6 +43,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
+import { TableSkeleton } from '@/components/LoadingSkeletons'
 
 const ROLE_LABELS: Record<string, string> = {
   owner: 'Owner',
@@ -234,9 +235,7 @@ export default function TeamPage() {
         </CardHeader>
         <CardContent>
           {membersLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
+            <TableSkeleton />
           ) : (
             <Table>
               <TableHeader>

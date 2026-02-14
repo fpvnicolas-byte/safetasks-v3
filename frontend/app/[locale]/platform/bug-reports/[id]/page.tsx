@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
+import { DetailPageSkeleton } from '@/components/LoadingSkeletons'
 import { useLocale } from 'next-intl'
 
 function statusVariant(status: string) {
@@ -83,11 +84,7 @@ export default function BugReportDetailPage() {
     }
 
     if (isLoading) {
-        return (
-            <div className="p-8">
-                <Loader2 className="animate-spin" />
-            </div>
-        )
+        return <DetailPageSkeleton />
     }
 
     if (error || !report) {

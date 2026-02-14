@@ -5,14 +5,10 @@ import dynamic from 'next/dynamic'
 import { FileUploadResponse } from '@/types'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Loader2 } from 'lucide-react'
+import { FormSkeleton } from '@/components/LoadingSkeletons'
 
 function StorageTabFallback() {
-  return (
-    <div className="flex justify-center py-6">
-      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-    </div>
-  )
+  return <FormSkeleton />
 }
 
 const FileUploadZone = dynamic(

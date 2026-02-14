@@ -27,6 +27,7 @@ import {
   CheckCircle,
   Trash2
 } from 'lucide-react'
+import { ProjectsListSkeleton } from '@/components/LoadingSkeletons'
 import type { AiSuggestion, AiRecommendation, ScriptAnalysis } from '@/types'
 import { toast } from 'sonner'
 import { useTranslations, useLocale } from 'next-intl'
@@ -524,9 +525,7 @@ export default function AiFeaturesPage() {
 	          </Card>
 
 	          {isLoadingSuggestions ? (
-	            <div className="flex justify-center items-center py-8">
-	              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-	            </div>
+	            <ProjectsListSkeleton />
 		          ) : groupedSuggestions.length > 0 ? (
 	            <div className="space-y-6">
 	              {groupedSuggestions.map((group) => (
@@ -646,10 +645,8 @@ export default function AiFeaturesPage() {
 	            </CardContent>
 	          </Card>
 
-	          {isLoadingRecommendations ? (
-	            <div className="flex justify-center items-center py-8">
-	              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-	            </div>
+		          {isLoadingRecommendations ? (
+		            <ProjectsListSkeleton />
 	          ) : recommendations && recommendations.length > 0 ? (
             <div className="grid gap-6">
               {recommendations.map((recommendation: AiRecommendation) => (
@@ -718,10 +715,8 @@ export default function AiFeaturesPage() {
             </div>
           </div>
 
-          {isLoadingAnalyses ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
+	          {isLoadingAnalyses ? (
+	            <ProjectsListSkeleton />
           ) : analyses && analyses.length > 0 ? (
             <div className="grid gap-6">
               {analyses.map((analysis: ScriptAnalysis) => (

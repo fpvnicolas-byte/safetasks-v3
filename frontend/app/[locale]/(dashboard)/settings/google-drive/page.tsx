@@ -28,6 +28,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
+import { FormSkeleton } from '@/components/LoadingSkeletons'
 import {
   useGoogleDriveStatus,
   useConnectGoogleDrive,
@@ -107,11 +108,7 @@ export default function GoogleDriveSettingsPage() {
   }
 
   if (isLoadingStatus && !status) {
-    return (
-      <div className="flex h-[200px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
+    return <FormSkeleton />
   }
 
   const isConnected = status?.connected

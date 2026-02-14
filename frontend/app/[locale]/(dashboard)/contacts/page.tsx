@@ -26,7 +26,6 @@ import {
   Mail,
   Users,
   FolderOpen,
-  Loader2,
   Shield,
 } from 'lucide-react'
 import { LocaleLink } from '@/components/LocaleLink'
@@ -36,6 +35,7 @@ import { useTranslations } from 'next-intl'
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ProjectsListSkeleton } from '@/components/LoadingSkeletons'
 
 const ContactsTeamTab = dynamic(
   () => import('./_components/ContactsTeamTab').then((mod) => mod.ContactsTeamTab),
@@ -224,9 +224,7 @@ export default function ContactsPage() {
           </Card>
 
           {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
+            <ProjectsListSkeleton />
           ) : error ? (
             <div>{t('error')}</div>
           ) : contacts && contacts.length > 0 ? (

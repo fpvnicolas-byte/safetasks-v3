@@ -19,10 +19,10 @@ import {
   Calendar,
   FileText,
   DollarSign,
-  Loader2,
   Target,
   Clock
 } from 'lucide-react'
+import { ProjectsListSkeleton } from '@/components/LoadingSkeletons'
 import type { AiRecommendation } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
 
@@ -282,9 +282,7 @@ export default function AiRecommendationsPage() {
           </CardHeader>
           <CardContent>
             {isLoadingRecommendations ? (
-              <div className="flex justify-center items-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
+              <ProjectsListSkeleton />
             ) : filteredRecommendations.length > 0 ? (
               <div className="space-y-4">
                 {filteredRecommendations.map((recommendation: AiRecommendation) => (

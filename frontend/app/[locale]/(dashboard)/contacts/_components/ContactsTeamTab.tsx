@@ -55,6 +55,7 @@ import {
 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
+import { TableSkeleton } from '@/components/LoadingSkeletons'
 
 const ROLE_TRANSLATION_KEYS = {
   owner: 'access.roles.owner',
@@ -281,9 +282,7 @@ export function ContactsTeamTab() {
         </CardHeader>
         <CardContent>
           {membersLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
+            <TableSkeleton />
           ) : (
             <Table>
               <TableHeader>

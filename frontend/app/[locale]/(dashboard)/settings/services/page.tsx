@@ -18,6 +18,7 @@ import { Plus, Pencil, Trash2, Loader2, Package, Link as LinkIcon } from 'lucide
 import { Service, ServiceCreate, ServiceUpdate, toCents, fromCents } from '@/types'
 import { useTranslations } from 'next-intl'
 import { formatCurrency } from '@/lib/utils/money'
+import { TableSkeleton } from '@/components/LoadingSkeletons'
 
 const ServiceEquipmentDialog = dynamic(
   () => import('./ServiceEquipmentDialog').then((mod) => mod.ServiceEquipmentDialog)
@@ -123,9 +124,7 @@ export default function ServicesPage() {
                 </CardHeader>
                 <CardContent>
                     {isLoading ? (
-                        <div className="flex justify-center py-8">
-                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        </div>
+                        <TableSkeleton />
                     ) : services && services.length > 0 ? (
                         <Table>
                             <TableHeader>
