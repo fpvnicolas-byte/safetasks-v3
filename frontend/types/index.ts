@@ -332,10 +332,31 @@ export interface BankAccountTransferResponse {
 }
 
 // Helper functions for currency conversion
-export function formatCurrency(cents: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+function normalizeMoneyLocale(locale?: string): 'en-US' | 'pt-BR' {
+  if (!locale) return 'en-US'
+
+  const normalized = locale.toLowerCase().replace('_', '-')
+  if (normalized === 'pt' || normalized.startsWith('pt-br')) {
+    return 'pt-BR'
+  }
+
+  return 'en-US'
+}
+
+function inferMoneyLocaleFromPathname(): 'en-US' | 'pt-BR' {
+  if (typeof window === 'undefined') return 'en-US'
+
+  const routeLocale = window.location.pathname.split('/').filter(Boolean)[0]?.toLowerCase()
+  return routeLocale === 'pt-br' ? 'pt-BR' : 'en-US'
+}
+
+export function formatCurrency(cents: number, currency?: string, locale?: string): string {
+  const resolvedLocale = locale ? normalizeMoneyLocale(locale) : inferMoneyLocaleFromPathname()
+  const resolvedCurrency = currency || (resolvedLocale === 'pt-BR' ? 'BRL' : 'USD')
+
+  return new Intl.NumberFormat(resolvedLocale, {
     style: 'currency',
-    currency,
+    currency: resolvedCurrency,
   }).format(cents / 100)
 }
 

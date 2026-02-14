@@ -38,6 +38,10 @@ export default function AiFeaturesPage() {
   const locale = useLocale()
   const router = useRouter()
   const { organizationId } = useAuth()
+  const currencyFormatter = new Intl.NumberFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', {
+    style: 'currency',
+    currency: locale === 'pt-br' ? 'BRL' : 'USD',
+  })
 
   const [analysisProjectId, setAnalysisProjectId] = useState<string>('')
   const [suggestionsProjectId, setSuggestionsProjectId] = useState<string>('')
@@ -571,11 +575,11 @@ export default function AiFeaturesPage() {
 	                              {t('lists.relatedScenes')}: {suggestion.related_scenes.join(', ')}
 	                            </div>
 	                          )}
-	                          {suggestion.estimated_savings_cents && (
-	                            <div className="text-sm text-success mt-2">
-	                              {t('lists.estimatedSavings')}: {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(suggestion.estimated_savings_cents / 100)}
-	                            </div>
-	                          )}
+                          {suggestion.estimated_savings_cents && (
+                            <div className="text-sm text-success mt-2">
+                              {t('lists.estimatedSavings')}: {currencyFormatter.format(suggestion.estimated_savings_cents / 100)}
+                            </div>
+                          )}
 	                          {suggestion.estimated_time_saved_minutes && (
 	                            <div className="text-sm text-info mt-1">
 	                              {t('lists.timeSaved')}: {suggestion.estimated_time_saved_minutes} minutes
@@ -684,7 +688,7 @@ export default function AiFeaturesPage() {
                     )}
                     {recommendation.estimated_impact.cost_saved_cents && (
                       <div className="text-sm text-success">
-                        {t('lists.costSaved')}: {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(recommendation.estimated_impact.cost_saved_cents / 100)}
+                        {t('lists.costSaved')}: {currencyFormatter.format(recommendation.estimated_impact.cost_saved_cents / 100)}
                       </div>
                     )}
                     {recommendation.estimated_impact.risk_reduction && (

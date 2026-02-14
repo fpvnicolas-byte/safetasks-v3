@@ -32,6 +32,10 @@ export default function AiRecommendationsPage() {
   const { organizationId } = useAuth()
   const tCommon = useTranslations('common.feedback')
   const t = useTranslations('ai')
+  const currencyFormatter = new Intl.NumberFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', {
+    style: 'currency',
+    currency: locale === 'pt-br' ? 'BRL' : 'USD',
+  })
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [recommendationType, setRecommendationType] = useState<'shooting_day' | 'budget' | 'schedule' | 'equipment' | 'all'>('all')
@@ -345,7 +349,7 @@ export default function AiRecommendationsPage() {
                               <div className="flex justify-between">
                                 <span>Cost Saved:</span>
                                 <span className="font-medium">
-                                  {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(recommendation.estimated_impact.cost_saved_cents / 100)}
+                                  {currencyFormatter.format(recommendation.estimated_impact.cost_saved_cents / 100)}
                                 </span>
                               </div>
                             )}

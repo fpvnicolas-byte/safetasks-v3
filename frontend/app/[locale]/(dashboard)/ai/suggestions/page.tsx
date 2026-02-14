@@ -33,6 +33,10 @@ export default function AiSuggestionsPage() {
   const { organizationId } = useAuth()
   const tCommon = useTranslations('common.feedback')
   const t = useTranslations('ai')
+  const currencyFormatter = new Intl.NumberFormat(locale === 'pt-br' ? 'pt-BR' : 'en-US', {
+    style: 'currency',
+    currency: locale === 'pt-br' ? 'BRL' : 'USD',
+  })
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [suggestionType, setSuggestionType] = useState<'all' | 'budget' | 'schedule' | 'casting' | 'logistics' | 'equipment' | 'other'>('all')
@@ -381,7 +385,7 @@ export default function AiSuggestionsPage() {
 	                              )}
 	                              {suggestion.estimated_savings_cents && (
 	                                <div className="text-sm text-success mb-1">
-	                                  <span className="font-medium">{t('suggestions.list.estimatedSavings')}</span> {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(suggestion.estimated_savings_cents / 100)}
+	                                  <span className="font-medium">{t('suggestions.list.estimatedSavings')}</span> {currencyFormatter.format(suggestion.estimated_savings_cents / 100)}
 	                                </div>
 	                              )}
 	                              {suggestion.estimated_time_saved_minutes && (
@@ -494,7 +498,7 @@ export default function AiSuggestionsPage() {
                     <CardTitle className="text-sm font-medium">{t('suggestions.insights.costSavings')}</CardTitle>
                   </div>
                   <div className="text-2xl font-bold">
-                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
+                    {currencyFormatter.format(
                       suggestions.reduce((acc: number, s: AiSuggestion) => acc + (s.estimated_savings_cents || 0), 0) / 100
                     )}
                   </div>

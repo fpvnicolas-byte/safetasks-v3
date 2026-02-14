@@ -2,6 +2,33 @@
  * Financial utilities for working with cents-based currency
  * All backend financial values are stored as integers in cents
  */
+import { getLocaleFromPathname } from '@/i18n/config'
+
+type SupportedIntlLocale = 'en-US' | 'pt-BR'
+
+function normalizeLocale(locale?: string): SupportedIntlLocale {
+  if (!locale) return 'en-US'
+
+  const normalized = locale.toLowerCase().replace('_', '-')
+  if (normalized === 'pt' || normalized.startsWith('pt-br')) {
+    return 'pt-BR'
+  }
+
+  return 'en-US'
+}
+
+function inferLocaleFromPathname(): SupportedIntlLocale {
+  if (typeof window === 'undefined') {
+    return 'en-US'
+  }
+
+  const routeLocale = getLocaleFromPathname(window.location.pathname)
+  return routeLocale === 'pt-br' ? 'pt-BR' : 'en-US'
+}
+
+function getDefaultCurrency(locale: SupportedIntlLocale): string {
+  return locale === 'pt-BR' ? 'BRL' : 'USD'
+}
 
 /**
  * Convert a currency amount to cents (integer)
@@ -26,13 +53,17 @@ export const centsToDollars = fromCents
 
 /**
  * Format cents as currency string
- * @example formatCurrency(9999) => "$99.99"
+ * @example formatCurrency(9999, undefined, 'en') => "$99.99"
+ * @example formatCurrency(9999, undefined, 'pt-br') => "R$ 99,99"
  */
-export function formatCurrency(cents: number, currency: string = 'USD'): string {
+export function formatCurrency(cents: number, currency?: string, locale?: string): string {
   const dollars = fromCents(cents)
-  return new Intl.NumberFormat('en-US', {
+  const resolvedLocale = locale ? normalizeLocale(locale) : inferLocaleFromPathname()
+  const resolvedCurrency = currency || getDefaultCurrency(resolvedLocale)
+
+  return new Intl.NumberFormat(resolvedLocale, {
     style: 'currency',
-    currency,
+    currency: resolvedCurrency,
   }).format(dollars)
 }
 
