@@ -6,9 +6,10 @@ import { useAuth } from '@/contexts/AuthContext'
 import { apiClient } from '@/lib/api/client'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { Loader2, ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { useLocale } from 'next-intl'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function PlatformLayout({
     children,
@@ -62,7 +63,23 @@ function PlatformLayoutContent({
     }, [isLoading, user, router, locale])
 
     if (isLoading || isPlatformAdmin === null) {
-        return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin" /></div>
+        return (
+            <div className="min-h-screen bg-background">
+                <header className="border-b bg-card px-6 py-4">
+                    <div className="flex items-center gap-4">
+                        <Skeleton className="h-7 w-36" />
+                        <div className="flex gap-4">
+                            <Skeleton className="h-4 w-16" />
+                            <Skeleton className="h-4 w-20" />
+                        </div>
+                    </div>
+                </header>
+                <main className="container mx-auto p-6">
+                    <Skeleton className="h-8 w-48 mb-6" />
+                    <Skeleton className="h-64 w-full rounded-lg" />
+                </main>
+            </div>
+        )
     }
 
     if (!isPlatformAdmin) {
