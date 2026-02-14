@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, Receipt } from 'lucide-react'
+import { Receipt } from 'lucide-react'
+import { BillingHistorySkeleton } from '@/components/LoadingSkeletons'
 import { useLocale, useTranslations } from 'next-intl'
 import { apiClient } from '@/lib/api/client'
 import { toast } from 'sonner'
@@ -78,7 +79,7 @@ export function BillingHistory() {
     }
 
     if (isLoading) {
-        return <div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div>
+        return <BillingHistorySkeleton />
     }
 
     return (
