@@ -62,7 +62,7 @@ export function ExportMenu({ data }: ExportMenuProps) {
 
         // Title
         doc.setFontSize(18)
-        doc.text('SafeTasks Dashboard Report', 14, 22)
+        doc.text('Produzo Dashboard Report', 14, 22)
 
         // Date
         doc.setFontSize(10)

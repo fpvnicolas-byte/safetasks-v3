@@ -32,7 +32,7 @@ export default function DesignSystemPage() {
       <header className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight font-display">Design System</h1>
         <p className="text-muted-foreground">
-          Core primitives, variants, and patterns for the SafeTasks UI.
+          Core primitives, variants, and patterns for the Produzo UI.
         </p>
       </header>
 

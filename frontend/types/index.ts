@@ -1,5 +1,5 @@
 /**
- * SafeTasks V3 - Frontend Type Definitions
+ * Produzo - Frontend Type Definitions
  *
  * ⚠️ CRITICAL: This file is now 100% aligned with backend Pydantic schemas.
  * All types match backend/app/schemas/*.py files EXACTLY.

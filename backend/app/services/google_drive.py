@@ -42,7 +42,7 @@ class GoogleDriveService:
         db: AsyncSession,
     ) -> str:
         """
-        Ensure the SafeTasks root folder exists for this org.
+        Ensure the Produzo root folder exists for this org.
         Returns the folder ID.
         """
         # Check if we already have a root folder
@@ -51,7 +51,7 @@ class GoogleDriveService:
             return creds.root_folder_id
 
         access_token = await google_oauth_service.get_valid_access_token(organization_id, db)
-        folder_name = f"SafeTasks - {org_name}"
+        folder_name = f"Produzo - {org_name}"
 
         folder_id = await self._create_folder(access_token, folder_name, parent_id=None)
         folder_url = f"https://drive.google.com/drive/folders/{folder_id}"
@@ -89,7 +89,7 @@ class GoogleDriveService:
         creds = await self._get_creds(organization_id, db)
         if not creds.root_folder_id:
             # Auto-create root folder
-            folder_name = f"SafeTasks - {project_name}"
+            folder_name = f"Produzo - {project_name}"
             root_id = await self._create_folder(access_token, folder_name, parent_id=None)
             creds.root_folder_id = root_id
             creds.root_folder_url = f"https://drive.google.com/drive/folders/{root_id}"

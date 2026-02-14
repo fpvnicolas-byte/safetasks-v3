@@ -6,8 +6,8 @@ from unittest.mock import MagicMock
 # and to provide necessary settings for the test
 config_mock = MagicMock()
 settings_mock = MagicMock()
-# Try interacting with localhost/safetasks without specific user (peer auth) or assume current user
-settings_mock.SQLALCHEMY_DATABASE_URI = "postgresql+asyncpg://localhost/safetasks"
+# Try interacting with localhost/postgres without specific user (peer auth) or assume current user
+settings_mock.SQLALCHEMY_DATABASE_URI = "postgresql+asyncpg://localhost/postgres"
 settings_mock.FINANCIAL_AUTOMATION_ENABLED = True
 settings_mock.LOG_LEVEL = "INFO"
 config_mock.settings = settings_mock

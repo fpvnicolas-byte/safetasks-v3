@@ -31,7 +31,7 @@ async def create_data():
             org = Organization(
                 id=org_id,
                 name="Produzo Studio Beta-2",
-                slug="safetasks-beta-2",
+                slug="produzo-beta-2",
                 plan="professional",
                 subscription_status="active"
             )

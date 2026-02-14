@@ -28,7 +28,7 @@ echo "🚀 Starting migration process..."
 echo ""
 
 # Navigate to backend directory
-cd /Users/nicolasbertoni/safetasks-v3/backend
+cd "$(cd "$(dirname "$0")" && pwd)"
 
 # Activate virtual environment
 echo "📦 Activating virtual environment..."

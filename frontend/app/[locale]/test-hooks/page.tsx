@@ -158,7 +158,7 @@ export default function TestHooksPage() {
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', margin: '20px', color: 'var(--foreground)' }}>
-      <h1>SafeTasks V3 Hook Test Page</h1>
+      <h1>Produzo Hook Test Page</h1>
       
       <div style={panelStyle}>
         <h2>Test 1: Get All Clients</h2>
