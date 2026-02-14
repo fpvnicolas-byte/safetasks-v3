@@ -57,7 +57,7 @@ export default async function TwitterImage({ params }: ImageProps) {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 1000 }}>
-          <div style={{ fontSize: 32, color: OG_HEX_COLORS.muted, fontWeight: 500 }}>SafeTasks</div>
+          <div style={{ fontSize: 32, color: OG_HEX_COLORS.muted, fontWeight: 500 }}>Produzo</div>
           <div style={{
             display: 'flex',
             flexDirection: 'column',

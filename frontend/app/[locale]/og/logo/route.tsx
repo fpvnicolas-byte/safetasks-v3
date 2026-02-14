@@ -45,10 +45,10 @@ export async function GET(
             boxShadow: `0 18px 42px -20px ${OG_ALPHA.shadow}`,
           }}
         >
-          S
+          P
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-          <span style={{ fontSize: 56, fontWeight: 700, letterSpacing: '-0.02em' }}>SafeTasks</span>
+          <span style={{ fontSize: 56, fontWeight: 700, letterSpacing: '-0.02em' }}>Produzo</span>
           <span style={{ fontSize: 24, color: OG_HEX_COLORS.muted, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
             Production OS
           </span>

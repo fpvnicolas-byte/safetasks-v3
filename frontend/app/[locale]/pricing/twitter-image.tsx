@@ -55,7 +55,7 @@ export default async function PricingTwitterImage({ params }: ImageProps) {
           >
             {kicker}
           </span>
-          <span style={{ fontSize: 30, color: OG_HEX_COLORS.muted, fontWeight: 500 }}>SafeTasks</span>
+          <span style={{ fontSize: 30, color: OG_HEX_COLORS.muted, fontWeight: 500 }}>Produzo</span>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 980 }}>

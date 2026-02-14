@@ -61,10 +61,10 @@ export default async function OpenGraphImage({ params }: ImageProps) {
                 fontWeight: 700,
               }}
             >
-              S
+              P
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: 28, fontWeight: 700 }}>SafeTasks</span>
+              <span style={{ fontSize: 28, fontWeight: 700 }}>Produzo</span>
               <span style={{ fontSize: 18, color: OG_HEX_COLORS.muted }}>Production OS</span>
             </div>
           </div>

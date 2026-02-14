@@ -46,7 +46,7 @@ export default async function PricingOpenGraphImage({ params }: ImageProps) {
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <span style={{ fontSize: 28, fontWeight: 700 }}>SafeTasks Pricing</span>
+            <span style={{ fontSize: 28, fontWeight: 700 }}>Produzo Pricing</span>
             <span style={{ fontSize: 18, color: OG_HEX_COLORS.muted }}>Production OS</span>
           </div>
           <span
