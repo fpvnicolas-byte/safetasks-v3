@@ -386,7 +386,7 @@ class GoogleDriveService:
         }
 
         # Determine frontend origin for CORS
-        frontend_url = str(getattr(settings, "FRONTEND_URL", "https://safetasks.vercel.app"))
+        frontend_url = str(getattr(settings, "FRONTEND_URL", "https://produzo.vercel.app"))
         # Strip trailing slash
         origin = frontend_url.rstrip("/")
 

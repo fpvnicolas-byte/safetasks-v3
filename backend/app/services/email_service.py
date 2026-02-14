@@ -42,7 +42,7 @@ def send_invoice_email(
     if not settings.RESEND_API_KEY:
         raise RuntimeError("RESEND_API_KEY is not configured")
 
-    from_email = settings.RESEND_FROM_EMAIL or "noreply@safetasks.app"
+    from_email = settings.RESEND_FROM_EMAIL or "noreply@produzo.app"
 
     resend.api_key = settings.RESEND_API_KEY
 
@@ -73,7 +73,7 @@ def send_email(
         logger.warning("RESEND_API_KEY not set. Skipping email.")
         return {}
 
-    from_email = settings.RESEND_FROM_EMAIL or "noreply@safetasks.app"
+    from_email = settings.RESEND_FROM_EMAIL or "noreply@produzo.app"
     resend.api_key = settings.RESEND_API_KEY
 
     params = {
@@ -93,7 +93,7 @@ def send_email(
 
 
 def send_plan_expiry_warning(to_email: str, org_name: str, days_left: int, renew_link: str):
-    subject = f"Action Required: Your SafeTasks plan expires in {days_left} days"
+    subject = f"Action Required: Your Produzo plan expires in {days_left} days"
     html = f"""
     <h1>Your plan is expiring soon</h1>
     <p>Hello,</p>
@@ -108,7 +108,7 @@ def send_plan_expiry_warning(to_email: str, org_name: str, days_left: int, renew
 
 
 def send_plan_expired_notice(to_email: str, org_name: str, renew_link: str):
-    subject = f"Your SafeTasks plan has expired"
+    subject = f"Your Produzo plan has expired"
     html = f"""
     <h1>Plan Expired</h1>
     <p>Hello,</p>

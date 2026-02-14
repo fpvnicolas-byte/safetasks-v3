@@ -89,7 +89,7 @@ class ManualRefundService:
 
             # Reuse existing synchronous email helper.
             send_email(
-                to=[settings.RESEND_FROM_EMAIL or "noreply@safetasks.app"],
+                to=[settings.RESEND_FROM_EMAIL or "noreply@produzo.app"],
                 subject=f"Refund Request: {org_name}",
                 html=html,
             )
