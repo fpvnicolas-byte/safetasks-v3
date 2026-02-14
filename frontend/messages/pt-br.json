@@ -504,7 +504,12 @@
           "exceedsBudgetBlocked": "Esta despesa excederia o orçamento aprovado e não pode ser adicionada",
           "teamCosts": "Custos da Equipe",
           "teamCostsDescription": "Despesas com membros da equipe",
-          "approved": "Aprovado"
+          "approved": "Aprovado",
+          "expenseScope": {
+            "all": "Todos",
+            "crew": "Equipe",
+            "general": "Geral"
+          }
         }
       },
       "production": {

@@ -41,7 +41,7 @@ import { useSubmitBudget, useRequestBudgetIncrement } from '@/lib/api/hooks/useP
 import { useAuth } from '@/contexts/AuthContext'
 import { useTranslations, useLocale } from 'next-intl'
 import { formatCurrency } from '@/lib/utils/money'
-import { TransactionWithRelations, getCategoryDisplayName, TransactionCategory, toCents, fromCents, ProjectWithClient, BudgetStatus } from '@/types'
+import { getCategoryDisplayName, TransactionCategory, toCents, fromCents, ProjectWithClient, BudgetStatus } from '@/types'
 import { toast } from 'sonner'
 
 interface ProjectExpensesTabProps {
@@ -68,33 +68,6 @@ function BudgetStatusBadge({ status }: { status: BudgetStatus }) {
             <Icon className="h-3 w-3" />
             {t(status)}
         </Badge>
-    )
-}
-
-function ExpenseRow({ transaction, locale }: { transaction: TransactionWithRelations; locale: string }) {
-    return (
-        <div className="flex items-center justify-between py-3 border-b border-border/50 last:border-0">
-            <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
-                    <ArrowDownRight className="h-4 w-4" />
-                </div>
-                <div>
-                    <p className="font-medium text-sm">
-                        {transaction.description || getCategoryDisplayName(transaction.category)}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>{new Date(transaction.transaction_date).toLocaleDateString(locale, { month: 'short', day: 'numeric' })}</span>
-                        <span>•</span>
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                            {getCategoryDisplayName(transaction.category)}
-                        </Badge>
-                    </div>
-                </div>
-            </div>
-            <span className="font-semibold text-red-600 dark:text-red-400">
-                -{formatCurrency(transaction.amount_cents, transaction.bank_account?.currency)}
-            </span>
-        </div>
     )
 }
 
@@ -136,8 +109,9 @@ export function ProjectExpensesTab({ projectId, project }: ProjectExpensesTabPro
         amount: '',
         notes: '',
     })
+    const [expenseScope, setExpenseScope] = useState<'all' | 'crew' | 'general'>('all')
 
-    const { data: budget, isLoading: budgetLoading } = useProjectBudget(projectId)
+    const { isLoading: budgetLoading } = useProjectBudget(projectId)
     const { data: transactions, isLoading: transactionsLoading } = useTransactions({
         organizationId: organizationId || undefined,
         project_id: projectId,
@@ -171,9 +145,19 @@ export function ProjectExpensesTab({ projectId, project }: ProjectExpensesTabPro
     const totalTeamApproved = teamExpenses.filter(t =>
         t.payment_status === 'approved' || t.payment_status === 'paid'
     ).reduce((sum, t) => sum + t.amount_cents, 0)
-    const totalTeamPending = teamExpenses.filter(t =>
-        t.payment_status === 'pending'
+    const totalOtherApproved = otherExpenses.filter(t =>
+        t.payment_status === 'approved' || t.payment_status === 'paid'
     ).reduce((sum, t) => sum + t.amount_cents, 0)
+
+    const filteredExpenses = (transactions || []).filter((transaction) => {
+        if (expenseScope === 'crew') return Boolean(transaction.stakeholder_id)
+        if (expenseScope === 'general') return !transaction.stakeholder_id
+        return true
+    })
+    const visibleExpenses = filteredExpenses
+        .slice()
+        .sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime())
+        .slice(0, 10)
 
     // Budget used = only approved expenses
     const totalExpenses = totalApprovedExpenses
@@ -433,91 +417,7 @@ export function ProjectExpensesTab({ projectId, project }: ProjectExpensesTabPro
                 </CardContent>
             </Card>
 
-            {/* Team Costs Card */}
-            {teamExpenses.length > 0 && (
-                <Card>
-                    <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-                                    {t('producer.teamCosts') || 'Team Costs'}
-                                    {totalTeamPending > 0 && (
-                                        <Badge className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 text-[10px]">
-                                            {formatCurrency(totalTeamPending)} {tApprovals('waitingApproval').toLocaleLowerCase(locale)}
-                                        </Badge>
-                                    )}
-                                </CardTitle>
-                                <CardDescription className="text-xs sm:text-sm">
-                                    {t('producer.teamCostsDescription') || 'Expenses from team members'}
-                                </CardDescription>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-lg font-bold text-red-600 dark:text-red-400">
-                                    {formatCurrency(totalTeamApproved)}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                    {t('producer.approved') || 'Approved'}
-                                </p>
-                            </div>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-0">
-                            {teamExpenses
-                                .sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime())
-                                .slice(0, 5)
-                                .map((transaction) => (
-                                    <div key={transaction.id} className="flex items-center justify-between py-3 border-b border-border/50 last:border-0">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`p-2 rounded-full ${transaction.payment_status === 'pending'
-                                                    ? 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400'
-                                                    : 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
-                                                }`}>
-                                                {transaction.payment_status === 'pending' ? (
-                                                    <Clock className="h-4 w-4" />
-                                                ) : (
-                                                    <CheckCircle2 className="h-4 w-4" />
-                                                )}
-                                            </div>
-                                            <div>
-                                                <p className="font-medium text-sm">
-                                                    {transaction.description || getCategoryDisplayName(transaction.category)}
-                                                </p>
-                                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                                    <span>{new Date(transaction.transaction_date).toLocaleDateString(locale, { month: 'short', day: 'numeric' })}</span>
-                                                    <span>•</span>
-                                                    <Badge
-                                                        variant="outline"
-                                                        className={`text-[10px] px-1.5 py-0 ${transaction.payment_status === 'pending'
-                                                                ? 'border-yellow-500 text-yellow-600'
-                                                                : transaction.payment_status === 'approved'
-                                                                    ? 'border-green-500 text-green-600'
-                                                                    : ''
-                                                            }`}
-                                                    >
-                                                        {transaction.payment_status === 'pending' ? tApprovals('waitingApproval') :
-                                                            transaction.payment_status === 'approved' ? tApprovals('approved') :
-                                                                transaction.payment_status === 'paid' ? tApprovals('paid') :
-                                                                    transaction.payment_status === 'rejected' ? tApprovals('rejected') :
-                                                                        transaction.payment_status}
-                                                    </Badge>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <span className={`font-semibold ${transaction.payment_status === 'pending'
-                                                ? 'text-yellow-600 dark:text-yellow-400'
-                                                : 'text-red-600 dark:text-red-400'
-                                            }`}>
-                                            -{formatCurrency(transaction.amount_cents, transaction.bank_account?.currency)}
-                                        </span>
-                                    </div>
-                                ))}
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
-
-            {/* Add Expense + Recent Expenses */}
+            {/* Unified Expenses Card */}
             <Card>
                 <CardHeader>
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -545,15 +445,128 @@ export function ProjectExpensesTab({ projectId, project }: ProjectExpensesTabPro
                         </p>
                     )}
                 </CardHeader>
-                <CardContent>
-                    {transactions && transactions.length > 0 ? (
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div className="rounded-lg border p-3 bg-muted/20">
+                            <p className="text-xs text-muted-foreground">{t('producer.approved')}</p>
+                            <p className="text-lg font-semibold text-red-600 dark:text-red-400">
+                                {formatCurrency(totalApprovedExpenses)}
+                            </p>
+                        </div>
+                        <div className="rounded-lg border p-3 bg-muted/20">
+                            <p className="text-xs text-muted-foreground">{tApprovals('waitingApproval')}</p>
+                            <p className="text-lg font-semibold text-yellow-600 dark:text-yellow-400">
+                                {formatCurrency(totalPendingExpenses)}
+                            </p>
+                        </div>
+                        <div className="rounded-lg border p-3 bg-muted/20">
+                            <p className="text-xs text-muted-foreground">
+                                {t('producer.expenseScope.crew')} / {t('producer.expenseScope.general')}
+                            </p>
+                            <div className="space-y-1 text-sm">
+                                <div className="flex items-center justify-between">
+                                    <span>{t('producer.expenseScope.crew')}</span>
+                                    <span className="font-semibold">{formatCurrency(totalTeamApproved)}</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span>{t('producer.expenseScope.general')}</span>
+                                    <span className="font-semibold">{formatCurrency(totalOtherApproved)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant={expenseScope === 'all' ? 'default' : 'outline'}
+                            onClick={() => setExpenseScope('all')}
+                        >
+                            {t('producer.expenseScope.all')} ({transactions?.length || 0})
+                        </Button>
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant={expenseScope === 'crew' ? 'default' : 'outline'}
+                            onClick={() => setExpenseScope('crew')}
+                        >
+                            {t('producer.expenseScope.crew')} ({teamExpenses.length})
+                        </Button>
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant={expenseScope === 'general' ? 'default' : 'outline'}
+                            onClick={() => setExpenseScope('general')}
+                        >
+                            {t('producer.expenseScope.general')} ({otherExpenses.length})
+                        </Button>
+                    </div>
+
+                    {visibleExpenses.length > 0 ? (
                         <div className="space-y-0">
-                            {transactions
-                                .sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime())
-                                .slice(0, 10)
-                                .map((transaction) => (
-                                    <ExpenseRow key={transaction.id} transaction={transaction} locale={locale} />
-                                ))}
+                            {visibleExpenses.map((transaction) => (
+                                <div key={transaction.id} className="flex items-center justify-between py-3 border-b border-border/50 last:border-0">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-full ${transaction.stakeholder_id
+                                            ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+                                            : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                                            }`}>
+                                            <ArrowDownRight className="h-4 w-4" />
+                                        </div>
+                                        <div>
+                                            <p className="font-medium text-sm">
+                                                {transaction.description || getCategoryDisplayName(transaction.category)}
+                                            </p>
+                                            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                                                <span>
+                                                    {new Date(transaction.transaction_date).toLocaleDateString(locale, { month: 'short', day: 'numeric' })}
+                                                </span>
+                                                <span>•</span>
+                                                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                                    {getCategoryDisplayName(transaction.category)}
+                                                </Badge>
+                                                <Badge
+                                                    variant="outline"
+                                                    className={`text-[10px] px-1.5 py-0 ${transaction.stakeholder_id
+                                                        ? 'border-blue-500 text-blue-600'
+                                                        : ''
+                                                        }`}
+                                                >
+                                                    {transaction.stakeholder_id
+                                                        ? t('producer.expenseScope.crew')
+                                                        : t('producer.expenseScope.general')}
+                                                </Badge>
+                                                <Badge
+                                                    variant="outline"
+                                                    className={`text-[10px] px-1.5 py-0 ${transaction.payment_status === 'pending'
+                                                        ? 'border-yellow-500 text-yellow-600'
+                                                        : transaction.payment_status === 'approved'
+                                                            ? 'border-green-500 text-green-600'
+                                                            : transaction.payment_status === 'paid'
+                                                                ? 'border-blue-500 text-blue-600'
+                                                                : transaction.payment_status === 'rejected'
+                                                                    ? 'border-red-500 text-red-600'
+                                                                    : ''
+                                                        }`}
+                                                >
+                                                    {transaction.payment_status === 'pending' ? tApprovals('waitingApproval') :
+                                                        transaction.payment_status === 'approved' ? tApprovals('approved') :
+                                                            transaction.payment_status === 'paid' ? tApprovals('paid') :
+                                                                transaction.payment_status === 'rejected' ? tApprovals('rejected') :
+                                                                    transaction.payment_status}
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span className={`font-semibold ${transaction.payment_status === 'pending'
+                                        ? 'text-yellow-600 dark:text-yellow-400'
+                                        : 'text-red-600 dark:text-red-400'
+                                        }`}>
+                                        -{formatCurrency(transaction.amount_cents, transaction.bank_account?.currency)}
+                                    </span>
+                                </div>
+                            ))}
                         </div>
                     ) : (
                         <div className="text-center py-8">

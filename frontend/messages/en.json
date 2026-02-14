@@ -504,7 +504,12 @@
           "exceedsBudgetBlocked": "This expense would exceed the approved budget and cannot be added",
           "teamCosts": "Team Costs",
           "teamCostsDescription": "Expenses from team members",
-          "approved": "Approved"
+          "approved": "Approved",
+          "expenseScope": {
+            "all": "All",
+            "crew": "Crew",
+            "general": "General"
+          }
         }
       },
       "production": {
