@@ -2,7 +2,7 @@
 
 import { usePlatformBugReports, useUpdateBugReport } from '@/lib/api/hooks/useBugReports'
 import KanbanBoard from '@/components/platform/KanbanBoard'
-import { Loader2 } from 'lucide-react'
+import { KanbanBoardSkeleton } from '@/components/LoadingSkeletons'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 
@@ -21,7 +21,7 @@ export default function PlatformBugReportsPage() {
         )
     }
 
-    if (isLoading) return <div className="p-8"><Loader2 className="animate-spin" /></div>
+    if (isLoading) return <KanbanBoardSkeleton />
 
     return (
         <div className="space-y-6">

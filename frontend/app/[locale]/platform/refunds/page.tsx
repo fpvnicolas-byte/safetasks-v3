@@ -5,7 +5,7 @@ import { apiClient } from '@/lib/api/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Loader2 } from 'lucide-react'
+import { RefundQueueSkeleton } from '@/components/LoadingSkeletons'
 import Link from 'next/link'
 import { useLocale } from 'next-intl'
 
@@ -52,7 +52,7 @@ export default function PlatformRefundsPage() {
         }
     }
 
-    if (isLoading) return <div className="p-8"><Loader2 className="animate-spin" /></div>
+    if (isLoading) return <RefundQueueSkeleton />
 
     return (
         <div className="space-y-6">

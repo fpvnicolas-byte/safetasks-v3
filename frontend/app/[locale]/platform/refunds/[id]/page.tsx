@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Loader2, ArrowLeft, CheckCircle, XCircle, DollarSign } from 'lucide-react'
+import { ArrowLeft, CheckCircle, XCircle, DollarSign } from 'lucide-react'
+import { RefundDetailSkeleton } from '@/components/LoadingSkeletons'
 import Link from 'next/link'
 import { useLocale } from 'next-intl'
 import { useParams } from 'next/navigation'
@@ -105,7 +106,7 @@ export default function PlatformRefundDetailPage() {
         await submitAction({ action: 'confirm_execution', provider_refund_id: providerId.trim() })
     }
 
-    if (isLoading) return <div className="p-8"><Loader2 className="animate-spin" /></div>
+    if (isLoading) return <RefundDetailSkeleton />
     if (!request) return <div className="p-8">Request not found</div>
 
     const formatCents = (cents: number) => (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
