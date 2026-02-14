@@ -4,10 +4,10 @@ import { createContext, useContext, useEffect, useMemo, useState, useRef, useCal
 import { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { logger } from '@/lib/utils/logger'
-import { usePathname, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useLocale } from 'next-intl'
 
-interface Profile {
+export interface Profile {
   id: string
   email: string
   organization_id: string | null
@@ -29,6 +29,12 @@ interface AuthContextType {
   signOut: () => Promise<void>
 }
 
+interface AuthProviderProps {
+  children: React.ReactNode
+  initialUser?: User | null
+  initialProfile?: Profile | null
+}
+
 const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
@@ -38,18 +44,18 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => { },
 })
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [organizationId, setOrganizationId] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+export function AuthProvider({ children, initialUser = null, initialProfile = null }: AuthProviderProps) {
+  const isSeeded = Boolean(initialUser && initialProfile)
+  const [user, setUser] = useState<User | null>(initialUser)
+  const [profile, setProfile] = useState<Profile | null>(initialProfile)
+  const [organizationId, setOrganizationId] = useState<string | null>(initialProfile?.organization_id ?? null)
+  const [isLoading, setIsLoading] = useState(!isSeeded)
   const supabase = useMemo(() => createClient(), [])
   const router = useRouter()
-  const pathname = usePathname()
   const locale = useLocale()
 
   // Use refs to track current state for async callbacks (avoids stale closures)
-  const profileRef = useRef<Profile | null>(null)
+  const profileRef = useRef<Profile | null>(initialProfile)
   const isSigningOutRef = useRef(false)
   const isFetchingProfileRef = useRef(false)
 
@@ -84,9 +90,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setOrganizationId(profileData.organization_id)
 
         if (!profileData.organization_id) {
-          const shouldRedirect = pathname
-            ? !pathname.includes('/onboarding') && !pathname.includes('/auth/')
-            : true
+          const currentPath = typeof window !== 'undefined' ? window.location.pathname : ''
+          const shouldRedirect = !currentPath.includes('/onboarding') && !currentPath.includes('/auth/')
           if (shouldRedirect) {
             router.push(`/${locale}/onboarding`)
           }
@@ -99,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       isFetchingProfileRef.current = false
     }
-  }, [pathname, locale, router])
+  }, [locale, router])
 
   const refreshProfile = async () => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -177,12 +182,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (isSigningOutRef.current) return
 
       setIsLoading(true)
-      const { data: { session }, error } = await supabase.auth.getSession()
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
       // CRITICAL: If no session from getSession (which checks local storage often),
       // try to force a refresh from the server/cookie.
       if (!session) {
-        logger.info('[AuthContext] No initial session found, attempting refreshSession to check cookies...')
+        logger.info('[AuthContext] No initial session found, attempting refreshSession to check cookies...', {
+          error: sessionError?.message,
+        })
         const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession()
 
         if (refreshedSession && !isSigningOutRef.current) {
@@ -207,7 +214,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    getSession()
+    if (!isSeeded) {
+      getSession()
+    } else {
+      setIsLoading(false)
+    }
 
     // Listen for auth changes
     const {
@@ -261,7 +272,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase, fetchProfile])
+  }, [supabase, fetchProfile, isSeeded])
 
   return (
     <AuthContext.Provider value={{ user, profile, organizationId, isLoading, refreshProfile, signOut }}>
