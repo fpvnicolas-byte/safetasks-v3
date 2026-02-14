@@ -7,45 +7,52 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
-import { Plus, Loader2 } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency } from '@/lib/utils/money'
+import {
+  FinancialOverviewSkeleton,
+  ApprovalCardSkeleton,
+  ProjectsFinancialsSkeleton,
+  InvoicesTabSkeleton,
+  TransactionListSkeleton,
+} from '@/components/LoadingSkeletons'
 import { InvoiceStatus } from '@/types'
 import { useLocale, useTranslations } from 'next-intl'
 
 const ExpenseApprovalDashboard = dynamic(
   () => import('@/components/financials/ExpenseApprovalDashboard').then((mod) => mod.ExpenseApprovalDashboard),
-  { loading: () => <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div> }
+  { loading: () => <ApprovalCardSkeleton /> }
 )
 
 const BudgetApprovalDashboard = dynamic(
   () => import('@/components/financials/BudgetApprovalDashboard').then((mod) => mod.BudgetApprovalDashboard),
-  { loading: () => <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div> }
+  { loading: () => <ApprovalCardSkeleton /> }
 )
 
 const ProjectsFinancialsTab = dynamic(
   () => import('@/components/financials/ProjectsFinancialsTab').then((mod) => mod.ProjectsFinancialsTab),
-  { loading: () => <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div> }
+  { loading: () => <ProjectsFinancialsSkeleton /> }
 )
 
 const FinancialsInvoicesTab = dynamic(
   () => import('./_components/FinancialsInvoicesTab').then((mod) => mod.FinancialsInvoicesTab),
-  { loading: () => <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>, ssr: false }
+  { loading: () => <InvoicesTabSkeleton />, ssr: false }
 )
 
 const FinancialsBankAccountsTab = dynamic(
   () => import('./_components/FinancialsBankAccountsTab').then((mod) => mod.FinancialsBankAccountsTab),
-  { loading: () => <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>, ssr: false }
+  { loading: () => <TransactionListSkeleton />, ssr: false }
 )
 
 const FinancialsTransactionsTab = dynamic(
   () => import('./_components/FinancialsTransactionsTab').then((mod) => mod.FinancialsTransactionsTab),
-  { loading: () => <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>, ssr: false }
+  { loading: () => <TransactionListSkeleton />, ssr: false }
 )
 
 const FinancialsExpensesTab = dynamic(
   () => import('./_components/FinancialsExpensesTab').then((mod) => mod.FinancialsExpensesTab),
-  { loading: () => <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>, ssr: false }
+  { loading: () => <TransactionListSkeleton />, ssr: false }
 )
 
 export default function FinancialsPage() {
@@ -97,9 +104,7 @@ export default function FinancialsPage() {
 
         <TabsContent value="overview" className="space-y-4">
           {isLoadingStats ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
+            <FinancialOverviewSkeleton />
           ) : (
             <div className="grid gap-4 md:grid-cols-3">
               <Card>
