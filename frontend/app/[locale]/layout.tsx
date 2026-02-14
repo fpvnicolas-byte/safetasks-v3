@@ -10,6 +10,7 @@ import {
   getSeoCopy,
   getSiteUrl,
 } from '@/lib/seo'
+import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import type { Metadata } from 'next'
 import { NextIntlClientProvider } from 'next-intl'
@@ -114,6 +115,7 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
             </QueryProvider>
           </ThemeProvider>
         </NextIntlClientProvider>
+        <Analytics />
         <SpeedInsights />
       </body>
     </html>
