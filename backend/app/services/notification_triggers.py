@@ -1,9 +1,13 @@
 """Notification triggers for key business events."""
+from typing import Any, Dict, Optional
 from uuid import UUID
-from sqlalchemy.ext.asyncio import AsyncSession
+
 from sqlalchemy import select
-from app.services.notifications import notification_service
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.platform import PlatformAdminUser
 from app.models.profiles import Profile
+from app.services.notifications import notification_service
 
 
 async def notify_organization_admins(
@@ -34,6 +38,47 @@ async def notify_organization_admins(
         )
 
 
+async def notify_platform_superadmins(
+    db: AsyncSession,
+    *,
+    title: str,
+    message: str,
+    type: str = "info",
+    metadata: Optional[Dict[str, Any]] = None,
+    source_organization_id: Optional[UUID] = None,
+) -> None:
+    """Send notification only to active platform superadmins."""
+    query = (
+        select(Profile)
+        .join(PlatformAdminUser, PlatformAdminUser.profile_id == Profile.id)
+        .where(
+            PlatformAdminUser.is_active == True,
+            PlatformAdminUser.role == "superadmin",
+        )
+    )
+    result = await db.execute(query)
+    superadmins = result.scalars().all()
+
+    for profile in superadmins:
+        if not profile.organization_id:
+            # Notification model requires organization_id; skip profiles outside org scope.
+            continue
+
+        final_metadata = dict(metadata or {})
+        if source_organization_id:
+            final_metadata.setdefault("source_organization_id", str(source_organization_id))
+
+        await notification_service.create_for_user(
+            db=db,
+            organization_id=profile.organization_id,
+            profile_id=profile.id,
+            title=title,
+            message=message,
+            type=type,
+            metadata=final_metadata,
+        )
+
+
 async def notify_invoice_status_change(
     db: AsyncSession,
     organization_id: UUID,
@@ -54,14 +99,15 @@ async def notify_invoice_status_change(
     await notify_organization_admins(
         db=db,
         organization_id=organization_id,
-        title=f"Invoice {new_status.title()}",
-        message=f"Invoice {invoice_number}{' for ' + client_name if client_name else ''} is now {new_status}",
+        title="invoice_status_changed_title",
+        message="invoice_status_changed_message",
         type=type_map.get(new_status, "info"),
         metadata={
             "invoice_id": str(invoice_id),
             "invoice_number": invoice_number,
             "old_status": old_status,
-            "new_status": new_status
+            "new_status": new_status,
+            "client_name": client_name or "",
         }
     )
 
@@ -76,12 +122,12 @@ async def notify_budget_threshold(
 ):
     """Notify when budget category exceeds threshold."""
     if percent_spent >= 100:
-        title = "Budget Exceeded"
-        message = f"{project_title}: {category} budget is {percent_spent:.0f}% spent (over budget!)"
+        title = "budget_exceeded_title"
+        message = "budget_exceeded_message"
         type = "error"
     elif percent_spent >= 80:
-        title = "Budget Warning"
-        message = f"{project_title}: {category} budget is {percent_spent:.0f}% spent"
+        title = "budget_warning_title"
+        message = "budget_warning_message"
         type = "warning"
     else:
         return  # No notification needed
@@ -94,8 +140,9 @@ async def notify_budget_threshold(
         type=type,
         metadata={
             "project_id": str(project_id),
+            "project_title": project_title,
             "category": category,
-            "percent_spent": percent_spent
+            "percent_spent": f"{percent_spent:.0f}",
         }
     )
 
@@ -108,25 +155,26 @@ async def notify_stakeholder_status_change(
     new_status: str
 ):
     """Notify when stakeholder booking status changes."""
-    status_messages = {
-        "confirmed": f"{stakeholder_name} confirmed for {project_title}",
-        "cancelled": f"{stakeholder_name} booking cancelled for {project_title}",
-        "completed": f"{stakeholder_name} completed work on {project_title}",
+    status_message_keys = {
+        "confirmed": "crew_status_confirmed_message",
+        "cancelled": "crew_status_cancelled_message",
+        "completed": "crew_status_completed_message",
     }
 
-    if new_status not in status_messages:
+    message_key = status_message_keys.get(new_status)
+    if not message_key:
         return
 
     await notify_organization_admins(
         db=db,
         organization_id=organization_id,
-        title=f"Crew {new_status.title()}",
-        message=status_messages[new_status],
+        title="crew_status_changed_title",
+        message=message_key,
         type="success" if new_status in ["confirmed", "completed"] else "warning",
         metadata={
             "stakeholder_name": stakeholder_name,
             "project_title": project_title,
-            "status": new_status
+            "status": new_status,
         }
     )
 
@@ -144,13 +192,14 @@ async def notify_expense_created(
     await notify_organization_admins(
         db=db,
         organization_id=organization_id,
-        title="Expense Created",
-        message=f"Automatic expense created: {stakeholder_name} on {project_title} - {amount_formatted}",
+        title="expense_created_title",
+        message="expense_created_message",
         type="info",
         metadata={
             "stakeholder_name": stakeholder_name,
             "project_title": project_title,
-            "amount_cents": amount_cents
+            "amount_cents": amount_cents,
+            "amount": amount_formatted,
         }
     )
 
@@ -168,13 +217,14 @@ async def notify_income_created(
     await notify_organization_admins(
         db=db,
         organization_id=organization_id,
-        title="Income Created",
-        message=f"Invoice {invoice_number} paid by {client_name} - {amount_formatted} added to balance",
+        title="income_created_title",
+        message="income_created_message",
         type="success",
         metadata={
             "invoice_number": invoice_number,
             "client_name": client_name,
-            "amount_cents": amount_cents
+            "amount_cents": amount_cents,
+            "amount": amount_formatted,
         }
     )
 
@@ -192,13 +242,14 @@ async def notify_project_created(
     await notify_organization_admins(
         db=db,
         organization_id=organization_id,
-        title="Project Started",
-        message=f"New project '{project_title}' started. Budget confirmed: {budget_formatted}",
+        title="project_started_title",
+        message="project_started_message",
         type="success",
         metadata={
             "project_id": str(project_id),
             "project_title": project_title,
-            "budget_cents": budget_cents
+            "budget_cents": budget_cents,
+            "budget": budget_formatted,
         }
     )
 
@@ -213,12 +264,12 @@ async def notify_project_finished(
     await notify_organization_admins(
         db=db,
         organization_id=organization_id,
-        title="Project Completed",
-        message=f"Project '{project_title}' has been marked as completed/delivered.",
+        title="project_completed_title",
+        message="project_completed_message",
         type="success",
         metadata={
             "project_id": str(project_id),
             "project_title": project_title,
-            "status": "delivered"
+            "status": "delivered",
         }
     )

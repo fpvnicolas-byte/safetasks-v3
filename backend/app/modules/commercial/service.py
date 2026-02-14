@@ -436,13 +436,15 @@ class ProposalService(BaseService[ProposalModel, ProposalCreate, ProposalUpdate]
                     db=db,
                     organization_id=organization_id,
                     profile_id=profile.id,
-                    title="Proposal Approved",
-                    message=f"Proposal '{proposal.title}' has been approved and converted to project '{project.title}'.",
+                    title="proposal_approved_title",
+                    message="proposal_approved_converted_message",
                     type="success",
                     metadata={
                         "proposal_id": str(proposal.id),
                         "project_id": str(project.id),
-                        "client_id": str(proposal.client_id)
+                        "client_id": str(proposal.client_id),
+                        "proposal_title": proposal.title,
+                        "project_title": project.title,
                     }
                 )
 

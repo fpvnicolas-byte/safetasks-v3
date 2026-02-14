@@ -65,14 +65,45 @@ class ManualRefundService:
             event_metadata={"reason": reason_code}
         )
         db.add(event)
-        
-        # Notify Admins
+
+        org_name = "Unknown Org"
         try:
             org_q = select(Organization).where(Organization.id == purchase.organization_id)
             res = await db.execute(org_q)
             org = res.scalar_one_or_none()
-            org_name = org.name if org else "Unknown Org"
+            if org and org.name:
+                org_name = org.name
+        except Exception:
+            # Fallback to default org label if lookup fails.
+            pass
 
+        # Notify Platform Superadmins (in-app notifications)
+        try:
+            from app.services.notification_triggers import notify_platform_superadmins
+
+            await notify_platform_superadmins(
+                db=db,
+                source_organization_id=purchase.organization_id,
+                title="platform_refund_request_title",
+                message="platform_refund_request_message",
+                type="warning",
+                metadata={
+                    "refund_request_id": str(request.id),
+                    "purchase_id": str(purchase.id),
+                    "organization_id": str(purchase.organization_id),
+                    "organization_name": org_name,
+                    "requester_email": requester.email or "",
+                    "reason_code": reason_code,
+                    "reason_detail": reason_detail or reason_code,
+                    "amount_paid_cents": purchase.amount_paid_cents,
+                    "amount_paid": f"R$ {purchase.amount_paid_cents / 100:,.2f}",
+                },
+            )
+        except Exception as e:
+            print(f"Failed to send platform superadmin refund notification: {e}")
+        
+        # Notify Admins
+        try:
             amount_fmt = f"{purchase.amount_paid_cents / 100:.2f}"
             dashboard_url = str(settings.FRONTEND_URL).rstrip("/")
             review_url = f"{dashboard_url}/platform/refunds/{request.id}"

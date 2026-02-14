@@ -351,7 +351,7 @@ class InventoryHealthService:
         Check for maintenance issues and send alerts to admins.
         Returns count of alerts sent.
         """
-        from app.services.notifications import notification_service
+        from app.services.notification_triggers import notify_organization_admins
 
         # Get health report
         health_report = await self.generate_health_report(
@@ -362,15 +362,17 @@ class InventoryHealthService:
 
         # Send alerts for items needing maintenance
         for item in health_report.items_needing_maintenance[:5]:  # Limit to 5 alerts
-            await notification_service.create_for_user(
+            await notify_organization_admins(
                 db=db,
                 organization_id=organization_id,
-                profile_id=None,  # Will be sent to all admins
-                title="⚠️ Gear Maintenance Alert",
-                message=f"{item['name']} ({item['category']}) needs preventive maintenance. Last serviced {item['days_since_last_maintenance']} days ago.",
+                title="equipment_maintenance_title",
+                message="equipment_maintenance_message",
                 type="warning",
                 metadata={
                     "kit_item_id": item["id"],
+                    "item": item["name"],
+                    "category": item["category"],
+                    "days": item["days_since_last_maintenance"],
                     "alert_type": "maintenance_overdue",
                     "days_overdue": item["days_since_last_maintenance"]
                 }
@@ -379,16 +381,20 @@ class InventoryHealthService:
 
         # Send alerts for items over usage limit
         for item in health_report.items_over_usage_limit[:3]:  # Limit to 3 alerts
-            await notification_service.create_for_user(
+            await notify_organization_admins(
                 db=db,
                 organization_id=organization_id,
-                profile_id=None,  # Will be sent to all admins
-                message=f"{item['name']} has exceeded {item['usage_percentage']:.1f}% of its expected lifespan ({item['current_usage_hours']:.0f}/{item['max_usage_hours']:.0f} hours).",
+                title="equipment_usage_limit_title",
+                message="equipment_usage_limit_message",
                 type="error",
                 metadata={
                     "kit_item_id": item["id"],
+                    "item": item["name"],
+                    "usage_percentage": f"{item['usage_percentage']:.1f}",
+                    "current_usage_hours": f"{item['current_usage_hours']:.0f}",
+                    "max_usage_hours": f"{item['max_usage_hours']:.0f}",
                     "alert_type": "usage_limit_exceeded",
-                    "usage_percentage": item["usage_percentage"]
+                    "usage_percentage_value": item["usage_percentage"],
                 }
             )
             alerts_sent += 1

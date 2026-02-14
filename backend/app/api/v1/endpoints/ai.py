@@ -520,25 +520,13 @@ async def process_script_analysis(
             db=db,
             organization_id=organization_id,
             profile_id=profile_id,
-            title=_localized_text(
-                response_language,
-                pt_br="Análise de Roteiro Concluída",
-                en="Script Analysis Complete",
-            ),
-            message=_localized_text(
-                response_language,
-                pt_br=(
-                    f"A análise de IA do seu roteiro está pronta. "
-                    f"Foram encontrados {len(analysis_result.get('characters', []))} personagens e {len(analysis_result.get('scenes', []))} cenas."
-                ),
-                en=(
-                    f"AI analysis of your script is ready. Found {len(analysis_result.get('characters', []))} "
-                    f"characters and {len(analysis_result.get('scenes', []))} scenes."
-                ),
-            ),
+            title="script_analysis_complete_title",
+            message="script_analysis_complete_message",
             type="success",
             metadata={
                 "analysis_id": str(saved_analysis.id),
+                "characters": len(analysis_result.get("characters", [])),
+                "scenes": len(analysis_result.get("scenes", [])),
                 "analysis_result": analysis_result,
                 "suggestions": suggestions,
                 "project_id": str(project_id)
@@ -546,8 +534,6 @@ async def process_script_analysis(
         )
 
     except Exception as e:
-        response_language = ai_engine_service.detect_content_language(script_content or "")
-
         # Log failed usage
         processing_time_ms = int((time.time() - start_time) * 1000)
         await ai_usage_log_service.log_request(
@@ -566,16 +552,8 @@ async def process_script_analysis(
             db=db,
             organization_id=organization_id,
             profile_id=profile_id,
-            title=_localized_text(
-                response_language,
-                pt_br="Falha na Análise de Roteiro",
-                en="Script Analysis Failed",
-            ),
-            message=_localized_text(
-                response_language,
-                pt_br=f"Falha ao analisar o roteiro: {str(e)}",
-                en=f"Failed to analyze script: {str(e)}",
-            ),
+            title="script_analysis_failed_title",
+            message="script_analysis_failed_message",
             type="error",
             metadata={"error": str(e), "project_id": str(project_id)}
         )
@@ -641,28 +619,19 @@ async def analyze_script(
         )
 
         # Create initial notification
-        response_language = ai_engine_service.detect_content_language(script_content)
         await notification_service.create_for_user(
             db=db,
             organization_id=organization_id,
             profile_id=profile.id,
-            title=_localized_text(
-                response_language,
-                pt_br="Análise de Roteiro Iniciada",
-                en="Script Analysis Started",
-            ),
-            message=_localized_text(
-                response_language,
-                pt_br="A IA está analisando seu roteiro. Você receberá uma notificação quando terminar.",
-                en="AI is analyzing your script. You'll receive a notification when it's complete.",
-            ),
+            title="script_analysis_started_title",
+            message="script_analysis_started_message",
             type="info",
             metadata={"project_id": str(project_id), "status": "processing"}
         )
 
         return {
             "message": _localized_text(
-                response_language,
+                ai_engine_service.detect_content_language(script_content),
                 pt_br="Análise de roteiro iniciada. Verifique as notificações para os resultados.",
                 en="Script analysis started. Check notifications for results.",
             ),

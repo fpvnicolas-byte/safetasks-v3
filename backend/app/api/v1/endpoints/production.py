@@ -138,8 +138,8 @@ async def generate_breakdown_from_ai(
             db=db,
             organization_id=organization_id,
             profile_id=profile.id,
-            title="AI Breakdown Generation Started",
-            message="AI is generating project breakdown from script analysis.",
+            title="ai_breakdown_generation_started_title",
+            message="ai_breakdown_generation_started_message",
             type="info",
             metadata={"project_id": str(project_id), "status": "processing"}
         )
@@ -191,11 +191,13 @@ async def process_ai_breakdown_generation(
             db=db,
             organization_id=organization_id,
             profile_id=profile_id,
-            title="AI Breakdown Generation Complete",
-            message=f"Successfully created {commit_result['characters_created']} characters and {commit_result['scenes_created']} scenes.",
+            title="ai_breakdown_generation_complete_title",
+            message="ai_breakdown_generation_complete_message",
             type="success",
             metadata={
                 "project_id": str(project_id),
+                "characters_created": commit_result["characters_created"],
+                "scenes_created": commit_result["scenes_created"],
                 "commit_result": commit_result,
                 "analysis_result": analysis_result
             }
@@ -207,8 +209,8 @@ async def process_ai_breakdown_generation(
             db=db,
             organization_id=organization_id,
             profile_id=profile_id,
-            title="AI Breakdown Generation Failed",
-            message=f"Failed to generate breakdown: {str(e)}",
+            title="ai_breakdown_generation_failed_title",
+            message="ai_breakdown_generation_failed_message",
             type="error",
             metadata={"error": str(e), "project_id": str(project_id)}
         )
