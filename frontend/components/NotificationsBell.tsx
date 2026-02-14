@@ -21,17 +21,36 @@ import { LocaleLink } from '@/components/LocaleLink'
 type TranslatorFn = (key: string, values?: Record<string, unknown>) => string
 type NotificationItemData = NonNullable<ReturnType<typeof useNotifications>['data']>[number]
 
+const normalizeMetadata = (metadata: unknown): Record<string, unknown> => {
+  if (!metadata) return {}
+  if (typeof metadata === 'string') {
+    try {
+      const parsed = JSON.parse(metadata) as unknown
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>
+      }
+    } catch {
+      return {}
+    }
+    return {}
+  }
+  if (typeof metadata === 'object' && !Array.isArray(metadata)) {
+    return metadata as Record<string, unknown>
+  }
+  return {}
+}
+
 // Helper component for individual notification item to use hooks
 const NotificationItem = ({ notification, onMarkRead }: { notification: NotificationItemData, onMarkRead: (id: string, e: React.MouseEvent) => void }) => {
   const tMessages = useTranslations('notifications.messages')
   const tMessagesUnsafe = tMessages as unknown as TranslatorFn
   const tControls = useTranslations('notifications.controls')
 
-  const getTranslatedContent = (defaultText: string, metadata?: Record<string, unknown> | null) => {
+  const getTranslatedContent = (defaultText: string, metadata?: unknown) => {
     const isLikelyKey = !defaultText.includes(' ') && defaultText.length < 50
     if (isLikelyKey) {
       try {
-        const translated = tMessagesUnsafe(defaultText, metadata || {})
+        const translated = tMessagesUnsafe(defaultText, normalizeMetadata(metadata))
         if (translated.includes('notifications.messages.')) return defaultText
         return translated
       } catch {
@@ -56,7 +75,7 @@ const NotificationItem = ({ notification, onMarkRead }: { notification: Notifica
 
   return (
     <DropdownMenuItem
-      className={`flex flex-col items-start gap-1 p-3 cursor-pointer ${!notification.is_read ? 'bg-blue-50 dark:bg-blue-950' : ''
+      className={`flex flex-col items-start gap-1 px-3 py-3.5 cursor-pointer ${!notification.is_read ? 'bg-blue-50 dark:bg-blue-950' : ''
         }`}
     >
       <div className="flex items-start justify-between w-full">
@@ -76,7 +95,7 @@ const NotificationItem = ({ notification, onMarkRead }: { notification: Notifica
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 flex-shrink-0"
+            className="h-7 w-7 flex-shrink-0"
             onClick={(e) => onMarkRead(notification.id, e)}
             aria-label={tControls('markRead')}
           >
@@ -91,8 +110,8 @@ const NotificationItem = ({ notification, onMarkRead }: { notification: Notifica
 export function NotificationsBell() {
   const [open, setOpen] = useState(false)
 
-  // Delay WebSocket connection until the user opens the menu.
-  const { isConnected } = useNotificationWebSocket({ enabled: open })
+  // Keep WebSocket live so badge/page updates arrive immediately.
+  const { isConnected } = useNotificationWebSocket({ enabled: true })
 
   // Disable polling when WebSocket is connected
   const pollingInterval = isConnected ? false : 30000
@@ -134,15 +153,15 @@ export function NotificationsBell() {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
-        <div className="flex items-center justify-between px-2 py-2">
+      <DropdownMenuContent align="end" className="w-80 p-1.5">
+        <div className="flex items-center justify-between px-3 pt-3 pb-2">
           <h3 className="font-semibold">{t('title')}</h3>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
               size="sm"
               onClick={handleMarkAllAsRead}
-              className="h-auto py-1 px-2 text-xs"
+              className="h-auto px-3 py-1.5 text-xs font-medium"
             >
               <CheckCheck className="h-3 w-3 mr-1" />
               {t('controls.markAllRead')}
@@ -163,17 +182,17 @@ export function NotificationsBell() {
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <div
-                className="w-full text-center text-sm text-muted-foreground cursor-pointer py-2"
+                className="w-full text-center text-sm text-muted-foreground cursor-pointer px-3 pt-2 pb-3"
                 onClick={() => setOpen(false)}
               >
-                <LocaleLink href="/notifications" className="w-full inline-block">
+                <LocaleLink href="/notifications" className="w-full inline-block rounded-md py-1.5 hover:bg-muted/60">
                   {t('viewAll')}
                 </LocaleLink>
               </div>
             </DropdownMenuItem>
           </>
         ) : (
-          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+          <div className="px-4 py-10 text-center text-sm text-muted-foreground">
             {t('empty.title')}
           </div>
         )}

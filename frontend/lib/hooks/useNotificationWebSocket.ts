@@ -240,8 +240,14 @@ export function useNotificationWebSocket(options: UseNotificationWebSocketOption
                     if (IS_DEV) {
                         console.log('[WS] Received notification:', message.action)
                     }
-                    // Invalidate queries globally for any listener
-                    queryClient.invalidateQueries({ queryKey: [NOTIFICATIONS_KEY] })
+                    // Invalidate now and shortly after to handle race conditions where
+                    // the websocket event can arrive before the DB transaction commit.
+                    const invalidate = () => {
+                        queryClient.invalidateQueries({ queryKey: [NOTIFICATIONS_KEY] })
+                    }
+                    invalidate()
+                    setTimeout(invalidate, 300)
+                    setTimeout(invalidate, 1200)
 
                     if (message.action === 'new' && message.data && onNotification) {
                         onNotification(message.data)

@@ -22,6 +22,25 @@ import { useTranslations } from 'next-intl'
 
 type TranslatorFn = (key: string, values?: Record<string, unknown>) => string
 
+const normalizeMetadata = (metadata: unknown): Record<string, unknown> => {
+  if (!metadata) return {}
+  if (typeof metadata === 'string') {
+    try {
+      const parsed = JSON.parse(metadata) as unknown
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>
+      }
+    } catch {
+      return {}
+    }
+    return {}
+  }
+  if (typeof metadata === 'object' && !Array.isArray(metadata)) {
+    return metadata as Record<string, unknown>
+  }
+  return {}
+}
+
 export default function NotificationsPage() {
   const t = useTranslations('notifications')
   const tMessages = useTranslations('notifications.messages')
@@ -72,15 +91,15 @@ export default function NotificationsPage() {
   }
 
   // Helper to get translated text or fallback to original
-  const getTranslatedContent = (text: string, metadata?: Record<string, unknown> | null) => {
+  const getTranslatedContent = (text: string, metadata?: unknown) => {
     const isLikelyKey = !text.includes(' ') && text.length < 50
 
     if (isLikelyKey) {
       try {
-        const translated = tMessagesUnsafe(text, metadata || {})
+        const translated = tMessagesUnsafe(text, normalizeMetadata(metadata))
         if (translated.includes('notifications.messages.')) return text
         return translated
-      } catch (e) {
+      } catch {
         return text
       }
     }
