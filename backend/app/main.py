@@ -36,7 +36,7 @@ app = FastAPI(
     version="3.0.6",
     openapi_url=f"{api_v1_str}/openapi.json",
     description="""
-    Safe Tasks V3 - Professional Video Production Management Platform
+    Produzo - Professional Video Production Management Platform
 
     A comprehensive backend system for audiovisual production management,
     featuring multi-tenant architecture, advanced financial tracking,
@@ -57,8 +57,8 @@ app = FastAPI(
     All data is strictly isolated by `organization_id` for multi-tenant security.
     """,
     contact={
-        "name": "Safe Tasks Development Team",
-        "email": "dev@safetasks.com",
+        "name": "Produzo Development Team",
+        "email": "dev@produzo.app",
     },
     license_info={
         "name": "Proprietary",
@@ -114,7 +114,7 @@ def _build_allowed_origins() -> List[str]:
         add_origin(str(configured_origin))
 
     for default_origin in [
-        "https://safetasks.vercel.app",
+        "https://produzo.vercel.app",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:3001",

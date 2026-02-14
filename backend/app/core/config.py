@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     print("----------------------------------------------------------------")
 
     API_V1_STR: str = "/api/v1"
-    PROJECT_NAME: str = "Safe Tasks V3"
+    PROJECT_NAME: str = "Produzo"
     FRONTEND_URL: AnyHttpUrl = "http://localhost:3000"
     
     # Environment
@@ -141,7 +141,7 @@ class Settings(BaseSettings):
 
     # InfinityPay (for platform plans)
     INFINITYPAY_HANDLE: Optional[str] = None # e.g. "nicolas-domenico-bertoni"
-    INFINITYPAY_WEBHOOK_URL: Optional[str] = None # e.g. "https://api.safetasks.com/api/v1/billing/webhooks/infinitypay"
+    INFINITYPAY_WEBHOOK_URL: Optional[str] = None # e.g. "https://api.produzo.app/api/v1/billing/webhooks/infinitypay"
     INFINITYPAY_API_URL: str = "https://api.infinitepay.io/invoices/public/checkout"
 
     # Invites
