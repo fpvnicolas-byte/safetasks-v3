@@ -19,6 +19,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useTranslations } from 'next-intl'
 import { formatCurrency } from '@/lib/utils/money'
 import { Loader2, CheckCircle, XCircle, Wallet, Folder, Clock } from 'lucide-react'
+import { ApprovalCardSkeleton } from '@/components/LoadingSkeletons'
 import { ProjectWithClient } from '@/types'
 import { toast } from 'sonner'
 
@@ -36,17 +37,7 @@ export function BudgetApprovalDashboard() {
     const totalPending = pendingProjects?.reduce((acc, p) => acc + (p.budget_total_cents || 0), 0) || 0
 
     if (isLoading) {
-        return (
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t('title')}</CardTitle>
-                    <CardDescription>{t('description')}</CardDescription>
-                </CardHeader>
-                <CardContent className="flex justify-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </CardContent>
-            </Card>
-        )
+        return <ApprovalCardSkeleton />
     }
 
     return (

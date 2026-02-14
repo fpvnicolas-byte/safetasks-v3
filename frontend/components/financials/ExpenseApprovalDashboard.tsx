@@ -8,7 +8,8 @@ import { usePendingTransactions, useTransactions } from '@/lib/api/hooks/useTran
 import { useAuth } from '@/contexts/AuthContext'
 import { useTranslations } from 'next-intl'
 import { formatCurrency } from '@/lib/utils/money'
-import { Loader2, CheckCircle, XCircle, AlertCircle, Filter, Clock } from 'lucide-react'
+import { CheckCircle, XCircle, AlertCircle, Filter, Clock } from 'lucide-react'
+import { ApprovalCardSkeleton } from '@/components/LoadingSkeletons'
 import { ExpenseApprovalDialog } from './ExpenseApprovalDialog'
 import { TransactionWithRelations } from '@/types'
 
@@ -30,17 +31,7 @@ export function ExpenseApprovalDashboard() {
     }
 
     if (isLoading) {
-        return (
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t('title')}</CardTitle>
-                    <CardDescription>{t('pendingAmount')}</CardDescription>
-                </CardHeader>
-                <CardContent className="flex justify-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </CardContent>
-            </Card>
-        )
+        return <ApprovalCardSkeleton />
     }
 
     return (
