@@ -1,0 +1,4 @@
+interface:
+  display_name: "Superpowers Workflow"
+  short_description: "Planning-first execution workflow for Codex tasks."
+  default_prompt: "Use the Superpowers workflow to break down, execute, verify, and summarize this task."
