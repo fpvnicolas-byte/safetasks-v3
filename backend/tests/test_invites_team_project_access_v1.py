@@ -23,9 +23,12 @@ from app.models.profiles import Profile
 from app.models.projects import Project
 from app.schemas.access import ProjectAssignmentCreate
 from app.schemas.invites import ChangeRolePayload, InviteCreate
+from app.schemas.commercial import StakeholderCreate
 from app.services import invite_service
+from app.services.contacts import contacts_service
 from app.api.v1.endpoints import project_assignments as project_assignments_endpoints
 from app.api.v1.endpoints import team as team_endpoints
+from app.api.v1.endpoints import stakeholders as stakeholders_endpoints
 
 
 def _database_uri() -> str:
@@ -383,7 +386,9 @@ async def test_accept_invite_happy_path_sets_roles_links_supplier_and_increments
 
     usage = await db.get(OrganizationUsage, org.id)
     assert usage is not None
-    assert usage.users_count == 1
+    # invite acceptance reserves a seat after reconciling current active org users,
+    # so existing inviter + accepted profile = 2
+    assert usage.users_count == 2
 
     invite = await db.get(OrganizationInvite, created.invite.id)
     assert invite is not None
@@ -637,6 +642,9 @@ async def test_team_remove_member_resets_profile_deletes_assignments_and_decreme
     client = await _create_client(db, organization_id=org.id)
     project = await _create_project(db, organization_id=org.id, client_id=client.id)
     db.add(ProjectAssignment(id=uuid.uuid4(), project_id=project.id, user_id=target.id))
+    supplier = await _create_supplier(db, organization_id=org.id, category="freelancer")
+    supplier.profile_id = target.id
+    db.add(supplier)
     await db.flush()
 
     resp = await team_endpoints.remove_member(
@@ -659,6 +667,106 @@ async def test_team_remove_member_resets_profile_deletes_assignments_and_decreme
 
     remaining = await db.execute(select(ProjectAssignment).where(ProjectAssignment.user_id == target.id))
     assert remaining.scalars().all() == []
+
+    supplier_after = await db.get(Supplier, supplier.id)
+    assert supplier_after is not None
+    assert supplier_after.profile_id is None
+
+
+@pytest.mark.asyncio
+async def test_contacts_detail_returns_project_access_assignments_for_linked_freelancer(db: AsyncSession):
+    org = await _create_org(db)
+    freelancer = await _create_profile(
+        db,
+        organization_id=org.id,
+        email="freelancer@example.com",
+        role_v2="freelancer",
+        role_legacy="crew",
+    )
+    supplier = await _create_supplier(db, organization_id=org.id, category="freelancer")
+    supplier.profile_id = freelancer.id
+    db.add(supplier)
+
+    client = await _create_client(db, organization_id=org.id)
+    project = await _create_project(db, organization_id=org.id, client_id=client.id)
+    db.add(ProjectAssignment(id=uuid.uuid4(), project_id=project.id, user_id=freelancer.id))
+    await db.flush()
+
+    detail = await contacts_service.get_contact_detail(
+        db=db,
+        organization_id=org.id,
+        supplier_id=supplier.id,
+    )
+
+    assert detail is not None
+    assert detail["team_info"] is not None
+    assert detail["team_info"]["effective_role"] == "freelancer"
+    assert len(detail["project_access_assignments"]) == 1
+    assert detail["project_access_assignments"][0]["project_id"] == str(project.id)
+    assert detail["project_access_assignments"][0]["project_title"] == project.title
+
+
+@pytest.mark.asyncio
+async def test_contacts_detail_ignores_linked_profile_outside_org(db: AsyncSession):
+    org = await _create_org(db)
+    other_org = await _create_org(db)
+    foreign_profile = await _create_profile(
+        db,
+        organization_id=other_org.id,
+        email="foreign@example.com",
+        role_v2="freelancer",
+        role_legacy="crew",
+    )
+
+    supplier = await _create_supplier(db, organization_id=org.id, category="freelancer")
+    supplier.profile_id = foreign_profile.id
+    db.add(supplier)
+    await db.flush()
+
+    detail = await contacts_service.get_contact_detail(
+        db=db,
+        organization_id=org.id,
+        supplier_id=supplier.id,
+    )
+
+    assert detail is not None
+    assert detail["platform_status"] == "none"
+    assert detail["team_info"] is None
+    assert detail["project_access_assignments"] == []
+
+
+@pytest.mark.asyncio
+async def test_create_stakeholder_rejects_supplier_from_other_org(db: AsyncSession):
+    org = await _create_org(db)
+    other_org = await _create_org(db)
+    admin = await _create_profile(
+        db,
+        organization_id=org.id,
+        email="admin@example.com",
+        role_v2="admin",
+        role_legacy="admin",
+    )
+
+    client = await _create_client(db, organization_id=org.id)
+    project = await _create_project(db, organization_id=org.id, client_id=client.id)
+    foreign_supplier = await _create_supplier(db, organization_id=other_org.id, category="freelancer")
+    await db.flush()
+
+    with pytest.raises(HTTPException) as exc:
+        await stakeholders_endpoints.create_stakeholder(
+            stakeholder_in=StakeholderCreate(
+                name="Crew Member",
+                role="Gaffer",
+                project_id=project.id,
+                supplier_id=foreign_supplier.id,
+            ),
+            organization_id=org.id,
+            profile=admin,
+            db=db,
+        )
+
+    assert exc.value.status_code == 400
+    assert exc.value.detail == "Invalid supplier_id for this organization"
 
 
 @pytest.mark.asyncio

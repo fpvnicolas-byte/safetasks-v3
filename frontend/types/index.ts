@@ -859,6 +859,7 @@ export interface ContactDetail extends Contact {
   address: string | null
   bank_info: Record<string, unknown> | null
   assignments: ContactAssignment[]
+  project_access_assignments: ContactProjectAccessAssignment[]
   team_info: ContactTeamInfo | null
   pending_invite: ContactInviteInfo | null
 }
@@ -891,6 +892,13 @@ export interface ContactInviteInfo {
   role_v2: string
   status: string
   expires_at: ISODateTime | null
+  created_at: ISODateTime | null
+}
+
+export interface ContactProjectAccessAssignment {
+  id: UUID
+  project_id: UUID
+  project_title: string
   created_at: ISODateTime | null
 }
 

@@ -226,18 +226,16 @@ class ContactOut(BaseModel):
 
 class ContactAssignment(BaseModel):
     """Project assignment info for a contact."""
-    stakeholder_id: UUID
+    id: UUID
     project_id: UUID
-    project_name: str
+    project_title: str
     role: str
     status: str
     rate_type: Optional[str] = None
     rate_value_cents: Optional[int] = None
     booking_start_date: Optional[date] = None
     booking_end_date: Optional[date] = None
-    total_paid_cents: int = 0
-    pending_amount_cents: Optional[int] = None
-    payment_status: str = "not_configured"
+    is_active: bool = True
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -245,22 +243,32 @@ class ContactAssignment(BaseModel):
 class ContactTeamInfo(BaseModel):
     """Platform access info for a contact."""
     profile_id: UUID
-    role: str
+    full_name: Optional[str] = None
     email: str
-    is_active: bool = True
-    created_at: datetime
+    effective_role: str
+    is_master_owner: bool = False
+    created_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class ContactInviteInfo(BaseModel):
     """Pending invite info for a contact."""
-    invite_id: UUID
-    email: str
-    role: str
+    id: UUID
+    invited_email: str
+    role_v2: str
     created_at: datetime
     expires_at: Optional[datetime] = None
     status: str = "pending"
+
+    model_config = ConfigDict(from_attributes=True)
+
+class ContactProjectAccessAssignment(BaseModel):
+    """Project access assignment info for linked freelancer contacts."""
+    id: UUID
+    project_id: UUID
+    project_title: str
+    created_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -270,6 +278,7 @@ class ContactDetailOut(ContactOut):
     address: Optional[str] = None
     bank_info: Optional[Dict[str, Any]] = None
     assignments: List[ContactAssignment] = []
+    project_access_assignments: List[ContactProjectAccessAssignment] = []
     team_info: Optional[ContactTeamInfo] = None
     pending_invite: Optional[ContactInviteInfo] = None
 

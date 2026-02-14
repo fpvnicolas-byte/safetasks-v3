@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '../client'
 import { Contact, ContactDetail, ContactFilters } from '@/types'
 
-const CONTACTS_KEY = 'contacts'
+export const CONTACTS_KEY = 'contacts'
 
 interface UseContactsOptions {
   enabled?: boolean

@@ -243,14 +243,12 @@ async def ensure_and_reserve_resource_limit(
     delta: int = 1
 ) -> None:
     entitlement = await get_entitlement(db, organization)
-    if not entitlement:
-        return
 
     limit_map = {
-        "projects": entitlement.max_projects,
-        "clients": entitlement.max_clients,
-        "proposals": entitlement.max_proposals,
-        "users": entitlement.max_users,
+        "projects": entitlement.max_projects if entitlement else None,
+        "clients": entitlement.max_clients if entitlement else None,
+        "proposals": entitlement.max_proposals if entitlement else None,
+        "users": entitlement.max_users if entitlement else None,
     }
     field_map = {
         "projects": "projects_count",

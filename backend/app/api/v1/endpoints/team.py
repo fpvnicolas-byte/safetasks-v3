@@ -16,6 +16,7 @@ from app.api.deps import (
 from app.db.session import get_db
 from app.models.profiles import Profile
 from app.models.access import ProjectAssignment
+from app.models.commercial import Supplier
 from app.schemas.invites import TeamMemberOut, ChangeRolePayload
 from app.services.entitlements import increment_usage_count
 
@@ -162,6 +163,18 @@ async def remove_member(
     await db.execute(
         delete(ProjectAssignment).where(ProjectAssignment.user_id == profile_id)
     )
+
+    # Clear supplier links in this org to avoid stale "active platform user" contacts.
+    suppliers_result = await db.execute(
+        select(Supplier).where(
+            Supplier.organization_id == organization_id,
+            Supplier.profile_id == profile_id,
+        )
+    )
+    linked_suppliers = suppliers_result.scalars().all()
+    for supplier in linked_suppliers:
+        supplier.profile_id = None
+        db.add(supplier)
 
     # Decrement seat count
     await increment_usage_count(db, organization_id, resource="users", delta=-1)

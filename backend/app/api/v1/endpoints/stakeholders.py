@@ -134,6 +134,20 @@ async def create_stakeholder(
     from app.models.transactions import Transaction
     from app.models.commercial import Supplier as SupplierModel
 
+    if stakeholder_in.supplier_id:
+        supplier_result = await db.execute(
+            select(SupplierModel).where(
+                SupplierModel.id == stakeholder_in.supplier_id,
+                SupplierModel.organization_id == organization_id,
+            )
+        )
+        supplier = supplier_result.scalar_one_or_none()
+        if not supplier:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid supplier_id for this organization",
+            )
+
     # Auto-create supplier if not provided
     if not stakeholder_in.supplier_id:
         new_supplier = SupplierModel(

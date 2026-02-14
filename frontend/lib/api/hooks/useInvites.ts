@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../client'
+import { CONTACTS_KEY } from './useContacts'
 
 const INVITES_KEY = 'invites'
 
@@ -41,6 +42,7 @@ export function useCreateInvite() {
       apiClient.post<InviteCreateResponse>('/api/v1/invites/', payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [INVITES_KEY] })
+      queryClient.invalidateQueries({ queryKey: [CONTACTS_KEY] })
     },
   })
 }
@@ -52,6 +54,7 @@ export function useRevokeInvite() {
       apiClient.post(`/api/v1/invites/${inviteId}/revoke`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [INVITES_KEY] })
+      queryClient.invalidateQueries({ queryKey: [CONTACTS_KEY] })
     },
   })
 }
@@ -63,6 +66,7 @@ export function useResendInvite() {
       apiClient.post<{ invite_link: string }>(`/api/v1/invites/${inviteId}/resend`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [INVITES_KEY] })
+      queryClient.invalidateQueries({ queryKey: [CONTACTS_KEY] })
     },
   })
 }

@@ -537,10 +537,48 @@
         "mediaDescription": "Envie imagens, vídeos e outros recursos de mídia"
       },
       "team": {
-        "title": "Equipe",
-        "description": "Gerencie stakeholders e membros da equipe do projeto",
+        "title": "Equipe de Projeto",
+        "description": "Gerencie atribuições da equipe e contatos vinculados",
         "addMember": "Adicionar Membro",
-        "empty": "Nenhum membro da equipe encontrado para este projeto"
+        "empty": "Nenhum membro da equipe encontrado para este projeto",
+        "goToContacts": "Adicionar Contatos",
+        "noContactsDescription": "Crie contatos antes de atribuir equipe a este projeto.",
+        "invalidRateValue": "Informe um valor de taxa válido e não negativo.",
+        "addSuccess": "Membro adicionado com sucesso",
+        "addError": "Falha ao adicionar membro",
+        "editSuccess": "Membro atualizado com sucesso",
+        "editError": "Falha ao atualizar membro",
+        "deleteError": "Falha ao remover membro",
+        "addDialog": {
+          "title": "Adicionar Membro",
+          "description": "Selecione um contato e configure a função no projeto.",
+          "contact": "Contato",
+          "contactPlaceholder": "Escolha um contato",
+          "role": "Função",
+          "rolePlaceholder": "ex: Diretor, Gaffer, Assistente de Produção",
+          "rateType": "Tipo de Taxa",
+          "rateTypePlaceholder": "Selecione o tipo de taxa",
+          "rateValue": "Valor da Taxa",
+          "daily": "Diária",
+          "hourly": "Por Hora",
+          "fixed": "Fixo",
+          "submit": "Adicionar Membro",
+          "adding": "Adicionando..."
+        },
+        "editDialog": {
+          "title": "Editar Membro",
+          "description": "Atualize função e taxas de {name}.",
+          "role": "Função",
+          "rolePlaceholder": "ex: Diretor, Gaffer, Assistente de Produção",
+          "rateType": "Tipo de Taxa",
+          "rateTypePlaceholder": "Selecione o tipo de taxa",
+          "rateValue": "Valor da Taxa",
+          "daily": "Diária",
+          "hourly": "Por Hora",
+          "fixed": "Fixo",
+          "submit": "Salvar Alterações",
+          "saving": "Salvando..."
+        }
       }
     }
   },
@@ -3643,7 +3681,10 @@
       "totalTransactions": "Total de Transações",
       "periodTotal": "Total do Período",
       "period": "Período",
-      "byProject": "Por Projeto"
+      "byProject": "Por Projeto",
+      "allTime": "Todo o período",
+      "present": "Atual",
+      "unknownProject": "Desconhecido"
     },
     "info": {
       "title": "Informações do Contato",
@@ -3666,16 +3707,26 @@
     "projects": {
       "title": "Atribuições em Projetos",
       "description": "Projetos aos quais este contato está atribuído",
+      "projectAccessTitle": "Acesso a Projetos",
+      "projectAccessDescription": "Projetos que este freelancer pode acessar",
+      "workAssignmentsTitle": "Atribuições de Trabalho",
+      "workAssignmentsDescription": "Reservas de equipe vinculadas a este contato",
       "assignToProject": "Atribuir ao Projeto",
       "noAssignments": "Nenhuma atribuição de projeto ainda",
+      "noProjectAccess": "Nenhum acesso a projeto atribuído ainda",
       "noAssignmentsHelp": "Atribua este contato a um projeto para acompanhar trabalho e pagamentos.",
+      "removeProjectAccess": "Remover Acesso",
+      "accessRemoved": "Acesso ao projeto removido",
+      "accessRemoveError": "Falha ao remover acesso ao projeto",
       "table": {
         "project": "Projeto",
         "role": "Função",
         "status": "Status",
         "rate": "Taxa",
         "bookingDates": "Datas de Reserva",
-        "paymentStatus": "Pagamento"
+        "paymentStatus": "Pagamento",
+        "assignedAt": "Atribuído em",
+        "actions": "Ações"
       },
       "paymentStatus": {
         "pending": "Pendente",
@@ -3748,23 +3799,41 @@
       }
     },
     "assignDialog": {
-      "title": "Atribuir ao Projeto",
-      "description": "Atribua este contato a um projeto como membro da equipe",
+      "title": {
+        "stakeholder": "Atribuir Trabalho ao Projeto",
+        "projectAccess": "Conceder Acesso ao Projeto"
+      },
+      "description": {
+        "stakeholder": "Atribua {name} como membro da equipe no projeto.",
+        "projectAccess": "Conceda visibilidade de projeto para {name}."
+      },
       "selectProject": "Selecionar Projeto",
       "projectPlaceholder": "Escolha um projeto",
+      "noProjects": "Nenhum projeto disponível",
       "role": "Função",
       "rolePlaceholder": "ex: Diretor, Cameraman, Gaffer",
       "rateType": "Tipo de Taxa",
+      "rateTypePlaceholder": "Escolha o tipo de taxa",
       "daily": "Diária",
       "hourly": "Por Hora",
       "fixed": "Fixo",
       "rateValue": "Valor",
-      "startDate": "Data de Início",
-      "endDate": "Data de Término",
+      "cancel": "Cancelar",
       "assign": "Atribuir",
       "assigning": "Atribuindo...",
-      "success": "Contato atribuído ao projeto com sucesso",
-      "error": "Falha ao atribuir contato ao projeto"
+      "success": {
+        "stakeholder": "Atribuição de trabalho criada com sucesso",
+        "projectAccess": "Acesso ao projeto concedido com sucesso"
+      },
+      "errors": {
+        "missingProfile": "Este contato não está vinculado a um perfil freelancer ativo.",
+        "stakeholder400": "Dados de atribuição de trabalho inválidos.",
+        "projectAccess400": "Atribuição de acesso ao projeto inválida.",
+        "stakeholder409": "Este contato já está atribuído como equipe neste projeto.",
+        "projectAccess409": "Este freelancer já possui acesso a este projeto.",
+        "forbidden": "Você não tem permissão para executar esta ação.",
+        "generic": "Falha ao atribuir contato ao projeto."
+      }
     },
     "form": {
       "createTitle": "Adicionar Novo Contato",

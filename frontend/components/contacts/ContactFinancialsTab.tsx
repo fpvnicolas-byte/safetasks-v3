@@ -103,7 +103,7 @@ export function ContactFinancialsTab({ contact, organizationId }: ContactFinanci
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">{t('period')}</div>
                   <div className="text-sm">
-                    {statement.statement_period.from || 'All time'} - {statement.statement_period.to || 'Present'}
+                    {statement.statement_period.from || t('allTime')} - {statement.statement_period.to || t('present')}
                   </div>
                 </div>
               </div>
@@ -116,7 +116,7 @@ export function ContactFinancialsTab({ contact, organizationId }: ContactFinanci
                       const rec = project as Record<string, unknown>
                       return (
                         <div key={index} className="flex items-center justify-between p-2 border rounded">
-                          <span className="text-sm">{(rec.project_name as string) || 'Unknown'}</span>
+                          <span className="text-sm">{(rec.project_name as string) || t('unknownProject')}</span>
                           <span className="font-medium">
                             {formatCurrency((rec.total_cents as number) || 0, statement.currency)}
                           </span>

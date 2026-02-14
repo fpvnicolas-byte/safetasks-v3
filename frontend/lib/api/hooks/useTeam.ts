@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../client'
+import { CONTACTS_KEY } from './useContacts'
 
 const TEAM_KEY = 'team'
 
@@ -29,6 +30,7 @@ export function useChangeRole() {
       apiClient.patch(`/api/v1/team/members/${profileId}/role`, { role_v2 }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [TEAM_KEY] })
+      queryClient.invalidateQueries({ queryKey: [CONTACTS_KEY] })
     },
   })
 }
@@ -40,6 +42,7 @@ export function useRemoveMember() {
       apiClient.delete(`/api/v1/team/members/${profileId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [TEAM_KEY] })
+      queryClient.invalidateQueries({ queryKey: [CONTACTS_KEY] })
     },
   })
 }

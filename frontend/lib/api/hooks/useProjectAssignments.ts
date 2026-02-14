@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../client'
+import { CONTACTS_KEY } from './useContacts'
 
 const PROJECT_ASSIGNMENTS_KEY = 'project_assignments'
 
@@ -36,6 +37,7 @@ export function useCreateProjectAssignment() {
       apiClient.post<ProjectAssignment>('/api/v1/project-assignments/', payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [PROJECT_ASSIGNMENTS_KEY] })
+      queryClient.invalidateQueries({ queryKey: [CONTACTS_KEY] })
     },
   })
 }
@@ -47,7 +49,7 @@ export function useDeleteProjectAssignment() {
       apiClient.delete(`/api/v1/project-assignments/${assignmentId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [PROJECT_ASSIGNMENTS_KEY] })
+      queryClient.invalidateQueries({ queryKey: [CONTACTS_KEY] })
     },
   })
 }
-

@@ -13,7 +13,6 @@ import { LocaleLink } from '@/components/LocaleLink'
 import { useTranslations } from 'next-intl'
 import { useDeleteSupplier } from '@/lib/api/hooks'
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
-import { getSupplierCategoryDisplayName } from '@/types'
 import { ContactInfoTab } from '@/components/contacts/ContactInfoTab'
 import { ContactProjectsTab } from '@/components/contacts/ContactProjectsTab'
 import { ContactFinancialsTab } from '@/components/contacts/ContactFinancialsTab'
@@ -73,7 +72,7 @@ export default function ContactDetailPage() {
             <h1 className="text-3xl font-bold">{contact.name}</h1>
             <div className="flex items-center gap-2 mt-1">
               <Badge variant="secondary">
-                {getSupplierCategoryDisplayName(contact.category)}
+                {t(`categories.${contact.category}`)}
               </Badge>
               <Badge variant={contact.is_active ? 'default' : 'outline'}>
                 {contact.is_active ? t('card.active') : t('card.inactive')}

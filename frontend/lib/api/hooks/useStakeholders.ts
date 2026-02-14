@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../client'
+import { CONTACTS_KEY } from './useContacts'
 import {
   Stakeholder,
   StakeholderCreate,
@@ -40,6 +41,7 @@ export function useCreateStakeholder() {
       apiClient.post<Stakeholder>('/api/v1/stakeholders/', stakeholder),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [STAKEHOLDERS_KEY] })
+      queryClient.invalidateQueries({ queryKey: [CONTACTS_KEY] })
     },
   })
 }
@@ -52,6 +54,7 @@ export function useUpdateStakeholder() {
       apiClient.put<Stakeholder>(`/api/v1/stakeholders/${stakeholderId}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [STAKEHOLDERS_KEY] })
+      queryClient.invalidateQueries({ queryKey: [CONTACTS_KEY] })
     },
   })
 }
@@ -70,6 +73,7 @@ export function useDeleteStakeholder() {
       // Invalidate budget + financial summary as well
       queryClient.invalidateQueries({ queryKey: ['budget'] })
       queryClient.invalidateQueries({ queryKey: ['project_financial_summary'] })
+      queryClient.invalidateQueries({ queryKey: [CONTACTS_KEY] })
     },
   })
 }

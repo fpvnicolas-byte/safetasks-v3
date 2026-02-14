@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,12 +8,13 @@ from app.api.deps import (
     require_admin_producer_or_finance,
 )
 from app.db.session import get_db
+from app.schemas.commercial import ContactOut, ContactDetailOut
 from app.services.contacts import contacts_service
 
 router = APIRouter()
 
 
-@router.get("/", dependencies=[Depends(require_admin_producer_or_finance)])
+@router.get("/", response_model=List[ContactOut], dependencies=[Depends(require_admin_producer_or_finance)])
 async def get_contacts(
     organization_id: UUID = Depends(get_organization_from_profile),
     db: AsyncSession = Depends(get_db),
@@ -33,7 +34,7 @@ async def get_contacts(
     )
 
 
-@router.get("/{supplier_id}", dependencies=[Depends(require_admin_producer_or_finance)])
+@router.get("/{supplier_id}", response_model=ContactDetailOut, dependencies=[Depends(require_admin_producer_or_finance)])
 async def get_contact_detail(
     supplier_id: UUID,
     organization_id: UUID = Depends(get_organization_from_profile),

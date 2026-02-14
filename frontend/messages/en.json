@@ -537,10 +537,48 @@
         "mediaDescription": "Upload images, videos, and other media assets"
       },
       "team": {
-        "title": "Team",
-        "description": "Manage project stakeholders and team members",
-        "addMember": "Add Member",
-        "empty": "No team members found for this project"
+        "title": "Crew",
+        "description": "Manage project crew assignments and linked contacts",
+        "addMember": "Add Crew Member",
+        "empty": "No crew members found for this project",
+        "goToContacts": "Add Contacts First",
+        "noContactsDescription": "Create contacts before assigning crew to this project.",
+        "invalidRateValue": "Enter a valid non-negative rate value.",
+        "addSuccess": "Crew member added successfully",
+        "addError": "Failed to add crew member",
+        "editSuccess": "Crew member updated successfully",
+        "editError": "Failed to update crew member",
+        "deleteError": "Failed to remove crew member",
+        "addDialog": {
+          "title": "Add Crew Member",
+          "description": "Select a contact and configure their project role.",
+          "contact": "Contact",
+          "contactPlaceholder": "Choose a contact",
+          "role": "Role",
+          "rolePlaceholder": "e.g., Director, Gaffer, Production Assistant",
+          "rateType": "Rate Type",
+          "rateTypePlaceholder": "Select rate type",
+          "rateValue": "Rate Value",
+          "daily": "Daily",
+          "hourly": "Hourly",
+          "fixed": "Fixed",
+          "submit": "Add Member",
+          "adding": "Adding..."
+        },
+        "editDialog": {
+          "title": "Edit Crew Member",
+          "description": "Update role and rates for {name}.",
+          "role": "Role",
+          "rolePlaceholder": "e.g., Director, Gaffer, Production Assistant",
+          "rateType": "Rate Type",
+          "rateTypePlaceholder": "Select rate type",
+          "rateValue": "Rate Value",
+          "daily": "Daily",
+          "hourly": "Hourly",
+          "fixed": "Fixed",
+          "submit": "Save Changes",
+          "saving": "Saving..."
+        }
       }
     }
   },
@@ -3643,7 +3681,10 @@
       "totalTransactions": "Total Transactions",
       "periodTotal": "Period Total",
       "period": "Period",
-      "byProject": "By Project"
+      "byProject": "By Project",
+      "allTime": "All time",
+      "present": "Present",
+      "unknownProject": "Unknown"
     },
     "info": {
       "title": "Contact Information",
@@ -3666,16 +3707,26 @@
     "projects": {
       "title": "Project Assignments",
       "description": "Projects this contact is assigned to",
+      "projectAccessTitle": "Project Access",
+      "projectAccessDescription": "Projects this freelancer can access",
+      "workAssignmentsTitle": "Work Assignments",
+      "workAssignmentsDescription": "Stakeholder bookings linked to this contact",
       "assignToProject": "Assign to Project",
       "noAssignments": "No project assignments yet",
+      "noProjectAccess": "No project access assignments yet",
       "noAssignmentsHelp": "Assign this contact to a project to track their work and payments.",
+      "removeProjectAccess": "Remove Access",
+      "accessRemoved": "Project access removed",
+      "accessRemoveError": "Failed to remove project access",
       "table": {
         "project": "Project",
         "role": "Role",
         "status": "Status",
         "rate": "Rate",
         "bookingDates": "Booking Dates",
-        "paymentStatus": "Payment"
+        "paymentStatus": "Payment",
+        "assignedAt": "Assigned",
+        "actions": "Actions"
       },
       "paymentStatus": {
         "pending": "Pending",
@@ -3748,23 +3799,41 @@
       }
     },
     "assignDialog": {
-      "title": "Assign to Project",
-      "description": "Assign this contact to a project as a team member",
+      "title": {
+        "stakeholder": "Assign Work to Project",
+        "projectAccess": "Grant Project Access"
+      },
+      "description": {
+        "stakeholder": "Assign {name} as a project crew member.",
+        "projectAccess": "Grant {name} visibility to a project."
+      },
       "selectProject": "Select Project",
       "projectPlaceholder": "Choose a project",
+      "noProjects": "No projects available",
       "role": "Role",
       "rolePlaceholder": "e.g., Director, Cameraman, Gaffer",
       "rateType": "Rate Type",
+      "rateTypePlaceholder": "Choose rate type",
       "daily": "Daily",
       "hourly": "Hourly",
       "fixed": "Fixed",
       "rateValue": "Rate Value",
-      "startDate": "Start Date",
-      "endDate": "End Date",
+      "cancel": "Cancel",
       "assign": "Assign",
       "assigning": "Assigning...",
-      "success": "Contact assigned to project successfully",
-      "error": "Failed to assign contact to project"
+      "success": {
+        "stakeholder": "Work assignment created successfully",
+        "projectAccess": "Project access granted successfully"
+      },
+      "errors": {
+        "missingProfile": "This contact is not linked to an active freelancer profile.",
+        "stakeholder400": "Invalid work assignment data.",
+        "projectAccess400": "Invalid project access assignment.",
+        "stakeholder409": "This contact is already assigned as crew on this project.",
+        "projectAccess409": "This freelancer already has access to this project.",
+        "forbidden": "You do not have permission to perform this action.",
+        "generic": "Failed to assign contact to project."
+      }
     },
     "form": {
       "createTitle": "Add New Contact",
