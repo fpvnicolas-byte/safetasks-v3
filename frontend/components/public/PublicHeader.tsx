@@ -24,7 +24,7 @@ export function PublicHeader({ extraNav }: PublicHeaderProps) {
             <Clapperboard className="h-6 w-6" />
           </div>
           <div>
-            <div className="text-lg font-semibold tracking-tight">SafeTasks</div>
+            <div className="text-lg font-semibold tracking-tight">Produzo</div>
             <div className="text-xs uppercase tracking-[0.32em] text-slate-500">Production OS</div>
           </div>
         </Link>

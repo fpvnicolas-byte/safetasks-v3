@@ -76,8 +76,8 @@ export function Header({ onSidebarToggle }: HeaderProps) {
     <header className="border-b">
       <div className="flex h-14 items-center px-4 gap-4 md:h-16">
         <LocaleLink href={homeHref} className="inline-flex font-display text-xl font-semibold tracking-tight md:text-2xl">
-          <span className="md:hidden">SafeTasks</span>
-          <span className="hidden md:inline">SafeTasks V3</span>
+          <span className="md:hidden">Produzo</span>
+          <span className="hidden md:inline">Produzo</span>
         </LocaleLink>
 
         <nav className="hidden md:flex gap-6 ml-6">
