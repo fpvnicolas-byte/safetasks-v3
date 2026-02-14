@@ -255,7 +255,7 @@ export default function PlansPage() {
             </div>
           </div>
           <Button variant="outline" className="w-full" asChild>
-            <a href="mailto:sales@safetasks.com">Contact Sales</a>
+            <a href="mailto:sales@produzo.app">Contact Sales</a>
           </Button>
         </CardContent>
       </Card>
