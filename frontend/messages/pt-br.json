@@ -60,7 +60,7 @@
   },
   "auth": {
     "login": {
-      "title": "Bem-vindo ao SafeTasks V3",
+      "title": "Bem-vindo ao Produzo",
       "subtitle": "Entre na sua conta",
       "backToHome": "Voltar para Home",
       "email": "E-mail",
@@ -73,7 +73,7 @@
     },
     "register": {
       "title": "Criar Conta",
-      "subtitle": "Cadastre-se no SafeTasks V3",
+      "subtitle": "Cadastre-se no Produzo",
       "fullName": "Nome Completo",
       "fullNamePlaceholder": "João Silva",
       "email": "E-mail",
@@ -230,7 +230,7 @@
     "exportPDF": "Exportar como PDF",
     "bugReportModal": {
       "title": "Reportar um Bug",
-      "description": "Nos ajude a melhorar o SafeTasks reportando problemas encontrados.",
+      "description": "Nos ajude a melhorar o Produzo reportando problemas encontrados.",
       "fields": {
         "titleLabel": "Titulo",
         "titlePlaceholder": "Breve descricao do problema",
@@ -2622,7 +2622,7 @@
   },
   "notifications": {
     "messages": {
-      "welcome_title": "Bem-vindo ao SafeTasks! 🎬",
+      "welcome_title": "Bem-vindo ao Produzo! 🎬",
       "welcome_message": "Seu sistema de gestão de produção está pronto. Comece criando seu primeiro projeto ou enviando um roteiro para análise de IA.",
       "script_analysis_complete_title": "Análise de Roteiro Completa ✅",
       "script_analysis_complete_message": "Seu roteiro foi analisado. Encontrados {characters} personagens e {scenes} cenas.",
@@ -2688,7 +2688,7 @@
     },
     "hero": {
       "eyebrow": "Feito para produtoras audiovisuais",
-      "title": "SafeTasks é o sistema de produção que conecta projetos, pessoas e dinheiro.",
+      "title": "Produzo é o sistema de produção que conecta projetos, pessoas e dinheiro.",
       "subtitle": "O melhor do Yandu + Jobb System, reconstruído em uma plataforma moderna e com acesso por função.",
       "primaryCta": "Criar conta",
       "secondaryCta": "Ver preços",
@@ -2702,7 +2702,7 @@
     },
     "console": {
       "label": "Console de Produção",
-      "title": "SafeTasks Studio",
+      "title": "Produzo Studio",
       "cards": {
         "active": {
           "label": "Produção ativa",
@@ -2743,7 +2743,7 @@
         "subtitle": "Feito para substituir planilhas soltas e fluxos frágeis."
       },
       "cta": {
-        "title": "Pronto para rodar sua próxima produção no SafeTasks?",
+        "title": "Pronto para rodar sua próxima produção no Produzo?",
         "subtitle": "Crie sua conta e inicie o teste em minutos."
       }
     },
@@ -2835,7 +2835,7 @@
       "primary": "Começar teste",
       "secondary": "Ver planos"
     },
-    "footer": "© 2026 SafeTasks V3. Feito para produções audiovisuais."
+    "footer": "© 2026 Produzo. Feito para produções audiovisuais."
   },
   "pricing": {
     "eyebrow": "Planos",
@@ -2849,7 +2849,7 @@
         "name": "Starter",
         "price": "R$ 39,90",
         "period": "mês",
-        "description": "Para equipes pequenas testando o SafeTasks.",
+        "description": "Para equipes pequenas testando o Produzo.",
         "billingNote": "Mensal",
         "cta": "Escolher Starter",
         "features": [
@@ -2936,7 +2936,7 @@
     },
     "cta": {
       "title": "Comece a produzir hoje",
-      "subtitle": "Crie sua conta e traga o estúdio inteiro para o SafeTasks.",
+      "subtitle": "Crie sua conta e traga o estúdio inteiro para o Produzo.",
       "primary": "Criar conta",
       "secondary": "Voltar para home"
     }
@@ -3368,7 +3368,7 @@
     "trialEndingTitle": "Teste terminando em breve",
     "trialEndingMessage": "Seu teste grátis termina {time}. Faça upgrade para manter acesso total.",
     "trialEndedTitle": "Teste encerrado",
-    "trialEndedMessage": "Seu teste terminou. Faça upgrade para continuar usando o SafeTasks.",
+    "trialEndedMessage": "Seu teste terminou. Faça upgrade para continuar usando o Produzo.",
     "paymentRequiredTitle": "Pagamento necessário",
     "paymentRequiredMessage": "Seu plano foi bloqueado por falta de pagamento. Pague novamente para restaurar o acesso.",
     "renewalSoonTitle": "Renovação do plano em breve",
@@ -3822,21 +3822,21 @@
   },
   "faq": {
     "meta": {
-      "title": "FAQ | SafeTasks",
-      "description": "Encontre respostas para perguntas frequentes sobre o SafeTasks, incluindo cobrança, reembolso, privacidade de dados e uso da plataforma."
+      "title": "FAQ | Produzo",
+      "description": "Encontre respostas para perguntas frequentes sobre o Produzo, incluindo cobrança, reembolso, privacidade de dados e uso da plataforma."
     },
     "hero": {
       "eyebrow": "SUPORTE",
       "title": "Perguntas Frequentes",
-      "subtitle": "Encontre respostas sobre cobrança, reembolso, privacidade e uso do SafeTasks."
+      "subtitle": "Encontre respostas sobre cobrança, reembolso, privacidade e uso do Produzo."
     },
     "categories": {
       "subscriptions": {
         "title": "Assinaturas e Planos",
         "items": [
           {
-            "q": "Quais planos o SafeTasks oferece?",
-            "a": "O SafeTasks oferece três planos: Starter para equipes pequenas, Professional para produtoras em crescimento e Enterprise para grandes estúdios. Todos os planos incluem recursos essenciais de gestão de projetos, com planos superiores desbloqueando ferramentas financeiras avançadas, mais armazenamento e suporte prioritário."
+            "q": "Quais planos o Produzo oferece?",
+            "a": "O Produzo oferece três planos: Starter para equipes pequenas, Professional para produtoras em crescimento e Enterprise para grandes estúdios. Todos os planos incluem recursos essenciais de gestão de projetos, com planos superiores desbloqueando ferramentas financeiras avançadas, mais armazenamento e suporte prioritário."
           },
           {
             "q": "Como funciona o período de teste gratuito?",
@@ -3861,7 +3861,7 @@
           },
           {
             "q": "Como solicito um reembolso?",
-            "a": "Para solicitar um reembolso dentro do prazo de 7 dias de arrependimento, acesse Configurações > Cobrança > Cancelar Assinatura ou envie um e-mail para support@safetasks.com. Solicitações de reembolso dentro do prazo de 7 dias são processadas automaticamente sem necessidade de justificativa."
+            "a": "Para solicitar um reembolso dentro do prazo de 7 dias de arrependimento, acesse Configurações > Cobrança > Cancelar Assinatura ou envie um e-mail para support@produzo.app. Solicitações de reembolso dentro do prazo de 7 dias são processadas automaticamente sem necessidade de justificativa."
           },
           {
             "q": "Quanto tempo leva para processar um reembolso?",
@@ -3869,7 +3869,7 @@
           },
           {
             "q": "Posso obter reembolso após o prazo de 7 dias de arrependimento?",
-            "a": "Após o prazo de 7 dias de arrependimento, cancelamentos passam a valer no final do ciclo de cobrança atual. Você manterá acesso aos recursos do seu plano até essa data. Reembolsos proporcionais podem ser concedidos caso a caso para planos anuais — entre em contato com support@safetasks.com."
+            "a": "Após o prazo de 7 dias de arrependimento, cancelamentos passam a valer no final do ciclo de cobrança atual. Você manterá acesso aos recursos do seu plano até essa data. Reembolsos proporcionais podem ser concedidos caso a caso para planos anuais — entre em contato com support@produzo.app."
           }
         ]
       },
@@ -3878,7 +3878,7 @@
         "items": [
           {
             "q": "Como cancelo minha assinatura?",
-            "a": "Acesse Configurações > Cobrança e clique em 'Cancelar Assinatura'. Você também pode entrar em contato com support@safetasks.com. O cancelamento entra em vigor no final do período de cobrança atual, e você mantém acesso até lá."
+            "a": "Acesse Configurações > Cobrança e clique em 'Cancelar Assinatura'. Você também pode entrar em contato com support@produzo.app. O cancelamento entra em vigor no final do período de cobrança atual, e você mantém acesso até lá."
           },
           {
             "q": "O que acontece com meus dados após o cancelamento?",
@@ -3894,16 +3894,16 @@
         "title": "Privacidade e Proteção de Dados",
         "items": [
           {
-            "q": "Quais dados o SafeTasks coleta?",
+            "q": "Quais dados o Produzo coleta?",
             "a": "Coletamos os dados necessários para fornecer nossos serviços: informações da conta (nome, e-mail), dados de projetos criados por você, análises de uso e informações de pagamento processadas com segurança através do Stripe. Não vendemos seus dados a terceiros."
           },
           {
-            "q": "Como o SafeTasks cumpre a LGPD?",
-            "a": "O SafeTasks cumpre integralmente a Lei Geral de Proteção de Dados (LGPD). Realizamos o tratamento de dados pessoais com base em interesse legítimo e necessidade contratual. Você pode exercer seus direitos como titular dos dados a qualquer momento."
+            "q": "Como o Produzo cumpre a LGPD?",
+            "a": "O Produzo cumpre integralmente a Lei Geral de Proteção de Dados (LGPD). Realizamos o tratamento de dados pessoais com base em interesse legítimo e necessidade contratual. Você pode exercer seus direitos como titular dos dados a qualquer momento."
           },
           {
             "q": "Quais são meus direitos como titular dos dados sob a LGPD?",
-            "a": "Sob a LGPD, você tem direito a: acessar seus dados pessoais, corrigir dados incorretos, solicitar a exclusão de seus dados, obter portabilidade dos dados, revogar o consentimento e receber informações sobre com quais entidades seus dados foram compartilhados. Exerça esses direitos em Configurações > Conta ou enviando e-mail para privacy@safetasks.com."
+            "a": "Sob a LGPD, você tem direito a: acessar seus dados pessoais, corrigir dados incorretos, solicitar a exclusão de seus dados, obter portabilidade dos dados, revogar o consentimento e receber informações sobre com quais entidades seus dados foram compartilhados. Exerça esses direitos em Configurações > Conta ou enviando e-mail para privacy@produzo.app."
           },
           {
             "q": "Onde meus dados são armazenados?",
@@ -3937,11 +3937,11 @@
         "items": [
           {
             "q": "Quais navegadores são suportados?",
-            "a": "O SafeTasks funciona em todos os navegadores modernos: Chrome, Firefox, Safari e Edge (duas versões mais recentes). Recomendamos o Chrome para a melhor experiência."
+            "a": "O Produzo funciona em todos os navegadores modernos: Chrome, Firefox, Safari e Edge (duas versões mais recentes). Recomendamos o Chrome para a melhor experiência."
           },
           {
-            "q": "Posso usar o SafeTasks no celular?",
-            "a": "Sim. O SafeTasks é totalmente responsivo e funciona em navegadores móveis. Embora ainda não tenhamos um aplicativo nativo, a experiência web móvel é otimizada para uso no set e em movimento."
+            "q": "Posso usar o Produzo no celular?",
+            "a": "Sim. O Produzo é totalmente responsivo e funciona em navegadores móveis. Embora ainda não tenhamos um aplicativo nativo, a experiência web móvel é otimizada para uso no set e em movimento."
           },
           {
             "q": "Posso exportar meus dados?",
@@ -3958,25 +3958,25 @@
       "title": "Ainda tem dúvidas?",
       "description": "Nossa equipe de suporte está aqui para ajudar.",
       "cta": "Falar com o Suporte",
-      "email": "support@safetasks.com"
+      "email": "support@produzo.app"
     }
   },
   "about": {
     "meta": {
-      "title": "Sobre Nós | SafeTasks",
-      "description": "Conheça o SafeTasks — a plataforma de gestão de produção para equipes audiovisuais. Nossa missão, história e equipe."
+      "title": "Sobre Nós | Produzo",
+      "description": "Conheça o Produzo — a plataforma de gestão de produção para equipes audiovisuais. Nossa missão, história e equipe."
     },
     "hero": {
       "eyebrow": "SOBRE NÓS",
       "title": "Feito para equipes de produção audiovisual",
-      "subtitle": "SafeTasks é uma plataforma de gestão de produção projetada para simplificar o caos da produção de cinema, TV e conteúdo."
+      "subtitle": "Produzo é uma plataforma de gestão de produção projetada para simplificar o caos da produção de cinema, TV e conteúdo."
     },
     "story": {
       "title": "Nossa História",
       "paragraphs": [
         "Gerenciar produções audiovisuais sempre foi complexo — planilhas dispersas, orçamentos desorganizados, intermináveis cadeias de e-mail e nenhuma fonte única de verdade para toda a equipe.",
-        "O SafeTasks nasceu da experiência direta de produtores que viveram esse caos. Construímos a plataforma que gostaríamos que existisse: um workspace unificado onde cada função — de produtores executivos a freelancers — pode colaborar, acompanhar finanças, gerenciar cronogramas e manter as produções funcionando sem problemas.",
-        "Hoje, o SafeTasks ajuda equipes de produção em todo o Brasil e além a organizar seu trabalho, controlar custos e entregar projetos no prazo."
+        "O Produzo nasceu da experiência direta de produtores que viveram esse caos. Construímos a plataforma que gostaríamos que existisse: um workspace unificado onde cada função — de produtores executivos a freelancers — pode colaborar, acompanhar finanças, gerenciar cronogramas e manter as produções funcionando sem problemas.",
+        "Hoje, o Produzo ajuda equipes de produção em todo o Brasil e além a organizar seu trabalho, controlar custos e entregar projetos no prazo."
       ]
     },
     "values": {
@@ -4002,12 +4002,12 @@
     },
     "team": {
       "title": "Nossa Equipe",
-      "subtitle": "As pessoas por trás do SafeTasks.",
+      "subtitle": "As pessoas por trás do Produzo.",
       "members": [
         {
           "name": "Membro da Equipe",
           "role": "Fundador e CEO",
-          "bio": "Produtor audiovisual que se tornou empreendedor de tecnologia. Criou o SafeTasks para resolver os problemas que enfrentava diariamente no set."
+          "bio": "Produtor audiovisual que se tornou empreendedor de tecnologia. Criou o Produzo para resolver os problemas que enfrentava diariamente no set."
         },
         {
           "name": "Membro da Equipe",
@@ -4025,11 +4025,11 @@
       "title": "Entre em Contato",
       "description": "Tem perguntas, ideias de parceria ou feedback? Adoraríamos ouvir de você.",
       "cta": "Fale Conosco",
-      "email": "contact@safetasks.com"
+      "email": "contact@produzo.app"
     }
   },
   "publicFooter": {
-    "copyright": "© 2026 SafeTasks. Todos os direitos reservados.",
+    "copyright": "© 2026 Produzo. Todos os direitos reservados.",
     "links": {
       "faq": "FAQ",
       "about": "Sobre Nós",
