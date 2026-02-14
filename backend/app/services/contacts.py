@@ -1,13 +1,14 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_, case
+from sqlalchemy import select, func, and_, or_
 from typing import List, Optional, Dict, Any
 from uuid import UUID
-from datetime import datetime
 
 from app.models.commercial import Supplier, Stakeholder
 from app.models.transactions import Transaction
 from app.models.profiles import Profile
 from app.models.invites import OrganizationInvite
+from app.models.access import ProjectAssignment
+from app.models.projects import Project
 
 
 class ContactsService:
@@ -56,7 +57,10 @@ class ContactsService:
                 Stakeholder.supplier_id,
                 func.count(func.distinct(Stakeholder.project_id)).label("project_count"),
             )
-            .where(Stakeholder.supplier_id.in_(supplier_ids))
+            .where(
+                Stakeholder.supplier_id.in_(supplier_ids),
+                Stakeholder.organization_id == organization_id,
+            )
             .group_by(Stakeholder.supplier_id)
         )
         project_counts_result = await db.execute(project_counts_q)
@@ -71,6 +75,7 @@ class ContactsService:
             .where(
                 Transaction.supplier_id.in_(supplier_ids),
                 Transaction.type == "expense",
+                Transaction.organization_id == organization_id,
             )
             .group_by(Transaction.supplier_id)
         )
@@ -82,7 +87,11 @@ class ContactsService:
         profile_map: Dict[UUID, Profile] = {}
         if profile_ids:
             profiles_result = await db.execute(
-                select(Profile).where(Profile.id.in_(profile_ids))
+                select(Profile).where(
+                    Profile.id.in_(profile_ids),
+                    Profile.organization_id == organization_id,
+                    Profile.is_active == True,
+                )
             )
             for p in profiles_result.scalars().all():
                 profile_map[p.id] = p
@@ -93,6 +102,7 @@ class ContactsService:
             .where(
                 OrganizationInvite.supplier_id.in_(supplier_ids),
                 OrganizationInvite.status == "pending",
+                OrganizationInvite.org_id == organization_id,
             )
         )
         invite_result = await db.execute(invite_q)
@@ -160,17 +170,22 @@ class ContactsService:
 
         # Get stakeholder assignments
         assignments_result = await db.execute(
-            select(Stakeholder).where(Stakeholder.supplier_id == supplier_id)
+            select(Stakeholder).where(
+                Stakeholder.supplier_id == supplier_id,
+                Stakeholder.organization_id == organization_id,
+            )
         )
         assignments = assignments_result.scalars().all()
 
         # Get project names for assignments
-        from app.models.projects import Project
         project_ids = list(set(a.project_id for a in assignments))
         project_map: Dict[UUID, str] = {}
         if project_ids:
             projects_result = await db.execute(
-                select(Project.id, Project.title).where(Project.id.in_(project_ids))
+                select(Project.id, Project.title).where(
+                    Project.id.in_(project_ids),
+                    Project.organization_id == organization_id,
+                )
             )
             for pid, ptitle in projects_result.all():
                 project_map[pid] = ptitle
@@ -192,19 +207,24 @@ class ContactsService:
 
         # Team info
         team_info = None
+        team_profile: Optional[Profile] = None
         if supplier.profile_id:
             profile_result = await db.execute(
-                select(Profile).where(Profile.id == supplier.profile_id)
+                select(Profile).where(
+                    Profile.id == supplier.profile_id,
+                    Profile.organization_id == organization_id,
+                    Profile.is_active == True,
+                )
             )
-            profile = profile_result.scalar_one_or_none()
-            if profile:
+            team_profile = profile_result.scalar_one_or_none()
+            if team_profile:
                 team_info = {
-                    "profile_id": str(profile.id),
-                    "email": profile.email,
-                    "full_name": profile.full_name,
-                    "effective_role": profile.role_v2 or profile.role,
-                    "is_master_owner": profile.is_master_owner,
-                    "created_at": str(profile.created_at) if profile.created_at else None,
+                    "profile_id": str(team_profile.id),
+                    "email": team_profile.email,
+                    "full_name": team_profile.full_name,
+                    "effective_role": team_profile.role_v2 or team_profile.role,
+                    "is_master_owner": team_profile.is_master_owner,
+                    "created_at": str(team_profile.created_at) if team_profile.created_at else None,
                 }
 
         # Pending invite
@@ -213,6 +233,7 @@ class ContactsService:
             select(OrganizationInvite).where(
                 OrganizationInvite.supplier_id == supplier_id,
                 OrganizationInvite.status == "pending",
+                OrganizationInvite.org_id == organization_id,
             )
         )
         invite = invite_result.scalar_one_or_none()
@@ -231,9 +252,37 @@ class ContactsService:
             select(func.coalesce(func.sum(Transaction.amount_cents), 0)).where(
                 Transaction.supplier_id == supplier_id,
                 Transaction.type == "expense",
+                Transaction.organization_id == organization_id,
             )
         )
         total_spent = spend_result.scalar() or 0
+
+        # Project access assignments for linked freelancer profiles
+        project_access_assignments: List[Dict[str, Any]] = []
+        if team_profile and (team_profile.role_v2 or team_profile.role) == "freelancer":
+            access_result = await db.execute(
+                select(
+                    ProjectAssignment.id,
+                    ProjectAssignment.project_id,
+                    Project.title,
+                    ProjectAssignment.created_at,
+                )
+                .join(Project, Project.id == ProjectAssignment.project_id)
+                .where(
+                    ProjectAssignment.user_id == team_profile.id,
+                    Project.organization_id == organization_id,
+                )
+                .order_by(ProjectAssignment.created_at.desc())
+            )
+            project_access_assignments = [
+                {
+                    "id": str(pa_id),
+                    "project_id": str(project_id),
+                    "project_title": project_title,
+                    "created_at": str(created_at) if created_at else None,
+                }
+                for pa_id, project_id, project_title, created_at in access_result.all()
+            ]
 
         # Platform status
         if team_info:
@@ -265,6 +314,7 @@ class ContactsService:
             "platform_role": platform_role,
             "profile_id": supplier.profile_id,
             "assignments": assignments_data,
+            "project_access_assignments": project_access_assignments,
             "team_info": team_info,
             "pending_invite": pending_invite,
         }
