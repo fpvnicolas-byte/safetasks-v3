@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Safe Tasks Backend API
+  # Produzo Backend API
   api:
     build:
       context: .
@@ -10,7 +10,7 @@ services:
       - "8000:8000"
     environment:
       - ENVIRONMENT=production
-      - PROJECT_NAME=Safe Tasks V3
+      - PROJECT_NAME=Produzo
       - API_V1_STR=/api/v1
       - SECRET_KEY=${SECRET_KEY}
       - SUPABASE_URL=${SUPABASE_URL}
@@ -77,7 +77,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - ENVIRONMENT=production
-      - PROJECT_NAME=Safe Tasks V3
+      - PROJECT_NAME=Produzo
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_KEY=${SUPABASE_KEY}
       - POSTGRES_USER=${POSTGRES_USER}
@@ -104,7 +104,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - ENVIRONMENT=production
-      - PROJECT_NAME=Safe Tasks V3
+      - PROJECT_NAME=Produzo
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_KEY=${SUPABASE_KEY}
       - POSTGRES_USER=${POSTGRES_USER}
