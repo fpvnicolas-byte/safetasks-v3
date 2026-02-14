@@ -9,8 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog'
-import { DollarSign, Plus, Eye, Edit, Trash2, Loader2 } from 'lucide-react'
+import { DollarSign, Plus, Eye, Edit, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { InvoicesTabSkeleton } from '@/components/LoadingSkeletons'
 import { formatCurrency } from '@/lib/utils/money'
 import type { InvoiceStatus, InvoiceWithItems } from '@/types'
 
@@ -63,9 +64,7 @@ export function FinancialsInvoicesTab({
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
+        <InvoicesTabSkeleton />
       ) : errorMessage ? (
         <div>{t('invoicesTab.error', { message: errorMessage })}</div>
       ) : invoices && invoices.length > 0 ? (

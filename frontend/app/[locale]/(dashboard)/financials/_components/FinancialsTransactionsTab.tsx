@@ -4,8 +4,9 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Clock, Loader2, Plus } from 'lucide-react'
+import { Clock, Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { TransactionListSkeleton } from '@/components/LoadingSkeletons'
 import { formatCurrency } from '@/lib/utils/money'
 import type { TransactionWithRelations } from '@/types'
 
@@ -32,9 +33,7 @@ export function FinancialsTransactionsTab({
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
+          <TransactionListSkeleton />
         ) : recentTransactions && recentTransactions.length > 0 ? (
           <div className="space-y-4">
             {recentTransactions.map((transaction) => (

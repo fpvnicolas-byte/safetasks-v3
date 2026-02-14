@@ -3,8 +3,9 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus, Loader2 } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { TransactionListSkeleton } from '@/components/LoadingSkeletons'
 import { formatCurrency } from '@/lib/utils/money'
 import type { BankAccount } from '@/types'
 
@@ -24,9 +25,7 @@ export function FinancialsBankAccountsTab({ bankAccounts, isLoading }: Financial
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
+          <TransactionListSkeleton />
         ) : bankAccounts && bankAccounts.length > 0 ? (
           <div className="space-y-4">
             {bankAccounts.map((account) => (
