@@ -1101,7 +1101,7 @@ async def send_invoice_email(
             <p>{body.message.replace(chr(10), '<br>')}</p>
             <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
             <p style="color: #888; font-size: 12px;">
-                This email was sent via SafeTasks. The invoice PDF is attached.
+                This email was sent via Produzo. The invoice PDF is attached.
             </p>
         </div>
         """

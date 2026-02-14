@@ -1,7 +1,7 @@
 """
 Production Logging Configuration
 
-Configures comprehensive logging for the SafeTasks V3 AI service with:
+Configures comprehensive logging for the Produzo AI service with:
 - Structured logging with JSON format
 - Multiple log levels and handlers
 - Performance and security monitoring

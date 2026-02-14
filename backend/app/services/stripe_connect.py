@@ -68,7 +68,7 @@ async def handle_connect_oauth_callback(
     state: str,
 ) -> Organization:
     """
-    Handle the Stripe OAuth callback after the user authorizes SafeTasks.
+    Handle the Stripe OAuth callback after the user authorizes Produzo.
 
     Exchanges the authorization code for a connected account ID and updates
     the organization record.

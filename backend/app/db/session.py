@@ -48,7 +48,7 @@ _connect_args: dict = {
     "statement_cache_size": 0,
     "server_settings": {
         "jit": "off",
-        "application_name": "safetasks-v3",
+        "application_name": "produzo",
     },
 }
 if settings.DB_SSL is not None:

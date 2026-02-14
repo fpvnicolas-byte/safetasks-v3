@@ -127,7 +127,7 @@ async def connect_oauth_callback(
     Handle Stripe Connect OAuth callback.
 
     This endpoint receives the authorization code from Stripe after the user
-    authorizes SafeTasks. It exchanges the code for a connected account ID,
+    authorizes Produzo. It exchanges the code for a connected account ID,
     then redirects the user back to the frontend settings page.
 
     Note: This endpoint does NOT require authentication because it's called
