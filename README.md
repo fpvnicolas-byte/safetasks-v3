@@ -1,4 +1,4 @@
-# SafeTasks V3 - Film Production Management Platform
+# Produzo - Film Production Management Platform
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Made with TypeScript](https://img.shields.io/badge/Made%20with-TypeScript-blue.svg)](https://www.typescriptlang.org/)
@@ -65,8 +65,8 @@
 #### Backend Setup
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/safetasks-v3.git
-cd safetasks-v3/backend
+git clone https://github.com/your-org/produzo.git
+cd produzo/backend
 
 # Install Python dependencies
 pip install -r requirements.txt
@@ -85,7 +85,7 @@ uvicorn app.main:app --reload --port 8000
 #### Frontend Setup
 ```bash
 # In a new terminal
-cd safetasks-v3/frontend
+cd produzo/frontend
 
 # Install Node.js dependencies
 npm install
@@ -103,7 +103,7 @@ npm run dev
 #### Backend (.env)
 ```env
 # Database
-DATABASE_URL=postgresql://user:password@localhost:5432/safetasks
+DATABASE_URL=postgresql://user:password@localhost:5432/produzo
 
 # Authentication
 SECRET_KEY=your-secret-key-here
@@ -291,9 +291,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- 🐛 **Bug Reports:** [GitHub Issues](https://github.com/your-org/safetasks-v3/issues)
-- 💡 **Feature Requests:** [GitHub Discussions](https://github.com/your-org/safetasks-v3/discussions)
-- 📚 **Documentation:** [Wiki](https://github.com/your-org/safetasks-v3/wiki)
+- 🐛 **Bug Reports:** [GitHub Issues](https://github.com/your-org/produzo/issues)
+- 💡 **Feature Requests:** [GitHub Discussions](https://github.com/your-org/produzo/discussions)
+- 📚 **Documentation:** [Wiki](https://github.com/your-org/produzo/wiki)
 - 💬 **Community:** [Discord](https://discord.gg/your-invite-link)
 
 ## 🎯 Roadmap
@@ -313,7 +313,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Made with ❤️ by the SafeTasks Team**
+**Made with ❤️ by the Produzo Team**
 
 [![Twitter Follow](https://img.shields.io/twitter/follow/yourhandle?style=social)](https://twitter.com/yourhandle)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Company%20Page-blue)](https://linkedin.com/company/yourcompany)
