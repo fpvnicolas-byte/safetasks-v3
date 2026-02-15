@@ -5,6 +5,6 @@
         "buildCommand": "pip install -r requirements.txt"
     },
     "deploy": {
-        "startCommand": "/bin/sh -c \"MODE=${RAILWAY_RUNTIME_MODE:-web}; if [ \\\"$MODE\\\" = \\\"cron\\\" ]; then echo 'Runtime mode: cron'; python -m app.cron_check_plans; elif [ \\\"$MODE\\\" = \\\"worker\\\" ]; then echo 'Runtime mode: worker'; python -m app.worker_daemon; else echo 'Runtime mode: web'; if [ \\\"${RUN_MIGRATIONS_ON_STARTUP:-0}\\\" = \\\"1\\\" ]; then echo 'Running migrations...' && alembic upgrade head || echo 'Migration failed, continuing startup'; fi; python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT; fi\""
+        "startCommand": "/bin/sh -c \"MODE=${RAILWAY_RUNTIME_MODE:-web}; if [ \\\"$MODE\\\" = \\\"worker\\\" ]; then echo 'Runtime mode: worker'; python -m app.worker_daemon; else echo 'Runtime mode: web'; if [ \\\"${RUN_MIGRATIONS_ON_STARTUP:-0}\\\" = \\\"1\\\" ]; then echo 'Running migrations...' && alembic upgrade head || echo 'Migration failed, continuing startup'; fi; python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT; fi\""
     }
 }
