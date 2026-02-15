@@ -165,37 +165,9 @@ export default function BillingPage() {
   }, [t])
 
   useEffect(() => {
-    const checkPaymentStatus = async () => {
+    const checkPaymentStatus = () => {
       const success = searchParams.get('success')
       const canceled = searchParams.get('canceled')
-
-      // InfinityPay Params
-      const transactionNsu = searchParams.get('transaction_nsu')
-      const orderNsu = searchParams.get('order_nsu')
-      const invoiceSlug = searchParams.get('slug') // They call it 'slug' in params
-      const receiptUrl = searchParams.get('receipt_url')
-
-      if (transactionNsu && orderNsu && invoiceSlug) {
-        const toastId = toast.loading(t('billingPage.messages.verifyingPayment'))
-        try {
-          await apiClient.post('/api/v1/billing/verify', {
-            transaction_nsu: transactionNsu,
-            order_nsu: orderNsu,
-            invoice_slug: invoiceSlug,
-            receipt_url: receiptUrl,
-          })
-          toast.success(t('billingPage.messages.paymentVerified'), { id: toastId })
-          // Remove params to clean URL
-          const newUrl = window.location.pathname
-          window.history.replaceState({}, '', newUrl)
-          // Reload usage to reflect new plan
-          await loadUsage()
-        } catch (error) {
-          console.error('Payment verification failed:', error)
-          toast.error(t('billingPage.messages.verificationFailed'), { id: toastId })
-        }
-        return
-      }
 
       if (success === 'true') {
         toast.success(t('billingPage.messages.success'))
@@ -204,8 +176,8 @@ export default function BillingPage() {
       }
     }
 
-    void checkPaymentStatus()
-  }, [searchParams, t, loadUsage])
+    checkPaymentStatus()
+  }, [searchParams, t])
 
   useEffect(() => {
     if (organizationId) {

@@ -30,7 +30,7 @@ class Organization(Base):
     trial_ends_at = Column(TIMESTAMP(timezone=True), nullable=True)
     stripe_customer_id = Column(String, nullable=True)
     stripe_subscription_id = Column(String, nullable=True)
-    access_ends_at = Column(TIMESTAMP(timezone=True), nullable=True) # For pre-paid access (InfinityPay)
+    access_ends_at = Column(TIMESTAMP(timezone=True), nullable=True) # For paid access period end
 
     # Stripe Connect (for receiving payments from clients)
     stripe_connect_account_id = Column(String, nullable=True)           # e.g., "acct_xxx"

@@ -1,19 +1,18 @@
-"""Billing service for InfinityPay integration."""
+"""Billing service for Stripe checkout and billing event integration."""
 import logging
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from uuid import UUID
-from datetime import datetime, timedelta, timezone
-from urllib.parse import urlsplit
 
+import stripe
+from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException, status
 
 from app.core.config import settings
-from app.models.billing import BillingEvent, Plan, OrganizationUsage
+from app.models.billing import BillingEvent, OrganizationUsage, Plan
 from app.models.organizations import Organization
 from app.models.refunds import BillingPurchase
-from app.services.infinity_pay import infinity_pay_service
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +24,49 @@ PLAN_DURATION_DAYS = {
 
 PAID_ACTIVE_BILLING_STATUSES = {"active", "billing_pending_review"}
 
+SUBSCRIPTION_STATUS_MAP = {
+    "active": "active",
+    "trialing": "trialing",
+    "past_due": "past_due",
+    "unpaid": "past_due",
+    "canceled": "cancelled",
+    "paused": "paused",
+    "incomplete": "paused",
+    "incomplete_expired": "cancelled",
+}
+
+
+def _configure_stripe() -> None:
+    if not settings.STRIPE_SECRET_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Stripe secret key not configured",
+        )
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
+def _timestamp_to_datetime(value: Optional[int]) -> Optional[datetime]:
+    if value is None:
+        return None
+    return datetime.fromtimestamp(value, tz=timezone.utc)
+
+
+def _extract_subscription_price_id(subscription: dict) -> Optional[str]:
+    items = subscription.get("items", {}).get("data", [])
+    if not items:
+        return None
+    price_info = items[0].get("price")
+    if isinstance(price_info, dict):
+        return price_info.get("id")
+    return None
+
+
+def _extract_subscription_period_end(subscription: dict) -> Optional[datetime]:
+    period_end = subscription.get("current_period_end")
+    if isinstance(period_end, int):
+        return datetime.fromtimestamp(period_end, tz=timezone.utc)
+    return None
+
 
 async def get_pro_trial_plan(db: AsyncSession) -> Plan:
     """Get the pro_trial plan."""
@@ -34,7 +76,7 @@ async def get_pro_trial_plan(db: AsyncSession) -> Plan:
     if not plan:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="pro_trial plan not found - run seed_plans_entitlements.py"
+            detail="pro_trial plan not found - run seed_plans_entitlements.py",
         )
     return plan
 
@@ -42,12 +84,10 @@ async def get_pro_trial_plan(db: AsyncSession) -> Plan:
 async def setup_trial_for_organization(
     db: AsyncSession,
     organization: Organization,
-    user_email: str
+    user_email: str,
 ) -> None:
     """
     Set up 7-day Pro trial for a new organization.
-
-    This should be called immediately after creating an organization.
 
     Steps:
     1. Set plan_id to pro_trial
@@ -55,107 +95,160 @@ async def setup_trial_for_organization(
     3. Set trial_ends_at to now() + 7 days
     4. Create initial OrganizationUsage record
     """
-    # Get pro_trial plan
+    del user_email  # Created lazily at checkout time if stripe_customer_id is missing.
+
     trial_plan = await get_pro_trial_plan(db)
 
-    # Set up trial
     organization.plan_id = trial_plan.id
-    # Legacy fields for UI/backward compatibility
     organization.plan = "professional"
     organization.subscription_status = "trialing"
     organization.billing_status = "trial_active"
     organization.trial_ends_at = datetime.now(timezone.utc) + timedelta(days=7)
-    
-    # Initialize access_ends_at to trial end
     organization.access_ends_at = organization.trial_ends_at
 
-    # Create initial usage record
     usage = OrganizationUsage(org_id=organization.id)
     db.add(usage)
     db.add(organization)
 
-    logger.info(f"Set up 7-day trial for org {organization.id}, expires {organization.trial_ends_at}")
+    logger.info("Set up 7-day trial for org %s, expires %s", organization.id, organization.trial_ends_at)
 
 
-# Allowed redirect URL prefixes for checkout
-_ALLOWED_REDIRECT_PREFIXES: list[str] = []
+async def create_stripe_customer(
+    email: str,
+    name: str,
+    org_id: UUID,
+) -> str:
+    """Create a Stripe customer and return the customer ID."""
+    _configure_stripe()
+    try:
+        customer = stripe.Customer.create(
+            email=email,
+            name=name,
+            metadata={"org_id": str(org_id)},
+        )
+        logger.info("Created Stripe customer %s for org %s", customer.id, org_id)
+        return customer.id
+    except stripe.error.StripeError as e:
+        logger.error("Failed to create Stripe customer: %s", e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create billing customer",
+        )
 
-def _is_redirect_url_allowed(url: str) -> bool:
-    """Validate redirect_url against allowed frontend origins."""
-    frontend_url = settings.FRONTEND_URL
-    allowed = [str(prefix) for prefix in _ALLOWED_REDIRECT_PREFIXES]
-    if frontend_url:
-        allowed.append(str(frontend_url))
-    if not allowed:
-        return True  # No restrictions configured
+
+async def get_plan_by_price_id(db: AsyncSession, price_id: str) -> Optional[Plan]:
+    """Get plan by Stripe price ID."""
+    query = select(Plan).where(Plan.stripe_price_id == price_id)
+    result = await db.execute(query)
+    return result.scalar_one_or_none()
+
+
+async def create_checkout_session(
+    db: AsyncSession,
+    organization: Organization,
+    price_id: str,
+    success_url: str,
+    cancel_url: str,
+    customer_email: Optional[str],
+) -> str:
+    """
+    Create a Stripe Checkout session for a plan upgrade.
+    """
+    _configure_stripe()
+
+    plan = await get_plan_by_price_id(db, price_id)
+    if not plan:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid plan selected",
+        )
+
+    if organization.stripe_subscription_id and organization.billing_status == "active":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Organization already has an active subscription.",
+        )
+
+    if not organization.stripe_customer_id:
+        if not customer_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Organization does not have a Stripe customer and no user email was provided",
+            )
+        organization.stripe_customer_id = await create_stripe_customer(
+            email=customer_email,
+            name=organization.name,
+            org_id=organization.id,
+        )
+        db.add(organization)
+        await db.commit()
+        await db.refresh(organization)
 
     try:
-        parsed_url = urlsplit(url)
-    except Exception:
-        return False
-
-    if parsed_url.scheme not in ("http", "https") or not parsed_url.netloc:
-        return False
-
-    target_origin = f"{parsed_url.scheme.lower()}://{parsed_url.netloc.lower()}"
-    target_path = parsed_url.path or "/"
-
-    for raw_prefix in allowed:
-        prefix = (raw_prefix or "").strip()
-        if not prefix:
-            continue
-
-        # Backward-compatible fallback for arbitrary prefixes.
-        if "://" not in prefix:
-            if url.startswith(prefix):
-                return True
-            continue
-
-        try:
-            parsed_prefix = urlsplit(prefix)
-        except Exception:
-            continue
-
-        if parsed_prefix.scheme not in ("http", "https") or not parsed_prefix.netloc:
-            continue
-
-        allowed_origin = f"{parsed_prefix.scheme.lower()}://{parsed_prefix.netloc.lower()}"
-        if target_origin != allowed_origin:
-            continue
-
-        # If prefix has no path (or "/"), any path on same origin is allowed.
-        base_path = (parsed_prefix.path or "/").rstrip("/")
-        if not base_path:
-            return True
-
-        if target_path == base_path or target_path.startswith(f"{base_path}/"):
-            return True
-
-    return False
+        session = stripe.checkout.Session.create(
+            customer=organization.stripe_customer_id,
+            payment_method_types=["card", "boleto"],
+            payment_method_options={
+                "boleto": {"expires_after_days": 3},
+            },
+            line_items=[{"price": price_id, "quantity": 1}],
+            mode="subscription",
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata={"org_id": str(organization.id), "plan_name": plan.name},
+        )
+        logger.info("Created Stripe checkout session %s for org %s", session.id, organization.id)
+        return session.url
+    except stripe.error.StripeError as e:
+        logger.error("Failed to create checkout session: %s", e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create checkout session",
+        )
 
 
-def _has_active_paid_access(organization: Organization) -> bool:
-    """Return True when organization is currently in an active paid cycle."""
-    now = datetime.now(timezone.utc)
+async def retrieve_subscription(subscription_id: str) -> stripe.Subscription:
+    """Retrieve a Stripe subscription."""
+    _configure_stripe()
+    try:
+        subscription = stripe.Subscription.retrieve(subscription_id)
+        return subscription
+    except stripe.error.StripeError as e:
+        logger.error("Failed to retrieve Stripe subscription %s: %s", subscription_id, e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch Stripe subscription",
+        )
 
-    # Trial users may carry "professional" in legacy org.plan but should still be
-    # allowed to purchase the paid professional plan.
-    if organization.billing_status == "trial_active":
-        return False
 
-    # Primary signal for InfinityPay prepaid plans.
-    if organization.access_ends_at and organization.access_ends_at > now:
-        return True
+def normalize_subscription_status(stripe_status: Optional[str]) -> str:
+    if not stripe_status:
+        return "active"
+    return SUBSCRIPTION_STATUS_MAP.get(stripe_status, "active")
 
-    # Legacy fallback: some active paid orgs may not have access_ends_at populated.
-    if organization.billing_status in PAID_ACTIVE_BILLING_STATUSES:
-        return True
 
-    # Additional legacy fallback for older subscription-based states.
-    if organization.subscription_status == "active":
-        return True
+def map_subscription_billing_status(stripe_status: Optional[str]) -> str:
+    status_map = {
+        "active": "active",
+        "past_due": "past_due",
+        "canceled": "canceled",
+        "unpaid": "past_due",
+        "incomplete": "billing_pending_review",
+        "incomplete_expired": "canceled",
+        "trialing": "trial_active",
+        "paused": "past_due",
+    }
+    return status_map.get(stripe_status or "", "billing_pending_review")
 
-    return False
+
+async def get_organization_by_stripe_customer_id(
+    db: AsyncSession,
+    stripe_customer_id: str,
+) -> Optional[Organization]:
+    """Get organization by Stripe customer ID."""
+    query = select(Organization).where(Organization.stripe_customer_id == stripe_customer_id)
+    result = await db.execute(query)
+    return result.scalar_one_or_none()
 
 
 async def _resolve_org_plan_name(db: AsyncSession, organization: Organization) -> Optional[str]:
@@ -166,7 +259,6 @@ async def _resolve_org_plan_name(db: AsyncSession, organization: Organization) -
         plan = result.scalar_one_or_none()
         if plan and plan.name:
             return plan.name
-
     return organization.plan
 
 
@@ -250,299 +342,409 @@ async def ensure_access_end_for_paid_org(
     return inferred_end
 
 
-async def create_infinitypay_checkout_link(
-    db: AsyncSession,
-    organization: Organization,
-    plan_name: str,
-    redirect_url: str
-) -> str:
-    """
-    Create an InfinityPay Checkout link for plan upgrade.
+async def handle_customer_created(db: AsyncSession, event_data: dict) -> None:
+    """Handle customer.created event."""
+    customer = event_data["object"]
+    customer_id = customer["id"]
+    org_id_str = customer.get("metadata", {}).get("org_id")
 
-    Args:
-        db: Database session
-        organization: Organization upgrading
-        plan_name: Plan name (e.g. 'starter', 'professional')
-        redirect_url: URL to redirect on success
+    if not org_id_str:
+        logger.warning("customer.created event missing org_id metadata: %s", customer_id)
+        return
 
-    Returns:
-        Checkout URL
-    """
-    
-    # Map plan names to details (Price in Cents)
-    # TODO: Fetch from database or keep strict mapping here to avoid DB drift
-    PLAN_DETAILS = {
-        "starter": {"price": 3990, "description": "Starter Plan - 1 Month Access"},
-        "professional": {"price": 8990, "description": "Professional Plan - 1 Month Access"},
-        "professional_annual": {"price": 75500, "description": "Professional Plan - 1 Year Access"},
-    }
-    
-    plan_info = PLAN_DETAILS.get(plan_name)
-    if not plan_info:
-         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid plan selected"
-        )
-
-    # Validate redirect_url against allowed origins to prevent open redirect
-    if not _is_redirect_url_allowed(redirect_url):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid redirect URL"
-        )
-
-    # Prevent accidental duplicate purchases of the same active paid plan.
-    current_plan_name = organization.plan
-    if organization.plan_id:
-        current_plan_query = select(Plan).where(Plan.id == organization.plan_id)
-        current_plan_result = await db.execute(current_plan_query)
-        current_plan = current_plan_result.scalar_one_or_none()
-        if current_plan and current_plan.name:
-            current_plan_name = current_plan.name
-
-    await ensure_access_end_for_paid_org(db, organization)
-
-    if _has_active_paid_access(organization):
-        active_until = organization.access_ends_at.isoformat() if organization.access_ends_at else "unknown"
-        current_label = current_plan_name or "unknown"
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Organization already has an active plan ({current_label}) until {active_until}"
-        )
-
-    # Get the plan ID from DB to ensure validity
-    query = select(Plan).where(Plan.name == plan_name)
-    result = await db.execute(query)
-    plan_db = result.scalar_one_or_none()
-    
-    if not plan_db:
-         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Plan {plan_name} not found in database"
-        )
-
-    # Create InfinityPay payload
-    items = [
-        {
-            "quantity": 1,
-            "price": plan_info["price"],
-            "description": plan_info["description"]
-        }
-    ]
-    
-    # Embed org + plan + timestamp to recover plan deterministically from webhook.
-    order_nsu = f"{organization.id}_{plan_name}_{int(datetime.now().timestamp())}"
-    
-    metadata = {
-        "order_nsu": order_nsu,
-        "org_id": str(organization.id),
-        "plan_id": str(plan_db.id),
-        "plan_name": plan_name
-    }
-    
-    # Optional: fetch user data if available (e.g. billing contact)
-    # keeping it simple for now
-    
-    try:
-        url = await infinity_pay_service.create_checkout_link(
-            items=items,
-            metadata=metadata,
-            redirect_url=redirect_url
-        )
-        return url
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to create InfinityPay link: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Failed to initiate payment provider"
-        )
-
-
-async def process_infinitypay_webhook(
-    db: AsyncSession,
-    payload: dict
-) -> bool:
-    """
-    Process InfinityPay webhook (payment approval).
-    
-    Expected logic:
-    1. Parse payload
-    2. Verify organization
-    3. Update plan and access_ends_at
-    """
-    # Payload example:
-    # {
-    #   "invoice_slug": "abc123",
-    #   "amount": 1000,
-    #   "order_nsu": "UUID_TIMESTAMP",
-    #   ...
-    # }
-    
-    order_nsu = payload.get("order_nsu")
-    if not order_nsu:
-        logger.error("InfinityPay webhook missing order_nsu")
-        return False
-
-    # Extract org_id from order_nsu (format: orgId_timestamp)
-    try:
-        org_id_str = order_nsu.split("_")[0]
-        org_id = UUID(org_id_str)
-    except Exception:
-        logger.error(f"Malformed order_nsu: {order_nsu}")
-        return False
-
+    org_id = UUID(org_id_str)
     query = select(Organization).where(Organization.id == org_id)
     result = await db.execute(query)
-    organization = result.scalar_one_or_none()
-    
-    if not organization:
-        logger.error(f"Organization not found for order_nsu: {order_nsu}")
-        return False
-        
-    # Extract verification details
-    transaction_nsu = payload.get("transaction_nsu") # UUID of transaction
-    invoice_slug = payload.get("invoice_slug") or payload.get("slug") # Slug
-    
-    # 1. Zero Trust Verification
-    if not transaction_nsu or not invoice_slug:
-        logger.error("Missing verification fields (transaction_nsu/invoice_slug)")
-        # We cannot verify, so we cannot trust this webhook
-        return False
+    org = result.scalar_one_or_none()
 
-    is_verified, transaction_data = await infinity_pay_service.verify_payment(
-        transaction_id=transaction_nsu,
-        order_nsu=order_nsu,
-        slug=invoice_slug
-    )
-    
-    if not is_verified:
-        logger.warning(f"Payment verification FAILED for order {order_nsu}. Access denied.")
-        return False
+    if org:
+        org.stripe_customer_id = customer_id
+        db.add(org)
+        logger.info("Updated org %s with Stripe customer %s", org_id, customer_id)
 
-    # 2. Ledgering (Audit Trail)
-    # Check if we already processed this transaction to be idempotent
-    # We can query BillingEvent by external_id = transaction_nsu
-    query = select(BillingEvent).where(BillingEvent.external_id == transaction_nsu)
-    result = await db.execute(query)
-    existing_event = result.scalar_one_or_none()
-    
-    if existing_event:
-        logger.info(f"Transaction {transaction_nsu} already processed.")
-        return True
 
-    amount_cents = payload.get("amount", 0)
-    paid_amount_cents = payload.get("paid_amount", 0)
-    
-    # Determine plan from trusted metadata first, then from order_nsu, then fallback to amount.
-    # New order_nsu format: <org_uuid>_<plan_name>_<timestamp>
-    order_parts = order_nsu.split("_")
-    plan_from_order_nsu = None
-    if len(order_parts) >= 3:
-        candidate = "_".join(order_parts[1:-1])
-        if candidate:
-            plan_from_order_nsu = candidate
+async def handle_customer_updated(db: AsyncSession, event_data: dict) -> None:
+    """Handle customer.updated event."""
+    customer = event_data["object"]
+    customer_id = customer["id"]
 
-    metadata_plan = payload.get("plan_name") or plan_from_order_nsu
-    
-    # Amount-based fallback mapping (amount_cents → plan_name, duration)
-    AMOUNT_TO_PLAN = {
-        3990: ("starter", PLAN_DURATION_DAYS["starter"]),
-        8990: ("professional", PLAN_DURATION_DAYS["professional"]),
-        75500: ("professional_annual", PLAN_DURATION_DAYS["professional_annual"]),
-    }
-    
-    if metadata_plan and metadata_plan in PLAN_DURATION_DAYS:
-        # Trusted metadata from our checkout link
-        new_plan_name = metadata_plan
-        duration_days = PLAN_DURATION_DAYS[metadata_plan]
-    elif amount_cents in AMOUNT_TO_PLAN:
-        # Fallback: infer from amount
-        new_plan_name, duration_days = AMOUNT_TO_PLAN[amount_cents]
+    org = await get_organization_by_stripe_customer_id(db, customer_id)
+    if not org:
+        logger.warning("No org found for customer %s on update", customer_id)
+        return
+
+    if not org.stripe_customer_id:
+        org.stripe_customer_id = customer_id
+        db.add(org)
+        logger.info("Linked org %s to Stripe customer %s", org.id, customer_id)
+
+
+async def handle_customer_deleted(db: AsyncSession, event_data: dict) -> None:
+    """Handle customer.deleted event."""
+    customer = event_data["object"]
+    customer_id = customer["id"]
+
+    org = await get_organization_by_stripe_customer_id(db, customer_id)
+    if not org:
+        return
+
+    org.billing_status = "canceled"
+    org.subscription_status = "cancelled"
+    db.add(org)
+    logger.info("Marked org %s as canceled (customer deleted)", org.id)
+
+
+async def handle_subscription_created(db: AsyncSession, event_data: dict) -> None:
+    """Handle customer.subscription.created event."""
+    subscription = event_data["object"]
+    customer_id = subscription["customer"]
+    subscription_id = subscription["id"]
+    price_id = _extract_subscription_price_id(subscription)
+
+    org = await get_organization_by_stripe_customer_id(db, customer_id)
+    if not org:
+        logger.warning("No org found for customer %s", customer_id)
+        return
+
+    if price_id:
+        plan = await get_plan_by_price_id(db, price_id)
+        if plan:
+            org.plan_id = plan.id
+            org.plan = plan.name
+
+    period_end = _extract_subscription_period_end(subscription)
+    if period_end:
+        org.access_ends_at = period_end
+
+    sub_status = subscription.get("status")
+    org.stripe_subscription_id = subscription_id
+    org.billing_status = map_subscription_billing_status(sub_status)
+    org.subscription_status = normalize_subscription_status(sub_status)
+    db.add(org)
+    logger.info("Subscription %s created for org %s with status %s", subscription_id, org.id, sub_status)
+
+
+async def handle_subscription_updated(db: AsyncSession, event_data: dict) -> None:
+    """Handle customer.subscription.updated event."""
+    subscription = event_data["object"]
+    customer_id = subscription["customer"]
+    subscription_id = subscription["id"]
+    sub_status = subscription["status"]
+    price_id = _extract_subscription_price_id(subscription)
+
+    org = await get_organization_by_stripe_customer_id(db, customer_id)
+    if not org:
+        logger.warning("No org found for customer %s", customer_id)
+        return
+
+    if price_id:
+        plan = await get_plan_by_price_id(db, price_id)
+        if plan:
+            org.plan_id = plan.id
+            org.plan = plan.name
+
+    org.billing_status = map_subscription_billing_status(sub_status)
+    org.subscription_status = normalize_subscription_status(sub_status)
+
+    period_end = _extract_subscription_period_end(subscription)
+    if period_end:
+        org.access_ends_at = period_end
+
+    db.add(org)
+    logger.info("Subscription %s updated for org %s: %s", subscription_id, org.id, sub_status)
+
+
+async def handle_subscription_trial_will_end(db: AsyncSession, event_data: dict) -> None:
+    """Handle customer.subscription.trial_will_end event."""
+    subscription = event_data["object"]
+    customer_id = subscription["customer"]
+    trial_end = subscription.get("trial_end")
+
+    org = await get_organization_by_stripe_customer_id(db, customer_id)
+    if not org:
+        logger.warning("No org found for customer %s", customer_id)
+        return
+
+    if trial_end:
+        org.trial_ends_at = datetime.fromtimestamp(trial_end, tz=timezone.utc)
+        db.add(org)
+        logger.info("Trial will end for org %s at %s", org.id, org.trial_ends_at)
+
+
+async def handle_subscription_deleted(db: AsyncSession, event_data: dict) -> None:
+    """Handle customer.subscription.deleted event."""
+    subscription = event_data["object"]
+    customer_id = subscription["customer"]
+
+    org = await get_organization_by_stripe_customer_id(db, customer_id)
+    if not org:
+        return
+
+    org.billing_status = "canceled"
+    org.subscription_status = "cancelled"
+    db.add(org)
+    logger.info("Subscription deleted for org %s", org.id)
+
+
+async def handle_invoice_payment_succeeded(db: AsyncSession, event_data: dict) -> None:
+    """Handle invoice.payment_succeeded event."""
+    invoice = event_data["object"]
+    customer_id = invoice.get("customer")
+    invoice_id = invoice.get("id")
+
+    if not customer_id:
+        logger.warning("invoice.payment_succeeded missing customer")
+        return
+
+    org = await get_organization_by_stripe_customer_id(db, customer_id)
+    if not org:
+        logger.warning("No org found for invoice customer %s", customer_id)
+        return
+
+    org.billing_status = "active"
+    org.subscription_status = "active"
+
+    period_end = None
+    lines = invoice.get("lines", {}).get("data", [])
+    if lines:
+        line_period = lines[0].get("period", {}) if isinstance(lines[0], dict) else {}
+        end_ts = line_period.get("end")
+        if isinstance(end_ts, int):
+            period_end = datetime.fromtimestamp(end_ts, tz=timezone.utc)
+    if period_end:
+        org.access_ends_at = period_end
+
+    db.add(org)
+
+    amount_paid = invoice.get("amount_paid") or invoice.get("amount_due") or 0
+    if invoice_id and amount_paid > 0:
+        existing_query = select(BillingPurchase).where(
+            BillingPurchase.external_charge_id == invoice_id
+        )
+        existing_result = await db.execute(existing_query)
+        existing = existing_result.scalar_one_or_none()
+
+        if not existing:
+            paid_at_ts = (
+                invoice.get("status_transitions", {}).get("paid_at")
+                if isinstance(invoice.get("status_transitions"), dict)
+                else None
+            )
+            paid_at = _timestamp_to_datetime(paid_at_ts) or datetime.now(timezone.utc)
+            plan_name = await _resolve_org_plan_name(db, org)
+
+            purchase = BillingPurchase(
+                organization_id=org.id,
+                provider="stripe",
+                external_charge_id=invoice_id,
+                plan_name=plan_name,
+                amount_paid_cents=amount_paid,
+                currency=(invoice.get("currency") or "BRL").upper(),
+                paid_at=paid_at,
+            )
+            db.add(purchase)
+
+    logger.info("Payment succeeded for org %s", org.id)
+
+
+async def handle_invoice_payment_failed(db: AsyncSession, event_data: dict) -> None:
+    """Handle invoice.payment_failed event."""
+    invoice = event_data["object"]
+    customer_id = invoice.get("customer")
+
+    if not customer_id:
+        logger.warning("invoice.payment_failed missing customer")
+        return
+
+    org = await get_organization_by_stripe_customer_id(db, customer_id)
+    if not org:
+        logger.warning("No org found for invoice customer %s", customer_id)
+        return
+
+    org.billing_status = "past_due"
+    org.subscription_status = "past_due"
+    db.add(org)
+    logger.info("Payment failed for org %s, set to past_due", org.id)
+
+
+async def handle_invoice_payment_action_required(db: AsyncSession, event_data: dict) -> None:
+    """Handle invoice.payment_action_required event."""
+    invoice = event_data["object"]
+    customer_id = invoice.get("customer")
+
+    if not customer_id:
+        logger.warning("invoice.payment_action_required missing customer")
+        return
+
+    org = await get_organization_by_stripe_customer_id(db, customer_id)
+    if not org:
+        logger.warning("No org found for invoice customer %s", customer_id)
+        return
+
+    org.billing_status = "billing_pending_review"
+    db.add(org)
+    logger.info("Payment action required for org %s", org.id)
+
+
+async def handle_checkout_session_completed(db: AsyncSession, event_data: dict) -> None:
+    """Handle checkout.session.completed event."""
+    session = event_data["object"]
+    customer_id = session.get("customer")
+    subscription_id = session.get("subscription")
+    payment_status = session.get("payment_status")
+    metadata = session.get("metadata", {}) if isinstance(session.get("metadata"), dict) else {}
+    org_id_str = metadata.get("org_id")
+
+    org = None
+    if customer_id:
+        org = await get_organization_by_stripe_customer_id(db, customer_id)
+
+    if not org and org_id_str:
+        try:
+            org_id = UUID(org_id_str)
+            query = select(Organization).where(Organization.id == org_id)
+            result = await db.execute(query)
+            org = result.scalar_one_or_none()
+        except Exception:
+            org = None
+
+    if not org:
+        logger.warning("checkout.session.completed could not resolve organization")
+        return
+
+    if customer_id and not org.stripe_customer_id:
+        org.stripe_customer_id = customer_id
+    if subscription_id:
+        org.stripe_subscription_id = subscription_id
+
+    if payment_status in {"paid", "no_payment_required"}:
+        org.billing_status = "active"
+        org.subscription_status = "active"
     else:
-        logger.error(f"Unknown payment amount {amount_cents} and no metadata plan. Cannot determine plan.")
-        return False
-        
-    receipt_url = payload.get("receipt_url")
-    if not receipt_url and isinstance(transaction_data, dict):
-        receipt_url = transaction_data.get("receipt_url")
-
-    # Create Ledger Entry
-    ledger_entry = BillingEvent(
-        organization_id=organization.id,
-        event_type="payment_success",
-        plan_name=new_plan_name,
-        amount_cents=paid_amount_cents,
-        currency="BRL",
-        status="succeeded",
-        provider="infinitypay",
-        external_id=transaction_nsu,
-        event_metadata={
-            "order_nsu": order_nsu,
-            "invoice_slug": invoice_slug,
-            "receipt_url": receipt_url,
-            "capture_method": payload.get("capture_method"),
-            "installments": payload.get("installments"),
-            "full_verification_data": transaction_data
-        }
+        # Delayed methods (for example boleto) can complete checkout before settlement.
+        org.billing_status = "billing_pending_review"
+    db.add(org)
+    logger.info(
+        "Checkout completed for org %s with payment_status=%s",
+        org.id,
+        payment_status,
     )
-    db.add(ledger_entry)
-    await db.flush()
-
-    # Persist canonical purchase row for refund workflows.
-    purchase_amount_cents = paid_amount_cents or amount_cents
-    purchase = BillingPurchase(
-        organization_id=organization.id,
-        source_billing_event_id=ledger_entry.id,
-        provider="infinitypay",
-        external_charge_id=transaction_nsu,
-        plan_name=new_plan_name,
-        amount_paid_cents=purchase_amount_cents,
-        currency="BRL",
-        paid_at=datetime.now(timezone.utc),
-    )
-    db.add(purchase)
-
-    # 3. Grant Access
-    query = select(Plan).where(Plan.name == new_plan_name)
-    result = await db.execute(query)
-    plan_db = result.scalar_one_or_none()
-    
-    if plan_db:
-        organization.plan_id = plan_db.id
-        organization.plan = new_plan_name
-        
-    now = datetime.now(timezone.utc)
-    
-    if organization.access_ends_at and organization.access_ends_at > now:
-        organization.access_ends_at += timedelta(days=duration_days)
-    else:
-        organization.access_ends_at = now + timedelta(days=duration_days)
-        
-    organization.billing_status = "active"
-    organization.subscription_status = "active"
-    
-    db.add(organization)
-    await db.commit() # Commit explicitly here to save ledger and org update together
-    
-    logger.info(f"Verified & Processed InfinityPay payment {transaction_nsu} for org {organization.id}.")
-    return True
 
 
-# Helper to check access
+async def handle_checkout_session_async_payment_succeeded(
+    db: AsyncSession,
+    event_data: dict,
+) -> None:
+    """Handle checkout.session.async_payment_succeeded event."""
+    session = event_data["object"]
+    customer_id = session.get("customer")
+
+    if not customer_id:
+        logger.warning("checkout.session.async_payment_succeeded missing customer")
+        return
+
+    org = await get_organization_by_stripe_customer_id(db, customer_id)
+    if not org:
+        logger.warning("No org found for checkout async payment customer %s", customer_id)
+        return
+
+    org.billing_status = "active"
+    org.subscription_status = "active"
+    db.add(org)
+    logger.info("Async checkout payment succeeded for org %s", org.id)
+
+
+async def handle_checkout_session_async_payment_failed(
+    db: AsyncSession,
+    event_data: dict,
+) -> None:
+    """Handle checkout.session.async_payment_failed event."""
+    session = event_data["object"]
+    customer_id = session.get("customer")
+
+    if not customer_id:
+        logger.warning("checkout.session.async_payment_failed missing customer")
+        return
+
+    org = await get_organization_by_stripe_customer_id(db, customer_id)
+    if not org:
+        logger.warning("No org found for checkout async payment customer %s", customer_id)
+        return
+
+    org.billing_status = "past_due"
+    org.subscription_status = "past_due"
+    db.add(org)
+    logger.warning("Async checkout payment failed for org %s", org.id)
+
+
+async def handle_invoice_finalized(db: AsyncSession, event_data: dict) -> None:
+    """Handle invoice.finalized event."""
+    invoice = event_data["object"]
+    customer_id = invoice.get("customer")
+
+    if not customer_id:
+        logger.warning("invoice.finalized missing customer")
+        return
+
+    org = await get_organization_by_stripe_customer_id(db, customer_id)
+    if not org:
+        logger.warning("No org found for customer %s", customer_id)
+        return
+
+    logger.info("Invoice finalized for org %s", org.id)
+
+
+async def handle_invoice_finalization_failed(db: AsyncSession, event_data: dict) -> None:
+    """Handle invoice.finalization_failed event."""
+    invoice = event_data["object"]
+    customer_id = invoice.get("customer")
+
+    if not customer_id:
+        logger.warning("invoice.finalization_failed missing customer")
+        return
+
+    org = await get_organization_by_stripe_customer_id(db, customer_id)
+    if not org:
+        logger.warning("No org found for customer %s", customer_id)
+        return
+
+    org.billing_status = "billing_pending_review"
+    db.add(org)
+    logger.warning("Invoice finalization failed for org %s", org.id)
+
+
+EVENT_HANDLERS = {
+    "customer.created": handle_customer_created,
+    "customer.updated": handle_customer_updated,
+    "customer.deleted": handle_customer_deleted,
+    "customer.subscription.created": handle_subscription_created,
+    "customer.subscription.updated": handle_subscription_updated,
+    "customer.subscription.paused": handle_subscription_updated,
+    "customer.subscription.resumed": handle_subscription_updated,
+    "customer.subscription.trial_will_end": handle_subscription_trial_will_end,
+    "customer.subscription.deleted": handle_subscription_deleted,
+    "invoice.finalized": handle_invoice_finalized,
+    "invoice.paid": handle_invoice_payment_succeeded,
+    "invoice.payment_succeeded": handle_invoice_payment_succeeded,
+    "invoice.payment_failed": handle_invoice_payment_failed,
+    "invoice.payment_action_required": handle_invoice_payment_action_required,
+    "checkout.session.completed": handle_checkout_session_completed,
+    "checkout.session.async_payment_succeeded": handle_checkout_session_async_payment_succeeded,
+    "checkout.session.async_payment_failed": handle_checkout_session_async_payment_failed,
+    "invoice.finalization_failed": handle_invoice_finalization_failed,
+}
+
+
 def has_active_access(organization: Organization) -> bool:
     """Check if organization has active paid access or trial."""
     now = datetime.now(timezone.utc)
-    
-    # Check manual access date (Pre-paid)
+
     if organization.access_ends_at and organization.access_ends_at > now:
         return True
-        
-    # Check legacy/trial
+
     if organization.trial_ends_at and organization.trial_ends_at > now:
         return True
-        
+
     return False
 
 
@@ -550,39 +752,37 @@ async def is_event_processed(db: AsyncSession, event_id: str) -> bool:
     """Check if a webhook event has already been processed."""
     query = select(BillingEvent).where(
         (BillingEvent.stripe_event_id == event_id) | (BillingEvent.external_id == event_id),
-        BillingEvent.status == "processed"
+        BillingEvent.status == "processed",
     )
     result = await db.execute(query)
     return result.scalars().first() is not None
 
 
 async def record_billing_event(
-    db: AsyncSession, 
-    event_id: str, 
-    event_type: str, 
-    status: str
+    db: AsyncSession,
+    event_id: str,
+    event_type: str,
+    status_value: str,
 ) -> BillingEvent:
     """Record a new billing event."""
-    # Check if exists
     query = select(BillingEvent).where(
         (BillingEvent.stripe_event_id == event_id) | (BillingEvent.external_id == event_id)
     )
     result = await db.execute(query)
     existing = result.scalars().first()
-    
+
     if existing:
         return existing
-        
+
     event = BillingEvent(
         stripe_event_id=event_id,
         external_id=event_id,
         event_type=event_type,
-        status=status,
-        provider="stripe",  # Defaulting to stripe for compatibility with stripe_connect.py
-        received_at=datetime.now(timezone.utc)
+        status=status_value,
+        provider="stripe",
+        received_at=datetime.now(timezone.utc),
     )
     db.add(event)
-    # We don't commit here, identifying the caller responsibility usually, but we need ID.
     await db.flush()
     return event
 
@@ -597,4 +797,5 @@ async def mark_event_processed(db: AsyncSession, event: BillingEvent) -> None:
 async def mark_event_failed(db: AsyncSession, event: BillingEvent) -> None:
     """Mark event as failed."""
     event.status = "failed"
+    event.processed_at = datetime.now(timezone.utc)
     db.add(event)

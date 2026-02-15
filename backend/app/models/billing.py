@@ -54,12 +54,12 @@ class BillingEvent(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     stripe_event_id = Column(String, nullable=True) # Legacy (keep for now, or make nullable)
-    external_id = Column(String, nullable=True) # For InfinityPay NSU or generic ID
+    external_id = Column(String, nullable=True) # Generic external provider event/charge ID
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True)
     
     event_type = Column(String, nullable=False)
     status = Column(String, nullable=False)  # received, processed, failed, succeeded
-    provider = Column(String, default="stripe", nullable=False) # stripe, infinitypay
+    provider = Column(String, default="stripe", nullable=False) # e.g. stripe
     
     amount_cents = Column(BIGINT, nullable=True)
     currency = Column(String, nullable=True)

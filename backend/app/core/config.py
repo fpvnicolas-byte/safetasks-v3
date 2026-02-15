@@ -139,11 +139,6 @@ class Settings(BaseSettings):
     STRIPE_CONNECT_CLIENT_ID: Optional[str] = None          # Stripe Connect OAuth client ID (ca_xxx)
     STRIPE_CONNECT_WEBHOOK_SECRET: Optional[str] = None      # Separate webhook secret for Connect events
 
-    # InfinityPay (for platform plans)
-    INFINITYPAY_HANDLE: Optional[str] = None # e.g. "nicolas-domenico-bertoni"
-    INFINITYPAY_WEBHOOK_URL: Optional[str] = None # e.g. "https://api.produzo.app/api/v1/billing/webhooks/infinitypay"
-    INFINITYPAY_API_URL: str = "https://api.infinitepay.io/invoices/public/checkout"
-
     # Invites
     INVITE_EMAIL_ENABLED: bool = False
     INVITE_TOKEN_EXPIRY_DAYS: int = 7

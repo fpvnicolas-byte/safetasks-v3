@@ -45,7 +45,7 @@ function PlatformLayoutContent({
             }
 
             try {
-                await apiClient.get('/api/v1/platform/refunds/?limit=1')
+                await apiClient.get('/api/v1/platform/bug-reports/?limit=1')
                 if (!cancelled) setIsPlatformAdmin(true)
             } catch {
                 if (!cancelled) {
@@ -95,9 +95,6 @@ function PlatformLayoutContent({
                             Platform Admin
                         </Link>
                         <nav className="flex gap-4 text-sm">
-                            <Link href={`/${locale}/platform/refunds`} className="hover:text-primary">
-                                Refunds Queue
-                            </Link>
                             <Link href={`/${locale}/platform/bug-reports`} className="hover:text-primary">
                                 Bug Reports
                             </Link>

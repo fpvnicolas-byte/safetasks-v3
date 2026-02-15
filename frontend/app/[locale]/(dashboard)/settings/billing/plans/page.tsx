@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,7 @@ interface Plan {
   displayName: string
   price: string
   interval: string
+  priceId: string
   features: string[]
   recommended?: boolean
 }
@@ -26,6 +27,7 @@ const PLANS: Plan[] = [
     displayName: 'Starter',
     price: 'R$ 39,90',
     interval: 'mês',
+    priceId: 'price_1SmKRMQBou9YDSD2HPqUgldI',
     features: [
       '5 projects',
       '20 clients',
@@ -40,6 +42,7 @@ const PLANS: Plan[] = [
     displayName: 'Professional',
     price: 'R$ 89,90',
     interval: 'mês',
+    priceId: 'price_1SpDHYQBou9YDSD2wu8zH3rt',
     features: [
       'Unlimited projects',
       'Unlimited clients',
@@ -53,8 +56,9 @@ const PLANS: Plan[] = [
   {
     name: 'professional_annual',
     displayName: 'Professional Annual',
-    price: 'R$ 755',
+    price: 'R$ 755,00',
     interval: 'ano',
+    priceId: 'price_1SpDYvQBou9YDSD2YsG88KQa',
     features: [
       'Unlimited projects',
       'Unlimited clients',
@@ -101,10 +105,10 @@ export default function PlansPage() {
       return { isWarning: false, message: rawMessage }
     }
 
-    return { isWarning: false, message: 'Failed to generate checkout link' }
+    return { isWarning: false, message: 'Failed to create checkout session' }
   }
 
-  const handleSelectPlan = async (plan: Plan) => {
+  const handleSelectPlan = useCallback(async (plan: Plan) => {
     if (!organizationId) {
       toast.error('No organization found')
       return
@@ -113,16 +117,16 @@ export default function PlansPage() {
     try {
       setIsUpgrading(plan.name)
 
-      // Use the new InfinityPay checkout link endpoint
-      const response = await apiClient.post<{ url: string }>('/api/v1/billing/checkout/link', {
-        plan_name: plan.name, // 'starter', 'professional', 'professional_annual'
-        redirect_url: `${window.location.origin}/${locale}/settings/billing?success=true`,
+      const response = await apiClient.post<{ url: string }>('/api/v1/billing/create-checkout-session', {
+        price_id: plan.priceId,
+        success_url: `${window.location.origin}/${locale}/settings/billing?success=true`,
+        cancel_url: `${window.location.origin}/${locale}/settings/billing/plans?canceled=true`,
       })
 
-      // Redirect to InfinityPay Checkout
+      // Redirect to Stripe Checkout
       window.location.href = response.url
     } catch (error) {
-      console.error('Failed to create checkout link:', error)
+      console.error('Failed to create checkout session:', error)
       const { message, isWarning } = getCheckoutErrorMessage(error)
       if (isWarning) {
         toast.warning(message)
@@ -131,7 +135,7 @@ export default function PlansPage() {
       }
       setIsUpgrading(null)
     }
-  }
+  }, [locale, organizationId])
 
   useEffect(() => {
     if (autoCheckoutRef.current) return
@@ -145,7 +149,7 @@ export default function PlansPage() {
 
     autoCheckoutRef.current = true
     handleSelectPlan(selectedPlan)
-  }, [organizationId, searchParams])
+  }, [handleSelectPlan, organizationId, searchParams])
 
   return (
     <div className="space-y-8">

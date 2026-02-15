@@ -1,9 +1,10 @@
-"""Billing and InfinityPay webhook endpoints."""
+"""Billing and Stripe webhook endpoints."""
 import logging
 from datetime import datetime, timezone
-from typing import Literal, Optional
+from typing import Optional
 from uuid import UUID
 
+import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_
@@ -22,138 +23,123 @@ from app.schemas.billing import (
 )
 from app.services import billing as billing_service
 from app.api.deps import get_organization_record
-from app.services.infinity_pay import infinity_pay_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-class CheckoutLinkRequest(BaseModel):
-    """Request to create a checkout link."""
-    plan_name: Literal["starter", "professional", "professional_annual"]
-    redirect_url: str
+class CheckoutSessionRequest(BaseModel):
+    """Request to create a checkout session."""
+    price_id: str
+    success_url: str
+    cancel_url: str
 
 
-class CheckoutLinkResponse(BaseModel):
-    """Response with checkout URL."""
+class CheckoutSessionResponse(BaseModel):
+    """Response with checkout session URL."""
     url: str
 
 
-@router.post("/webhooks/infinitypay")
-async def infinitypay_webhook(
+@router.post("/webhooks/stripe")
+async def stripe_webhook(
     request: Request,
     db: AsyncSession = Depends(get_db)
-) -> dict:
+) -> dict[str, str]:
     """
-    Handle InfinityPay webhook events.
+    Handle Stripe webhook events.
     """
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature")
+
+    if not sig_header:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing stripe-signature header"
+        )
+
+    if not settings.STRIPE_WEBHOOK_SECRET:
+        logger.error("STRIPE_WEBHOOK_SECRET not configured")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Webhook secret not configured"
+        )
+
     try:
-        payload = await request.json()
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid JSON")
-    
-    logger.info(f"Received InfinityPay webhook: {payload}")
-    
-    # Process webhook (return 400 on failure so provider retries)
-    processed = await billing_service.process_infinitypay_webhook(db, payload)
-    if not processed:
-        raise HTTPException(status_code=400, detail="Webhook payload could not be processed")
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+    except ValueError:
+        logger.error("Invalid webhook payload")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid payload"
+        )
+    except stripe.error.SignatureVerificationError:
+        logger.error("Invalid webhook signature")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid signature"
+        )
 
-    return {"status": "success"}
+    event_id = event["id"]
+    event_type = event["type"]
+    event_data = event["data"]
 
+    logger.info(f"Received webhook event: {event_type} ({event_id})")
 
-class VerifyTransactionRequest(BaseModel):
-    transaction_nsu: str
-    order_nsu: str
-    invoice_slug: Optional[str] = None
-    slug: Optional[str] = None
-    receipt_url: Optional[str] = None
+    if await billing_service.is_event_processed(db, event_id):
+        logger.info(f"Event {event_id} already processed, skipping")
+        return {"status": "success", "message": "Event already processed"}
 
-
-@router.post("/verify")
-async def verify_transaction_manually(
-    request: VerifyTransactionRequest,
-    db: AsyncSession = Depends(get_db),
-    profile: Profile = Depends(get_current_profile)
-) -> dict:
-    """
-    Manually trigger verification for a transaction (called by Frontend on success page).
-    User must belong to the organization referenced in order_nsu.
-    """
-    invoice_slug = request.invoice_slug or request.slug
-    if not invoice_slug:
-        raise HTTPException(400, "Missing invoice slug")
-
-    # Security: Ensure user owns the order
-    # order_nsu format: orgId_plan_timestamp (legacy: orgId_timestamp)
-    try:
-        org_id_str = request.order_nsu.split("_")[0]
-        order_org_id = UUID(org_id_str)
-    except:
-        raise HTTPException(400, "Invalid order_nsu format")
-
-    if profile.organization_id != order_org_id:
-        raise HTTPException(403, "You do not have permission to verify this order")
-
-    # Reuse the logic from webhook via a simulated payload
-    # Or better, extract a 'process_payment' method in service.
-    # For now, let's construct a payload that matches what process_infinitypay_webhook expects
-    # We need to fetch amount/details from the verification call first because frontend might lie.
-    
-    # 1. Verify with InfinityPay FIRST to get truth
-    is_valid, data = await infinity_pay_service.verify_payment(
-        transaction_id=request.transaction_nsu,
-        order_nsu=request.order_nsu,
-        slug=invoice_slug
+    billing_event = await billing_service.record_billing_event(
+        db, event_id, event_type, "received"
     )
-    
-    if not is_valid:
-         raise HTTPException(400, "Payment verification failed or invalid")
-         
-    # 2. Construct a properly-shaped payload from the TRUSTED verification response
-    # The process_infinitypay_webhook expects specific top-level keys
-    verified_payload = {
-        "order_nsu": request.order_nsu,
-        "transaction_nsu": request.transaction_nsu,
-        "invoice_slug": invoice_slug,
-        "receipt_url": request.receipt_url or data.get("receipt_url"),
-        "amount": data.get("amount", 0),
-        "paid_amount": data.get("paid_amount", data.get("amount", 0)),
-        "plan_name": data.get("plan_name"),  # From checkout metadata if available
-        "capture_method": data.get("capture_method"),
-        "installments": data.get("installments"),
-    }
-    processed = await billing_service.process_infinitypay_webhook(db, verified_payload)
-    if not processed:
-        raise HTTPException(400, "Verification payload could not be processed")
-    
-    return {"status": "verified", "access_granted": True}
+
+    try:
+        handler = billing_service.EVENT_HANDLERS.get(event_type)
+        if handler:
+            await handler(db, event_data)
+            await billing_service.mark_event_processed(db, billing_event)
+            await db.commit()
+            logger.info(f"Successfully processed event {event_id}")
+        else:
+            logger.info(f"No handler for event type: {event_type}")
+            await billing_service.mark_event_processed(db, billing_event)
+            await db.commit()
+
+        return {"status": "success"}
+
+    except Exception as e:
+        logger.error(f"Failed to process event {event_id}: {e}", exc_info=True)
+        await billing_service.mark_event_failed(db, billing_event)
+        await db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Webhook processing failed"
+        )
 
 
-@router.post("/checkout/link", response_model=CheckoutLinkResponse, dependencies=[Depends(require_billing_checkout())])
-async def create_checkout_link(
-    request: CheckoutLinkRequest,
+@router.post("/create-checkout-session", response_model=CheckoutSessionResponse, dependencies=[Depends(require_billing_checkout())])
+async def create_checkout_session(
+    request: CheckoutSessionRequest,
     profile: Profile = Depends(get_current_profile),
     db: AsyncSession = Depends(get_db)
-) -> CheckoutLinkResponse:
+) -> CheckoutSessionResponse:
     """
-    Create an InfinityPay Checkout link for plan upgrade.
+    Create a Stripe Checkout session for plan upgrade.
     """
-    # Get organization
     organization = await get_organization_record(profile, db)
 
-    # Create checkout link
-    url = await billing_service.create_infinitypay_checkout_link(
+    checkout_url = await billing_service.create_checkout_session(
         db=db,
         organization=organization,
-        plan_name=request.plan_name,
-        redirect_url=request.redirect_url
+        price_id=request.price_id,
+        success_url=request.success_url,
+        cancel_url=request.cancel_url,
+        customer_email=profile.email,
     )
-    
-    if not url:
-        raise HTTPException(status_code=500, detail="Failed to generate checkout link")
 
-    return CheckoutLinkResponse(url=url)
+    return CheckoutSessionResponse(url=checkout_url)
 
 
 @router.get("/usage", response_model=BillingUsageResponse, dependencies=[Depends(require_billing_checkout())])
@@ -185,9 +171,15 @@ async def get_usage(
             plan_name = plan_row.name
             plan_info = _serialize_plan_info(plan_row, entitlement)
 
-    # Mock subscription info for frontend compatibility if needed, 
-    # or return None to indicate no recurring sub.
     subscription_info = None
+    if organization.stripe_subscription_id:
+        try:
+            stripe_subscription = await billing_service.retrieve_subscription(
+                organization.stripe_subscription_id
+            )
+            subscription_info = _build_subscription_info(stripe_subscription)
+        except HTTPException:
+            subscription_info = None
     
     days_until_access_end = None
     if organization.access_ends_at:
@@ -225,10 +217,6 @@ async def get_usage(
     )
 
 
-# Removed: cancellation/resume/portal endpoints as they were Stripe-specific 
-# and don't apply to one-off InfinityPay payments.
-
-
 def _serialize_plan_info(plan: Plan, entitlement) -> PlanInfo:
     entitlements = None
     if entitlement:
@@ -250,6 +238,36 @@ def _serialize_plan_info(plan: Plan, entitlement) -> PlanInfo:
     )
 
 
+def _build_subscription_info(subscription: stripe.Subscription) -> SubscriptionInfo:
+    items = subscription.get("items", {}).get("data", [])
+    price_id = None
+    if items:
+        price_info = items[0].get("price")
+        if isinstance(price_info, dict):
+            price_id = price_info.get("id")
+    latest_invoice = subscription.get("latest_invoice")
+    latest_invoice_id = None
+    if isinstance(latest_invoice, dict):
+        latest_invoice_id = latest_invoice.get("id")
+    elif isinstance(latest_invoice, str):
+        latest_invoice_id = latest_invoice
+
+    return SubscriptionInfo(
+        id=subscription["id"],
+        status=subscription["status"],
+        cancel_at_period_end=bool(subscription.get("cancel_at_period_end")),
+        canceled_at=_timestamp_to_datetime(subscription.get("canceled_at")),
+        cancel_at=_timestamp_to_datetime(subscription.get("cancel_at")),
+        current_period_start=_timestamp_to_datetime(subscription.get("current_period_start")),
+        current_period_end=_timestamp_to_datetime(subscription.get("current_period_end")),
+        trial_start=_timestamp_to_datetime(subscription.get("trial_start")),
+        trial_end=_timestamp_to_datetime(subscription.get("trial_end")),
+        price_id=price_id,
+        plan_id=None,
+        latest_invoice=latest_invoice_id,
+    )
+
+
 
 def _timestamp_to_datetime(value: Optional[int]) -> Optional[datetime]:
     if value is None:
@@ -267,7 +285,7 @@ async def get_billing_history(
     """
     Get billing history (purchases) for the current organization.
     """
-    from app.models.refunds import BillingPurchase, RefundRequest
+    from app.models.refunds import BillingPurchase
 
     if not profile.organization_id:
         return []
@@ -281,13 +299,13 @@ async def get_billing_history(
 
     # Backward-compatible auto-backfill:
     # Older organizations may have payment ledger events but no billing_purchases rows.
-    # Create missing purchase rows from successful payment events so billing history/refunds can work.
+    # Create missing purchase rows from successful payment events so billing history remains complete.
     if not purchases:
         event_query = (
             select(BillingEvent)
             .where(
                 BillingEvent.organization_id == profile.organization_id,
-                BillingEvent.event_type == "payment_success",
+                BillingEvent.event_type.in_(["payment_success", "invoice.payment_succeeded", "invoice.paid"]),
                 BillingEvent.status.in_(["succeeded", "processed"]),
             )
             .order_by(BillingEvent.processed_at.desc().nullslast(), BillingEvent.received_at.desc())
@@ -323,7 +341,7 @@ async def get_billing_history(
             purchase = BillingPurchase(
                 organization_id=profile.organization_id,
                 source_billing_event_id=event.id,
-                provider=event.provider or "infinitypay",
+                provider=event.provider or "stripe",
                 external_charge_id=event.external_id,
                 plan_name=event.plan_name,
                 amount_paid_cents=event.amount_cents,
@@ -340,16 +358,6 @@ async def get_billing_history(
         result = await db.execute(query)
         purchases = result.scalars().all()
 
-    purchase_ids = [p.id for p in purchases]
-    purchases_with_refund_request = set()
-    if purchase_ids:
-        refund_result = await db.execute(
-            select(RefundRequest.purchase_id).where(
-                RefundRequest.purchase_id.in_(purchase_ids)
-            )
-        )
-        purchases_with_refund_request = {row[0] for row in refund_result.all()}
-
     return [
         BillingPurchaseResponse(
             id=p.id,
@@ -360,7 +368,7 @@ async def get_billing_history(
             currency=p.currency,
             paid_at=p.paid_at,
             total_refunded_cents=p.total_refunded_cents,
-            has_refund_request=p.id in purchases_with_refund_request,
+            has_refund_request=False,
             created_at=p.created_at,
         )
         for p in purchases

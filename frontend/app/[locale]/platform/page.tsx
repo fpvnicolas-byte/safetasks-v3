@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
-import { Bug, ReceiptText } from 'lucide-react'
+import { Bug } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 
 const sections = [
@@ -11,12 +11,6 @@ const sections = [
         href: '/platform/bug-reports',
         icon: Bug,
         color: 'bg-destructive/15 text-destructive',
-    },
-    {
-        key: 'refunds',
-        href: '/platform/refunds',
-        icon: ReceiptText,
-        color: 'bg-primary/15 text-primary',
     },
 ]
 
